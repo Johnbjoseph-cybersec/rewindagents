@@ -52,7 +52,7 @@ python3 -m rewindagent branch 12 --name try2   # keep the current files, then re
 - `rewind N` puts back every file that a step after N changed with `Write`, `Edit`, `MultiEdit` or
   `NotebookEdit`, and deletes the files those steps created. `rewind 0` undoes the whole session.
 - A rewind is undoable. It first saves the current bytes of every file it will change and records itself
-  as a new step; the command prints `undo it with: rewindagent rewind <step>`.
+  as a new step; the command prints `undo it with: python3 -m rewindagent rewind <step> --session <id>`.
 - `branch N --name X` does the same and, in a git repo, also commits the whole current working tree to the
   branch `rewindagent/X`. It does this through a temporary index, so your `HEAD`, index and current
   branch stay as they were. Outside git, the current files are kept in the log only.

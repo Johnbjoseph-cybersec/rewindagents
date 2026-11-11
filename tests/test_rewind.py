@@ -238,7 +238,7 @@ class TestCli(unittest.TestCase):
             self.assertEqual(p.returncode, 0, p.stderr)
             self.assertEqual(Path(d, "app.py").read_text(), "good")
             self.assertFalse(Path(d, "junk.py").exists())
-            self.assertIn("undo it with: rewindagent rewind 3 --session s1", p.stdout)
+            self.assertIn("undo it with: python3 -m rewindagent rewind 3 --session s1", p.stdout)
 
     def test_rewind_cli_exit_codes(self):
         with TemporaryDirectory() as d:
