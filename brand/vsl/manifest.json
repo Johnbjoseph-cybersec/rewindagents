@@ -112,7 +112,7 @@
    "mp4_facts": {
     "audio_codec": "mp4a",
     "audio_seconds": 13.521,
-    "bytes": 582471,
+    "bytes": 588800,
     "channels": 2,
     "faststart": true,
     "fps": 30.0,
@@ -120,7 +120,7 @@
     "height": 1920,
     "sample_rate": 48000,
     "seconds": 13.5,
-    "sha256": "2c639b303ccb1a24576f27082704e932f3e865806eedcf07460577d0c6c00b97",
+    "sha256": "fa5c2a2d6bfd2934183a04fda75e36b8424e9a9f75c5892843392af9a8a2fe75",
     "video_codec": "avc1",
     "video_seconds": 13.5,
     "width": 1080
@@ -291,7 +291,7 @@
    "mp4_facts": {
     "audio_codec": "mp4a",
     "audio_seconds": 29.021,
-    "bytes": 1205756,
+    "bytes": 1186111,
     "channels": 2,
     "faststart": true,
     "fps": 30.0,
@@ -299,7 +299,7 @@
     "height": 1080,
     "sample_rate": 48000,
     "seconds": 29.0,
-    "sha256": "51caa7870d86151a0f96a76e008f7049330c157be3f8a1fecaf0052778b9672b",
+    "sha256": "d4b4ddb5bc56dd55fe3525016777d9ab79ca6efa2f3b60741b1dbbcc04713dc3",
     "video_codec": "avc1",
     "video_seconds": 29.0,
     "width": 1920
@@ -455,13 +455,13 @@
     "The first twelve steps stay. So does the new test.",
     "Every tool call goes into a hash-chained log. Edit one record and verify names it.",
     "Before every edit, the hook copies the file as it is.",
-    "Around every Bash command it saves first, scans after. So step thirteen kept three",
-    "copies.",
+    "Around every Bash command it saves first, scans after.",
+    "So step thirteen kept three copies.",
     "rewindagent install adds the Claude Code hook. It has run in real sessions.",
     "Codex and Cursor: built from the vendors' hook documentation, tested with the",
     "documented payloads. Not yet in a live session.",
-    "Files over twenty megabytes aren't copied. Over twenty thousand files, no scan, and",
-    "rewind says so.",
+    "Files over twenty megabytes aren't copied.",
+    "Over twenty thousand files, no scan, and rewind says so.",
     "Export it as one HTML page. Find it later with sessions.",
     "Apache-2.0, standard library only. Not on PyPI yet: install from the repository.",
     "A paid Cloud tier is planned. Not built, not priced.",
@@ -677,7 +677,7 @@
    "mp4_facts": {
     "audio_codec": "mp4a",
     "audio_seconds": 89.521,
-    "bytes": 3360558,
+    "bytes": 3353384,
     "channels": 2,
     "faststart": true,
     "fps": 30.0,
@@ -685,14 +685,14 @@
     "height": 1080,
     "sample_rate": 48000,
     "seconds": 89.5,
-    "sha256": "480aa32da108f4cdb623f6c50b999b8b3b5ce36de5d706a5b50af038257e42e7",
+    "sha256": "1364fe4ed38adea87053d7cef1d364ee95b5e72ab0f5aef277f7e621251ae379",
     "video_codec": "avc1",
     "video_seconds": 89.5,
     "width": 1920
    },
    "srt": "vsl-90s.srt",
    "storyboard_ms": 89500,
-   "unique_frames": 403,
+   "unique_frames": 358,
    "width": 1920
   }
  }

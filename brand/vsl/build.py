@@ -64,15 +64,35 @@ def wrap_caption(text, width=CAPTION_CHARS):
     return lines
 
 
+def chunk_lines(voice):
+    """Caption chunks of at most CAPTION_LINES lines, cut at sentence ends: whole sentences are packed into a
+    cue while they fit, and only a sentence longer than one cue is cut inside (review round 1 of RB4b: a cue
+    that ends mid-sentence leaves an orphan like "copies." on screen for a fraction of a second)."""
+    chunks, cur = [], []
+    for sentence in re.split(r"(?<=[.?!])\s+", voice):
+        if cur and len(wrap_caption(" ".join(cur + [sentence]))) <= CAPTION_LINES:
+            cur.append(sentence)
+            continue
+        if cur:
+            chunks.append(wrap_caption(" ".join(cur)))
+        lines = wrap_caption(sentence)
+        while len(lines) > CAPTION_LINES:
+            chunks.append(lines[:CAPTION_LINES])
+            lines = wrap_caption(" ".join(lines[CAPTION_LINES:]))
+        cur = [" ".join(lines)]
+    if cur:
+        chunks.append(wrap_caption(" ".join(cur)))
+    return chunks
+
+
 def cues(video):
-    """One or more caption cues per spoken beat: a cue holds at most CAPTION_LINES lines, cues share the beat's
-    time in proportion to their word count. Silent beats get no cue."""
+    """One or more caption cues per spoken beat (chunk_lines), sharing the beat's time in proportion to their
+    word count. Silent beats get no cue."""
     out, t = [], 0
     for b in video["beats"]:
         voice = b["voice"].strip()
         if voice:
-            lines = wrap_caption(voice)
-            chunks = [lines[i:i + CAPTION_LINES] for i in range(0, len(lines), CAPTION_LINES)]
+            chunks = chunk_lines(voice)
             counts = [sum(len(words(l)) for l in c) for c in chunks]
             total = sum(counts)
             start = t

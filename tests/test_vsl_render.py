@@ -80,6 +80,16 @@ class TestVslRender(unittest.TestCase):
             self.assertEqual([" ".join(c.split()) for c in shown], cues, name)
             self.assertEqual(read(os.path.join(BRAND, name + ".srt")), read(os.path.join(VSL, name + ".srt")), name)
 
+    def test_cues_end_on_a_sentence_and_stay_up_long_enough_to_read(self):
+        # review round 1: a cue cut mid-sentence left "copies." on screen for 0.4 s
+        for name in VIDEOS:
+            for start, end, lines in self.build.cues(self.videos[name]):
+                text = " ".join(lines)
+                self.assertGreaterEqual(end - start, 1200, "%s: %r is up for %d ms" % (name, text, end - start))
+                if not re.search(r"[.?!]$", text):
+                    self.assertEqual(len(lines), self.build.CAPTION_LINES,
+                                     "%s: %r ends mid-sentence without filling the cue" % (name, text))
+
     def test_render_code_types_no_address_and_uses_the_palette(self):
         src = read(os.path.join(VSL, "render.py"))
         hosts = [m.group(0) for m in re.finditer(r"[\w-]+\.(github\.io|com|dev|io|app|org|net|sh|co|ai)\b", src)]

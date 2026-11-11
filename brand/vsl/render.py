@@ -90,7 +90,7 @@ DIRECTION = {
         "b01": dict(kind="term", clear=True, ruler=(13, 13), accent=[[None, [0]]]),
         "b02": dict(kind="term", ruler=(14, 14), ruler_at=300, start=300, accent=[[None, [0, 1]]]),
         "b03": dict(kind="term", clear=True, accent=[[None, [4, 5]]]),
-        "b04": dict(kind="term", clear=True, ruler=(14, 6), start=700, accent=[[None, [0]]]),
+        "b04": dict(kind="term", clear=True, brackets=6, start=300, accent=[[None, [0]]]),
         "b05": dict(kind="term", clear=True, ruler=(14, 14), accent=[[None, [4, 5]]]),
         "b06": dict(kind="term", ruler=(14, 12), ruler_at=200, accent=[[200, [0]]]),
         "b07": dict(kind="term"),
@@ -99,15 +99,15 @@ DIRECTION = {
         "b09": dict(kind="term", ruler=(15, 12), ruler_at=400, accent=[[None, [0]]], note_accent=None),
         "b10": dict(kind="term", clear=True, accent=[[None, [4]]]),
         "b11": dict(kind="page", chain=True, accent_row=None),
-        "b12": dict(kind="page", tape_rows=[0], accent_row=1, copy=True),
-        "b13": dict(kind="term", clear=True, ruler=(14, 13), brackets=13, accent=[[None, [0]]],
+        "b12": dict(kind="page", tape_rows=[0], copy=True),
+        "b13": dict(kind="term", clear=True, brackets=13, accent=[[None, [0]]],
                     accent_word="[3 checkpointed]"),
-        "b14": dict(kind="term", clear=True, notes_side=True, ruler=(14, 14)),
+        "b14": dict(kind="term", clear=True, notes_side=True),
         "b15": dict(kind="term", notes_side=True, note_accent=2),
         "b16": dict(kind="page", accent_word="reported"),
-        "b17": dict(kind="term", clear=True),
+        "b17": dict(kind="term", clear=True, notes_side=True, note_accent=None),
         "b18": dict(kind="page", accent_row=3),
-        "b19": dict(kind="page", heading=0, tape_rows=[1, 2], open_ticks=True),
+        "b19": dict(kind="page", heading=0, label="planned", tape_rows=[1, 2]),
         "b20": dict(kind="end"),
     },
     "vsl-30s": {
@@ -137,7 +137,7 @@ LAYOUT = {
                  MONO=30, LH=44, NOTE=34, NOTE_GAP=50, CAP=40, CAP_LH=54, CAP_BASE=966, CAP_CHARS=vsl.CAPTION_CHARS,
                  ROW=40, ROW_H=96, ROWS_TOP=330, TITLE=44),
     "9:16": dict(W=1080, H=1920, X0=80, X1=1000, RULER_Y=330, PANEL=(80, 430, 920, 720), SIDE_W=920,
-                 MONO=40, LH=60, NOTE=44, NOTE_GAP=60, CAP=54, CAP_LH=70, CAP_BASE=1420, CAP_CHARS=28,
+                 MONO=40, LH=60, NOTE=44, NOTE_GAP=60, CAP=54, CAP_LH=70, CAP_BASE=1180, CAP_CHARS=28,
                  ROW=46, ROW_H=110, ROWS_TOP=560, TITLE=56),
 }
 
@@ -294,7 +294,11 @@ def plan(video, cfg):
                     when = (max(new) + ACCENT_DELAY_MS) if new else t0
                 accents.append((when, panel_id, [id(x) for x in group]))
         t0 += b["ms"]
-    return {"lines": lines, "accents": sorted(accents, key=lambda a: a[0]), "ruler": ruler, "shots": shots,
+    # each panel is as tall as the most it ever shows (its lines plus the prompt), never a dark empty box
+    rows = {}
+    for ln in lines:
+        rows[ln["panel"]] = rows.get(ln["panel"], 0) + 1
+    return {"rows": rows, "lines": lines, "accents": sorted(accents, key=lambda a: a[0]), "ruler": ruler, "shots": shots,
             "total": t0}
 
 
@@ -373,8 +377,20 @@ def draw_ruler(cv, L, state, brackets=None, mono=None):
     cv.add(rect(php - 1.5, top + 3.5 * k - 1, 3, y + 2 - (top + 3.5 * k - 1), C["Record"]))
 
 
+def pad_of(L):
+    return 28 if L["W"] > L["H"] else 32
+
+
+def panel_h(L, p, panel):
+    """Height for a panel's content: title bar, padding, its rows plus the prompt (at least three), at most
+    the layout's panel."""
+    n = max(3, p["rows"].get(panel, 0) + 1)
+    return min(L["PANEL"][3], L["TITLE"] + 2 * pad_of(L) + n * L["LH"] - (L["LH"] - L["MONO"]))
+
+
 def draw_panel(cv, kit, L, p, shot, t, side):
-    x, y, w, h = L["PANEL"]
+    x, y, w, _ = L["PANEL"]
+    h = panel_h(L, p, shot["panel"])
     if side:
         w = L["SIDE_W"]
     cv.add(rect(x, y, w, h, C["Spool"]))
@@ -387,7 +403,7 @@ def draw_panel(cv, kit, L, p, shot, t, side):
     cv.text(kit.disp, "rewindagent", nsize, x + 24 + 16 * k + 12, y + (tb + kit.disp.cap(nsize)) / 2, "Leader",
             tracking=-0.02)
     mono, size, lh = kit.mono, L["MONO"], L["LH"]
-    pad = 28 if L["W"] > L["H"] else 32
+    pad = pad_of(L)
     rows = int((h - tb - 2 * pad + (lh - size)) // lh)
     hot = accent_ids(p, shot["panel"], t)
     visible = []
@@ -425,8 +441,9 @@ def draw_panel(cv, kit, L, p, shot, t, side):
             cx += adv * len(text)
 
 
-def draw_notes(cv, kit, L, shot, t, side):
-    x, y, w, h = L["PANEL"]
+def draw_notes(cv, kit, L, p, shot, t, side):
+    x, y, w, _ = L["PANEL"]
+    h = panel_h(L, p, shot["panel"])
     size, gap = L["NOTE"], L["NOTE_GAP"]
     acc = shot["d"].get("note_accent", "last" if len(shot["notes"]) == 1 else None)
     if side:
@@ -444,10 +461,10 @@ def draw_notes(cv, kit, L, shot, t, side):
             base += gap - size * 0.25
     else:
         base = y + h + 24 + kit.body.cap(size) + 10
-        for note in shot["notes"]:
+        for note in shot["notes"]:      # under a panel that has the Rewind block: Tape, one accent per view
             if note["at"] > t:
                 continue
-            colour = "Record" if acc in ("last", note["index"]) else "Tape"
+            colour = "Tape"
             for line in wrap(kit.body, note["text"], size, w):
                 cv.text(kit.body, line, size, x, base, colour)
                 base += size * 1.3
@@ -500,7 +517,14 @@ def draw_page(cv, kit, L, shot, t):
         base = y + i * rh + size
         if i == d.get("heading"):
             hsize = size * 1.5
-            adv = cv.text(kit.disp, row, hsize, x, base, "Reel", tracking=-0.02)
+            label = d.get("label")
+            head = row[:-len(label)].rstrip() if label and row.endswith(label) else row
+            adv = cv.text(kit.disp, head, hsize, x, base, "Reel", tracking=-0.02)
+            if head != row:                  # the status as an outlined label in Record, beside the heading
+                lw = kit.mono.width(label, size * 0.8)
+                lx = x + adv + 28
+                cv.add(outline(lx, base - size * 0.8 - 14, lw + 32, size * 0.8 + 28, "Record", 3))
+                cv.text(kit.mono, label, size * 0.8, lx + 16, base, "Record")
             continue
         if COMMAND.match(row):
             mono_w = kit.mono.width("$ " + row, size)
@@ -509,11 +533,7 @@ def draw_page(cv, kit, L, shot, t):
             cv.text(kit.mono, row, size, x + 28 + kit.mono.width("$ ", size), base, "Leader")
             continue
         colour = "Record" if i == d.get("accent_row") else ("Tape" if i in d.get("tape_rows", []) else "Reel")
-        if d.get("open_ticks") and colour == "Tape":       # not built: an open tick in front of the row
-            cv.add(outline(x, base - size * 0.8, 8, size * 0.8, "Rule", 2))
-            x_row = x + 32
-        else:
-            x_row = x
+        x_row = x
         word = d.get("accent_word")
         if word and word in row:
             a = row.index(word)
@@ -533,7 +553,7 @@ def draw_end(cv, kit, L, cfg):
     target = 980 if wide else 860
     s = target / ww
     x = L["X0"] if wide else (W - target) / 2
-    top = 270 if wide else 560
+    top = 270 if wide else 380
     cv.add('<g transform="translate(%.2f %.2f) scale(%.4f)">%s</g>' % (x, top, s, body))
     y = top + wh * s + (70 if wide else 110)
     psize = 46 if wide else 56
@@ -543,13 +563,21 @@ def draw_end(cv, kit, L, cfg):
         cv.text(kit.body, line, psize, x, y, "Playhead")
         y += psize * 1.3
     url = cfg["site_url"]
-    usize = min(34.0, target / kit.mono.width(url, 1.0))       # the address fits the wordmark's width
+    # the address on one line if it fits the wordmark's width at a readable size, else broken after the host
+    usize = 34.0 if wide else 36.0
+    ulines = [url]
+    if kit.mono.width(url, usize) > target:
+        cut = url.index("/", len("https://")) + 1
+        ulines = [url[:cut], url[cut:]]
     y += 30
-    cv.text(kit.mono, url, usize, x, y, "Leader")
-    y += 50
+    for line in ulines:
+        cv.text(kit.mono, line, usize, x, y, "Leader")
+        y += usize * 1.35
+    y += 16
     cv.add(rect(x, y, target, 1.5, C["Rule"]))
-    y += 30 + 28
-    cv.text(kit.body, vsl.CREDIT, 28 if wide else 34, x, y, "Playhead")
+    csize = 28 if wide else 40
+    y += 30 + csize
+    cv.text(kit.body, vsl.CREDIT, csize, x, y, "Playhead")
 
 
 def caption_lines(cue_lines, L, kit):
@@ -584,7 +612,7 @@ def frame(kit, L, p, cues, cfg, t):
         if d["kind"] == "term":
             side = d.get("notes_side", False)
             draw_panel(cv, kit, L, p, shot, t, side)
-            draw_notes(cv, kit, L, shot, t, side)
+            draw_notes(cv, kit, L, p, shot, t, side)
         else:
             draw_page(cv, kit, L, shot, t)
     cap = draw_caption(cv, kit, L, cues, t, dark)

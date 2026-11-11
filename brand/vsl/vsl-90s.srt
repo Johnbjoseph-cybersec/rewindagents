@@ -55,13 +55,13 @@ Before every edit, the hook copies the
 file as it is.
 
 13
-00:00:45,500 --> 00:00:51,100
+00:00:45,500 --> 00:00:49,100
 Around every Bash command it saves first,
-scans after. So step thirteen kept three
+scans after.
 
 14
-00:00:51,100 --> 00:00:51,500
-copies.
+00:00:49,100 --> 00:00:51,500
+So step thirteen kept three copies.
 
 15
 00:00:51,500 --> 00:00:57,000
@@ -79,12 +79,12 @@ documented payloads. Not yet in a live
 session.
 
 18
-00:01:05,000 --> 00:01:10,281
+00:01:05,000 --> 00:01:07,438
 Files over twenty megabytes aren't copied.
-Over twenty thousand files, no scan, and
 
 19
-00:01:10,281 --> 00:01:11,500
+00:01:07,438 --> 00:01:11,500
+Over twenty thousand files, no scan, and
 rewind says so.
 
 20
