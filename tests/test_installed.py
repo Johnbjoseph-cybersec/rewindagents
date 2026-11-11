@@ -107,6 +107,39 @@ class InstalledCommandTest(unittest.TestCase):
             self.assertIn("sed -i.bak", r.stdout)
             self.assertEqual(self._run("sessions", "--grep", "nothing-here", cwd=proj).returncode, 1)
 
+    def test_bundle_from_one_project_imports_into_another_and_rewinds_there(self):
+        with TemporaryDirectory() as src, TemporaryDirectory() as dst, TemporaryDirectory() as carry:
+            Path(src, "app.py").write_text("x = 1\n")
+            self.assertEqual(self._run("install", cwd=src).returncode, 0)
+            cmd = json.loads(Path(src, ".claude", "settings.json").read_text())["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
+            shell = "sed -i.bak s/1/2/ app.py && rm app.py.bak"
+            for event in ("PreToolUse", "PostToolUse"):
+                payload = {"session_id": "moved", "cwd": src, "hook_event_name": event, "tool_name": "Bash",
+                           "tool_input": {"command": shell}, "tool_use_id": "toolu_1"}
+                p = subprocess.run(cmd, shell=True, cwd=src, env=clean_env(), input=json.dumps(payload),
+                                   capture_output=True, text=True, timeout=120)
+                self.assertEqual((p.returncode, p.stderr), (0, ""))
+                if event == "PreToolUse":
+                    subprocess.run(["sh", "-c", shell], cwd=src, check=True)
+            out = str(Path(carry, "moved.bundle"))
+            r = self._run("bundle", "--out", out, cwd=src)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn("session moved, 1 steps, 2 records, 1 stored files", r.stdout)
+            r = self._run("import", out, cwd=dst)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn("imported session moved: 1 steps, 2 records", r.stdout)
+            self.assertIn("replay it with: rewindagent replay --session moved", r.stdout)
+            r = self._run("verify", cwd=dst)
+            self.assertEqual((r.returncode, r.stdout.strip()), (0, "OK: 2 records, chain intact"), r.stderr)
+            r = self._run("replay", "--session", "moved", cwd=dst)
+            self.assertIn("sed -i.bak", r.stdout)
+            self.assertFalse(Path(dst, "app.py").exists())
+            r = self._run("rewind", "0", "--session", "moved", cwd=dst)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertEqual(Path(dst, "app.py").read_text(), "x = 1\n")      # put back in the clone
+            self.assertEqual(Path(src, "app.py").read_text(), "x = 2\n")      # the source is left alone
+            self.assertEqual(self._run("import", out, cwd=dst).returncode, 1)  # the session is already here
+
     def test_install_for_codex_and_cursor_writes_commands_their_payloads_drive(self):
         """`install --agent codex|cursor` through the binary; then the command from the written file, run as the
         agent would run it (no PYTHONPATH, the documented payload on stdin), records a shell edit that the binary
@@ -177,7 +210,8 @@ class ReadmeCommandsTest(unittest.TestCase):
             if m and not m.group(1).startswith("-"):
                 self.assertIn(m.group(1), SUBCOMMANDS, line)
                 seen.add(m.group(1))
-        self.assertTrue({"install", "replay", "rewind", "branch", "verify", "export", "sessions"} <= seen, seen)
+        self.assertTrue({"install", "replay", "rewind", "branch", "verify", "export", "sessions", "bundle",
+                         "import"} <= seen, seen)
 
     def test_readme_says_the_package_exists_and_is_not_on_pypi(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")

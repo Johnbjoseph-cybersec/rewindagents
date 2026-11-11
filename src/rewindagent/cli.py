@@ -1,5 +1,5 @@
 """rewindagent command line: record, verify, head, show, hook, install, replay, rewind, branch, export,
-sessions."""
+sessions, bundle, import."""
 from __future__ import annotations
 
 import argparse
@@ -7,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import __version__, agents, export, hook, log, rewind, sessions
+from . import __version__, agents, bundle, export, hook, log, rewind, sessions
 
 
 def invocation() -> str:
@@ -56,6 +56,13 @@ def main(argv: list[str] | None = None) -> int:
     se.add_argument("--grep", metavar="TEXT",
                     help="only sessions with a step whose command, file or input mentions TEXT (any case); "
                          "the matching steps are listed")
+    bu = sub.add_parser("bundle", help="write one session and the file copies it names to one file, "
+                                       "to replay and rewind it on another machine or clone")
+    bu.add_argument("--session", help="default: the session that wrote the last record")
+    bu.add_argument("--out", required=True, help="file to write")
+    im = sub.add_parser("import", help="check a bundle, then add its session to this project's log; "
+                                       "file paths move to this project")
+    im.add_argument("file", help="a file written by `bundle`")
 
     a = ap.parse_args(argv)
     if a.cmd == "hook":
@@ -65,9 +72,29 @@ def main(argv: list[str] | None = None) -> int:
         changed = hook.install(target, agent=a.agent)
         print(f"{'installed in' if changed else 'already installed in'} {target}")
         return 0
-    if a.cmd in ("verify", "show", "replay", "rewind", "branch", "export", "sessions") and not Path(a.log).exists():
+    if a.cmd in ("verify", "show", "replay", "rewind", "branch", "export", "sessions", "bundle") \
+            and not Path(a.log).exists():
         print(f"rewindagent: no log at {a.log}", file=sys.stderr)
         return 2
+    if a.cmd in ("bundle", "import"):
+        root = rewind.project_root(a.log)
+        try:
+            if a.cmd == "bundle":
+                d = bundle.bundle(a.log, a.out, a.session)
+            else:
+                d = bundle.import_bundle(a.file, a.log)
+        except bundle.BundleError as e:
+            print(f"rewindagent: {e}", file=sys.stderr)
+            return 1
+        if a.cmd == "bundle":
+            print(f"wrote {rewind.relative(d['out'], root)}: session {d['session']}, {d['steps']} steps, "
+                  f"{d['records']} records, {d['objects']} stored files, {d['bytes']:,} bytes")
+        else:
+            print(f"imported session {d['session']}: {d['steps']} steps, {d['records']} records, "
+                  f"{d['objects']} stored files ({d['already_here']} already here)")
+            print(f"  file paths moved from {d['from_root']} to {d['root']}")
+            print(f"  replay it with: {invocation()} replay --session {d['session']}")
+        return 0
     if a.cmd == "replay":
         return _replay(a.log, a.session, a.step)
     if a.cmd == "sessions":

@@ -43,12 +43,13 @@ class Recorder:
         self.path.parent.mkdir(parents=True, exist_ok=True)
 
     def record(self, session: str, tool: str, args: Any, result: Any = None,
-               actor: str = "agent", event: str = "tool_call") -> dict:
+               actor: str = "agent", event: str = "tool_call", ts: float | None = None) -> dict:
+        """Append one record. `ts` defaults to now; `import` passes the original time of a moved record."""
         with self.path.open("a+", encoding="utf-8") as fh:
             fcntl.flock(fh, fcntl.LOCK_EX)
             try:
                 prev, n = _last_hash(fh)
-                body = {"seq": n + 1, "ts": round(time.time(), 3), "session": session,
+                body = {"seq": n + 1, "ts": round(time.time() if ts is None else ts, 3), "session": session,
                         "actor": actor, "event": event, "tool": tool,
                         "args": args, "result": result, "prev": prev}
                 body["hash"] = _digest(body)

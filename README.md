@@ -5,8 +5,8 @@ tamper-evident, hash-chained log you can verify later.
 
 **Status: v0.0.7, pre-release.** Built and tested today: the recorder and its CLI, hooks for Claude Code,
 Codex and Cursor that record every call and checkpoint the files a step changes, `replay`, `rewind` and
-`branch`, `export` (a session as one HTML page), `sessions` (list and search the sessions in a log), and a
-pip-installable package with a `rewindagent` command. Not on PyPI yet. The Claude Code hook has run in real
+`branch`, `export` (a session as one HTML page), `sessions` (list and search the sessions in a log),
+`bundle` and `import` (carry a session to another machine or clone as one file), and a pip-installable package with a `rewindagent` command. Not on PyPI yet. The Claude Code hook has run in real
 sessions; the Codex and Cursor hooks are built from the vendors' hook documentation and tested with the
 documented payloads, not yet in a live session.
 
@@ -175,6 +175,27 @@ last record, the one `replay` and `rewind` use by default, is marked `(latest)`.
   their step numbers, so `rewindagent rewind <step> --session <id>` can follow. Exit code 1 if no session
   matches.
 - Paths are shown relative to the project.
+
+## Move a session to another machine
+
+```sh
+rewindagent bundle --out s1.bundle                 # the latest session, and the file copies it names, in one file
+rewindagent bundle --session abc --out abc.bundle  # a given session
+rewindagent import s1.bundle                       # in another clone: check the file, then add the session to its log
+```
+
+Then `replay`, `rewind` and `branch` work on that session in the other clone, with `--session <id>`.
+
+- One JSON file: the session's log records exactly as the log holds them, each with its hash, and every
+  stored file copy they name. Nothing goes over a network; carry the file however you like.
+- `bundle` refuses a log whose chain does not verify, and a session whose stored copies are missing or altered.
+- `import` writes nothing until everything checks out: the file's own SHA-256, every record's hash, that every
+  record belongs to the session and is in log order, every stored copy against its SHA-256, that no copy a
+  record names is missing, that this project's log verifies, and that it does not already hold the session.
+- The records join this project's chain in order, with their original times; they get new sequence
+  numbers and hashes here.
+- File paths under the old project move under this one, so a rewind puts the files back in this clone.
+  Commands and results keep their text as recorded.
 
 ## Recorder
 
