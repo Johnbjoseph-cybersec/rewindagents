@@ -184,6 +184,13 @@ rewindagent verify --head <pinned-hash>
 - Publish on PyPI
 - Hooks for Codex and Cursor
 
+## Site
+
+`brand/site/` holds the landing page, the pricing page and the getting-started docs, published with GitHub Pages
+by `.github/workflows/pages.yml`. The pages are built by `brand/site/build.py` from this README, the package and
+the clip's session, and `tests/test_site.py` fails if a committed page differs from a fresh build. The site's
+address lives in one place, `brand/site/config.json`.
+
 ## Tests
 
 ```sh

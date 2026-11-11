@@ -1,9 +1,9 @@
 # rewindagent - brand identity
 
-Status: identity (RB1, written by Iris Kapoor, Creative Studio), logo set (RB2, see "Logo" below) and the
-demo GIF (RB2b, see "Demo GIF"). No site yet.
-Not self-graded; independent reviewers score the identity in brand/review.json and the demo in
-brand/demo/review.json.
+Status: identity (RB1, written by Iris Kapoor, Creative Studio), logo set (RB2, see "Logo" below), the
+demo GIF (RB2b, see "Demo GIF") and the site (RB3, see "Site").
+Not self-graded; independent reviewers score the identity in brand/review.json, the demo in
+brand/demo/review.json and the site in brand/site/review.json.
 
 ## One-line promise
 
@@ -167,6 +167,26 @@ GIF's size, play time, delays and colour table from the file.
   of two to three seconds with the prompt back. Every duration is on ffmpeg's 40 ms grid.
 - Look at brand/demo/keyframes/ (the opening prompt and the end of each beat, full size) and
   brand/demo/contact-sheet.png before judging it; the per-frame sources are rebuilt into brand/demo/frames/.
+
+## Site (RB3)
+
+brand/site/index.html (landing), pricing.html and docs/index.html, built by brand/site/build.py and served by
+GitHub Pages from brand/site/. The address lives in brand/site/config.json only (site_url); a bought domain is a
+one-line change there plus a redirect.
+
+- Nothing on a page is typed from memory: every command block is an sh block of the README, every number is a
+  constant of the package, the terminal in the hero quotes brand/demo/manifest.json (the session behind the clip,
+  which tests/test_demo.py replays), and every planned item on the pricing page is a phrase of this document.
+  tests/test_site.py rebuilds the pages and fails on any difference.
+- Look: Leader paper, Reel ink, Spool terminal panels with Leader text, Playhead for prompts and comments, Rewind
+  for the one block to look at in a panel, Record for links and for the playhead in the section rulers. The step
+  ruler opens every section: ticks on a hairline, the playhead on the section's number, the ticks after it in
+  Rule grey. Left aligned; hairlines do the structuring. The footer is Reel, like the end of a tape.
+- Type: Bricolage Grotesque 800 for headings, Hanken Grotesk 400 and 600 for text, Commit Mono for every command,
+  number and label. Self-hosted WOFF2 files in brand/site/fonts/ with their OFL licences beside them.
+- No scripts, no cookies, no analytics, nothing fetched from outside the site. Static HTML.
+- Look at it before judging it: `bash ~/team-agents/fire/bin/render_html.sh brand/site/index.html 1440 <height> out.png`
+  renders a page at 1440 and, through an iframe, at 390.
 
 ## Logo direction brief (from RB1)
 

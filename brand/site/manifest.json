@@ -1,0 +1,153 @@
+{
+ "assets": [
+  "demo.gif",
+  "logo-wordmark.svg",
+  "logo-wordmark-reverse.svg",
+  "logo-mark.svg",
+  "favicon.svg",
+  "favicon-32.png",
+  "social-preview-1280x640.png"
+ ],
+ "checkout": false,
+ "credit": "made by John B Joseph",
+ "facts": {
+  "blocks": {
+   "export": [
+    "rewindagent export                                  # writes .rewindagent/replay-<session>.html",
+    "rewindagent export --session abc --out replay.html  # a given session, to a given file",
+    "rewindagent export --no-contents                    # steps, tools and paths only: no inputs, results or diffs"
+   ],
+   "hook": [
+    "cd /path/to/your/project",
+    "rewindagent install            # adds the hook to .claude/settings.json in this project",
+    "rewindagent install --settings ~/.claude/settings.json   # or for every project"
+   ],
+   "install": [
+    "pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagent     # or: pip install git+https://...",
+    "rewindagent --version"
+   ],
+   "record": [
+    "echo '{\"tool\": \"Bash\", \"args\": {\"command\": \"ls\"}}' | rewindagent record --session s1",
+    "rewindagent verify     # OK: 1 records, chain intact",
+    "rewindagent show       # list recorded calls",
+    "rewindagent head       # current head hash"
+   ],
+   "replay": [
+    "rewindagent replay              # one line per step: number, tool, file or command",
+    "rewindagent replay --step 12    # step 12 in full: input, checkpoints, result",
+    "rewindagent rewind 12 --dry-run # what would change",
+    "rewindagent rewind 12           # files back to how they were right after step 12",
+    "rewindagent branch 12 --name try2   # keep the current files, then rewind to step 12"
+   ],
+   "sessions": [
+    "rewindagent sessions                     # every session in the log: id, first and last time, steps, files touched",
+    "rewindagent sessions --grep config.py    # only sessions with a step that mentions it, and those steps"
+   ],
+   "tests": [
+    "python3 -m unittest discover -s tests -v"
+   ],
+   "verify": [
+    "rewindagent verify --head <pinned-hash>"
+   ]
+  },
+  "diff_kb": 256,
+  "diff_lines": 400,
+  "file_mb": 20,
+  "file_tools": [
+   "Write",
+   "Edit",
+   "MultiEdit",
+   "NotebookEdit"
+  ],
+  "gif": {
+   "frames": 65,
+   "height": 675,
+   "seconds": 16.64,
+   "width": 1200
+  },
+  "good_step": 12,
+  "py_req": ">=3.10",
+  "result_chars": 4000,
+  "scan_files": 20000,
+  "show_files": 5,
+  "skip_dirs": [
+   ".git",
+   ".rewindagent",
+   ".venv",
+   "__pycache__",
+   "node_modules",
+   "venv"
+  ],
+  "steps": 14,
+  "tested_on": "Python 3.15 on macOS",
+  "version": "0.0.7",
+  "wreck_steps": 2
+ },
+ "hero": [
+  [
+   "cmd",
+   "rewindagent replay"
+  ],
+  [
+   "gap",
+   "    ..."
+  ],
+  [
+   "out",
+   "   11  Bash          git status --short"
+  ],
+  [
+   "out",
+   "   12  Read          tests/test_server.py"
+  ],
+  [
+   "out",
+   "   13  Bash          rm -rf tests  [3 checkpointed]"
+  ],
+  [
+   "out",
+   "   14  Write         app/config.py  [1 checkpointed]"
+  ],
+  [
+   "cmd",
+   "rewindagent rewind 12"
+  ],
+  [
+   "out",
+   "session demo: rewind to step 12 of 14 (did change 4 files)"
+  ],
+  [
+   "hit",
+   "  restore  tests/test_config.py"
+  ],
+  [
+   "hit",
+   "  restore  tests/test_server.py"
+  ],
+  [
+   "hit",
+   "  restore  tests/test_timeout.py"
+  ],
+  [
+   "hit",
+   "  restore  app/config.py"
+  ],
+  [
+   "out",
+   "  this rewind is step 15; undo it with: rewindagent rewind 14 --session demo"
+  ]
+ ],
+ "pages": [
+  "docs/index.html",
+  "index.html",
+  "pricing.html"
+ ],
+ "planned": [
+  "cloud sync",
+  "shareable replay links",
+  "long retention",
+  "session search"
+ ],
+ "promise": "Ctrl+Z for AI coding agents: record, replay, rewind.",
+ "site_url_key": "site_url"
+}

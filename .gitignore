@@ -7,3 +7,4 @@ dist/
 .venv/
 .brandcache/
 brand/demo/frames/
+brand/site/assets/

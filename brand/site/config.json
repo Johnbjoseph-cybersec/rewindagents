@@ -1,0 +1,8 @@
+{
+ "note": "The ONE place the site's address lives (FIRE, 2026-11-11: no artefact may assume a domain). Swapping to a bought domain is a change to site_url here plus a redirect from the old address; brand/site/build.py reads it and tests/test_site.py fails if any other file names a hostname for the product. checkout_url stays null until a Polar product exists.",
+ "site_url": "https://johnbjoseph-cybersec.github.io/rewindagent/",
+ "repo_url": "https://github.com/Johnbjoseph-cybersec/rewindagent",
+ "branch": "main",
+ "waitlist_url": "https://github.com/Johnbjoseph-cybersec/rewindagent/issues/new?title=Cloud+waitlist&labels=waitlist&body=I+would+use+a+paid+tier+for%3A",
+ "checkout_url": null
+}
