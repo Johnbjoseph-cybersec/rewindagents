@@ -11,7 +11,7 @@ from tempfile import TemporaryDirectory
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 import rewindagent  # noqa: E402
-from rewindagent import export, rewind  # noqa: E402
+from rewindagent import export, hook, rewind  # noqa: E402
 from test_rewind import Agent, cli  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -150,6 +150,36 @@ class TestPage(unittest.TestCase):
             for root in (str(Path(d)), str(Path(d).resolve())):
                 self.assertFalse(root in page, f"project location {root} is in the page")
             self.assertIn("&quot;file_path&quot;: &quot;app.py&quot;", page)   # inputs show the relative path
+
+    def test_bare_root_in_a_command_or_input_is_not_in_the_page(self):
+        # R11: `cd /abs/proj`, a Cursor-style working_directory, and the Bash summary line all carried the
+        # bare root, which the old root+separator scrub missed.
+        with TemporaryDirectory() as d:
+            a = wrecked(d)
+            for root in (str(Path(d)), str(Path(d).resolve())):
+                a.bash(f"cd {root} && ls")
+                a.bash(f"cat {root}/app.py")
+                inp = {"command": "make", "working_directory": root}
+                hook.handle(a._p("PreToolUse", "Bash", inp))
+                hook.handle(a._p("PostToolUse", "Bash", inp, {"stdout": f"in {root}\n"}))
+            for contents in (True, False):
+                page = export.render(export.build(a.log, contents=contents))
+                for root in (str(Path(d)), str(Path(d).resolve())):
+                    self.assertFalse(root in page, f"project location {root} is in the page (contents={contents})")
+                self.assertIn("cd . &amp;&amp; ls", page)
+                self.assertIn("cat app.py", page)
+
+    def test_a_long_command_is_scrubbed_before_it_is_cut(self):
+        with TemporaryDirectory() as d:
+            a = Agent(d)
+            root = str(Path(d).resolve())
+            a.bash("x" * 99 + f" {root}")       # the root starts at 100: a 120-character cut keeps 17 of it
+            page = export.render(export.build(a.log))
+            self.assertFalse(root[:12] in page, "half the root survived the cut")
+
+    def test_scrub_leaves_a_sibling_that_only_starts_with_the_root(self):
+        self.assertEqual(export.scrub("cd /p/proj; cd /p/proj2; cat /p/proj/a", ["/p/proj"]),
+                         "cd .; cd /p/proj2; cat a")
 
     def test_page_carries_the_steps_the_credit_and_the_version(self):
         with TemporaryDirectory() as d:

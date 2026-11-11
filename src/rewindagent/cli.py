@@ -127,7 +127,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"rewindagent: {e}", file=sys.stderr)
             return 1
         _report(p, dry_run=getattr(a, "dry_run", False), root=rewind.project_root(a.log))
-        return 1 if p["cannot"] else 0
+        # README: "If anything could not be restored, the exit code is 1" - an unscanned step counts.
+        return 1 if p["cannot"] or p["bash_uncovered"] else 0
     if a.cmd == "record":
         try:
             call = json.load(sys.stdin)

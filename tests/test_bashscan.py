@@ -113,6 +113,8 @@ class TestBashLimits(unittest.TestCase):
             self.assertEqual(p["bash_uncovered"], 1)
             code, out, _ = cli("--log", str(a.log), "rewind", "0", "--dry-run")
             self.assertIn("1 step(s) after step 0 were not scanned", out)
+            self.assertEqual(code, 1, "README: if anything could not be restored, the exit code is 1")
+            self.assertEqual(cli("--log", str(a.log), "rewind", "0")[0], 1)
 
     def test_large_file_changed_by_bash_is_reported_as_cannot(self):
         with TemporaryDirectory() as d:

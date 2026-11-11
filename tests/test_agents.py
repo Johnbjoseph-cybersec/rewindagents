@@ -130,7 +130,7 @@ class TestCursor(unittest.TestCase):
             lg = Path(d, ".rewindagent", "log.jsonl")
             self.assertEqual(rewind.rewind(lg, 0, dry_run=True)["bash_uncovered"], 1)
             code, out = cli("--log", str(lg), "rewind", "0", "--dry-run")
-            self.assertEqual(code, 0)
+            self.assertEqual(code, 1)        # README: anything not restored -> exit 1
             self.assertIn("1 step(s) after step 0 were not scanned", out)
 
     def test_process_answers_allow_before_a_call_and_an_empty_object_after_it(self):

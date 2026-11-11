@@ -17,6 +17,8 @@ import difflib
 import html
 import json
 import os
+import re
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -110,6 +112,9 @@ def build(log_path: str | Path, session: str | None = None, contents: bool = Tru
     """
     diffs = contents
     root = rewind.project_root(log_path)
+    # The project's location is scrubbed from everything the page prints: the resolved root and the root
+    # as the log was addressed (macOS gives /var/... and /private/var/... for the same directory).
+    roots = sorted({str(root), str(Path(log_path).absolute().parent.parent)}, key=len, reverse=True)
     objects = root / ".rewindagent" / "objects"
     ok, n, msg = log.verify(log_path)
     session = session or rewind.latest_session(log_path)
@@ -141,13 +146,10 @@ def build(log_path: str | Path, session: str | None = None, contents: bool = Tru
                                                           f"{rel} (after step {s['step']})")
             files.append(entry)
         steps_out.append({"step": s["step"], "tool": s["tool"], "event": s["event"],
-                          "summary": rewind.summary(s, width=120, root=root),
+                          "summary": _summary(s, root, roots),
                           "input": s.get("input"), "result": s.get("result"), "files": files,
                           "to_step": s.get("to_step"), "branch": s.get("branch"),
                           "bash_scan": s.get("bash_scan")})
-    # Paths inside the project are scrubbed from inputs and results: the resolved root and the root as
-    # the log was addressed (macOS gives /var/... and /private/var/... for the same directory).
-    roots = sorted({str(root), str(Path(log_path).absolute().parent.parent)}, key=len, reverse=True)
     return {"project": root.name, "roots": roots, "session": session, "steps": steps_out,
             "records": n, "chain_ok": ok, "chain_msg": msg, "head": log.head(log_path),
             "exported": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
@@ -188,11 +190,23 @@ footer{margin-top:40px;padding-top:12px;border-top:1px solid var(--rule);color:v
 """ % PALETTE
 
 
-def _json(value: Any, roots: list[str]) -> str:
-    text = json.dumps(value, indent=2, ensure_ascii=False, default=str)
+def scrub(text: str, roots: list[str]) -> str:
+    """Drop the project's location: a path inside it becomes relative, the bare root (`cd /abs/proj`,
+    a Cursor working_directory) becomes `.`. A longer path that only starts with the root is left alone."""
     for r in roots:
         text = text.replace(r + os.sep, "")
-    return _esc(text)
+        text = re.sub(r"(?<![\w.-])" + re.escape(r) + r"(?![\w.-])", ".", text)
+    return text
+
+
+def _summary(step: dict, root: Path, roots: list[str], width: int = 120) -> str:
+    """The `replay` line, scrubbed before it is cut so a cut cannot leave half the root behind."""
+    text = scrub(rewind.summary(step, width=sys.maxsize, root=root), roots)
+    return text if len(text) <= width else text[: width - 3] + "..."
+
+
+def _json(value: Any, roots: list[str]) -> str:
+    return _esc(scrub(json.dumps(value, indent=2, ensure_ascii=False, default=str), roots))
 
 
 def _diff_html(change: dict) -> str:
