@@ -3,9 +3,9 @@
 Ctrl+Z for AI coding agents: record, replay and rewind. Every tool call your coding agent makes goes into a
 tamper-evident, hash-chained log you can verify later.
 
-**Status: v0.0.2, pre-release.** The recorder, its CLI and a Claude Code hook that records every call and
-checkpoints files exist today. Replay and rewind are planned; they are listed under Roadmap below and are
-not built yet, so a checkpoint can be saved but there is no command to restore it yet.
+**Status: v0.0.3, pre-release.** Built and tested today: the recorder and its CLI, a Claude Code hook
+that records every call and checkpoints files before `Write`/`Edit`, and `replay`, `rewind` and `branch`.
+Not built yet: checkpoints for files that `Bash` commands change (see Roadmap).
 
 ## Claude Code hook
 
@@ -35,6 +35,34 @@ broken or it cannot write; any problem goes to stderr only.
 
 Not checkpointed yet: files changed by `Bash` commands (for example `sed -i` or `rm`). Those calls are
 recorded, but the file contents before them are not saved.
+
+## Replay, rewind, branch
+
+Run these from the project directory (the one holding `.rewindagent/`). They work on the latest session
+unless you pass `--session ID`.
+
+```sh
+python3 -m rewindagent replay              # one line per step: number, tool, file or command
+python3 -m rewindagent replay --step 12    # step 12 in full: input, checkpoints, result
+python3 -m rewindagent rewind 12 --dry-run # what would change
+python3 -m rewindagent rewind 12           # files back to how they were right after step 12
+python3 -m rewindagent branch 12 --name try2   # keep the current files, then rewind to step 12
+```
+
+- `rewind N` puts back every file that a step after N changed with `Write`, `Edit`, `MultiEdit` or
+  `NotebookEdit`, and deletes the files those steps created. `rewind 0` undoes the whole session.
+- A rewind is undoable. It first saves the current bytes of every file it will change and records itself
+  as a new step; the command prints `undo it with: rewindagent rewind <step>`.
+- `branch N --name X` does the same and, in a git repo, also commits the whole current working tree to the
+  branch `rewindagent/X`. It does this through a temporary index, so your `HEAD`, index and current
+  branch stay as they were. Outside git, the current files are kept in the log only.
+- Before writing anything, rewind checks the log's hash chain and the SHA-256 of every stored copy. If the
+  chain is broken it changes nothing. If a stored copy no longer matches, that file is reported and left
+  as it is.
+- It only touches files inside the project directory. Files outside it are reported and left alone.
+- Limits: files changed by `Bash` steps after N are not put back (the command reports how many Bash steps
+  there were). Directories created by those steps stay. Files over 20 MB were never copied, so they are
+  reported and not restored. If anything could not be restored, the exit code is 1.
 
 ## Recorder
 
@@ -80,9 +108,7 @@ python3 -m rewindagent verify --head <pinned-hash>
 
 ## Roadmap
 
-- Checkpoint files changed by `Bash` commands
-- Replay of a recorded session, step by step
-- Rewind the working tree to any recorded step, and branch from it
+- Checkpoint files changed by `Bash` commands, so `rewind` covers `sed -i` and `rm` too
 
 ## Tests
 
