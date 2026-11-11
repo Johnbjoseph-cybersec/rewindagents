@@ -1,0 +1,108 @@
+1
+00:00:00,000 --> 00:00:03,000
+Step thirteen. The agent deletes your
+tests.
+
+2
+00:00:03,000 --> 00:00:06,000
+Step fourteen. It overwrites the config.
+
+3
+00:00:06,000 --> 00:00:09,500
+Git status agrees. Two test files, gone.
+
+4
+00:00:09,500 --> 00:00:14,500
+There were three. The third was never
+committed. Git can't return it.
+
+5
+00:00:14,500 --> 00:00:17,500
+But rewindagent recorded all fourteen
+steps.
+
+6
+00:00:17,500 --> 00:00:20,500
+Step twelve was the last good one.
+
+7
+00:00:20,500 --> 00:00:22,500
+So rewind to it.
+
+8
+00:00:22,500 --> 00:00:26,500
+Four files back: all three tests and the
+config.
+
+9
+00:00:26,500 --> 00:00:31,000
+And the rewind is step fifteen. You can
+undo the undo.
+
+10
+00:00:31,000 --> 00:00:35,000
+The first twelve steps stay. So does the
+new test.
+
+11
+00:00:35,000 --> 00:00:41,000
+Every tool call goes into a hash-chained
+log. Edit one record and verify names it.
+
+12
+00:00:41,000 --> 00:00:45,500
+Before every edit, the hook copies the
+file as it is.
+
+13
+00:00:45,500 --> 00:00:51,100
+Around every Bash command it saves first,
+scans after. So step thirteen kept three
+
+14
+00:00:51,100 --> 00:00:51,500
+copies.
+
+15
+00:00:51,500 --> 00:00:57,000
+rewindagent install adds the Claude Code
+hook. It has run in real sessions.
+
+16
+00:00:57,000 --> 00:01:01,800
+Codex and Cursor: built from the vendors'
+hook documentation, tested with the
+
+17
+00:01:01,800 --> 00:01:05,000
+documented payloads. Not yet in a live
+session.
+
+18
+00:01:05,000 --> 00:01:10,281
+Files over twenty megabytes aren't copied.
+Over twenty thousand files, no scan, and
+
+19
+00:01:10,281 --> 00:01:11,500
+rewind says so.
+
+20
+00:01:11,500 --> 00:01:16,000
+Export it as one HTML page. Find it later
+with sessions.
+
+21
+00:01:16,000 --> 00:01:21,000
+Apache-2.0, standard library only. Not on
+PyPI yet: install from the repository.
+
+22
+00:01:21,000 --> 00:01:25,000
+A paid Cloud tier is planned. Not built,
+not priced.
+
+23
+00:01:25,000 --> 00:01:29,500
+Your editor has had undo for decades. Now
+your agent does.

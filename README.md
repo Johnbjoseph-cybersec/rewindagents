@@ -229,6 +229,10 @@ by `.github/workflows/pages.yml`. The pages are built by `brand/site/build.py` f
 the clip's session, and `tests/test_site.py` fails if a committed page differs from a fresh build. The site's
 address lives in one place, `brand/site/config.json`.
 
+`brand/vsl/` holds the scripts and captions of the launch videos, rendered by `brand/vsl/build.py` from
+`brand/vsl/beats.json`; every command and terminal line in them is one of this README's or one the clip's session
+printed, and `tests/test_vsl.py` checks that. The videos themselves are not made yet.
+
 ## Tests
 
 ```sh

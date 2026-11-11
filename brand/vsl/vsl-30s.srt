@@ -1,0 +1,36 @@
+1
+00:00:00,000 --> 00:00:03,000
+Step thirteen. The agent deletes your
+tests.
+
+2
+00:00:03,000 --> 00:00:06,000
+Step fourteen. It overwrites the config.
+
+3
+00:00:06,000 --> 00:00:10,500
+rewindagent replay lists every step.
+Twelve was the last good one.
+
+4
+00:00:10,500 --> 00:00:13,000
+So rewind to twelve.
+
+5
+00:00:13,000 --> 00:00:16,500
+Four files back. The tests, and the
+config.
+
+6
+00:00:16,500 --> 00:00:19,500
+And the rewind itself can be undone.
+
+7
+00:00:19,500 --> 00:00:24,500
+Install it from the repository, then run
+rewindagent install in your project.
+
+8
+00:00:24,500 --> 00:00:29,000
+Your editor has had undo for decades. Now
+your agent does.

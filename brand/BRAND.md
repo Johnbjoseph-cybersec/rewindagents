@@ -188,6 +188,26 @@ one-line change there plus a redirect.
 - Look at it before judging it: `bash ~/team-agents/fire/bin/render_html.sh brand/site/index.html 1440 <height> out.png`
   renders a page at 1440 and, through an iframe, at 390.
 
+## VSL scripts (RB4a)
+
+brand/vsl/beats.json is the one source for the three launch videos (vsl-90s, vsl-30s, vsl-15s-vertical): per
+beat the time, the narration, the lines on screen, the shot and what backs it. brand/vsl/build.py renders the
+scripts (brand/vsl/<name>.md) and the captions (brand/vsl/<name>.srt) from it; edit the JSON, never the outputs.
+The videos themselves (voice, music, motion) are not made yet; the renders are the next brand task, and they are
+judged on full-resolution frames by an independent reviewer, never by the builder.
+
+- Nothing on screen is typed from memory: every command is a line of an sh block of the README or one of the four
+  commands of the recorded demo session, and every terminal line is one that session printed
+  (brand/demo/manifest.json, replayed by tests/test_demo.py). Every number is a limit of the package or a number
+  that session printed. tests/test_vsl.py checks each one.
+- The address is `{site_url}` and `{repo_url}` in every script and caption, substituted from brand/site/config.json
+  when the videos are rendered.
+- Every video ends on the same end card: the name, the one-line promise, the address, the credit line.
+- Narration at most 2.6 words a second per beat, beats between 1.5 and 9 seconds, captions in two lines of 42
+  characters, built from the narration word for word.
+- The claims are checked by claim-verifier, not by the writer or the builder, into brand/vsl/claims.json; the
+  review carries the SHA-256 of the beats it read, and the tests fail if the beats change after it.
+
 ## Logo direction brief (from RB1)
 
 Concept: a **playhead on a step ruler**. A single vertical line (the playhead) crossing a row of evenly spaced
