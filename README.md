@@ -3,10 +3,40 @@
 Ctrl+Z for AI coding agents: record, replay and rewind. Every tool call your coding agent makes goes into a
 tamper-evident, hash-chained log you can verify later.
 
-**Status: v0.0.1, pre-release.** Only the recorder and its CLI exist today. The Claude Code hook,
-file checkpoints, replay and rewind are planned; they are listed under Roadmap below and are not built yet.
+**Status: v0.0.2, pre-release.** The recorder, its CLI and a Claude Code hook that records every call and
+checkpoints files exist today. Replay and rewind are planned; they are listed under Roadmap below and are
+not built yet, so a checkpoint can be saved but there is no command to restore it yet.
 
-## What works now
+## Claude Code hook
+
+There is no pip package yet. From a clone:
+
+```sh
+git clone https://github.com/Johnbjoseph-cybersec/rewindagent
+export PYTHONPATH="$PWD/rewindagent/src"
+cd /path/to/your/project
+python3 -m rewindagent install            # adds the hook to .claude/settings.json in this project
+python3 -m rewindagent install --settings ~/.claude/settings.json   # or for every project
+```
+
+`install` keeps everything already in the settings file and does nothing if the hook is already there.
+After that, in each project Claude Code works in:
+
+- every tool call gets a `pre` record (tool and input) and a `post` record (tool and response) in
+  `.rewindagent/log.jsonl`, in one hash chain. Responses longer than 4,000 characters are cut, with the
+  full length noted.
+- before `Write`, `Edit`, `MultiEdit` and `NotebookEdit`, the current bytes of the target file are copied
+  to `.rewindagent/objects/<sha256>` and the hash goes into the `pre` record. A file that does not exist
+  yet is recorded as absent. Files over 20 MB are noted and not copied.
+- `.rewindagent/` gets its own `.gitignore`, so the log and the copies stay out of your commits.
+
+The hook never blocks or changes a call. It prints nothing and always exits 0, even if its input is
+broken or it cannot write; any problem goes to stderr only.
+
+Not checkpointed yet: files changed by `Bash` commands (for example `sed -i` or `rm`). Those calls are
+recorded, but the file contents before them are not saved.
+
+## Recorder
 
 - `Recorder.record(session, tool, args, result)` appends one JSON line per tool call.
 - Each record holds the SHA-256 of the record before it, so editing, deleting or reordering any
@@ -50,7 +80,7 @@ python3 -m rewindagent verify --head <pinned-hash>
 
 ## Roadmap
 
-- Claude Code `PreToolUse` / `PostToolUse` hook that records every call and checkpoints files before each change
+- Checkpoint files changed by `Bash` commands
 - Replay of a recorded session, step by step
 - Rewind the working tree to any recorded step, and branch from it
 

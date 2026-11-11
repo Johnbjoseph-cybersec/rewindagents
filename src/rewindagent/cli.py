@@ -1,4 +1,4 @@
-"""rewindagent command line: record, verify, head, show."""
+"""rewindagent command line: record, verify, head, show, hook, install."""
 from __future__ import annotations
 
 import argparse
@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import log
+from . import hook, log
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -21,8 +21,17 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("head", help="print the current head hash")
     s = sub.add_parser("show", help="print recorded calls")
     s.add_argument("--session")
+    sub.add_parser("hook", help="Claude Code hook entry point (reads the hook JSON on stdin; never blocks)")
+    i = sub.add_parser("install", help="add the hook to a Claude Code settings file")
+    i.add_argument("--settings", default=".claude/settings.json", help="settings file (default: %(default)s)")
 
     a = ap.parse_args(argv)
+    if a.cmd == "hook":
+        return hook.run()
+    if a.cmd == "install":
+        changed = hook.install(a.settings)
+        print(f"{'installed in' if changed else 'already installed in'} {a.settings}")
+        return 0
     if a.cmd in ("verify", "show") and not Path(a.log).exists():
         print(f"rewindagent: no log at {a.log}", file=sys.stderr)
         return 2
@@ -47,7 +56,8 @@ def main(argv: list[str] | None = None) -> int:
         print(log.head(a.log))
         return 0
     for rec in log.read(a.log, a.session):
-        print(f"{rec['seq']:>5}  {rec['session']}  {rec['tool']}  {json.dumps(rec['args'], ensure_ascii=False)}")
+        print(f"{rec['seq']:>5}  {rec['session']}  {rec.get('event', '')}  {rec['tool']}  "
+              f"{json.dumps(rec['args'], ensure_ascii=False)}")
     return 0
 
 
