@@ -252,17 +252,22 @@ class TestSite(unittest.TestCase):
         # every `$ command` on the pages is a README line (with any trailing comment put back)
         for p in PAGES:
             html = read(p)
-            for block in re.findall(r'<pre class="term"><code>(.*?)</code></pre>', html, re.S):
+            beat_commands = {b["command"] for b in json.loads(read(os.path.join("demo", "manifest.json"), BRAND))["beats"]}
+            for block in re.findall(r'<pre class="term[^"]*"><code>(.*?)</code></pre>', html, re.S):
                 rows = block.split("\n")
                 for i, row in enumerate(rows):
-                    if not row.startswith('<span class="p">$ </span>'):
+                    if not row.startswith('<span class="l"><span class="p">$ </span>'):
                         continue
                     cmd = unesc(re.sub(r"<[^>]+>", "", row)[2:])
-                    if cmd in {b["command"] for b in json.loads(read(os.path.join("demo", "manifest.json"), BRAND))["beats"]}:
+                    if cmd in beat_commands or cmd == "rewindagent --version":
                         continue
-                    comment = unesc(re.sub(r"<[^>]+>", "", rows[i - 1])) if i and 'class="c"' in rows[i - 1] else ""
-                    ok = cmd in readme_lines or any(ln.startswith(cmd) and ln.endswith(comment) for ln in readme_lines)
+                    # the README's trailing comment sits on the row before (describes) or after (alternative)
+                    near = [unesc(re.sub(r"<[^>]+>", "", rows[j])) for j in (i - 1, i + 1)
+                            if 0 <= j < len(rows) and 'class="c"' in rows[j]]
+                    ok = cmd in readme_lines or any(ln.startswith(cmd) and ln.endswith(c) for ln in readme_lines for c in near)
                     self.assertTrue(ok, "%s: command not in README: %r" % (p, cmd))
+        # the one output line not from the session is the version line, and it is what the binary prints
+        self.assertIn("rewindagent %s" % rewindagent.__version__, text_of("docs/index.html"))
 
     def test_planned_items_are_brand_md_phrases_and_nothing_is_for_sale(self):
         build = load_build()
@@ -275,6 +280,7 @@ class TestSite(unittest.TestCase):
         pricing = read("pricing.html")
         self.assertIn(cfg["waitlist_url"].replace("&", "&amp;"), pricing)
         self.assertNotIn("Buy Cloud", pricing)
+        self.assertIn("waitlist", read("README.md", ROOT).lower(), "the pricing page's waitlist is backed by the README")
         for p in PAGES:
             text = text_of(p)
             self.assertIn(build.CREDIT, text, p)

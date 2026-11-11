@@ -183,6 +183,8 @@ rewindagent verify --head <pinned-hash>
 
 - Publish on PyPI
 - Hooks for Codex and Cursor
+- A paid Cloud tier (cloud sync, shareable replay links, long retention, session search): planned, not built,
+  not priced. The waitlist is a GitHub issue on this repository with the label `waitlist`; say what you would pay for.
 
 ## Site
 

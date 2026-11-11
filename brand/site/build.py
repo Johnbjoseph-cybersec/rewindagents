@@ -4,8 +4,8 @@ Nothing on the pages is typed from memory:
 - every command block is a ```sh block of README.md, found by its section heading;
 - every number (version, the 4,000-character result cut, the 20 MB file limit, the 20,000-file scan limit, the
   diff limits, the step numbers in the clip) is read from the package or from brand/demo/scenario.py;
-- the terminal panel in the hero shows lines of brand/demo/manifest.json, the record of the real session behind
-  brand/demo.gif, which tests/test_demo.py replays byte for byte;
+- the terminal panels quote brand/demo/manifest.json, the record of the real session behind brand/demo.gif,
+  which tests/test_demo.py replays byte for byte;
 - everything called planned on the pricing page is a phrase of brand/BRAND.md;
 - the only address the site knows is site_url in config.json. checkout_url is null until a Polar product exists.
 
@@ -14,6 +14,8 @@ tests/test_site.py rebuilds the pages into a temp folder and fails if the commit
 
   python3 brand/site/build.py            -> writes the pages, manifest.json and assets/ (git-ignored) in brand/site/
   python3 brand/site/build.py fonts      -> copies the brand WOFF2 files + licences from .brandcache into fonts/
+  python3 brand/site/build.py open DIR   -> a copy of the site in DIR (outside brand/site, e.g. build/site-open) plus
+                                            DIR/index-open.html with every answer open, for review renders only
 """
 import html
 import json
@@ -45,7 +47,7 @@ FONTS = {"bricolage-grotesque": (700, 800), "hanken-grotesk": (400, 600), "commi
 C = {"Leader": "#F2F4F1", "Reel": "#121412", "Spool": "#1C201D", "Tape": "#55605A",
      "Record": "#B82A16", "Rewind": "#FF7A59", "Playhead": "#B9C2BB", "Rule": "#838C86"}
 # The paid tier, as BRAND.md puts it. Each phrase must appear in BRAND.md (tests/test_site.py).
-PLANNED = [("cloud sync", "Cloud sync of session history across your machines and your team"),
+PLANNED = [("cloud sync", "Cloud sync of session history across your machines"),
            ("shareable replay links", "Shareable replay links: the export page, hosted, for a code review or a bug report"),
            ("long retention", "Long retention of sessions"),
            ("session search", "Session search across all of them")]
@@ -129,42 +131,51 @@ def nowrap_urls(text):
 
 
 def term(rows):
-    """Rows of a terminal panel as HTML: the prompt in Playhead, comments in Playhead, hit rows in Rewind."""
+    """Rows of a terminal panel as HTML, one block per row (a wrapped row gets a hanging indent): the prompt and
+    comments in Playhead, hit rows in Rewind."""
     out = []
     for kind, text in rows:
         t = nowrap_urls(text)
         if kind == "cmd":
-            out.append('<span class="p">$ </span>%s' % t)
+            out.append('<span class="l"><span class="p">$ </span>%s</span>' % t)
         elif kind in ("gap", "c"):
-            out.append('<span class="c">%s</span>' % t)
+            out.append('<span class="l"><span class="c">%s</span></span>' % t)
         elif kind == "hit":
-            out.append('<span class="hit">%s</span>' % t)
+            out.append('<span class="l"><span class="hit">%s</span></span>' % t)
         else:
-            out.append(t)
+            out.append('<span class="l">%s</span>' % t)
     return "\n".join(out)
+
+
+def panel(rows, cls=""):
+    return '<pre class="term%s"><code>%s</code></pre>' % (" " + cls if cls else "", term(rows))
 
 
 def code(lines):
     """A README sh block as a terminal panel. A trailing `# comment` moves to its own line (the README aligns
-    comments with spaces, which would force a wide block on a phone). Words are untouched."""
+    comments with spaces, which would force a wide block on a phone): before the command when it describes it,
+    after the command when it offers an alternative (`# or: ...`). Words are untouched."""
     rows = []
     for line in lines:
         if not line.strip():
             continue
         m = re.match(r"^(.*?)(?:\s+(# .*))?$", line)
         body, comment = m.group(1), m.group(2)
-        if comment:
-            rows.append(("c", comment))
-        rows.append(("cmd", body))
-    return '<pre class="term"><code>%s</code></pre>' % term(rows)
+        if comment and comment.startswith("# or"):
+            rows += [("cmd", body), ("c", comment)]
+        elif comment:
+            rows += [("c", comment), ("cmd", body)]
+        else:
+            rows.append(("cmd", body))
+    return panel(rows)
 
 
-def beat_html(b):
-    """One command of the clip as a terminal panel: its caption, the command, every line it printed."""
+def beat_rows(b, lit=True):
+    """One command of the clip: its caption, the command, every line it printed; hit rows lit only if `lit`."""
     rows = [("c", b["caption"]), ("cmd", b["command"])]
     for i, ln in enumerate(b["output"].rstrip("\n").split("\n")):
-        rows.append(("hit" if i in b["accent_rows"] else "out", ln))
-    return '<pre class="term"><code>%s</code></pre>' % term(rows)
+        rows.append(("hit" if lit and i in b["accent_rows"] else "out", ln))
+    return rows
 
 
 def ruler(at, n=7, w=84, h=18):
@@ -237,7 +248,7 @@ def page(cfg, path, title, description, body, current):
 <footer class="foot"><div class="wrap">
 <a class="brand" href="%(rel)sindex.html" aria-label="%(name)s home"><img src="%(rel)sassets/logo-wordmark-reverse.svg" alt="%(name)s" width="178" height="26"></a>
 <span class="credit">%(credit)s</span>
-<nav aria-label="Footer"><a href="%(rel)sindex.html">Home</a><a href="%(rel)sdocs/">Docs</a><a href="%(rel)spricing.html">Pricing</a><a href="%(repo)s">GitHub</a><a href="%(repo)s/blob/%(branch)s/LICENSE">%(licence)s licence</a></nav>
+<nav aria-label="Footer"><a href="%(rel)sdocs/">Docs</a><a href="%(rel)spricing.html">Pricing</a><a href="%(repo)s">GitHub</a><a href="%(repo)s/blob/%(branch)s/LICENSE">%(licence)s licence</a></nav>
 <span class="note">This site is static: no scripts, no cookies, no analytics.</span>
 </div></footer>
 </body>
@@ -258,9 +269,9 @@ def plans(cfg, rel):
     if cfg.get("checkout_url"):
         buy, status = '<a class="btn btn-primary" href="%s">Buy Cloud</a>' % e(cfg["checkout_url"]), "Checkout is open."
     else:
-        buy = '<a class="btn btn-ghost" href="%s">Join the waitlist (a GitHub issue)</a>' % e(cfg["waitlist_url"])
-        status = ("Not for sale yet. No price has been set, so none is shown. The waitlist is a GitHub issue: say "
-                  "what you would pay for, and that decides what gets built first.")
+        buy = '<a class="btn btn-ghost" href="%s">Join the waitlist</a>' % e(cfg["waitlist_url"])
+        status = ("Not for sale yet. No price has been set, so none is shown. If you want it, open the waitlist issue "
+                  "on GitHub and say what you would pay for.")
     return ('<div class="plans">'
             '<section class="plan" aria-labelledby="plan-oss"><h3 id="plan-oss">Open source <span class="pill">%s</span></h3>'
             '<div class="price">Free</div><p class="pricenote">Everything the tool does today.</p><ul>%s</ul>'
@@ -270,7 +281,12 @@ def plans(cfg, rel):
             % (LICENCE, items(has), rel, e(status), items([("planned", e(t)) for _, t in PLANNED]), buy))
 
 
-def index_html(cfg, f, hero):
+def faq_html(items, open_all=False):
+    return '<div class="faq">%s</div>' % "".join(
+        '<details%s><summary>%s</summary><p>%s</p></details>' % (" open" if open_all else "", e(q), a) for q, a in items)
+
+
+def index_html(cfg, f, hero, open_all=False):
     rel = ""
     b = f["blocks"]
     n, good = f["steps"], f["good_step"]
@@ -280,36 +296,47 @@ def index_html(cfg, f, hero):
     hero_s = """
 <section class="hero" aria-labelledby="h1"><div class="wrap">
 <div class="hero-text">
-<p class="eyebrow"><b>v%(v)s</b> &middot; %(licence)s &middot; Claude Code hook today, Codex and Cursor planned</p>
+<p class="eyebrow"><b>v%(v)s</b> &middot; %(licence)s &middot; a Claude Code hook</p>
 <h1 id="h1">%(promise)s</h1>
-<p class="lede">rewindagent records every tool call your coding agent makes and saves a copy of each file before the agent changes it. Replay the session step by step. Rewind the working tree to any step, or keep the current files as a branch and then rewind. The agent works at full speed; nothing it does is final.</p>
+<p class="lede">rewindagent records every tool call your coding agent makes and saves a copy of each file before the agent changes it. Replay the session step by step. Rewind the working tree to any step, or keep the current files as a branch and then rewind. The agent works at full speed, and every step it takes can be taken back, within the <a href="#limits">limits</a> below.</p>
 <div class="cta"><a class="btn btn-primary" href="#install">Install</a><a class="btn btn-ghost" href="docs/">Read the docs</a></div>
-<ul class="facts"><li>standard library only</li><li>no network, no account</li><li>never stops or changes a call</li><li>%(licence)s</li></ul>
 </div>
 <div class="hero-panel">
-<div class="panel"><div class="panel-head"><span>a session of %(n)d steps; the last %(wreck)d wrecked the repo</span></div><pre class="term"><code>%(hero)s</code></pre></div>
+<div class="panel"><div class="panel-head"><span>a session of %(n)d steps; the last %(wreck)d wrecked the repo</span></div>%(hero)s</div>
 <p class="caption">Lines from the session behind the clip below. The recorder, the four files and the step numbers are real; a test replays the session and fails if a line changes.</p>
+<ul class="facts"><li>standard library only</li><li>no network, no account</li><li>never stops or changes a call</li><li>%(licence)s</li></ul>
 </div>
 </div></section>
-""" % {"v": e(f["version"]), "licence": LICENCE, "promise": PROMISE, "n": n, "wreck": f["wreck_steps"], "hero": term(hero)}
+""" % {"v": e(f["version"]), "licence": LICENCE, "promise": PROMISE, "n": n, "wreck": f["wreck_steps"], "hero": panel(hero)}
 
+    right = beat_rows(f["beats"][1]) + beat_rows(f["beats"][2]) + beat_rows(f["beats"][3])
     demo = """
 <section class="sec" id="demo" aria-labelledby="h-demo"><div class="wrap">
 %(label)s
 <div class="head"><h2 id="h-demo">A wrecked repo, put back in one command.</h2>
 <p class="lede">An agent works in a small project for %(n)d steps. Steps %(s13)d and %(s14)d delete the tests and overwrite the config. <code>rewindagent rewind %(good)d</code> puts the files back the way they were right after step %(good)d. The first %(good)d steps stay.</p></div>
-<div class="demo-grid">
 <figure class="clip"><img src="assets/demo.gif" alt="A terminal: rewindagent replay lists %(n)d agent steps, the last two delete the tests and overwrite the config; git status shows the damage; rewindagent rewind %(good)d restores four files; git status shows the tests back" width="%(gw)d" height="%(gh)d" loading="lazy">
 <figcaption>%(secs)s seconds, %(frames)d frames, looping. Built from the real session, not drawn: <code>brand/demo/build.py</code> runs the steps through the hook in a temporary project and draws every frame from what the commands printed.</figcaption></figure>
-<div class="clip-text"><p class="small">The same session as text. The first command: every step the agent took, the last two in Rewind.</p>%(beat0)s</div>
+<div class="session">
+<div><p class="small">The session as text. First, every step the agent took.</p>%(left)s</div>
+<div><p class="small">Then the damage, the rewind, and the project after it.</p>%(right)s</div>
 </div>
-<p class="small beats-note">Then the damage, the rewind, and the project after it. Every line is what the command printed.</p>
-<div class="beats">%(beat1)s%(beat2)s%(beat3)s</div>
 </div></section>
 """ % {"label": label(1, "The clip"), "n": n, "good": good, "s13": n - 1, "s14": n, "gw": f["gif"]["width"],
        "gh": f["gif"]["height"], "secs": ("%.1f" % f["gif"]["seconds"]).rstrip("0").rstrip("."), "frames": f["gif"]["frames"],
-       "beat0": beat_html(f["beats"][0]), "beat1": beat_html(f["beats"][1]), "beat2": beat_html(f["beats"][2]),
-       "beat3": beat_html(f["beats"][3])}
+       "left": panel(beat_rows(f["beats"][0], lit=False), "fill"), "right": panel(right, "fill")}
+
+    install = """
+<section class="sec" id="install" aria-labelledby="h-install"><div class="wrap">
+%(label)s
+<div class="head"><h2 id="h-install">Install, then add the hook to a project.</h2>
+<p class="lede">Python %(py)s. No dependencies beyond the standard library. Tested on %(tested)s. Not on PyPI yet, so install from the repository. The <a href="docs/">docs</a> walk through a first session.</p></div>
+<div class="cols">
+<div><h3>Install</h3>%(install)s<p>Or from a clone, <code>pip install .</code>. Without installing, <code>PYTHONPATH=src python3 -m rewindagent</code> runs the same CLI from a clone.</p></div>
+<div><h3>Add the hook</h3>%(hook)s<p><code>install</code> keeps everything already in the settings file and does nothing if the hook is already there. <code>.rewindagent/</code> gets its own <code>.gitignore</code>, so the log and the copies stay out of your commits.</p></div>
+</div>
+</div></section>
+""" % {"label": label(2, "Install"), "py": e(f["py_req"]), "tested": e(f["tested_on"]), "install": code(b["install"]), "hook": code(b["hook"])}
 
     how = """
 <section class="sec" id="how" aria-labelledby="h-how"><div class="wrap">
@@ -322,7 +349,7 @@ def index_html(cfg, f, hero):
 <li>%(r3)s<h3>Rewind</h3><p><code>rewind N</code> puts back every file a later step changed and deletes the files later steps created. It first checks the hash chain and the hash of every stored copy; if the chain is broken it changes nothing. A rewind saves the current files and records itself as a new step, so a rewind is undone with another rewind.</p></li>
 </ol>
 </div></section>
-""" % {"label": label(2, "How it works"), "r1": ruler(2, n=5, w=60, h=16), "r2": ruler(3, n=5, w=60, h=16), "r3": ruler(4, n=5, w=60, h=16)}
+""" % {"label": label(3, "How it works"), "r1": ruler(2, n=5, w=60, h=16), "r2": ruler(3, n=5, w=60, h=16), "r3": ruler(4, n=5, w=60, h=16)}
 
     limits = """
 <section class="sec" id="limits" aria-labelledby="h-limits"><div class="wrap">
@@ -338,7 +365,7 @@ def index_html(cfg, f, hero):
 <li><span class="k">the end of the log</span><span>A hash chain proves the records are unchanged relative to each other. It cannot tell that records were cut off the end or that the whole file was rewritten and re-hashed. Pin the head hash somewhere the agent cannot write and check against it with <code>verify --head</code>.</span></li>
 </ul>
 </div></section>
-""" % {"label": label(3, "Limits"), "chars": "{:,}".format(f["result_chars"]), "mb": f["file_mb"],
+""" % {"label": label(4, "Limits"), "chars": "{:,}".format(f["result_chars"]), "mb": f["file_mb"],
        "files": "{:,}".format(f["scan_files"]), "skip": ", ".join("<code>%s</code>" % e(d) for d in f["skip_dirs"])}
 
     commands = """
@@ -346,33 +373,20 @@ def index_html(cfg, f, hero):
 %(label)s
 <div class="head"><h2 id="h-cmd">Six commands. All of them local.</h2>
 <p class="lede">Run them from the project directory, the one holding <code>.rewindagent/</code>. They work on the latest session unless you pass <code>--session ID</code>.</p></div>
-<div class="cols">
-<div><h3>Replay, rewind, branch</h3>%(replay)s<p><code>branch N --name X</code> keeps the current files and, in a git repository, commits the whole working tree to <code>rewindagent/X</code> through a temporary index, so your <code>HEAD</code>, index and current branch stay as they were.</p></div>
-<div><h3>Export a replay</h3>%(export)s<p>One HTML file with every step, its input and result, and for every file a step touched, the change that step made as a unified diff. Inline CSS only, no scripts, nothing fetched, the project&#x27;s path not in the page. A file over %(kb)d KB is described, not diffed; a diff longer than %(lines)d lines is cut, with the count left out.</p></div>
-<div><h3>Find a session</h3>%(sessions)s<p>One line per session: id, first and last time, steps (with how many are rewinds), files touched. The latest session is marked. <code>--grep</code> keeps the sessions with a step whose command, file or input mentions the text, and lists those steps with their numbers.</p></div>
-<div><h3>Verify the chain</h3>%(verify)s<p>Checks every record against the one before it and names the first bad one. With <code>--head</code>, also catches records cut from the end.</p></div>
+<div class="cmdlist">
+<div class="cmdrow"><div><h3>Replay, rewind, branch</h3><p><code>branch N --name X</code> keeps the current files and, in a git repository, commits the whole working tree to <code>rewindagent/X</code> through a temporary index, so your <code>HEAD</code>, index and current branch stay as they were.</p></div>%(replay)s</div>
+<div class="cmdrow"><div><h3>Export a replay</h3><p>One HTML file with every step, its input and result, and for every file a step touched, the change that step made as a unified diff. Inline CSS only, no scripts, nothing fetched, the project&#x27;s path not in the page. A file over %(kb)d KB is described, not diffed; a diff longer than %(lines)d lines is cut, with the count left out.</p></div>%(export)s</div>
+<div class="cmdrow"><div><h3>Find a session</h3><p>One line per session: id, first and last time, steps (with how many are rewinds), files touched. The latest session is marked. <code>--grep</code> keeps the sessions with a step whose command, file or input mentions the text, and lists those steps with their numbers.</p></div>%(sessions)s</div>
+<div class="cmdrow"><div><h3>Verify the chain</h3><p>Checks every record against the one before it and names the first bad one. With <code>--head</code>, also catches records cut from the end.</p></div>%(verify)s</div>
 </div>
 </div></section>
-""" % {"label": label(4, "Commands"), "replay": code(b["replay"]), "export": code(b["export"]), "sessions": code(b["sessions"]),
+""" % {"label": label(5, "Commands"), "replay": code(b["replay"]), "export": code(b["export"]), "sessions": code(b["sessions"]),
        "verify": code(b["verify"]), "kb": f["diff_kb"], "lines": f["diff_lines"]}
-
-    install = """
-<section class="sec" id="install" aria-labelledby="h-install"><div class="wrap">
-%(label)s
-<div class="head"><h2 id="h-install">Install, then add the hook to a project.</h2>
-<p class="lede">Python %(py)s. No dependencies beyond the standard library. Tested on %(tested)s. Not on PyPI yet, so install from the repository.</p></div>
-<div class="cols">
-<div><h3>Install</h3>%(install)s<p>Or from a clone, <code>pip install .</code>. Without installing, <code>PYTHONPATH=src python3 -m rewindagent</code> runs the same CLI from a clone.</p></div>
-<div><h3>Add the hook</h3>%(hook)s<p><code>install</code> keeps everything already in the settings file and does nothing if the hook is already there. <code>.rewindagent/</code> gets its own <code>.gitignore</code>, so the log and the copies stay out of your commits.</p></div>
-</div>
-<div class="cta"><a class="btn btn-ghost" href="docs/">Getting started, step by step</a></div>
-</div></section>
-""" % {"label": label(5, "Install"), "py": e(f["py_req"]), "tested": e(f["tested_on"]), "install": code(b["install"]), "hook": code(b["hook"])}
 
     pricing = """
 <section class="sec" id="pricing" aria-labelledby="h-pricing"><div class="wrap">
 %(label)s
-<div class="head"><h2 id="h-pricing">The tool is free. Cloud is planned, and says so.</h2>
+<div class="head"><h2 id="h-pricing">The tool is free. Cloud is planned.</h2>
 <p class="lede">Everything that exists is open source under %(licence)s. A paid tier may come later; nothing is sold before it exists.</p></div>
 %(plans)s
 <p class="small" style="margin-top:22px">Details on the <a href="pricing.html">pricing page</a>.</p>
@@ -396,46 +410,65 @@ def index_html(cfg, f, hero):
     faq = """
 <section class="sec" id="faq" aria-labelledby="h-faq"><div class="wrap">
 %(label)s
-<div class="head"><h2 id="h-faq">Plain answers.</h2></div>
-<div class="faq">%(items)s</div>
+<div class="head"><h2 id="h-faq">Questions.</h2></div>
+%(items)s
 </div></section>
-""" % {"label": label(7, "Questions"), "items": "".join('<details><summary>%s</summary><p>%s</p></details>' % (e(q), a) for q, a in faq_items)}
+""" % {"label": label(7, "Questions"), "items": faq_html(faq_items, open_all)}
 
-    body = hero_s + demo + how + limits + commands + install + pricing + faq
+    closing = """
+<section class="sec close" aria-labelledby="h-close"><div class="wrap">
+<div class="closegrid"><div><h2 id="h-close">Install it, add the hook, carry on.</h2>
+<div class="cta"><a class="btn btn-primary" href="#install">Install</a><a class="btn btn-ghost" href="docs/">Read the docs</a></div></div>
+%(install)s</div>
+</div></section>
+""" % {"install": code(b["install"][:1])}
+
+    body = hero_s + demo + install + how + limits + commands + pricing + faq + closing
     return page(cfg, "index.html", "%s: %s" % (NAME, PROMISE.rstrip(".")), desc, body, "home")
 
 
 def pricing_html(cfg, f):
     rel = ""
     desc = "rewindagent is free under %s. A Cloud tier is planned and not yet priced; the waitlist is a GitHub issue." % LICENCE
+    items = [
+        ("Will the open-source tool stay free?",
+         "The code you have is %s, and that licence cannot be withdrawn from it. Nothing that exists today is behind a paywall: the recorder, the hook, replay, rewind, branch, export and sessions are all in the open-source tier." % LICENCE),
+        ("What would Cloud add?",
+         "Things that need a service rather than a command: the same session history on every machine you use, the export page hosted at a link you can hand to a reviewer, sessions kept for longer than a laptop keeps them, and search across all of them. None of it is built yet. <code>export</code> and <code>sessions</code> are the local halves and are free."),
+        ("How does the waitlist work?",
+         "It is a GitHub issue on the repository with the label <code>waitlist</code>, as the README says. Say what you would pay for. There is no form, no email list and no tracking on this site."),
+        ("Can my company get an invoice or a quote today?",
+         "No. Nothing is for sale yet. When Cloud exists, this page will carry the price and a checkout link, and the link will live in one config key until then."),
+    ]
     body = """
 <section class="sec first" aria-labelledby="h1"><div class="wrap">
 %(label)s
 <div class="head"><h1 id="h1" class="h1-small">The tool is free. Cloud is planned.</h1>
-<p class="lede">What exists is open source. What is planned is marked planned, has no price and is not for sale.</p></div>
+<p class="lede">What exists is open source. What is planned has no price and is not for sale.</p></div>
 %(plans)s
 </div></section>
 <section class="sec" aria-labelledby="h-q"><div class="wrap">
 %(label2)s
 <div class="head"><h2 id="h-q">Before you ask.</h2></div>
-<div class="faq">
-<details><summary>Will the open-source tool stay free?</summary><p>The code you have is %(licence)s, and that licence cannot be withdrawn from it. Nothing that exists today is behind a paywall: the recorder, the hook, replay, rewind, branch, export and sessions are all in the open-source tier.</p></details>
-<details><summary>What would Cloud add?</summary><p>Things that need a service rather than a command: the same session history on every machine you and your team use, the export page hosted at a link you can hand to a reviewer, sessions kept for longer than a laptop keeps them, and search across all of them. None of it is built yet. <code>export</code> and <code>sessions</code> are the local halves and are free.</p></details>
-<details><summary>How does the waitlist work?</summary><p>It is a GitHub issue on the repository with the label <code>waitlist</code>. Say what you would pay for. There is no form, no email list and no tracking on this site.</p></details>
-<details><summary>Can my company get an invoice or a quote today?</summary><p>No. Nothing is for sale yet. When Cloud exists, this page will carry the price and a checkout link, and the link will live in one config key until then.</p></details>
-</div>
+%(faq)s
 </div></section>
-""" % {"label": label(1, "Pricing"), "plans": plans(cfg, rel), "label2": label(2, "Questions about paying"), "licence": LICENCE}
+""" % {"label": label(1, "Pricing"), "plans": plans(cfg, rel), "label2": label(2, "Questions about paying"),
+       "faq": faq_html(items, open_all=True)}
     return page(cfg, "pricing.html", "Pricing: %s" % NAME, desc, body, "pricing")
 
 
 def docs_html(cfg, f):
     rel = "../"
     b = f["blocks"]
-    desc = "Getting started with rewindagent: install, add the Claude Code hook, replay a session, rewind, branch, export, find a session, verify the log."
-    toc = [("install", "Install"), ("hook", "Add the hook"), ("recorded", "What gets recorded"), ("replay", "Replay and rewind"),
-           ("branch", "Branch"), ("export", "Export"), ("sessions", "Find a session"), ("verify", "Verify"),
-           ("limits", "Limits"), ("remove", "Remove it")]
+    desc = "Getting started with rewindagent: install, add the Claude Code hook, a first session, replay, rewind, branch, export, find a session, verify the log."
+    toc = [("install", "Install"), ("hook", "Add the hook"), ("first", "A first session"), ("recorded", "What gets recorded"),
+           ("replay", "Replay and rewind"), ("branch", "Branch"), ("export", "Export"), ("sessions", "Find a session"),
+           ("verify", "Verify"), ("limits", "Limits"), ("remove", "Remove it")]
+    first = "".join('<li><p>%s</p>%s</li>' % (text, panel(beat_rows(bt, lit=(i == 2)))) for i, (text, bt) in enumerate(zip((
+        "Ask Claude Code for anything in a project with the hook installed; here, %d steps that add a timeout to a small service, then two steps that delete the tests and overwrite the config. <code>replay</code> lists every step with its number." % f["good_step"],
+        "git shows the damage: three files changed, two deleted.",
+        "Rewind to the last good step. Every restored file is named, and the rewind is itself a step, so the last line says how to undo it.",
+        "git shows the first %d steps kept and the tests back." % f["good_step"]), f["beats"])))
     body = """
 <section class="sec first" aria-labelledby="h1"><div class="wrap">
 %(label)s
@@ -447,11 +480,17 @@ def docs_html(cfg, f):
 <h2 id="install">Install</h2>
 <p>Python %(py)s, standard library only. Tested on %(tested)s. Not on PyPI yet, so install from the repository:</p>
 %(install)s
+<p>The last command prints the version it installed:</p>
+%(version)s
 <p>Or from a clone, <code>pip install .</code>. Without installing, <code>PYTHONPATH=src python3 -m rewindagent</code> runs the same CLI from a clone; then the undo hint says <code>python3 -m rewindagent</code> instead of <code>rewindagent</code>.</p>
 
 <h2 id="hook">Add the hook</h2>
 %(hook)s
 <p><code>install</code> adds a <code>PreToolUse</code> and a <code>PostToolUse</code> hook to the settings file, keeps everything already in it, and does nothing if the hook is already there. The command it writes names the Python that rewindagent was installed into by absolute path, so it runs whether or not a virtualenv is active. To remove the hook, delete those two entries from the settings file.</p>
+
+<h2 id="first">A first session</h2>
+<p>The session behind the clip on the front page, as it ran. Every line below is what the command printed; <code>tests/test_demo.py</code> runs the same session and fails if a line changes.</p>
+<ol class="walk">%(first)s</ol>
 
 <h2 id="recorded">What gets recorded</h2>
 <p>In each project Claude Code works in, with the hook installed:</p>
@@ -467,18 +506,24 @@ def docs_html(cfg, f):
 <p>Run these from the project directory. They work on the latest session unless you pass <code>--session ID</code>.</p>
 %(replay)s
 <p><code>replay</code> prints one line per step: number, tool, file or command, and how many files the step checkpointed. <code>replay --step N</code> shows one step in full. <code>rewind N</code> puts back every file that a step after N changed and deletes the files those steps created; <code>rewind 0</code> undoes the whole session. Before writing anything it checks the hash chain and the SHA-256 of every stored copy: if the chain is broken it changes nothing, and a copy that no longer matches is reported and left as it is.</p>
-<p>A rewind is undoable. It first saves the current bytes of every file it will change and records itself as a new step, then prints <code>undo it with: rewindagent rewind &lt;step&gt; --session &lt;id&gt;</code>. In the clip on the front page, the rewind to step %(good)d of %(n)d becomes step %(n1)d, and undoing it is <code>rewind %(n)d</code>.</p>
+<p>A rewind is undoable. It first saves the current bytes of every file it will change and records itself as a new step, then prints <code>undo it with: rewindagent rewind &lt;step&gt; --session &lt;id&gt;</code>. In the session above, the rewind to step %(good)d of %(n)d became step %(n1)d, and undoing it is <code>rewind %(n)d</code>.</p>
 
 <h2 id="branch">Branch</h2>
 <p><code>branch N --name X</code> does what <code>rewind N</code> does and, in a git repository, first commits the whole current working tree to the branch <code>rewindagent/X</code>. It does this through a temporary index, so your <code>HEAD</code>, index and current branch stay as they were. Outside git, the current files are kept in the log only.</p>
 
 <h2 id="export">Export</h2>
 %(export)s
-<p>One HTML file with the whole session: every step with its tool, input and result, and for every file a step checkpointed, the change that step made as a unified diff (the file before the step against the file after it: its next checkpoint in the session, or the file as it is now). Inline CSS only, no scripts, nothing fetched. Paths are shown relative to the project; where the project lives on disk is not in the page. A file over %(kb)d KB on either side is described, not diffed; a diff longer than %(lines)d lines is cut, with the count of lines left out; binary files show their size before and after. <code>--no-contents</code> drops inputs, results and diffs and keeps the one-line summary of each step. If the hash chain does not verify, the page is still written, with a notice naming the first bad record, and the command exits 1.</p>
+<p>One HTML file with the whole session: every step with its tool, input and result, and for every file a step checkpointed, the change that step made as a unified diff (the file before the step against the file after it: its next checkpoint in the session, or the file as it is now). Inline CSS only, no scripts, nothing fetched. Paths are shown relative to the project; where the project lives on disk is not in the page.</p>
+<ul>
+<li>A file over %(kb)d KB on either side is described, not diffed. A diff longer than %(lines)d lines is cut, with the count of lines left out. Binary files show their size before and after.</li>
+<li><code>--no-contents</code> drops inputs, results and diffs and keeps the one-line summary of each step.</li>
+<li>If the hash chain does not verify, the page is still written, with a notice naming the first bad record, and the command exits 1.</li>
+</ul>
 
 <h2 id="sessions">Find a session</h2>
 %(sessions)s
-<p>One line per session, in the order the sessions first wrote to the log: the session id, the local time of its first and last record, the number of steps (with how many of them are rewinds or branches) and the files it touched; a second line names the first %(show)d files and counts the rest. The session that wrote the last record is marked <code>(latest)</code>. <code>--grep TEXT</code> keeps the sessions with a step whose <code>replay</code> line or checkpointed path contains TEXT, in any case, and lists those steps with their numbers. Exit code 1 if no session matches.</p>
+<p>One line per session, in the order the sessions first wrote to the log: the session id, the local time of its first and last record, the number of steps (with how many of them are rewinds or branches) and the files it touched; a second line names the first %(show)d files and counts the rest. The session that wrote the last record is marked <code>(latest)</code>.</p>
+<p><code>--grep TEXT</code> keeps the sessions with a step whose <code>replay</code> line or checkpointed path contains TEXT, in any case, and lists those steps with their numbers. Exit code 1 if no session matches.</p>
 
 <h2 id="verify">Verify</h2>
 %(verify)s
@@ -500,12 +545,14 @@ def docs_html(cfg, f):
 
 <h2 id="tests">Tests</h2>
 %(tests)s
-<p>That runs against the source tree and skips the tests of the installed command. <code>.fire-test-cmd</code> in the repository holds the full command: it builds a venv, installs the package into it and runs every test, including the ones that drive the installed <code>rewindagent</code> binary, replay the session behind the clip, and rebuild this site byte for byte.</p>
+<p>That runs against the source tree and skips the tests of the installed command. <code>.fire-test-cmd</code> in the repository holds the full command: it builds a venv, installs the package into it and runs every test, including the ones that drive the installed <code>rewindagent</code> binary, replay the session above, and rebuild this site byte for byte.</p>
 </article>
 </div>
 </div></section>
 """ % {"label": label(1, "Docs"), "toc": "".join('<a href="#%s">%s</a>' % (a, t) for a, t in toc), "py": e(f["py_req"]),
-       "tested": e(f["tested_on"]), "install": code(b["install"]), "hook": code(b["hook"]), "chars": "{:,}".format(f["result_chars"]),
+       "tested": e(f["tested_on"]), "install": code(b["install"]),
+       "version": panel([("cmd", "rewindagent --version"), ("out", "rewindagent %s" % f["version"])]),
+       "hook": code(b["hook"]), "first": first, "chars": "{:,}".format(f["result_chars"]),
        "tools": ", ".join("<code>%s</code>" % t for t in f["file_tools"]), "mb": f["file_mb"], "replay": code(b["replay"]),
        "good": f["good_step"], "n": f["steps"], "n1": f["steps"] + 1, "export": code(b["export"]), "kb": f["diff_kb"],
        "lines": f["diff_lines"], "sessions": code(b["sessions"]), "show": f["show_files"], "verify": code(b["verify"]),
@@ -515,12 +562,14 @@ def docs_html(cfg, f):
 
 
 # ---- build ------------------------------------------------------------------------------------------------
-def build(out=None, cfg=None):
+def build(out=None, cfg=None, open_variant=False):
     out = out or HERE
     cfg = cfg or config()
     f = facts()
     hero = hero_rows(f["beats"])
     pages = {"index.html": index_html(cfg, f, hero), "pricing.html": pricing_html(cfg, f), "docs/index.html": docs_html(cfg, f)}
+    if open_variant:        # review material only: the landing page with every answer open; never committed
+        pages["index-open.html"] = index_html(cfg, f, hero, open_all=True)
     for rel, text in pages.items():
         path = os.path.join(out, rel)
         os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -533,7 +582,7 @@ def build(out=None, cfg=None):
     if os.path.abspath(out) != HERE:        # a build elsewhere needs the static files beside the pages too
         shutil.copyfile(os.path.join(HERE, "site.css"), os.path.join(out, "site.css"))
         shutil.copytree(os.path.join(HERE, "fonts"), os.path.join(out, "fonts"), dirs_exist_ok=True)
-    manifest = {"pages": sorted(pages), "facts": {k: v for k, v in f.items() if k != "beats"},
+    manifest = {"pages": sorted(p for p in pages if p in PAGES), "facts": {k: v for k, v in f.items() if k != "beats"},
                 "hero": [list(r) for r in hero], "assets": ASSETS, "credit": CREDIT, "promise": PROMISE,
                 "planned": [p for p, _ in PLANNED], "site_url_key": "site_url", "checkout": bool(cfg.get("checkout_url"))}
     with open(os.path.join(out, "manifest.json"), "w", encoding="utf-8") as fh:
@@ -564,5 +613,9 @@ if __name__ == "__main__":
         print("built %s in %s: %s" % (", ".join(sorted(pages)), HERE, config()["site_url"]))
     elif cmd == "fonts":
         fonts(*sys.argv[2:3])
+    elif cmd == "open":
+        if os.path.abspath(sys.argv[2]) == HERE:
+            raise SystemExit("open: pick a directory outside brand/site (the open variant is never published)")
+        print("built %s in %s" % (", ".join(sorted(build(out=sys.argv[2], open_variant=True))), sys.argv[2]))
     else:
-        raise SystemExit("usage: build.py [build|fonts [cache]]")
+        raise SystemExit("usage: build.py [build|fonts [cache]|open DIR]")

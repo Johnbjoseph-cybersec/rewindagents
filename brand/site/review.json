@@ -1,0 +1,85 @@
+{
+  "reviewer": "cs-iris-kapoor",
+  "task": "RB3 site",
+  "round": 1,
+  "date": "2026-11-11",
+  "judged_on": [
+    "~/fire/rewindagent/brand/BRAND.md",
+    "~/fire/rewindagent/README.md",
+    "~/fire/rewindagent/brand/demo/manifest.json",
+    "~/fire/rewindagent/build/site-shots/index-1440-top.png",
+    "~/fire/rewindagent/build/site-shots/index-1440-mid.png",
+    "~/fire/rewindagent/build/site-shots/index-1440-tail.png",
+    "~/fire/rewindagent/build/site-shots/index-1440-foot.png",
+    "~/fire/rewindagent/build/site-shots/index-1440.png",
+    "~/fire/rewindagent/build/site-shots/pricing-1440.png",
+    "~/fire/rewindagent/build/site-shots/docs-1440-top.png",
+    "~/fire/rewindagent/build/site-shots/docs-1440.png",
+    "~/fire/rewindagent/build/site-shots/index-390-a.png",
+    "~/fire/rewindagent/build/site-shots/index-390-b.png",
+    "~/fire/rewindagent/build/site-shots/index-390-c.png",
+    "~/fire/rewindagent/build/site-shots/index-390-d.png",
+    "~/fire/rewindagent/build/site-shots/index-390-install.png",
+    "~/fire/rewindagent/build/site-shots/pricing-390.png",
+    "~/fire/rewindagent/build/site-shots/docs-390-a.png"
+  ],
+  "rows": [
+    {
+      "criterion": "first_glance",
+      "weight": 2,
+      "score": 8.0,
+      "evidence": "index-1440-top.png (shown at 0.91 scale, multiply by 1.10): the hero does the job. Four-line Bricolage headline at y 180-400 says the product and the three verbs; the paragraph (y 430-595) says what it records and saves; Install (dark) and Read the docs (outline) sit at y 626-669; the Spool panel at the right (y 121-480) shows a real replay of steps 11-14 and a real rewind 12 with the four restore lines in Rewind, so the proof is on the first screen. Faults: (1) the panel wraps mid-line with no hanging indent: 'did change 4 / files)' at y 320-338 and 'rewindagent / 14 --session demo' at y 434-453, which looks like a mistake in the one panel everybody reads; (2) the left column runs to y 740 while the panel and its caption stop at y 550, leaving about 190 px (210 at full size) empty under the caption, so the proof looks smaller than the promise; (3) the small mono tag at y 130-150 wraps and orphans 'CURSOR PLANNED'; (4) the four-item fact list at y 700-740 is the weakest type on the screen (about 11 px grey mono with hairline ticks) and carries the 'no network, no account' claim. At 390 (index-390-a.png) the panel falls below the buttons and the 'the last 2 wrecked the repo' header wraps, so the proof is under the fold.",
+      "fix": "Widen the hero panel or drop its font one step so no output line wraps (the 'did change 4 files)' and 'undo it with: rewindagent 14 --session demo' lines must fit on one line each, or break them on purpose with a two-space hanging indent). Make the tag one line (shorten to 'v0.0.7 - Apache-2.0 - Claude Code today; Codex, Cursor planned'). Pull the caption and a third element (for example the 'standard library only' list, set in 13 px) under the panel so both columns end within 40 px of each other."
+    },
+    {
+      "criterion": "journey",
+      "weight": 1.5,
+      "score": 8.0,
+      "evidence": "Order is hero, 01 clip, 02 how it works, 03 limits, 04 commands, 05 install, 06 pricing, 07 questions (index-1440.png structure; section rulers numbered in index-1440-mid.png and -tail.png). Good: limits sit before pricing, the nav has Install, the hero has Install and Read the docs, the pricing card repeats Install (index-1440-foot.png y 977-1025), and the install section ends with 'Getting started, step by step' (index-1440-tail.png y 1508-1556). Weak: (1) the install section is the fifth block, about 5,000 px down; the hero button is the only quick path and the reader who scrolls gets four sections of explanation before the first command they can run; (2) the page ends on FAQ rows (index-1440-foot.png y 1380-1500) then the footer, with no closing action; (3) the clip section shows one session four ways (hero panel, GIF, text replay, three panels), so the reader scrolls about 1,900 px (index-1440-top.png y 810-1950) before learning anything new; (4) the 'Getting started' button sits alone, left, under the two install panels, as an orphan with nothing to join it to.",
+      "fix": "Move the install section up to second, directly after the clip, and keep the three-step explanation after it. Cut the clip section to the GIF plus one text panel (drop the three-panel row, or fold it into docs). End the landing page with a one-line closing strip: the pipx command in a panel and the two buttons. Put 'Getting started, step by step' beside the Add the hook panel caption as a link, not a lone button."
+    },
+    {
+      "criterion": "copy",
+      "weight": 1.5,
+      "score": 8.5,
+      "evidence": "Voice is plain, exact and dry throughout and matches BRAND.md: 'It never stops a call and never changes one: it prints nothing and always exits 0' (index-1440-mid.png y 133-197), the six-row limits table with 4,000 characters, 20 MB, 20,000 files, the project directory, symlinks, the end of the log (y 880-1462), 'Not on PyPI yet' (index-1440-tail.png y 1103-1135), Planned tags on Cloud (index-1440-foot.png y 480-495). Every command and number traces to README.md or manifest.json (14 steps, rewind 12, step 15, 16.6 s, 65 frames). No invented users, quotes, stars or numbers. Faults: (1) 'Join the waitlist (a GitHub issue)' and 'The waitlist is a GitHub issue: say what you would pay for, and that decides what gets built first' (index-1440-foot.png y 576-640) assert a waitlist process the README and BRAND.md do not contain; 'and your team' in 'Cloud sync of session history across your machines and your team' (y 688) is also beyond BRAND.md, which says cloud sync only; (2) the install panel opens with '# or: pip install git+https://...' before the pipx line it is an alternative to (index-1440-tail.png y 1249), which reads backwards, and the README puts it after; (3) headings that talk about the page's own honesty ('Cloud is planned, and says so', 'Plain answers', 'What is planned is marked planned') lean on the virtue instead of showing it, and 'nothing it does is final' in the hero is stronger than the limits table allows (files over 20 MB, outside the project, git-ignored are not restored); (4) the FAQ answers were closed in every render, so I could not read or check them.",
+      "fix": "Either confirm the GitHub issue exists and link it by number, or reword to 'Cloud has no price and is not for sale; if you want it, open an issue and say what you would pay for' and drop 'decides what gets built first'. Cut 'and your team'. Move the 'or: pip install' comment below the pipx line. Change the hero last sentence to 'Every step it takes can be taken back, within the limits below' (or keep, but link 'limits'). Ship one render with every FAQ open so the answers can be read."
+    },
+    {
+      "criterion": "palette_type",
+      "weight": 1,
+      "score": 8.5,
+      "evidence": "Only Leader paper (#F2F4F1 look), Reel ink, Spool panels, Playhead comments, Rewind restore lines and Record for the playhead tick, links ('pricing page' in index-1440-foot.png y 1086) and the logo cap. No gradient, glow, shadow, emoji or stray hue seen in any of the 18 files. Three faces: Bricolage 800 headings, Hanken body, Commit Mono for commands, labels and the facts list. Section rulers (index-1440-mid.png y 20-30) are the single motif, with the red playhead stepping right per section; the footer is Reel (pricing-1440.png y 1549-1725). Faults: Rewind is lit in four panels inside one 1440 screen of the clip section (index-1440-top.png: the text replay rows 13-14 at y 1524-1541, the restore rows in the middle panel at y 1767-1820, plus the hero panel two screens up), which stretches 'once per view for the thing to look at'; the hero 'standard library only' list and the section captions are Tape grey at about 11-12 px, thin; docs-390-a.png sets ten Record-red links in a cluster, so the accent stops being a signal.",
+      "fix": "Light Rewind only in the hero panel and in the GIF; in the text replay and the three-panel row use Leader with a plain marker (for example a leading '>' in Playhead) so the clip section has one accent block. At 390 set the docs contents links in Reel with a Rule underline and keep Record for the current section."
+    },
+    {
+      "criterion": "layout_1440",
+      "weight": 1.5,
+      "score": 7.5,
+      "evidence": "Clean grid, 184 px left edge, hairlines and rulers work. Faults: (1) clip section (index-1440-top.png, scale 1.10): the GIF is a 510 px-wide frame at y 1130-1435 whose terminal text will render at about 8-9 px (1200 px clip shown at roughly 0.47x), so it cannot be read at this size, and the right text panel ends at y 1567, 130 display px lower, leaving the left column short; (2) the three-panel row at y 1655-1880 has three different heights and three different widths (235, 390, 312 display px), so the bottoms end at y 1846, 1881 and 1810: a ragged edge with a 70 px hole under the third panel; (3) text replay panel wraps mid-row: '6 Write tests/test_timeout.py [1 / checkpointed]' and the two 'python3 -m unittest ... / tests -t . -q' rows (y 1348-1445) break back to the left margin with no hanging indent; (4) limits table (index-1440-mid.png y 880-1462): the text column stops near x 980 while the rule runs to x 1256, an empty 270 px strip right of every row; (5) commands grid (index-1440-tail.png): Export ends y 345 and Verify ends y 620 against Replay y 405 and Find a session y 780, so the right column has a void of about 160 px at its foot; (6) the 'Getting started' button at y 1508 is alone with 350 px empty to its right; (7) pricing-1440.png and docs-1440.png leave about 175 px of plain white under the footer (y 1725-1900 on pricing), a different white from the paper; this may be the renderer's fixed height but it looks like a page defect in the shot; (8) the landing footer was not in any 1440 slice, so I could not judge it.",
+      "fix": "Make the GIF fill the left column (about 620 px) and set the clip section as two equal-height columns: GIF with its caption left, one replay panel right with a hanging indent so wrapped rows are indented, or reduce the font so none wrap. Delete the three-panel row or make it a 3-column grid with equal heights (align-items stretch). In the limits table cap the rule at the text width or set the description column to 700 px. In the commands grid put Verify in the left column under Find a session and Export beside Replay with matching panel heights, or switch to a single full-width list. Check that the body ends at the footer with no white band. Supply a 1440 slice of the landing footer."
+    },
+    {
+      "criterion": "layout_390",
+      "weight": 1.5,
+      "score": 7.0,
+      "evidence": "Single column in a sane order (index-390-a.png: nav, tag, headline, promise, two buttons, facts stacked, panel, caption, then 01 clip). Buttons are about 28 px tall at 313 display (about 45 px full size), fine. Faults: (1) docs-390-a.png y 790-820: 'git+https://github.com/Johnbjoseph-cybersec/re' is cut at the right edge of the panel, mid-token, with no scroll cue; index-390-d.png (y 1650-1670) shows the same cut, while index-390-install.png shows the same command wrapping at 'github.com/', so the two renders disagree and at least one page still clips; (2) the text replay panel at 390 (index-390-a.png y 1400-1700) wraps nearly every step row ('[1 / checkpointed]' on its own line at the left margin), so a 14-step list becomes 25 lines that are hard to scan; the hero panel does the same for steps 13 and 14 (y 600-630); (3) the GIF at 390 (index-390-a.png y 1215-1370) is a 360 px dark rectangle whose in-frame text will be about 5 px, so it is a picture of a dark box; (4) nav (pricing-390.png y 40-70, docs-390-a.png y 60-95) is five bare text links in a row with about 10 px between them, hit height not above roughly 24-28 px, under the 44 px guidance; (5) footer (pricing-390.png y 1580-1650, index-390-d.png y 1680-1760): the two-column link grid leaves 'Apache-2.0 licence' alone on a third row with a hole beside it; (6) docs-390-a.png y 450-560: the contents becomes ten wrapped red links, uneven row widths. Good: tables, cards and FAQ stack without overflow, text sizes are readable, no horizontal scroll of the page itself.",
+      "fix": "Set the install URL panel to wrap at the slash (overflow-wrap anywhere for the URL, or put 'pipx install' and the URL on separate lines with a hanging indent) on landing and docs, and verify in both shots. At 390 present the replay as a shortened list: show steps 11-14 only (as in the hero), not the full 14, or reduce the font to 12 px and indent continuations by 4 characters. Hide the GIF below 480 px and show the rewind panel in its place, or give the GIF a poster of the rewind output. Give each nav link at least 44 px of height (padding 12 px 8 px) and let the nav scroll or wrap into two clean rows. Put 'Apache-2.0 licence' beside 'GitHub' by switching to three narrow columns, or make the footer links one vertical list. Show docs contents as a two-column grid in Reel."
+    },
+    {
+      "criterion": "pricing_docs",
+      "weight": 1,
+      "score": 8.5,
+      "evidence": "Pricing (pricing-1440.png): two cards of equal width and height (y 357-962), titles at the same baseline, 'Free' and 'Not yet priced' in the same size, buttons aligned at y 887-935; solid squares for what exists and outlined squares for what is planned is a good quiet distinction; the Planned tag is on the Cloud card; no price shown for the cloud. Left list has five items and right has four plus a longer lede, so the right card has about 80 px of air above its button (y 805-887): acceptable. Honest framing matches BRAND.md. Faults: waitlist and 'your team' wording noted under copy; the lede on the right card is 12 px grey on paper at y 497-545, hard to read; FAQ is four closed rows only (y 1229-1476), so a reader has to click to learn whether the tool will stay free. Docs (docs-1440-top.png, docs-1440.png): a real getting-started page with a ten-item contents column at x 184-384, then Install, Add the hook, What gets recorded, Replay and rewind, Branch, Export, Find a session, Verify, Limits, Remove it; each command panel is real README text. Faults: it is the README re-set in order, with no first-run path ('start Claude Code, ask it to change a file, run rewindagent replay, here is what you see') and no expected output beside rewindagent --version or the first replay, although the real output exists in brand/demo/manifest.json; the contents column ends at y 830 while the text runs on for 7,000 px, so it should stay in view (cannot confirm it is sticky from a static shot); long panels in Export and Verify have dense body text in 17 px lines about 600 px wide with no sub-structure.",
+      "fix": "Add a 'Your first session' section between Add the hook and What gets recorded: four numbered steps with the real replay and rewind output from the manifest, labelled as the demo session. Print the expected output of rewindagent --version. Open the FAQ answers on the pricing page (four short answers are cheap) and darken the Cloud card lede to Reel at 15 px. Make the contents column sticky and mark the current section with a Record tick."
+    }
+  ],
+  "score_working": "first_glance 8.0 x 2.0 = 16.00; journey 8.0 x 1.5 = 12.00; copy 8.5 x 1.5 = 12.75; palette_type 8.5 x 1.0 = 8.50; layout_1440 7.5 x 1.5 = 11.25; layout_390 7.0 x 1.5 = 10.50; pricing_docs 8.5 x 1.0 = 8.50. Sum = 79.50. Weights sum to 10.0. Weighted mean = 79.50 / 10 = 7.95. Gate needs 9.0 and no row under 8.0: weighted mean 7.95 is below 9.0, and layout_1440 (7.5) and layout_390 (7.0) are under 8.0. Result: FAIL.",
+  "score": 7.95,
+  "pass": false,
+  "top_fixes": [
+    "Fix the wrapping of command and output panels everywhere: the hero panel (wraps 'did change 4 files)' and the undo line), the text replay panel (rows broken back to the left margin at 1440 and almost every row at 390), and the install URL cut mid-token in docs-390-a.png and index-390-d.png. Use a hanging indent or a smaller font so no output row breaks, wrap the URL at a slash, and re-render both pages at 390 to prove it.",
+    "Rebuild the clip section so it is one session shown once or twice, not four times, with equal-height columns: GIF filling the left column (at 510 px its text is about 8 px and at 390 it is about 5 px, so hide it below 480 px and show a panel instead), one replay panel on the right, no three-panel row with ragged bottoms, no lone 'Getting started' button, and Rewind lit in one panel only.",
+    "Tighten the journey and the 390 chrome: move install up to follow the clip, add a closing install strip after the questions, bring nav links to 44 px tap height, fix the footer's orphaned 'Apache-2.0 licence', remove the unverifiable 'waitlist is a GitHub issue' and 'your team' wording, add a first-session walkthrough with the real output to docs, and open the FAQ answers in at least one render."
+  ]
+}
