@@ -1,10 +1,10 @@
 # rewindagent
 
-A flight recorder for AI agents. Every tool call your coding agent makes goes into a
+Ctrl+Z for AI coding agents: record, replay and rewind. Every tool call your coding agent makes goes into a
 tamper-evident, hash-chained log you can verify later.
 
 **Status: v0.0.1, pre-release.** Only the recorder and its CLI exist today. The Claude Code hook,
-policy blocking and session replay are planned; they are listed under Roadmap below and are not built yet.
+file checkpoints, replay and rewind are planned; they are listed under Roadmap below and are not built yet.
 
 ## What works now
 
@@ -50,9 +50,9 @@ python3 -m rewindagent verify --head <pinned-hash>
 
 ## Roadmap
 
-- Claude Code `PreToolUse` / `PostToolUse` hook that records every call
-- Policy rules that block a call before it runs (for example `rm -rf /`, force-push, production DB writes)
-- Replay of a recorded session
+- Claude Code `PreToolUse` / `PostToolUse` hook that records every call and checkpoints files before each change
+- Replay of a recorded session, step by step
+- Rewind the working tree to any recorded step, and branch from it
 
 ## Tests
 
