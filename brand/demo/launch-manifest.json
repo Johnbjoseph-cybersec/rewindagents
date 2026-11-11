@@ -1,0 +1,78 @@
+{
+ "audio": "none: a screen recording; the captions carry the words",
+ "captions_burnt_in": [
+  "a coding agent has been working in this repo; rewindagent recorded every step",
+  "its last two steps deleted the tests and overwrote the config",
+  "put the files back the way they were right after step 12",
+  "the tests are back; the first 12 steps stay"
+ ],
+ "commands": [
+  "rewindagent replay",
+  "git status --short",
+  "rewindagent rewind 12",
+  "git status --short"
+ ],
+ "contact_sheet": "demo/launch-contact-sheet.png",
+ "cues": [
+  {
+   "end_ms": 4600,
+   "lines": [
+    "a coding agent has been working in this repo; rewindagent recorded every step"
+   ],
+   "start_ms": 400
+  },
+  {
+   "end_ms": 7880,
+   "lines": [
+    "its last two steps deleted the tests and overwrote the config"
+   ],
+   "start_ms": 4600
+  },
+  {
+   "end_ms": 12120,
+   "lines": [
+    "put the files back the way they were right after step 12"
+   ],
+   "start_ms": 7880
+  },
+  {
+   "end_ms": 16600,
+   "lines": [
+    "the tests are back; the first 12 steps stay"
+   ],
+   "start_ms": 12120
+  }
+ ],
+ "demo_beats_sha256": "b5808ab9335a0036bdce353850c5c7c1dd5fcb2569ec5d1b95da97250b7cca7b",
+ "end_card_seconds": 3.0,
+ "fps": 25,
+ "frames": 490,
+ "height": 1080,
+ "keyframes": [
+  "demo/launch-keyframes/k0.png",
+  "demo/launch-keyframes/k1.png",
+  "demo/launch-keyframes/k2.png",
+  "demo/launch-keyframes/k3.png",
+  "demo/launch-keyframes/k4-end.png"
+ ],
+ "mp4": "launch-demo.mp4",
+ "mp4_facts": {
+  "bytes": 564592,
+  "faststart": true,
+  "fps": 25.0,
+  "frames": 490,
+  "height": 1080,
+  "seconds": 19.6,
+  "sha256": "ab46490fe6eb125950763b75457c7825739ee6d29e0e0604751b9d329ed4e0a6",
+  "video_codec": "avc1",
+  "video_seconds": 19.6,
+  "width": 1920
+ },
+ "note": "Written by brand/demo/launch_mp4.py. The address on the end card comes from brand/site/config.json at render time; this file keeps no address.",
+ "session": "demo",
+ "srt": "launch-demo.srt",
+ "terminal_seconds": 16.6,
+ "unique_frames": 65,
+ "version": "0.0.7",
+ "width": 1920
+}

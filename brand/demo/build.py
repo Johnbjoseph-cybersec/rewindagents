@@ -154,6 +154,11 @@ def chrome(logo, disp, small):
 
 
 def frame_svg(logo, mono, static, lines):
+    return logo.svg(W, H, frame_body(mono, static, lines), bg=C["Leader"], title="rewindagent demo")
+
+
+def frame_body(mono, static, lines):
+    """One frame's drawing without the <svg> wrapper (brand/demo/launch_mp4.py places it inside a larger frame)."""
     body, chars = [], set()
     for row, segs in enumerate(lines[-ROWS:]):
         x, base = TX, BASE0 + row * LH
@@ -170,8 +175,7 @@ def frame_svg(logo, mono, static, lines):
                 x += mono.adv
             if uses:
                 body.append('<g fill="%s">%s</g>' % (C[COLOURS[role]], "".join(uses)))
-    return logo.svg(W, H, "<defs>%s</defs>" % mono.defs(chars) + static + "".join(body), bg=C["Leader"],
-                    title="rewindagent demo")
+    return "<defs>%s</defs>" % mono.defs(chars) + static + "".join(body)
 
 
 def merge(frames):
