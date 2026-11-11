@@ -15,12 +15,15 @@ permission hook (`{"permission": "allow"}`). Problems go to stderr only.
 """
 from __future__ import annotations
 
+import contextlib
+import fcntl
 import hashlib
 import json
 import os
 import shlex
 import site
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -35,6 +38,43 @@ MAX_RESULT_CHARS = 4000
 
 def store_dir(cwd: str | Path) -> Path:
     return Path(cwd) / ".rewindagent"
+
+
+@contextlib.contextmanager
+def store_lock(store: Path, exclusive: bool = False, timeout: float = 30.0):
+    """Lock on .rewindagent/lock. Everything that saves a stored copy and then writes the record naming it
+    (the hook, rewind, branch, import) holds it shared from the copy to the record; `gc` holds it exclusive,
+    so it never sees a copy whose record is not written yet. Several shared holders run at once.
+
+    Shared: if the lock file cannot be opened or locked, carry on unlocked (recording matters more).
+    Exclusive: wait up to `timeout` seconds, then raise TimeoutError."""
+    try:
+        store.mkdir(parents=True, exist_ok=True)
+        fh = (store / "lock").open("a+")
+    except OSError:
+        if exclusive:
+            raise
+        yield
+        return
+    try:
+        if exclusive:
+            deadline = time.monotonic() + timeout
+            while True:
+                try:
+                    fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    break
+                except BlockingIOError:
+                    if time.monotonic() > deadline:
+                        raise TimeoutError(f"the store was still in use after {timeout:g} s")
+                    time.sleep(0.05)
+        else:
+            try:
+                fcntl.flock(fh, fcntl.LOCK_SH)
+            except OSError:
+                pass
+        yield
+    finally:
+        fh.close()   # closing drops the lock
 
 
 def checkpoint(path: Path, objects: Path) -> dict:
@@ -72,13 +112,17 @@ def handle(payload: dict, agent: str = agents.DEFAULT) -> dict:
     """Record one hook event from `agent` (a key of agents.AGENTS). Returns the record written."""
     ag = agents.AGENTS[agent]
     n = agents.normalize(payload)
-    cwd, event, tool, tool_input, session = n["cwd"], n["event"], n["tool"], n["input"], n["session"]
-    store = store_dir(cwd)
+    store = store_dir(n["cwd"])
     rec = Recorder(store / "log.jsonl")
     ignore = store / ".gitignore"
     if not ignore.exists():  # keep the log and checkpoints out of the user's commits
         ignore.write_text("*\n", encoding="utf-8")
+    with store_lock(store):  # from the stored copy to the record that names it: see store_lock
+        return _handle(payload, ag, agent, n, store, rec)
 
+
+def _handle(payload: dict, ag, agent: str, n: dict, store: Path, rec: Recorder) -> dict:
+    cwd, event, tool, tool_input, session = n["cwd"], n["event"], n["tool"], n["input"], n["session"]
     if event == "pre":
         args: dict[str, Any] = {"input": tool_input, "agent": agent}
         key = FILE_TOOLS.get(tool) if ag.file_tools else None

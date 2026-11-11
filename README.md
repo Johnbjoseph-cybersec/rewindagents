@@ -6,7 +6,8 @@ tamper-evident, hash-chained log you can verify later.
 **Status: v0.0.7, pre-release.** Built and tested today: the recorder and its CLI, hooks for Claude Code,
 Codex and Cursor that record every call and checkpoint the files a step changes, `replay`, `rewind` and
 `branch`, `export` (a session as one HTML page), `sessions` (list and search the sessions in a log),
-`bundle` and `import` (carry a session to another machine or clone as one file), and a pip-installable package with a `rewindagent` command. Not on PyPI yet. The Claude Code hook has run in real
+`bundle` and `import` (carry a session to another machine or clone as one file), `gc` (delete stored file
+copies nothing names any more), and a pip-installable package with a `rewindagent` command. Not on PyPI yet. The Claude Code hook has run in real
 sessions; the Codex and Cursor hooks are built from the vendors' hook documentation and tested with the
 documented payloads, not yet in a live session.
 
@@ -196,6 +197,24 @@ Then `replay`, `rewind` and `branch` work on that session in the other clone, wi
   numbers and hashes here.
 - File paths under the old project move under this one, so a rewind puts the files back in this clone.
   Commands and results keep their text as recorded.
+
+## Clean up stored copies
+
+```sh
+rewindagent gc --dry-run   # what would be deleted, and how many bytes
+rewindagent gc             # delete it
+```
+
+Before every Bash call the hook saves a copy of every project file, and afterwards the log names only the
+copies of files the command changed, so `.rewindagent/objects/` grows. `gc` deletes every stored copy that no
+log record (in any session) and no pending scan (a command whose after-scan has not run) names, and prints how
+many it deleted and the bytes those files took on disk.
+
+- Every step of every session in the log can still be rewound afterwards; the copies a rewind needs are the
+  ones the log names.
+- It refuses to run when the log does not verify, and it never writes to the log.
+- While it runs it holds the store lock, so a hook call waits for it to finish, and it waits (up to 30 s) for
+  a hook, rewind or import that has saved a copy but not yet written the record naming it.
 
 ## Recorder
 

@@ -1,5 +1,5 @@
 """rewindagent command line: record, verify, head, show, hook, install, replay, rewind, branch, export,
-sessions, bundle, import."""
+sessions, bundle, import, gc."""
 from __future__ import annotations
 
 import argparse
@@ -7,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import __version__, agents, bundle, export, hook, log, rewind, sessions
+from . import __version__, agents, bundle, export, gc, hook, log, rewind, sessions
 
 
 def invocation() -> str:
@@ -63,6 +63,8 @@ def main(argv: list[str] | None = None) -> int:
     im = sub.add_parser("import", help="check a bundle, then add its session to this project's log; "
                                        "file paths move to this project")
     im.add_argument("file", help="a file written by `bundle`")
+    g = sub.add_parser("gc", help="delete stored file copies that no log record and no pending scan names")
+    g.add_argument("--dry-run", action="store_true", help="print what would be deleted, delete nothing")
 
     a = ap.parse_args(argv)
     if a.cmd == "hook":
@@ -72,10 +74,19 @@ def main(argv: list[str] | None = None) -> int:
         changed = hook.install(target, agent=a.agent)
         print(f"{'installed in' if changed else 'already installed in'} {target}")
         return 0
-    if a.cmd in ("verify", "show", "replay", "rewind", "branch", "export", "sessions", "bundle") \
+    if a.cmd in ("verify", "show", "replay", "rewind", "branch", "export", "sessions", "bundle", "gc") \
             and not Path(a.log).exists():
         print(f"rewindagent: no log at {a.log}", file=sys.stderr)
         return 2
+    if a.cmd == "gc":
+        try:
+            d = gc.gc(a.log, dry_run=a.dry_run)
+        except gc.GcError as e:
+            print(f"rewindagent: {e}", file=sys.stderr)
+            return 1
+        for line in gc.lines(d):
+            print(line)
+        return 0
     if a.cmd in ("bundle", "import"):
         root = rewind.project_root(a.log)
         try:

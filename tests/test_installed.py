@@ -140,6 +140,37 @@ class InstalledCommandTest(unittest.TestCase):
             self.assertEqual(Path(src, "app.py").read_text(), "x = 2\n")      # the source is left alone
             self.assertEqual(self._run("import", out, cwd=dst).returncode, 1)  # the session is already here
 
+    def test_gc_through_the_binary_frees_the_scan_copies_and_rewind_still_works(self):
+        with TemporaryDirectory() as proj:
+            Path(proj, "app.py").write_text("x = 1\n")
+            Path(proj, "big.txt").write_text("b" * 1000)
+            self.assertEqual(self._run("install", cwd=proj).returncode, 0)
+            cmd = json.loads(Path(proj, ".claude", "settings.json").read_text())["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
+            shell = "sed -i.bak s/1/2/ app.py && rm app.py.bak"
+            for event in ("PreToolUse", "PostToolUse"):
+                payload = {"session_id": "gc", "cwd": proj, "hook_event_name": event, "tool_name": "Bash",
+                           "tool_input": {"command": shell}, "tool_use_id": "toolu_1"}
+                p = subprocess.run(cmd, shell=True, cwd=proj, env=clean_env(), input=json.dumps(payload),
+                                   capture_output=True, text=True, timeout=120)
+                self.assertEqual((p.returncode, p.stderr), (0, ""))
+                if event == "PreToolUse":
+                    subprocess.run(["sh", "-c", shell], cwd=proj, check=True)
+            # the scan saved app.py, big.txt and .claude/settings.json; only app.py changed
+            settings_size = Path(proj, ".claude", "settings.json").stat().st_size
+            r = self._run("gc", "--dry-run", cwd=proj)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertEqual(r.stdout, f"would delete 2 stored copies ({1000 + settings_size:,} bytes); "
+                                       "kept 1 that the log or a pending scan names\n")
+            r = self._run("gc", cwd=proj)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn("deleted 2 stored copies", r.stdout)
+            self.assertEqual(len(list(Path(proj, ".rewindagent", "objects").iterdir())), 1)
+            r = self._run("rewind", "0", cwd=proj)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertEqual(Path(proj, "app.py").read_text(), "x = 1\n")
+            r = self._run("verify", cwd=proj)
+            self.assertEqual((r.returncode, r.stdout.strip()), (0, "OK: 3 records, chain intact"), r.stderr)
+
     def test_install_for_codex_and_cursor_writes_commands_their_payloads_drive(self):
         """`install --agent codex|cursor` through the binary; then the command from the written file, run as the
         agent would run it (no PYTHONPATH, the documented payload on stdin), records a shell edit that the binary
@@ -211,7 +242,7 @@ class ReadmeCommandsTest(unittest.TestCase):
                 self.assertIn(m.group(1), SUBCOMMANDS, line)
                 seen.add(m.group(1))
         self.assertTrue({"install", "replay", "rewind", "branch", "verify", "export", "sessions", "bundle",
-                         "import"} <= seen, seen)
+                         "import", "gc"} <= seen, seen)
 
     def test_readme_says_the_package_exists_and_is_not_on_pypi(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")

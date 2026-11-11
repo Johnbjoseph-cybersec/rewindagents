@@ -34,6 +34,7 @@ from pathlib import Path
 from typing import Any
 
 from . import __version__, log, rewind
+from .hook import store_lock
 
 FORMAT = "rewindagent-bundle"
 VERSION = 1
@@ -223,15 +224,16 @@ def import_bundle(path: str | Path, log_path: str | Path) -> dict:
     if not ignore.exists():  # as the hook does: keep the log and stored copies out of the user's commits
         ignore.write_text("*\n", encoding="utf-8")
     (store / "objects").mkdir(exist_ok=True)
-    for sha, raw in data.items():
-        obj = store / "objects" / sha
-        if not obj.exists():
-            tmp = obj.with_name(f".{sha}.{os.getpid()}.tmp")
-            tmp.write_bytes(raw)
-            os.replace(tmp, obj)
-    rec = log.Recorder(log_path)
-    for r in b["records"]:
-        rec.record(session, r["tool"], move_paths(r.get("args"), b["root_spellings"], root), r.get("result"),
-                   actor=r.get("actor", "agent"), event=r.get("event", "tool_call"), ts=r.get("ts"))
+    with store_lock(store):  # `gc` must not delete the copies before the records naming them are written
+        for sha, raw in data.items():
+            obj = store / "objects" / sha
+            if not obj.exists():
+                tmp = obj.with_name(f".{sha}.{os.getpid()}.tmp")
+                tmp.write_bytes(raw)
+                os.replace(tmp, obj)
+        rec = log.Recorder(log_path)
+        for r in b["records"]:
+            rec.record(session, r["tool"], move_paths(r.get("args"), b["root_spellings"], root), r.get("result"),
+                       actor=r.get("actor", "agent"), event=r.get("event", "tool_call"), ts=r.get("ts"))
     return {"session": session, "records": len(b["records"]), "steps": len(rewind.steps_from(b["records"])),
             "objects": len(data), "already_here": have, "from_root": b.get("root"), "root": root}

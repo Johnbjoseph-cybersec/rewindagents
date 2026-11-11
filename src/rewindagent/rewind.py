@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Any
 
 from . import log
-from .hook import FILE_TOOLS, checkpoint
+from .hook import FILE_TOOLS, checkpoint, store_lock
 
 STEP_EVENTS_SKIPPED = {"post"}
 
@@ -168,11 +168,12 @@ def _apply(log_path: str | Path, p: dict, event: str, extra: dict | None = None)
     root = project_root(log_path)
     objects = root / ".rewindagent" / "objects"
     touched = [path for path, _ in p["restore"]] + p["delete"]
-    saved = [checkpoint(Path(path), objects) for path in touched]
-    args = {"input": {"to_step": p["to_step"]}, "to_step": p["to_step"], "checkpoints": saved}
-    args.update(extra or {})
-    rec = log.Recorder(log_path).record(p["session"], "rewindagent", args, None,
-                                        actor="user", event=event)
+    with store_lock(root / ".rewindagent"):  # `gc` must not delete these copies before the record names them
+        saved = [checkpoint(Path(path), objects) for path in touched]
+        args = {"input": {"to_step": p["to_step"]}, "to_step": p["to_step"], "checkpoints": saved}
+        args.update(extra or {})
+        rec = log.Recorder(log_path).record(p["session"], "rewindagent", args, None,
+                                            actor="user", event=event)
     for path_s, sha in p["restore"]:
         path = Path(path_s)
         path.parent.mkdir(parents=True, exist_ok=True)
