@@ -1,0 +1,80 @@
+{
+  "task": "RB2b demo GIF",
+  "round": 1,
+  "reviewer": "cs-quinn-mehta (independent)",
+  "date": "2026-11-11",
+  "judged_on": [
+    "~/fire/rewindagent/brand/demo/keyframes/k0-frame0000.png",
+    "~/fire/rewindagent/brand/demo/keyframes/k1-frame0025.png",
+    "~/fire/rewindagent/brand/demo/keyframes/k2-frame0037.png",
+    "~/fire/rewindagent/brand/demo/keyframes/k3-frame0051.png",
+    "~/fire/rewindagent/brand/demo/keyframes/k4-frame0063.png",
+    "~/fire/rewindagent/brand/demo/contact-sheet.png",
+    "~/fire/rewindagent/brand/demo/frames/0001.png",
+    "~/fire/rewindagent/brand/demo/frames/0003.png",
+    "~/fire/rewindagent/brand/demo/frames/0011.png",
+    "~/fire/rewindagent/brand/demo/frames/0012.png",
+    "~/fire/rewindagent/brand/demo/frames/0018.png",
+    "~/fire/rewindagent/brand/demo/frames/0026.png",
+    "~/fire/rewindagent/brand/demo/frames/0027.png",
+    "~/fire/rewindagent/brand/demo/frames/0038.png",
+    "~/fire/rewindagent/brand/demo/frames/0040.png",
+    "~/fire/rewindagent/brand/demo/frames/0052.png",
+    "~/fire/rewindagent/brand/demo/frames/0062.png",
+    "~/fire/rewindagent/brand/demo/manifest.json",
+    "~/fire/rewindagent/brand/demo/frames/frames.json",
+    "~/fire/rewindagent/brand/BRAND.md",
+    "~/fire/rewindagent/brand/demo/build.py",
+    "~/fire/rewindagent/tests/test_demo.py"
+  ],
+  "method_note": "Viewed sixteen full-size 1200x675 PNGs with the image reader (the five keyframes and eleven per-frame renders chosen at the transitions: caption appears, mid-typing, command submitted, first streamed row, mid-stream, end of hold) plus the contact sheet. No shell was available in this session, so I could not sample pixel hex values, could not open demo.gif's container, and could not count its frames or delays; the 65 frames, 16.64 s, 1200x675, loop 0 and the 4/8/16/40/200/240/280/320 cs delay set are the builder's manifest values, which tests/test_demo.py lines 42-61 asserts against the file itself. Colour judgement is by eye against the BRAND.md swatches, backed by two mechanisms I read rather than ran: build.py lines 234-241 refuses any SVG fill outside the eight palette hexes before a frame is rasterised, and test_demo.py lines 59-61 asserts Leader, Spool, Playhead and Rewind survive in the GIF colour table (it does not assert the absence of anti-aliasing blends, which are expected and acceptable). The keyframe files are named k1-frame0025, k2-frame0037, k3-frame0051 (frames.json keyframes [0,25,37,51,63]), not 0026/0040/0053 as the brief said; I judged the files that exist. The 900 px README reading was done by scaling the measured sizes by 0.75, not by rendering at 900 px.",
+  "rows": [
+    {
+      "criterion": "legibility",
+      "score": 9.0,
+      "evidence": "Terminal panel spans x 40-1160, y 40-620 on a 1200x675 canvas. Text starts at x 69 (29 px inside the panel), first baseline ~y 118, last row baseline ~y 587 in frames 0037/0051/0063 with 33 px of panel below it. Longest line on screen is the opening caption ending at ~x 874 (frames 0001, 0025); the rewind report's last line ends ~x 843 (frame 0051); the tagline ends ~x 1135, 25 px inside the panel edge. No line wraps and nothing clips in any of the sixteen frames viewed; cols 104 in manifest.json line 52 leaves 24 spare columns beyond the longest 80-char line. Cursor is a solid Leader rectangle ~10x17 px at x 88-98 (frames 0000, 0001, 0038, 0052) and after the typed text at x 130-140 in frame 0003 and x 110-120 in frame 0027; no missing-glyph box anywhere. Row pitch 26 px, mono about 16 px; at 900 px wide that becomes ~12 px mono on a ~19.5 px pitch, the same size as a code block in a README. Contrast per BRAND.md lines 94-96: Leader on Spool 14.9, Playhead on Spool 9.0, Rewind on Spool 6.4. Held back from higher: the 14 px Hanken tagline becomes ~10.5 px at README width and the bracketed counts in the replay list ('[1 checkpointed]') are the smallest meaningful text in the clip at that scale."
+    },
+    {
+      "criterion": "pacing",
+      "score": 8.5,
+      "evidence": "frames.json: caption+prompt 0.40 s (frames 0, 26, 38, 52), typing at 2 characters per 0.08 s frame (frame 0003 shows 'rewi' two frames in; frame 0027 shows 'gi' one frame in) = 25 cps, a 0.16 s submitted beat with the cursor gone (frames 11, 36, 50, 62), then output. The replay list streams 14 rows at 0.04 s each (frames 12-25, frame 0012 shows row 1 alone, frame 0018 rows 1-7) which reads as a program printing, not a slideshow. Holds: 2.4 s (frame 25), 2.0 s (37), 2.8 s (51), 3.2 s (63); storyboard 16.6 s, manifest 16.64 s, under the 20 s limit. Loop: frame 63 (full panel, 3.2 s) cuts to frame 0 (empty prompt, 0.4 s) then frame 1 (caption, 0.4 s), a clean reset with 0.8 s of breath before the next command. Deductions: 25 cps is autotype speed, roughly three to four times a quick human typist, so the command entry reads as a demo tool rather than a person at the keyboard; and the 2.4 s hold on the 14-row replay list (frame 25) is the one place a first-time viewer has to scan a full table and find the two red rows before the view scrolls, the tightest read in the clip."
+    },
+    {
+      "criterion": "story",
+      "score": 9.0,
+      "evidence": "Four captions carry the arc without any narrator: frame 0001 '# a coding agent has been working in this repo; rewindagent recorded every step', frame 0026 '# its last two steps deleted the tests and overwrote the config', frame 0038 '# put the files back the way they were right after step 12', frame 0052 '# the tests are back; the first 12 steps stay'. The visual proof lines up under each: frame 0025 rows 13 and 14 in Rewind at y 476 and 502 ('rm -rf tests  [3 checkpointed]', 'Write app/config.py'); frame 0037 two 'D tests/...' lines at y 528 and 554; frame 0051 four 'restore' lines at y 450-528; frame 0063 three 'M' lines persist (README.md, app/config.py, app/server.py) and no 'D' line remains. Title bar 'Ctrl+Z for AI coding agents' states the product in five words a stranger gets. Deductions: the final proof is partly an absence (the two D lines are simply gone) and the last 3.2 s introduces a new symbol, '?? tests/test_timeout.py' at y 554, that a viewer without git fluency must decode; 'checkpointed' is never explained on screen, the viewer infers it from the restore list."
+    },
+    {
+      "criterion": "palette_and_type",
+      "score": 9.0,
+      "evidence": "By eye against the BRAND.md swatches (lines 67-74): Leader ground, Spool panel, a one-pixel Rule hairline under the title bar at y 83, Playhead for captions, prompt and tagline, Leader for commands, output, cursor, wordmark and the tick-ruler mark, Tape for the credit at (40, 650), Rewind for the accent rows. build.py lines 234-241 refuses any SVG fill outside those eight hexes; test_demo.py lines 59-61 asserts Leader, Spool, Playhead and Rewind are present exactly in the GIF colour table. Accent discipline is one block per view as BRAND.md lines 161-163 require: frame 0025 rows 13-14 only; the accent stays through the caption and typing of beat two (frames 0026, 0027) and returns to Leader the moment the next output lands (frame 0037, rows 13-14 at y 346 and 372 are Leader); frame 0051 the four restore rows only; frame 0063 those rows are Leader again and nothing is accented. Type: Commit Mono in the terminal, Bricolage Grotesque 800 wordmark at x 112-228 y 52-72, Hanken Grotesk tagline and credit, matching BRAND.md lines 109-113 and manifest.json lines 54-58. No gradient, no glow, flat fills only. Held back from higher because I could not sample pixels in this session, so the hex match rests on the builder's gate and the test rather than my own measurement."
+    },
+    {
+      "criterion": "honesty",
+      "score": 9.5,
+      "evidence": "Every non-caption line on screen is one of the four commands' own output as recorded in manifest.json beats[].output (lines 12, 20, 33, 41); frames 0025, 0037, 0051 and 0063 match those strings line for line, including the odd-but-genuine '(did change 4 files)' and 'this rewind is step 15; undo it with: rewindagent rewind 14 --session demo'. The only numbers on screen are the step numbers 1-14, the bracketed checkpoint counts, '12 of 14', '4 files' and 'step 15', all printed by the commands. The captions claim nothing the output does not show: 'recorded every step' (14 listed), 'deleted the tests and overwrote the config' (step 13 rm -rf tests, step 14 Write app/config.py, then two D lines), 'put the files back ... after step 12' (four restore lines), 'the tests are back; the first 12 steps stay' (D lines gone, three M lines kept). The tagline 'Ctrl+Z for AI coding agents' is the one framing claim and the clip shows exactly one undo, so it is covered. No users, stars, downloads, benchmarks or quotes. Not a full 10 only because 'checkpointed' and '?? tests/test_timeout.py' ask the viewer to trust two things the clip does not spell out (what a checkpoint is, and that an untracked file counts as restored)."
+    },
+    {
+      "criterion": "house_rules",
+      "score": 9.5,
+      "evidence": "Scanned all sixteen frames and the manifest text: no emoji, no section sign, no gradient, no glass or glow, no shield or padlock (the mark at x 66-98, y 52-72 is a row of ticks with one playhead, as BRAND.md lines 173-180 specify), no stock imagery, no purple or neon, left-aligned throughout, credit 'made by John B Joseph' at (40, 650) per BRAND.md line 193. Nothing on screen presents the clip as AI-generated; the word 'AI' appears once, in the product tagline describing its audience. No other product or company is named on screen. Body text is never set in an accent colour (the accent carries only the two wrecking steps and the four restore lines). The clip shows a recorder and an undo, nothing that stops or judges the agent. Half a point withheld because the gradient and off-palette checks are by eye and by the builder's own gate rather than by pixel sampling."
+    },
+    {
+      "criterion": "finish",
+      "score": 9.0,
+      "evidence": "The terminal behaves like a terminal: older rows leave at the top (frame 0037 starts at step 4, frame 0051 at step 12, frame 0063 at 'M app/config.py'), the cursor vanishes on submit (frames 0011, 0036, 0050, 0062) and returns on the hold, the accent hands over cleanly between beats (0027 to 0037, 0062 to 0063). The 209 KB file size (manifest line 61) is light for a README. Every delay is on the 40 ms grid (frames.json durations 0.04/0.08/0.16/0.40/2.0/2.4/2.8/3.2). Two finish nits a stranger would notice: the final 3.2 s hold (frame 0063) opens mid-list, the top row 'M app/config.py' is the second line of the earlier git status with its first line scrolled off, so a top-down read of the most important frame starts in the middle of a block; and the loop is a hard cut from a full panel to an empty prompt (frame 0063 to 0000), which is the convention for terminal clips but is still a visible flash on a README page."
+    }
+  ],
+  "score": 9.07,
+  "pass": true,
+  "fixes": [
+    "Frame 0025 (end of beat one): lengthen the hold from 2.4 s to 3.2 s so a first-time viewer can scan fourteen rows and land on the two red ones before the view scrolls; this is the tightest read in the clip and the one place the story can be missed.",
+    "Frames 0002-0010, 0027-0035, 0039-0049, 0053-0061 (typing): drop from 25 cps to 12-15 cps (one character per 0.08 s frame rather than two) so the command entry reads as a person at the keyboard; this adds about 1.6 s and keeps the total under 20 s if the beat-four hold stays at 3.2 s.",
+    "Frame 0063 (final hold): start the view on a block boundary. Either drop one row from the rewind report scrollback or raise the row count by one so the top line of the most-held frame is '# put the files back ...' or 'M README.md', not the second line of a list."
+  ],
+  "optional_lifts": [
+    "Add a second step to the loop restart: hold frame 0000 (empty prompt) for 0.8 s instead of 0.4 s so the cut from the full panel reads as a deliberate reset rather than a flash.",
+    "Consider one more caption word on beat four for readers without git fluency, for example '# the tests are back (no D lines); the first 12 steps stay', only if it stays under the 80-char longest line.",
+    "Pixel-sample one frame per beat in the next round (a five-point sample per accent row and per caption) and record the hexes in the manifest, so the palette row can be evidenced by measurement rather than by the builder's gate."
+  ]
+}
