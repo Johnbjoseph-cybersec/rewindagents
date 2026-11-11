@@ -9,8 +9,9 @@ exist then is deleted. Before changing anything, rewind checkpoints the current 
 will touch and records itself as a step, so a rewind can be rewound too.
 
 Safety: nothing is written unless the log's hash chain verifies and every stored copy still matches its
-SHA-256. Files outside the project (the directory holding .rewindagent/) are never touched. Changes made
-by Bash commands are not checkpointed yet, so they are counted and reported, not undone.
+SHA-256. Files outside the project (the directory holding .rewindagent/) are never touched. A Bash step
+whose before/after scan did not run (project too big, or no PostToolUse arrived) is counted and
+reported; the files it changed are not undone.
 """
 from __future__ import annotations
 
@@ -54,6 +55,10 @@ def steps(log_path: str | Path, session: str | None = None) -> list[dict]:
             for s in open_calls:
                 if s["tool"] == r["tool"] and s["input"] == inp:
                     s["result"] = r.get("result")
+                    pargs = r.get("args") if isinstance(r.get("args"), dict) else {}
+                    s["checkpoints"].extend(pargs.get("checkpoints") or [])
+                    if "bash_scan" in pargs and "skipped" not in s.get("bash_scan", {}):
+                        s["bash_scan"] = pargs["bash_scan"]   # a skip before the command says why
                     open_calls.remove(s)
                     break
             continue
@@ -67,6 +72,8 @@ def steps(log_path: str | Path, session: str | None = None) -> list[dict]:
             s["to_step"] = args["to_step"]
         if args.get("branch"):
             s["branch"] = args["branch"]
+        if isinstance(args.get("bash_scan"), dict) and "skipped" in args["bash_scan"]:
+            s["bash_scan"] = args["bash_scan"]
         out.append(s)
         if r.get("event") == "pre":
             open_calls.append(s)
@@ -125,7 +132,8 @@ def plan(log_path: str | Path, n: int, session: str | None = None) -> dict:
             first.setdefault(cp["path"], cp)
     p: dict[str, Any] = {"session": session, "to_step": n, "steps": len(all_steps),
                          "restore": [], "delete": [], "cannot": [],
-                         "bash_after": sum(1 for s in all_steps[n:] if s["tool"] == "Bash")}
+                         "bash_uncovered": sum(1 for s in all_steps[n:] if s["tool"] == "Bash"
+                                               and "changed" not in (s.get("bash_scan") or {}))}
     for path_s, cp in first.items():
         path = Path(path_s)
         if not _inside(path, root):

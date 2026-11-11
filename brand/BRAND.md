@@ -30,9 +30,9 @@ in the identity depends on it, and nothing is sold before it exists.
 Plain, exact, a little dry. We say what exists and what does not.
 
 1. **Exact.** We give the real behaviour and the real limit.
-   Example: "The hook records every call and saves the file before Write, Edit, MultiEdit and NotebookEdit; Bash changes are recorded but not yet checkpointed."
+   Example: "Files a Bash command changes are saved too, except git-ignored files and files over 20 MB; rewind tells you which ones it could not put back."
 2. **Honest about status.** Planned things are called planned.
-   Example: "Rewind is on the roadmap. Today you can verify the log, and every checkpoint is on disk in .rewindagent/objects/."
+   Example: "There is no pip package yet. Today you run it from a clone with PYTHONPATH."
 3. **Calm.** Mistakes happen; we do not dramatise them.
    Example: "The agent deleted the wrong folder. Step back one."
 4. **Dry.** One small joke at most, never at the reader's expense.

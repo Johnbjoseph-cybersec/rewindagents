@@ -117,9 +117,9 @@ def _report(p: dict, dry_run: bool, root) -> None:
     if p.get("record"):
         print(f"  this {('branch' if p.get('branch') else 'rewind')} is step {p['steps'] + 1}; "
               f"undo it with: python3 -m rewindagent rewind {p['steps']} --session {p['session']}")
-    if p["bash_after"]:
-        print(f"  note: {p['bash_after']} Bash step(s) after step {p['to_step']}; "
-              f"files they changed are not checkpointed and were not put back")
+    if p["bash_uncovered"]:
+        print(f"  note: {p['bash_uncovered']} Bash step(s) after step {p['to_step']} were not scanned; "
+              f"files they changed were not put back")
 
 
 if __name__ == "__main__":

@@ -3,9 +3,9 @@
 Ctrl+Z for AI coding agents: record, replay and rewind. Every tool call your coding agent makes goes into a
 tamper-evident, hash-chained log you can verify later.
 
-**Status: v0.0.3, pre-release.** Built and tested today: the recorder and its CLI, a Claude Code hook
-that records every call and checkpoints files before `Write`/`Edit`, and `replay`, `rewind` and `branch`.
-Not built yet: checkpoints for files that `Bash` commands change (see Roadmap).
+**Status: v0.0.4, pre-release.** Built and tested today: the recorder and its CLI, a Claude Code hook
+that records every call and checkpoints the files that `Write`/`Edit` and `Bash` commands change, and
+`replay`, `rewind` and `branch`. Not built yet: a pip package (see Roadmap).
 
 ## Claude Code hook
 
@@ -33,8 +33,18 @@ After that, in each project Claude Code works in:
 The hook never blocks or changes a call. It prints nothing and always exits 0, even if its input is
 broken or it cannot write; any problem goes to stderr only.
 
-Not checkpointed yet: files changed by `Bash` commands (for example `sed -i` or `rm`). Those calls are
-recorded, but the file contents before them are not saved.
+Around every `Bash` call (for example `sed -i`, `rm`, `mv`, a code generator), the hook saves the
+project's files before the command, scans again after it, and checkpoints, in the `post` record, only the
+files that were changed, deleted or created. Details and limits:
+
+- "The project's files" means, in a git repo, what `git ls-files --cached --others --exclude-standard`
+  lists: tracked and untracked files, but not git-ignored ones. Outside git, every file under the project
+  directory except `.git`, `.rewindagent`, `node_modules`, `.venv`, `venv` and `__pycache__`.
+- Only the project directory is scanned. A command that changes files elsewhere is recorded, not saved.
+- Symlinks are not saved. Files over 20 MB are noted and not copied.
+- Copies are stored by SHA-256, so an unchanged file is stored once. A stat cache
+  (`.rewindagent/index.json`) means only files whose size or modification time changed are read again.
+- A project with more than 20,000 files is not scanned; the call is still recorded and `rewind` reports it.
 
 ## Replay, rewind, branch
 
@@ -49,8 +59,9 @@ python3 -m rewindagent rewind 12           # files back to how they were right a
 python3 -m rewindagent branch 12 --name try2   # keep the current files, then rewind to step 12
 ```
 
-- `rewind N` puts back every file that a step after N changed with `Write`, `Edit`, `MultiEdit` or
-  `NotebookEdit`, and deletes the files those steps created. `rewind 0` undoes the whole session.
+- `rewind N` puts back every file that a step after N changed with `Write`, `Edit`, `MultiEdit`,
+  `NotebookEdit` or a `Bash` command, and deletes the files those steps created. `rewind 0` undoes the
+  whole session.
 - A rewind is undoable. It first saves the current bytes of every file it will change and records itself
   as a new step; the command prints `undo it with: python3 -m rewindagent rewind <step> --session <id>`.
 - `branch N --name X` does the same and, in a git repo, also commits the whole current working tree to the
@@ -60,9 +71,10 @@ python3 -m rewindagent branch 12 --name try2   # keep the current files, then re
   chain is broken it changes nothing. If a stored copy no longer matches, that file is reported and left
   as it is.
 - It only touches files inside the project directory. Files outside it are reported and left alone.
-- Limits: files changed by `Bash` steps after N are not put back (the command reports how many Bash steps
-  there were). Directories created by those steps stay. Files over 20 MB were never copied, so they are
-  reported and not restored. If anything could not be restored, the exit code is 1.
+- Limits: a `Bash` step whose scan did not run (more than 20,000 files, or Claude Code sent no
+  `PostToolUse` for it) is counted and reported, and its changes are not put back. Directories created by
+  later steps stay (empty). Files over 20 MB were never copied, so they are reported and not restored. If
+  anything could not be restored, the exit code is 1.
 
 ## Recorder
 
@@ -108,7 +120,7 @@ python3 -m rewindagent verify --head <pinned-hash>
 
 ## Roadmap
 
-- Checkpoint files changed by `Bash` commands, so `rewind` covers `sed -i` and `rm` too
+- A pip package with a `rewindagent` console command
 
 ## Tests
 

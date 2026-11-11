@@ -4,7 +4,9 @@ Claude Code runs the hook with one JSON object on stdin. The hook:
 - appends a "pre" record (tool + input) before the call and a "post" record (tool + response) after it;
 - before Write, Edit, MultiEdit and NotebookEdit, copies the current bytes of the target file into a
   content-addressed store (.rewindagent/objects/<sha256>) and puts the hash in the "pre" record, so the
-  file can be put back later. A file that does not exist yet is recorded as absent.
+  file can be put back later. A file that does not exist yet is recorded as absent;
+- around Bash, saves the project's files before the command and checkpoints, in the "post" record,
+  the ones it changed, created or deleted (see bashscan.py).
 
 It never blocks, never decides and never changes the call: it prints nothing to stdout and always
 exits 0, even when its own input is broken or the disk is full. Problems go to stderr only.
@@ -83,10 +85,16 @@ def handle(payload: dict) -> dict:
             if not target.is_absolute():
                 target = cwd / target
             args["checkpoint"] = checkpoint(target, store / "objects")
+        elif tool == "Bash":
+            from . import bashscan
+            args["bash_scan"] = bashscan.before(payload, cwd, store)
         return rec.record(session, tool, args, None, event="pre")
     if event == "PostToolUse":
-        return rec.record(session, tool, {"input": tool_input}, _clip(payload.get("tool_response")),
-                          event="post")
+        args = {"input": tool_input}
+        if tool == "Bash":
+            from . import bashscan
+            args["bash_scan"], args["checkpoints"] = bashscan.after(payload, cwd, store)
+        return rec.record(session, tool, args, _clip(payload.get("tool_response")), event="post")
     return rec.record(session, tool, {"input": tool_input}, None, event=event or "unknown")
 
 

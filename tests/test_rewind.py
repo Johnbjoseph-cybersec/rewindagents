@@ -36,10 +36,14 @@ class Agent:
         (self.cwd / name).write_text(text)
         hook.handle(self._p("PostToolUse", "Write", inp, {"ok": True}))
 
-    def bash(self, command):
+    def bash(self, command, action=None, post=True):
+        """Pre hook, then `action` (the command's effect on the files), then the post hook."""
         inp = {"command": command}
         hook.handle(self._p("PreToolUse", "Bash", inp))
-        hook.handle(self._p("PostToolUse", "Bash", inp, {"stdout": ""}))
+        if action:
+            action(self.cwd)
+        if post:
+            hook.handle(self._p("PostToolUse", "Bash", inp, {"stdout": ""}))
 
     @property
     def log(self):
@@ -155,13 +159,13 @@ class TestLimits(unittest.TestCase):
             self.assertEqual(p["cannot"], [(str(outside), "outside the project")])
             self.assertEqual(outside.read_text(), "after")
 
-    def test_bash_steps_after_the_target_are_counted(self):
+    def test_bash_steps_without_a_finished_scan_are_counted(self):
         with TemporaryDirectory() as d:
             a = Agent(d)
             a.write("f.txt", "1")
-            a.bash("sed -i '' s/1/2/ f.txt")
-            a.bash("rm -rf build")
-            self.assertEqual(rewind.rewind(a.log, 1, dry_run=True)["bash_after"], 2)
+            a.bash("sed -i '' s/1/2/ f.txt")             # scanned before and after
+            a.bash("rm -rf build", post=False)           # no PostToolUse arrived
+            self.assertEqual(rewind.rewind(a.log, 1, dry_run=True)["bash_uncovered"], 1)
 
 
 def git(cwd, *args):
