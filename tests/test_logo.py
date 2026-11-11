@@ -145,6 +145,13 @@ class TestLogo(unittest.TestCase):
             self.assertTrue(ok, "%s (%d,%d): %s should be %s, sampled %s" % (png, x, y, name, want, got))
         self.assertEqual({r[3] for r in results} >= {"Leader", "Reel", "Record", "Rewind", "Rule", "Tape"}, True)
 
+    def test_in_use_install_line_is_the_readme_install_line(self):
+        # The in-use sheet shows an install command; it must be the one the README gives, not a variant.
+        with open(os.path.join(BRAND, "logo", "build.py"), encoding="utf-8") as f:
+            install = re.search(r'^INSTALL = "([^"]+)"', f.read(), re.M).group(1)
+        with open(os.path.join(ROOT, "README.md"), encoding="utf-8") as f:
+            self.assertIn(install, f.read())
+
     def test_in_use_sheet_exists(self):
         # The reviewer judges the mark where it is seen (tab, README, avatar crops), not alone.
         self.assertEqual(png_size(os.path.join(BRAND, "logo", "in-use.png")), (1320, 460))
