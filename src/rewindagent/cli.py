@@ -1,4 +1,4 @@
-"""rewindagent command line: record, verify, head, show, hook, install, replay, rewind, branch."""
+"""rewindagent command line: record, verify, head, show, hook, install, replay, rewind, branch, export."""
 from __future__ import annotations
 
 import argparse
@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import __version__, hook, log, rewind
+from . import __version__, export, hook, log, rewind
 
 
 def invocation() -> str:
@@ -41,6 +41,11 @@ def main(argv: list[str] | None = None) -> int:
     br.add_argument("step", type=int)
     br.add_argument("--name", required=True, help="branch name (git: rewindagent/<name>)")
     br.add_argument("--session", help="default: the session that wrote the last record")
+    ex = sub.add_parser("export", help="write a session as one self-contained HTML page (steps, inputs, results, file diffs)")
+    ex.add_argument("--session", help="default: the session that wrote the last record")
+    ex.add_argument("--out", help="file to write (default: .rewindagent/replay-<session>.html)")
+    ex.add_argument("--no-contents", action="store_true",
+                    help="leave inputs, results and diffs out: steps, tools and paths only")
 
     a = ap.parse_args(argv)
     if a.cmd == "hook":
@@ -49,11 +54,23 @@ def main(argv: list[str] | None = None) -> int:
         changed = hook.install(a.settings)
         print(f"{'installed in' if changed else 'already installed in'} {a.settings}")
         return 0
-    if a.cmd in ("verify", "show", "replay", "rewind", "branch") and not Path(a.log).exists():
+    if a.cmd in ("verify", "show", "replay", "rewind", "branch", "export") and not Path(a.log).exists():
         print(f"rewindagent: no log at {a.log}", file=sys.stderr)
         return 2
     if a.cmd == "replay":
         return _replay(a.log, a.session, a.step)
+    if a.cmd == "export":
+        try:
+            d = export.export(a.log, a.session, a.out, contents=not a.no_contents)
+        except export.ExportError as e:
+            print(f"rewindagent: {e}", file=sys.stderr)
+            return 1
+        print(f"wrote {rewind.relative(d['out'], rewind.project_root(a.log))}: session {d['session']}, "
+              f"{len(d['steps'])} steps, {d['bytes']:,} bytes")
+        if not d["chain_ok"]:
+            print(f"rewindagent: the log does not verify ({d['chain_msg']}); the page says so", file=sys.stderr)
+            return 1
+        return 0
     if a.cmd in ("rewind", "branch"):
         try:
             if a.cmd == "rewind":

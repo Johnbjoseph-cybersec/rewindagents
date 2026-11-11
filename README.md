@@ -3,10 +3,10 @@
 Ctrl+Z for AI coding agents: record, replay and rewind. Every tool call your coding agent makes goes into a
 tamper-evident, hash-chained log you can verify later.
 
-**Status: v0.0.5, pre-release.** Built and tested today: the recorder and its CLI, a Claude Code hook
+**Status: v0.0.6, pre-release.** Built and tested today: the recorder and its CLI, a Claude Code hook
 that records every call and checkpoints the files that `Write`/`Edit` and `Bash` commands change,
-`replay`, `rewind` and `branch`, and a pip-installable package with a `rewindagent` command. Not on PyPI yet.
-Planned: hooks for Codex and Cursor.
+`replay`, `rewind` and `branch`, `export` (a session as one HTML page), and a pip-installable package with
+a `rewindagent` command. Not on PyPI yet. Planned: hooks for Codex and Cursor.
 
 ## Install
 
@@ -88,6 +88,29 @@ rewindagent branch 12 --name try2   # keep the current files, then rewind to ste
   `PostToolUse` for it) is counted and reported, and its changes are not put back. Directories created by
   later steps stay (empty). Files over 20 MB were never copied, so they are reported and not restored. If
   anything could not be restored, the exit code is 1.
+
+## Export a replay
+
+```sh
+rewindagent export                                  # writes .rewindagent/replay-<session>.html
+rewindagent export --session abc --out replay.html  # a given session, to a given file
+rewindagent export --no-contents                    # steps, tools and paths only: no inputs, results or diffs
+```
+
+One HTML file with the whole session: every step with its tool, input and result, and for every file a
+step checkpointed, the change that step made as a unified diff (the file before the step against the file
+after it: its next checkpoint in the session, or the file as it is now). Open it in a browser, attach it to a
+bug report or a code review, or keep it with the session.
+
+- Inline CSS only. No scripts, and nothing is fetched from anywhere, so the page is safe to pass on.
+- Paths inside the project are shown relative to it; where the project lives on disk is not in the page.
+- A file over 256 KB on either side is described, not diffed. A diff longer than 400 lines is cut, with
+  the count of the lines left out. Binary files show their size before and after.
+- Inputs and results are the recorded ones, so a result that was cut at 4,000 characters stays cut.
+- `--no-contents` drops inputs, results and diffs (a `Write` input is the file's content). Each step keeps
+  the one-line summary `replay` prints, so a `Bash` command line is still on the page.
+- If the log's hash chain does not verify, the page is still written, with a notice naming the first bad
+  record, and the command exits 1.
 
 ## Recorder
 

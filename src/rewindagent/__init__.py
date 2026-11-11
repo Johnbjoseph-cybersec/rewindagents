@@ -2,4 +2,4 @@
 from .log import GENESIS, Recorder, head, read, verify
 
 __all__ = ["GENESIS", "Recorder", "head", "read", "verify"]
-__version__ = "0.0.5"
+__version__ = "0.0.6"
