@@ -1,0 +1,30 @@
+{
+  "reviewer": "cs-iris-kapoor",
+  "round": 3,
+  "date": "2026-11-11",
+  "scope": "RB2 logo set only; site, videos, launch kit not yet reviewed",
+  "history": [
+    {"round": 1, "weighted": 7.71, "pass": false},
+    {"round": 2, "weighted": 7.86, "pass": false}
+  ],
+  "rows": [
+    {"id": 1, "item": "concept reads (playhead on a step ruler, one step back)", "score": 7, "evidence": "Verified: the detached down-pointing marker plus bar now reads as a cursor and the T/pin/1 confusion is gone, and the solid grey fourth tick is clean (no missing-glyph box). But the ticks are fat bars standing on a thick slab, so the set still reads as a bar chart or piano keys, and the wide red bar with a wide triangle above it can read as a necktie or funnel. One step back is carried only by the grey tick sitting to the right of the playhead, which takes explaining."},
+    {"id": 2, "item": "legibility at 16 px", "score": 7.5, "evidence": "Contact sheet, true 16 px (light and dark rows): marker, red bar, two ticks, grey tick and rule are all separable, so the separate drawing works and the dark reverse holds. At 16 px the triangle is only about 7 px wide and the left two ticks lose their gap on the light row; favicon-32.png is readable as a red bar with a triangle but looks like a tiny pin or I-beam before it looks like a ruler."},
+    {"id": 3, "item": "wordmark craft", "score": 8, "evidence": "logo-light/dark: Bricolage 800 lowercase, even colour, tight but clean at -0.02 em; no collisions in 'nd' or 'ag'. Weaker points: the g descender and a-g pair are slightly dense, and in the stacked lockup the name is about twice the width of the mark, so the mark feels like an accessory to a large word rather than one lockup."},
+    {"id": 4, "item": "palette fidelity and distinctness from John's other brands", "score": 8.5, "evidence": "By eye: warm paper ground, near-black ink, Record red bar, mid grey for the rewound tick, coral on the dark ground; no purple, no navy, no security look. Hex values were not sampled, so fidelity to BRAND.md is judged visually only. Red plus black plus paper is a slightly generic editorial trio, though the dark coral shift is deliberate."},
+    {"id": 5, "item": "composition of logo-light/dark + avatar", "score": 8, "evidence": "logo-light: block spans y 250 to 795 of 1024 (top gap 250, bottom gap about 229), centred, no clipping; mark and name share the centre axis. Dead margins left and right of the mark are large, and the mark is small against the name. avatar-512: mark spans x 72-440, y 95-417, optically centred and inside a circular crop (rule corner about 217 px from centre, limit 256); the marker sits a little close to the top edge relative to the bottom."},
+    {"id": 6, "item": "social preview", "score": 8, "evidence": "1280x640: clear hierarchy (name about 100 px, two-line tagline, command block, small credit), left edge at 96, right mark ends at 1184, no overlap or clip, mark vertically centred at about y 320. Weak points: the dark command block is the heaviest shape and competes with the mark; the grey credit is low contrast and small; the gap between the text column and the mark is wide so the two halves feel separate."},
+    {"id": 7, "item": "house rules", "score": 9, "evidence": "No gradient, glow, emoji, 3D or mascot; flat geometry only; no purple; the only text claims are the tagline and a real command, and the credit is a plain byline. Nothing presented as AI-generated. The tagline uses 'AI coding agents' as a product descriptor, which is fine."}
+  ],
+  "weighted": 8.0,
+  "pass": false,
+  "fixes": [
+    "Row 1 and 2: thin the ticks and the rule so the mark reads as a measuring ruler rather than a bar chart (ticks about 60 percent of current width, rule about 60 percent of current height) while keeping the playhead bar heavy; re-check at true 16 px that the gaps survive.",
+    "Row 1: narrow the marker triangle to roughly the playhead bar width plus one unit each side, and shorten the bar's overhang below the rule, so it stops reading as a necktie or funnel.",
+    "Row 1: make 'one step back' legible without explanation, for example give the rewound tick a visibly lower height or a hairline step-gap showing it was the last recorded step, not just a grey colour.",
+    "Row 2: in the 16 px drawing keep a 1 px gap between the left tick and the playhead and make the triangle at least 9 px wide; look at the dark row again afterwards.",
+    "Row 5: enlarge the mark in logo-light/dark to about 60 to 65 percent of the wordmark width so they read as one lockup; keep the avatar marker 1 unit lower from the top edge.",
+    "Row 6: lower the command block's weight (mid-grey fill or outline only) or reduce its width, raise the credit contrast, and bring the mark closer to the text column or enlarge it.",
+    "Row 4: sample the exported PNG pixels and paste the hex-to-BRAND.md comparison into the build log so palette fidelity is measured, not eyeballed."
+  ]
+}

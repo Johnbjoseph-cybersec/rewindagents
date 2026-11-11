@@ -1,7 +1,7 @@
 # rewindagent - brand identity
 
-Status: identity document only (task RB1). No logo, no site. Written by Iris Kapoor, Creative Studio.
-Not self-graded; an independent reviewer scores it later.
+Status: identity (RB1, written by Iris Kapoor, Creative Studio) and logo set (RB2, see "Logo" below). No site yet.
+Not self-graded; an independent reviewer scores it in brand/review.json.
 
 ## One-line promise
 
@@ -11,8 +11,8 @@ Ctrl+Z for AI coding agents: record, replay, rewind.
 
 rewindagent is an open-source recorder for coding agents. It writes every tool call an agent makes
 (Claude Code today; Codex and Cursor planned) into a tamper-evident, hash-chained JSONL log and saves a
-copy of each file before the agent changes it. Replaying a session step by step, and rewinding the working
-tree to any step or branching from it, are planned and not built yet. It never blocks, judges or stops an
+copy of each file before the agent changes it. You can replay a session step by step, rewind the working
+tree to any step, or keep the current files as a branch and then rewind. It never blocks, judges or stops an
 action: the agent works at full speed and every action stays undoable. It is a developer tool, not a security
 product, and it should feel like one: a flight recorder and a tape deck, plain, exact and a little
 mechanical, sitting quietly in the repo until you need it.
@@ -113,7 +113,26 @@ All free, open-licensed, self-hostable.
 Use: sentence case headings, left aligned, tight tracking on display only. Hashes and step numbers always in
 mono, tabular. Not used: Poppins, Plus Jakarta Sans, Inter, Space Grotesk, any serif.
 
-## Logo direction brief (for a later task)
+## Logo (RB2)
+
+Built by brand/logo/build.py (geometry + text outlined from the OFL font files) and rendered by
+brand/logo/render.mjs (resvg). Look at brand/logo/contact-sheet.png: every asset, plus the mark at true 16, 32
+and 64 px.
+
+- Mark: four ticks on a two-unit rule, 16-unit grid, integer coordinates. A Record red playhead stands on the
+  third tick: a bar crossing the rule, with a down-pointing marker one unit above it. The fourth tick, the
+  step that was rewound, is solid Rule grey.
+- One change from the brief below: the small left-pointing flag was dropped. Bar plus flag read as the
+  digit 1, and the caps tried after it read as a pin or a T. A detached marker reads as a timeline cursor.
+  The grey tick after the playhead carries "one step back".
+- favicon.svg / favicon-32.png are a separate 16 px drawing: one tick, the playhead, the rewound tick in Tape.
+- Files: logo-mark.svg (light), logo-mark-reverse.svg (dark), logo-mark-mono.svg (currentColor),
+  logo-wordmark.svg / -reverse / -mono (horizontal), favicon.svg + favicon-32.png, avatar-512.png,
+  logo-light.png and logo-dark.png (1024, stacked: mark over the name), social-preview-1280x640.png.
+- Wordmark: Bricolage Grotesque 800, tracking -0.02 em, no kerning table applied. In the horizontal lockup
+  the ruler is 1.25 x-heights tall and the text baseline is the bottom of the rule.
+
+## Logo direction brief (from RB1)
 
 Concept: a **playhead on a step ruler**. A single vertical line (the playhead) crossing a row of evenly spaced
 tick marks, with the line sitting one tick behind the last one. It reads as both a tape counter and a
@@ -139,7 +158,7 @@ stepped back to.
 
 ## Don't
 
-- Don't claim replay or rewind works today.
+- Don't claim more than the code does: Codex and Cursor support, a pip package and anything paid are planned.
 - Don't present it as a security, compliance or monitoring product.
 - Don't use purple, violet, neon, gradients, glass, blobs, sparkles, emoji or stock robot imagery.
 - Don't invent users, quotes, logos, stars, downloads, numbers or benchmarks.

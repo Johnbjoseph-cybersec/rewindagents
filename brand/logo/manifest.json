@@ -1,0 +1,22 @@
+{
+ "avatar-512.png": {
+  "src": "logo/src/avatar-512.svg",
+  "width": 512
+ },
+ "favicon-32.png": {
+  "src": "logo/src/favicon-32.svg",
+  "width": 32
+ },
+ "logo-dark.png": {
+  "src": "logo/src/logo-dark.svg",
+  "width": 1024
+ },
+ "logo-light.png": {
+  "src": "logo/src/logo-light.svg",
+  "width": 1024
+ },
+ "social-preview-1280x640.png": {
+  "src": "logo/src/social-preview-1280x640.svg",
+  "width": 1280
+ }
+}
