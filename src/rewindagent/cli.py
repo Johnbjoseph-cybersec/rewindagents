@@ -1,4 +1,5 @@
-"""rewindagent command line: record, verify, head, show, hook, install, replay, rewind, branch, export."""
+"""rewindagent command line: record, verify, head, show, hook, install, replay, rewind, branch, export,
+sessions."""
 from __future__ import annotations
 
 import argparse
@@ -6,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import __version__, export, hook, log, rewind
+from . import __version__, export, hook, log, rewind, sessions
 
 
 def invocation() -> str:
@@ -46,6 +47,10 @@ def main(argv: list[str] | None = None) -> int:
     ex.add_argument("--out", help="file to write (default: .rewindagent/replay-<session>.html)")
     ex.add_argument("--no-contents", action="store_true",
                     help="leave inputs, results and diffs out: steps, tools and paths only")
+    se = sub.add_parser("sessions", help="list every session in the log: id, first and last time, steps, files touched")
+    se.add_argument("--grep", metavar="TEXT",
+                    help="only sessions with a step whose command, file or input mentions TEXT (any case); "
+                         "the matching steps are listed")
 
     a = ap.parse_args(argv)
     if a.cmd == "hook":
@@ -54,11 +59,19 @@ def main(argv: list[str] | None = None) -> int:
         changed = hook.install(a.settings)
         print(f"{'installed in' if changed else 'already installed in'} {a.settings}")
         return 0
-    if a.cmd in ("verify", "show", "replay", "rewind", "branch", "export") and not Path(a.log).exists():
+    if a.cmd in ("verify", "show", "replay", "rewind", "branch", "export", "sessions") and not Path(a.log).exists():
         print(f"rewindagent: no log at {a.log}", file=sys.stderr)
         return 2
     if a.cmd == "replay":
         return _replay(a.log, a.session, a.step)
+    if a.cmd == "sessions":
+        found = sessions.sessions(a.log, a.grep)
+        for line in sessions.lines(found, root=rewind.project_root(a.log)):
+            print(line)
+        if a.grep and not found:
+            print(f"rewindagent: no session mentions {a.grep!r}", file=sys.stderr)
+            return 1
+        return 0
     if a.cmd == "export":
         try:
             d = export.export(a.log, a.session, a.out, contents=not a.no_contents)

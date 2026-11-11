@@ -94,6 +94,15 @@ class InstalledCommandTest(unittest.TestCase):
             self.assertIn("undo it with: rewindagent rewind 1 --session inst", r.stdout)
             r = self._run("verify", cwd=proj)
             self.assertEqual((r.returncode, r.stdout.strip()), (0, "OK: 3 records, chain intact"), r.stderr)
+            r = self._run("sessions", cwd=proj)                    # the Bash step and the rewind: 2 steps, app.py
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertRegex(r.stdout.splitlines()[0], r"^inst  .* to .*  2 steps \(1 rewind\)  1 files  \(latest\)$")
+            self.assertEqual(r.stdout.splitlines()[1], "    files: app.py")
+            self.assertNotIn(proj, r.stdout)
+            r = self._run("sessions", "--grep", "SED", cwd=proj)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn("sed -i.bak", r.stdout)
+            self.assertEqual(self._run("sessions", "--grep", "nothing-here", cwd=proj).returncode, 1)
 
 
 class ReadmeCommandsTest(unittest.TestCase):
@@ -108,7 +117,7 @@ class ReadmeCommandsTest(unittest.TestCase):
             if m and not m.group(1).startswith("-"):
                 self.assertIn(m.group(1), SUBCOMMANDS, line)
                 seen.add(m.group(1))
-        self.assertTrue({"install", "replay", "rewind", "branch", "verify"} <= seen, seen)
+        self.assertTrue({"install", "replay", "rewind", "branch", "verify", "export", "sessions"} <= seen, seen)
 
     def test_readme_says_the_package_exists_and_is_not_on_pypi(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")

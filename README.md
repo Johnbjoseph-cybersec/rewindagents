@@ -5,8 +5,9 @@ tamper-evident, hash-chained log you can verify later.
 
 **Status: v0.0.7, pre-release.** Built and tested today: the recorder and its CLI, a Claude Code hook
 that records every call and checkpoints the files that `Write`/`Edit` and `Bash` commands change,
-`replay`, `rewind` and `branch`, `export` (a session as one HTML page), and a pip-installable package with
-a `rewindagent` command. Not on PyPI yet. Planned: hooks for Codex and Cursor.
+`replay`, `rewind` and `branch`, `export` (a session as one HTML page), `sessions` (list and search the
+sessions in a log), and a pip-installable package with a `rewindagent` command. Not on PyPI yet. Planned:
+hooks for Codex and Cursor.
 
 ![rewindagent demo: an agent's last two steps delete the tests and overwrite the config; rewindagent replay lists the fourteen steps, rewindagent rewind 12 puts the files back](brand/demo.gif)
 
@@ -117,6 +118,27 @@ bug report or a code review, or keep it with the session.
   the one-line summary `replay` prints, so a `Bash` command line is still on the page.
 - If the log's hash chain does not verify, the page is still written, with a notice naming the first bad
   record, and the command exits 1.
+
+## Find a session
+
+```sh
+rewindagent sessions                     # every session in the log: id, first and last time, steps, files touched
+rewindagent sessions --grep config.py    # only sessions with a step that mentions it, and those steps
+```
+
+One line per session, in the order the sessions first wrote to the log, with the session id, the local
+time of its first and last record, the number of steps (the numbers `replay` and `rewind` use, with how
+many of them are rewinds or branches) and the files it touched; a second line names the first 5 files and
+counts the rest. The session that wrote the
+last record, the one `replay` and `rewind` use by default, is marked `(latest)`.
+
+- A file is touched when a step checkpointed it: changed, created or deleted by `Write`, `Edit`,
+  `MultiEdit`, `NotebookEdit`, a `Bash` command or a rewind. A file that was only read is not touched.
+- `--grep TEXT` keeps the sessions with a step whose `replay` line (the command, the file, or the
+  input) or checkpointed path contains TEXT, in any case, and lists those steps under the session with
+  their step numbers, so `rewindagent rewind <step> --session <id>` can follow. Exit code 1 if no session
+  matches.
+- Paths are shown relative to the project.
 
 ## Recorder
 

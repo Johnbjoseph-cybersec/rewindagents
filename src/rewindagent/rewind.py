@@ -46,7 +46,11 @@ def latest_session(log_path: str | Path) -> str | None:
 def steps(log_path: str | Path, session: str | None = None) -> list[dict]:
     """The session's steps in order. Default session: the one that wrote the last record."""
     session = session or latest_session(log_path)
-    recs = log.read(log_path, session)
+    return steps_from(log.read(log_path, session))
+
+
+def steps_from(recs: list[dict]) -> list[dict]:
+    """Pair one session's records (in log order) into numbered steps: see steps()."""
     out: list[dict] = []
     open_calls: list[dict] = []
     for r in recs:
