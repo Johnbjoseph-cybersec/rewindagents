@@ -1,7 +1,9 @@
 # rewindagent - brand identity
 
-Status: identity (RB1, written by Iris Kapoor, Creative Studio) and logo set (RB2, see "Logo" below). No site yet.
-Not self-graded; an independent reviewer scores it in brand/review.json.
+Status: identity (RB1, written by Iris Kapoor, Creative Studio), logo set (RB2, see "Logo" below) and the
+demo GIF (RB2b, see "Demo GIF"). No site yet.
+Not self-graded; independent reviewers score the identity in brand/review.json and the demo in
+brand/demo/review.json.
 
 ## One-line promise
 
@@ -145,6 +147,26 @@ page, avatar in circle crops): the reviewer reads the mark where it will be seen
 - Palette fidelity is measured, not eyeballed: build.py records sample points (pixel, expected palette name)
   for every PNG in brand/logo/manifest.json; `python3 brand/logo/pngsample.py` prints the sampled hex next to
   the BRAND.md hex, and tests/test_logo.py fails on any mismatch.
+
+## Demo GIF (RB2b)
+
+brand/demo.gif, 1200 x 675, under 20 seconds, looping. Built by brand/demo/build.py from brand/demo/scenario.py:
+a small project in a temporary folder, fourteen agent steps through the real Claude Code hook (the last two
+run `rm -rf tests` and overwrite app/config.py), then the four commands the clip shows: `rewindagent replay`,
+`git status --short`, `rewindagent rewind 12`, `git status --short`. Every line on screen is what those
+commands printed; tests/test_demo.py plays the session again and fails on any difference, and reads the
+GIF's size, play time, delays and colour table from the file.
+
+- Look: the Leader ground with a Spool terminal on it (light first, a dark variant for terminals). Terminal
+  text in Leader, comments and the prompt in Playhead, the mark in the title bar in mono Leader. Rewind is
+  used once per view, for the thing to look at: the two steps that wrecked the repo in the replay list, then
+  the restored files in the rewind report; when the next block appears the earlier one returns to Leader.
+- Type: Commit Mono 400 for the terminal, Bricolage Grotesque 800 for the name, Hanken Grotesk 400 for the
+  tagline and the credit, all outlined from the OFL files.
+- Pacing: a comment line, the command typed at 25 characters a second, a short beat, the output, then a hold
+  of two to three seconds with the prompt back. Every duration is on ffmpeg's 40 ms grid.
+- Look at brand/demo/keyframes/ (the opening prompt and the end of each beat, full size) and
+  brand/demo/contact-sheet.png before judging it; the per-frame sources are rebuilt into brand/demo/frames/.
 
 ## Logo direction brief (from RB1)
 

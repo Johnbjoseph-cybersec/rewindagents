@@ -1,0 +1,88 @@
+{
+ "beats": [
+  {
+   "accent_rows": [
+    12,
+    13
+   ],
+   "caption": "# a coding agent has been working in this repo; rewindagent recorded every step",
+   "command": "rewindagent replay",
+   "exit": 0,
+   "hold": 2.4,
+   "output": "    1  Read          README.md\n    2  Read          app/config.py\n    3  Edit          app/config.py  [1 checkpointed]\n    4  Read          app/server.py\n    5  Edit          app/server.py  [1 checkpointed]\n    6  Write         tests/test_timeout.py  [1 checkpointed]\n    7  Bash          python3 -m unittest discover -s tests -t . -q\n    8  Edit          app/server.py  [1 checkpointed]\n    9  Bash          python3 -m unittest discover -s tests -t . -q\n   10  Edit          README.md  [1 checkpointed]\n   11  Bash          git status --short\n   12  Read          tests/test_server.py\n   13  Bash          rm -rf tests  [3 checkpointed]\n   14  Write         app/config.py  [1 checkpointed]\n"
+  },
+  {
+   "accent_rows": [],
+   "caption": "# its last two steps deleted the tests and overwrote the config",
+   "command": "git status --short",
+   "exit": 0,
+   "hold": 2.0,
+   "output": " M README.md\n M app/config.py\n M app/server.py\n D tests/test_config.py\n D tests/test_server.py\n"
+  },
+  {
+   "accent_rows": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "caption": "# put the files back the way they were right after step 12",
+   "command": "rewindagent rewind 12",
+   "exit": 0,
+   "hold": 2.8,
+   "output": "session demo: rewind to step 12 of 14 (did change 4 files)\n  restore  tests/test_config.py\n  restore  tests/test_server.py\n  restore  tests/test_timeout.py\n  restore  app/config.py\n  this rewind is step 15; undo it with: rewindagent rewind 14 --session demo\n"
+  },
+  {
+   "accent_rows": [],
+   "caption": "# the tests are back; the first 12 steps stay",
+   "command": "git status --short",
+   "exit": 0,
+   "hold": 3.2,
+   "output": " M README.md\n M app/config.py\n M app/server.py\n?? tests/test_timeout.py\n"
+  }
+ ],
+ "colours": {
+  "accent": "Rewind",
+  "caption": "Playhead",
+  "command": "Leader",
+  "cursor": "Leader",
+  "output": "Leader",
+  "prompt": "Playhead"
+ },
+ "cols": 104,
+ "credit": "made by John B Joseph",
+ "fonts": [
+  "Commit Mono 400 (terminal)",
+  "Bricolage Grotesque 800 (name)",
+  "Hanken Grotesk 400 (small print)"
+ ],
+ "gif": "demo.gif",
+ "gif_facts": {
+  "bytes": 209049,
+  "delays_cs": [
+   4,
+   8,
+   16,
+   40,
+   200,
+   240,
+   280,
+   320
+  ],
+  "frames": 65,
+  "height": 675,
+  "loops": 0,
+  "seconds": 16.64,
+  "width": 1200
+ },
+ "good_step": 12,
+ "grid_seconds": 0.04,
+ "invocation": "rewindagent",
+ "limit_seconds": 20.0,
+ "rows": 19,
+ "session": "demo",
+ "steps": 14,
+ "storyboard_seconds": 16.6,
+ "title_right": "Ctrl+Z for AI coding agents",
+ "version": "0.0.7"
+}

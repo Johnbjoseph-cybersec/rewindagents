@@ -3,10 +3,16 @@
 Ctrl+Z for AI coding agents: record, replay and rewind. Every tool call your coding agent makes goes into a
 tamper-evident, hash-chained log you can verify later.
 
-**Status: v0.0.6, pre-release.** Built and tested today: the recorder and its CLI, a Claude Code hook
+**Status: v0.0.7, pre-release.** Built and tested today: the recorder and its CLI, a Claude Code hook
 that records every call and checkpoints the files that `Write`/`Edit` and `Bash` commands change,
 `replay`, `rewind` and `branch`, `export` (a session as one HTML page), and a pip-installable package with
 a `rewindagent` command. Not on PyPI yet. Planned: hooks for Codex and Cursor.
+
+![rewindagent demo: an agent's last two steps delete the tests and overwrite the config; rewindagent replay lists the fourteen steps, rewindagent rewind 12 puts the files back](brand/demo.gif)
+
+The clip is a real session, not a mock-up: `brand/demo/build.py` runs fourteen agent steps through the
+hook in a temporary project, then the four commands shown, and draws the frames from what they printed.
+`tests/test_demo.py` plays the same session again and fails if any line differs.
 
 ## Install
 

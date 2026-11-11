@@ -99,6 +99,8 @@ def summary(step: dict, width: int = 80, root: Path | None = None) -> str:
             text += f", branch {step['branch'].get('name')}"
     elif step["tool"] in FILE_TOOLS and isinstance(inp, dict):
         text = relative(inp.get(FILE_TOOLS[step["tool"]], ""), root)
+    elif isinstance(inp, dict) and isinstance(inp.get("file_path"), str):
+        text = relative(inp["file_path"], root)      # Read and other file tools: the file, not raw JSON
     elif isinstance(inp, dict) and "command" in inp:
         text = str(inp["command"])
     else:

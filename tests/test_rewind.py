@@ -281,5 +281,26 @@ class TestCli(unittest.TestCase):
             self.assertEqual(Path(d, "app.py").read_text(), "v2")
 
 
+class TestSummary(unittest.TestCase):
+    def test_a_read_step_shows_the_file_relative_to_the_project(self):
+        # A Read is recorded like any call; replay must show its file, not the input JSON with the full path.
+        with TemporaryDirectory() as d:
+            root = Path(d).resolve()
+            a = Agent(root)
+            inp = {"file_path": str(root / "docs" / "notes.md")}
+            hook.handle(a._p("PreToolUse", "Read", inp))
+            hook.handle(a._p("PostToolUse", "Read", inp, {"content": "x"}))
+            s = rewind.steps(a.log)[0]
+            self.assertEqual(rewind.summary(s, root=root), "docs/notes.md")
+            code, out, _ = cli("--log", str(a.log), "replay")
+            self.assertEqual(code, 0)
+            self.assertIn("  Read          docs/notes.md", out)
+            self.assertNotIn(str(root), out)
+
+    def test_a_step_without_a_file_or_command_still_shows_its_input(self):
+        s = {"event": "pre", "tool": "WebSearch", "input": {"query": "x"}, "checkpoints": []}
+        self.assertEqual(rewind.summary(s), '{"query": "x"}')
+
+
 if __name__ == "__main__":
     unittest.main()
