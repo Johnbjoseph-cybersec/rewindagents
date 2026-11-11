@@ -1,1 +1,1 @@
-python3 -m unittest discover -s tests -v
+python3 -m venv .venv && .venv/bin/pip install -q --disable-pip-version-check . && REWINDAGENT_BIN="$PWD/.venv/bin/rewindagent" python3 -m unittest discover -s tests -v

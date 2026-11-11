@@ -17,6 +17,7 @@ import hashlib
 import json
 import os
 import shlex
+import site
 import sys
 from pathlib import Path
 from typing import Any
@@ -110,9 +111,32 @@ def run(stdin=None) -> int:
     return 0
 
 
+def installed() -> bool:
+    """True when this copy of the package lives in a site-packages directory of this interpreter
+    (pip, pipx, a venv): then `python -m rewindagent` works without PYTHONPATH and the `rewindagent`
+    command exists. False when running from a clone with PYTHONPATH=src.
+
+    Not a metadata lookup: `pip install .` leaves `src/rewindagent.egg-info` behind in the clone, which
+    makes importlib.metadata report the clone as installed when src is on sys.path.
+    """
+    here = Path(__file__).resolve()
+    dirs = list(site.getsitepackages()) if hasattr(site, "getsitepackages") else []
+    if hasattr(site, "getusersitepackages"):
+        dirs.append(site.getusersitepackages())
+    return any(here.is_relative_to(Path(d).resolve()) for d in dirs if d)
+
+
 def hook_command() -> str:
+    """The command Claude Code will run for every hook event.
+
+    It names the interpreter by absolute path, so it works whether or not a virtualenv is active.
+    From a clone (not installed) it carries the PYTHONPATH that makes the package importable.
+    """
+    run = f"{shlex.quote(sys.executable)} -m rewindagent hook"
+    if installed():
+        return run
     src = Path(__file__).resolve().parent.parent
-    return f"PYTHONPATH={shlex.quote(str(src))} {shlex.quote(sys.executable)} -m rewindagent hook"
+    return f"PYTHONPATH={shlex.quote(str(src))} {run}"
 
 
 def install(settings_path: str | Path, command: str | None = None) -> bool:

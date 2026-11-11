@@ -175,6 +175,32 @@ class TestInstall(unittest.TestCase):
                     self.assertEqual(main(["install", "--settings", s]), 0)
                 self.assertTrue(out.getvalue().startswith(expect))
 
+    def test_hook_command_from_a_clone_carries_pythonpath(self):
+        import shlex
+        from unittest.mock import patch
+        with patch.object(hook, "installed", return_value=False):
+            cmd = hook.hook_command()
+        self.assertEqual(cmd, f"PYTHONPATH={shlex.quote(str(SRC))} {shlex.quote(sys.executable)} -m rewindagent hook")
+
+    def test_hook_command_when_installed_needs_no_pythonpath(self):
+        import shlex
+        from unittest.mock import patch
+        with patch.object(hook, "installed", return_value=True):
+            cmd = hook.hook_command()
+        self.assertEqual(cmd, f"{shlex.quote(sys.executable)} -m rewindagent hook")
+
+    def test_installed_means_this_file_lives_in_site_packages(self):
+        import site
+        from unittest.mock import patch
+        # These tests import the package from src/, so from here it is never "installed"...
+        self.assertFalse(hook.installed())
+        # ...even though `pip install .` leaves src/rewindagent.egg-info behind, which a metadata lookup would trust.
+        with patch.object(site, "getsitepackages", return_value=[str(SRC)]):
+            self.assertTrue(hook.installed())
+        with patch.object(site, "getsitepackages", return_value=[]), \
+                patch.object(site, "getusersitepackages", return_value=str(SRC.parent)):
+            self.assertTrue(hook.installed())
+
     def test_installed_command_actually_runs_the_hook(self):
         with TemporaryDirectory() as d:
             s = Path(d, "settings.json")

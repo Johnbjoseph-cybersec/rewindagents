@@ -242,7 +242,21 @@ class TestCli(unittest.TestCase):
             self.assertEqual(p.returncode, 0, p.stderr)
             self.assertEqual(Path(d, "app.py").read_text(), "good")
             self.assertFalse(Path(d, "junk.py").exists())
-            self.assertIn("undo it with: python3 -m rewindagent rewind 3 --session s1", p.stdout)
+            # "rewindagent" once pip-installed into this interpreter, "python3 -m rewindagent" from a clone
+            self.assertRegex(p.stdout, r"undo it with: (rewindagent|python3 -m rewindagent) rewind 3 --session s1")
+
+    def test_undo_hint_names_the_command_that_exists(self):
+        from unittest.mock import patch
+        for installed, expect in ((False, "python3 -m rewindagent rewind 2"), (True, "rewindagent rewind 2")):
+            with TemporaryDirectory() as d:
+                a = Agent(d)
+                a.write("app.py", "v1")
+                a.write("app.py", "v2")
+                with patch.object(hook, "installed", return_value=installed):
+                    code, out, _ = cli("--log", str(a.log), "rewind", "1")
+                self.assertEqual(code, 0)
+                # the rewind is step 3; undoing it means going back to how things were after step 2
+                self.assertIn(f"this rewind is step 3; undo it with: {expect} --session s1", out)
 
     def test_rewind_cli_exit_codes(self):
         with TemporaryDirectory() as d:

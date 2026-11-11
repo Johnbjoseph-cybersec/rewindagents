@@ -3,23 +3,35 @@
 Ctrl+Z for AI coding agents: record, replay and rewind. Every tool call your coding agent makes goes into a
 tamper-evident, hash-chained log you can verify later.
 
-**Status: v0.0.4, pre-release.** Built and tested today: the recorder and its CLI, a Claude Code hook
-that records every call and checkpoints the files that `Write`/`Edit` and `Bash` commands change, and
-`replay`, `rewind` and `branch`. Not built yet: a pip package (see Roadmap).
+**Status: v0.0.5, pre-release.** Built and tested today: the recorder and its CLI, a Claude Code hook
+that records every call and checkpoints the files that `Write`/`Edit` and `Bash` commands change,
+`replay`, `rewind` and `branch`, and a pip-installable package with a `rewindagent` command. Not on PyPI yet.
+Planned: hooks for Codex and Cursor.
+
+## Install
+
+Python 3.10 or newer (declared in `pyproject.toml`; tested on 3.15, macOS). No dependencies beyond the
+standard library. From the repository:
+
+```sh
+pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagent     # or: pip install git+https://...
+rewindagent --version
+```
+
+Or from a clone, `pip install .`. Without installing, `PYTHONPATH=src python3 -m rewindagent` runs the same
+CLI from a clone.
 
 ## Claude Code hook
 
-There is no pip package yet. From a clone:
-
 ```sh
-git clone https://github.com/Johnbjoseph-cybersec/rewindagent
-export PYTHONPATH="$PWD/rewindagent/src"
 cd /path/to/your/project
-python3 -m rewindagent install            # adds the hook to .claude/settings.json in this project
-python3 -m rewindagent install --settings ~/.claude/settings.json   # or for every project
+rewindagent install            # adds the hook to .claude/settings.json in this project
+rewindagent install --settings ~/.claude/settings.json   # or for every project
 ```
 
-`install` keeps everything already in the settings file and does nothing if the hook is already there.
+`install` keeps everything already in the settings file and does nothing if the hook is already there. The
+hook command it writes names the Python that rewindagent was installed into by absolute path, so it runs
+whether or not a virtualenv is active; from an uninstalled clone it carries the `PYTHONPATH` instead.
 After that, in each project Claude Code works in:
 
 - every tool call gets a `pre` record (tool and input) and a `post` record (tool and response) in
@@ -52,18 +64,19 @@ Run these from the project directory (the one holding `.rewindagent/`). They wor
 unless you pass `--session ID`.
 
 ```sh
-python3 -m rewindagent replay              # one line per step: number, tool, file or command
-python3 -m rewindagent replay --step 12    # step 12 in full: input, checkpoints, result
-python3 -m rewindagent rewind 12 --dry-run # what would change
-python3 -m rewindagent rewind 12           # files back to how they were right after step 12
-python3 -m rewindagent branch 12 --name try2   # keep the current files, then rewind to step 12
+rewindagent replay              # one line per step: number, tool, file or command
+rewindagent replay --step 12    # step 12 in full: input, checkpoints, result
+rewindagent rewind 12 --dry-run # what would change
+rewindagent rewind 12           # files back to how they were right after step 12
+rewindagent branch 12 --name try2   # keep the current files, then rewind to step 12
 ```
 
 - `rewind N` puts back every file that a step after N changed with `Write`, `Edit`, `MultiEdit`,
   `NotebookEdit` or a `Bash` command, and deletes the files those steps created. `rewind 0` undoes the
   whole session.
 - A rewind is undoable. It first saves the current bytes of every file it will change and records itself
-  as a new step; the command prints `undo it with: python3 -m rewindagent rewind <step> --session <id>`.
+  as a new step; the command prints `undo it with: rewindagent rewind <step> --session <id>` (from an
+  uninstalled clone it says `python3 -m rewindagent` instead).
 - `branch N --name X` does the same and, in a git repo, also commits the whole current working tree to the
   branch `rewindagent/X`. It does this through a temporary index, so your `HEAD`, index and current
   branch stay as they were. Outside git, the current files are kept in the log only.
@@ -83,18 +96,15 @@ python3 -m rewindagent branch 12 --name try2   # keep the current files, then re
   record makes `verify` fail and name the first bad record.
 - Several processes can write to the same log at once; appends are locked, so the chain stays single.
 - Plain JSONL. No server, no database, no dependencies beyond the Python standard library.
-  Tested on Python 3.15 on macOS; needs a Unix (`fcntl`) for the write lock.
+  Needs a Unix (`fcntl`) for the write lock.
 
 ## Use it
 
 ```sh
-git clone https://github.com/Johnbjoseph-cybersec/rewindagent && cd rewindagent
-export PYTHONPATH=src
-
-echo '{"tool": "Bash", "args": {"command": "ls"}}' | python3 -m rewindagent record --session s1
-python3 -m rewindagent verify     # OK: 1 records, chain intact
-python3 -m rewindagent show       # list recorded calls
-python3 -m rewindagent head       # current head hash
+echo '{"tool": "Bash", "args": {"command": "ls"}}' | rewindagent record --session s1
+rewindagent verify     # OK: 1 records, chain intact
+rewindagent show       # list recorded calls
+rewindagent head       # current head hash
 ```
 
 The log defaults to `.rewindagent/log.jsonl`; change it with `--log PATH`.
@@ -115,18 +125,23 @@ To catch both, copy the head hash somewhere the agent cannot write (`rewindagent
 against it:
 
 ```sh
-python3 -m rewindagent verify --head <pinned-hash>
+rewindagent verify --head <pinned-hash>
 ```
 
 ## Roadmap
 
-- A pip package with a `rewindagent` console command
+- Publish on PyPI
+- Hooks for Codex and Cursor
 
 ## Tests
 
 ```sh
 python3 -m unittest discover -s tests -v
 ```
+
+That runs against the source tree and skips the tests of the installed command. `.fire-test-cmd` holds the
+full command: it builds `.venv`, installs the package into it and runs every test, including the ones that
+drive the installed `rewindagent` binary and the hook command it writes into a settings file.
 
 ## Licence
 

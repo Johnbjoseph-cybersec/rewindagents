@@ -6,11 +6,17 @@ import json
 import sys
 from pathlib import Path
 
-from . import hook, log, rewind
+from . import __version__, hook, log, rewind
+
+
+def invocation() -> str:
+    """How the user runs us: the console command once installed, the module from a clone."""
+    return "rewindagent" if hook.installed() else "python3 -m rewindagent"
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="rewindagent")
+    ap.add_argument("--version", action="version", version=f"rewindagent {__version__}")
     ap.add_argument("--log", default=".rewindagent/log.jsonl", help="log file (default: %(default)s)")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
@@ -116,7 +122,7 @@ def _report(p: dict, dry_run: bool, root) -> None:
         print(f"  previous files kept in {where}")
     if p.get("record"):
         print(f"  this {('branch' if p.get('branch') else 'rewind')} is step {p['steps'] + 1}; "
-              f"undo it with: python3 -m rewindagent rewind {p['steps']} --session {p['session']}")
+              f"undo it with: {invocation()} rewind {p['steps']} --session {p['session']}")
     if p["bash_uncovered"]:
         print(f"  note: {p['bash_uncovered']} Bash step(s) after step {p['to_step']} were not scanned; "
               f"files they changed were not put back")

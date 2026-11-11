@@ -32,13 +32,13 @@ Plain, exact, a little dry. We say what exists and what does not.
 1. **Exact.** We give the real behaviour and the real limit.
    Example: "Files a Bash command changes are saved too, except git-ignored files and files over 20 MB; rewind tells you which ones it could not put back."
 2. **Honest about status.** Planned things are called planned.
-   Example: "There is no pip package yet. Today you run it from a clone with PYTHONPATH."
+   Example: "Not on PyPI yet. Install it from the repository with pip; Codex and Cursor hooks are planned."
 3. **Calm.** Mistakes happen; we do not dramatise them.
    Example: "The agent deleted the wrong folder. Step back one."
 4. **Dry.** One small joke at most, never at the reader's expense.
    Example: "Undo is a feature your editor has had for decades."
 5. **Hands-on.** Commands and file paths over adjectives.
-   Example: "Run python3 -m rewindagent verify and it names the first bad record."
+   Example: "Run rewindagent verify and it names the first bad record."
 
 Credit line, used exactly in footers: made by John B Joseph
 
@@ -158,7 +158,7 @@ stepped back to.
 
 ## Don't
 
-- Don't claim more than the code does: Codex and Cursor support, a pip package and anything paid are planned.
+- Don't claim more than the code does: Codex and Cursor support, a PyPI release and anything paid are planned.
 - Don't present it as a security, compliance or monitoring product.
 - Don't use purple, violet, neon, gradients, glass, blobs, sparkles, emoji or stock robot imagery.
 - Don't invent users, quotes, logos, stars, downloads, numbers or benchmarks.
