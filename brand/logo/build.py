@@ -1,13 +1,18 @@
-"""Build the rewindagent logo set as SVG (task RB2). render.mjs turns the SVGs into PNGs.
+"""Build the rewindagent logo set as SVG (task RB2; round 4 is RB2c). render.mjs turns the SVGs into PNGs.
 
-The mark is drawn on a 16-unit grid so it stays sharp at 16 px: a step ruler (baseline + ticks) with a
-red playhead standing on the third of four ticks, one behind the last. The tick after the playhead is drawn
-in Rule grey: the step that was rewound. (The brief's left-pointing flag was dropped: bar + flag read as "1".)
+The mark is a step ruler scrubbed back one step, drawn on a 16-unit grid: thin ticks on a hairline rule and a
+heavy red playhead (a bar with a detached, down-pointing marker) standing on the third of four steps. Everything
+after the playhead is the rewound part: the rule turns grey and the last tick is grey and shorter, like the
+unplayed part of a scrubber. The mark uses half units (sharp from 32 px up); favicon_shapes is a separate
+drawing on whole units for 16 px.
 
 Text is outlined from the OFL font files, so every SVG renders the same with no fonts installed.
 Usage: .venv/bin/python brand/logo/build.py <fonts-dir>
 <fonts-dir> holds the @fontsource packages (npm install --prefix .brandcache @fontsource/bricolage-grotesque
 @fontsource/hanken-grotesk @fontsource/commit-mono).
+
+Every PNG source also gets a list of sample points (pixel, expected palette name) in manifest.json;
+pngsample.py reads the rendered PNGs and compares, and tests/test_logo.py runs the same comparison.
 """
 import json
 import os
@@ -22,6 +27,7 @@ BRAND = os.path.dirname(HERE)
 
 C = {"Leader": "#F2F4F1", "Reel": "#121412", "Spool": "#1C201D", "Tape": "#55605A",
      "Record": "#B82A16", "Rewind": "#FF7A59", "Playhead": "#B9C2BB", "Rule": "#838C86"}
+NAME = {v: k for k, v in C.items()}
 
 THEMES = {
     "light": {"ground": C["Leader"], "ink": C["Reel"], "undone": C["Rule"], "head": C["Record"], "sub": C["Tape"]},
@@ -29,47 +35,89 @@ THEMES = {
 }
 
 TAGLINE = "Ctrl+Z for AI coding agents: record, replay, rewind."
-COMMAND = "python3 -m rewindagent rewind 12"
+COMMAND = "rewindagent rewind 12"
 CREDIT = "made by John B Joseph"
+INSTALL = "pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagent"
+
+# Visible rows of the mark on the 16 grid (the marker top and the playhead bar bottom); x spans 0..16.
+MARK_TOP, MARK_BOTTOM = 1.0, 13.5
+MARK_H = MARK_BOTTOM - MARK_TOP
+
+
+def g(v):
+    return "%g" % v
+
+
+def rect(x, y, w, h, fill):
+    return '<rect x="%s" y="%s" width="%s" height="%s" fill="%s"/>' % (g(x), g(y), g(w), g(h), fill)
+
+
+def playhead(bx, top, bottom, u, flare):
+    """Timeline cursor: a down-pointing marker (bar width + flare each side, 3u tall) detached by 1u above a
+    2u-wide bar whose left edge is bx. Kept apart on purpose: joined to the bar, every cap tried read as a
+    letter (1, T) or a pin."""
+    return ("M%s %sH%sL%s %sZM%s %sH%sV%sH%sZ"
+            % (g(bx - flare), g(top), g(bx + 2 * u + flare), g(bx + u), g(top + 3 * u),
+               g(bx), g(top + 4 * u), g(bx + 2 * u), g(bottom), g(bx)))
 
 
 def mark_shapes(t, mono=None):
-    """The mark on its 16x16 grid, for 32 px and up. Ruler (ticks + 2-unit rule) spans y 6..14; the
-    rewound tick is solid Rule grey. Returns SVG elements (no wrapper)."""
+    """The mark on its 16x16 grid, for 32 px and up. Ticks are 1 unit wide on a 1-unit rule; the playhead bar
+    is 2 units. Steps sit at x 2, 6, 10 (playhead) and 14. Returns SVG elements (no wrapper)."""
     ink = mono or t["ink"]
     undone = mono or t["undone"]
     head = mono or t["head"]
     return "".join([
-        '<rect x="0" y="12" width="16" height="2" fill="%s"/>' % ink,           # rule
-        '<rect x="1" y="6" width="2" height="6" fill="%s"/>' % ink,             # step 1
-        '<rect x="5" y="6" width="2" height="6" fill="%s"/>' % ink,             # step 2
-        '<rect x="13" y="6" width="2" height="6" fill="%s"/>' % undone,         # step 4, rewound
-        '<path d="%s" fill="%s"/>' % (playhead(9, 1, 15, 1), head),             # playhead on step 3
+        rect(0, 12, 10, 1, ink),                                            # rule, recorded part
+        rect(10, 12, 6, 1, undone),                                         # rule, rewound part
+        rect(1.5, 7, 1, 5, ink),                                            # step 1
+        rect(5.5, 7, 1, 5, ink),                                            # step 2
+        rect(13.5, 9, 1, 3, undone),                                        # step 4, rewound: grey, shorter
+        '<path d="%s" fill="%s"/>' % (playhead(9, 1, 13.5, 1, 1), head),   # playhead on step 3
     ])
+
+
+MARK_SAMPLES = [  # (grid x, grid y, theme key) of solid areas, for pixel sampling
+    (10, 9, "head"), (2, 9.5, "ink"), (14, 10.5, "undone"), (4, 12.5, "ink"), (15, 12.5, "undone")]
 
 
 def favicon_shapes(t):
-    """A separate drawing for 16 px: one tick, the playhead, the rewound tick in Tape (holds 5.9:1)."""
+    """A separate drawing for 16 px, whole units only so nothing is anti-aliased: one 2 px tick, the playhead
+    bar with a stepped 8 px marker (rows of 8, 6 and 4 px: a pixel drawing, not a scaled triangle), and the
+    rewound rule and tick in the secondary text colour (Tape on Leader holds 5.9:1 at 1 px)."""
+    marker = "M4 1H12V2H11V3H10V4H6V3H5V2H4Z"
     return "".join([
-        '<rect x="0" y="12" width="16" height="2" fill="%s"/>' % t["ink"],
-        '<rect x="2" y="6" width="2" height="6" fill="%s"/>' % t["ink"],
-        '<rect x="12" y="6" width="2" height="6" fill="%s"/>' % t["sub"],
-        '<path d="%s" fill="%s"/>' % (playhead(7, 1, 15, 1), t["head"]),
+        rect(0, 12, 8, 1, t["ink"]),
+        rect(8, 12, 8, 1, t["sub"]),
+        rect(1, 7, 2, 5, t["ink"]),
+        rect(12, 9, 2, 3, t["sub"]),
+        rect(7, 5, 2, 9, t["head"]),
+        '<path d="%s" fill="%s"/>' % (marker, t["head"]),
     ])
 
 
-def playhead(bx, top, bottom, u):
-    """Timeline marker: a pointer (6u wide, 3u tall, pointing down) detached by 1u above a 2u bar whose left
-    edge is bx. Kept apart on purpose: joined to the bar, every cap tried read as a letter (1, T) or a pin."""
-    return ("M%g %gH%gL%g %gZM%g %gH%gV%gH%gZ"
-            % (bx - 2 * u, top, bx + 4 * u, bx + u, top + 3 * u,
-               bx, top + 4 * u, bx + 2 * u, bottom, bx))
+FAVICON_SAMPLES = [(8, 9, "head"), (2, 9.5, "ink"), (13, 10.5, "sub"), (4, 12.5, "ink"), (12, 12.5, "sub")]
 
 
 def svg(w, h, body, bg=None, title="rewindagent"):
-    ground = '<rect width="%g" height="%g" fill="%s"/>' % (w, h, bg) if bg else ""
-    return ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %g %g" width="%g" height="%g" role="img">'
-            '<title>%s</title>%s%s</svg>\n' % (w, h, w, h, title, ground, body))
+    ground = '<rect width="%s" height="%s" fill="%s"/>' % (g(w), g(h), bg) if bg else ""
+    return ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %s %s" width="%s" height="%s" role="img">'
+            '<title>%s</title>%s%s</svg>\n' % (g(w), g(h), g(w), g(h), title, ground, body))
+
+
+def place(shapes, x, top, k):
+    """Scale the 16-grid mark by k and put its visible top-left corner at (x, top)."""
+    return '<g transform="translate(%.3f %.3f) scale(%.4f)">%s</g>' % (x, top - MARK_TOP * k, k, shapes)
+
+
+def samples(points, t, x, top, k, scale=1.0):
+    """Pixel sample points for a placed mark: [[px, py, palette name], ...]."""
+    out = []
+    for gx, gy, key in points:
+        px = (x + gx * k) * scale
+        py = (top + (gy - MARK_TOP) * k) * scale
+        out.append([int(px), int(py), NAME[t[key]]])
+    return out
 
 
 class Face:
@@ -88,14 +136,14 @@ class Face:
         x = 0.0
         parts = []
         for ch in text:
-            g = self.cmap[ord(ch)]
+            gl = self.cmap[ord(ch)]
             pen = SVGPathPen(self.gs)
-            self.gs[g].draw(pen)
+            self.gs[gl].draw(pen)
             d = pen.getCommands()
             if d:
                 parts.append('<path transform="translate(%.3f %.3f) scale(%.5f %.5f)" d="%s"/>'
                              % (x0 + x * s, baseline, s, -s, d))
-            x += self.hmtx[g][0] + tracking * self.upm
+            x += self.hmtx[gl][0] + tracking * self.upm
         return "".join(parts), x * s
 
     def bounds(self, ch, size):
@@ -111,20 +159,71 @@ class Face:
 
 
 def wordmark(face, t, mono=None):
-    """Mark + 'rewindagent'. The ruler (grid y 6..14) is 1.25 x-heights tall, so the mark's strokes carry
-    the weight of the 800 letter stems; the text baseline is the bottom of the rule."""
+    """Mark + 'rewindagent'. The ruler (ticks + rule, grid y 7..13) is 1.25 x-heights tall, so the playhead
+    bar carries about the weight of the 800 letter stems; the text baseline is the bottom of the rule."""
     size = 100.0
     xh = face.x_height(size)
-    k = xh * 1.25 / 8.0
+    k = xh * 1.25 / 6.0
     pad = 8.0
     mark_w = 16 * k
-    base_y = pad + 14 * k
-    glyphs, adv = face.outline("rewindagent", size, pad + mark_w + 0.42 * size, base_y, tracking=-0.02)
-    w = pad + mark_w + 0.42 * size + adv + pad
-    h = base_y + max(1 * k, face.descent("g", size)) + pad
-    body = ('<g transform="translate(%.3f %.3f) scale(%.4f)">%s</g>' % (pad, pad, k, mark_shapes(t, mono))
+    base_y = pad + 13 * k
+    glyphs, adv = face.outline("rewindagent", size, pad + mark_w + 0.36 * size, base_y, tracking=-0.02)
+    w = pad + mark_w + 0.36 * size + adv + pad
+    h = base_y + max(0.5 * k, face.descent("g", size)) + pad
+    body = (place(mark_shapes(t, mono), pad, pad, k)
             + '<g fill="%s">%s</g>' % (mono or t["ink"], glyphs))
     return w, h, body
+
+
+def circle_mark(shapes, cx, cy, r, uid, bg):
+    """The mark inside a circular crop of radius r (how GitHub shows an avatar)."""
+    k = 2 * r * 0.72 / 16
+    x, top = cx - 8 * k, cy - MARK_H * k / 2
+    return ('<clipPath id="%s"><circle cx="%s" cy="%s" r="%s"/></clipPath>'
+            '<g clip-path="url(#%s)"><circle cx="%s" cy="%s" r="%s" fill="%s"/>%s</g>'
+            % (uid, g(cx), g(cy), g(r), uid, g(cx), g(cy), g(r), bg, place(shapes, x, top, k)))
+
+
+def in_use(disp, body, mono):
+    """A sheet of the identity in the places it will actually be seen: a browser tab (favicon at true 16 px),
+    a README header on a light and a dark page, and the avatar at GitHub's circle sizes. Review material
+    only (brand/logo/in-use.png); the dark page ground is GitHub's, not ours, on purpose."""
+    L, D = THEMES["light"], THEMES["dark"]
+    GH_DARK = "#0D1117"
+    parts = []
+    # row A: browser tab strips, light and dark, favicon at 1:1
+    for i, (t, strip, tab, fav) in enumerate(((L, C["Playhead"], C["Leader"], favicon_shapes(L)),
+                                             (D, C["Spool"], C["Reel"], favicon_shapes(D)))):
+        x0 = 680 * i
+        title, _ = body.outline("rewindagent", 13, x0 + 54, 39)
+        other, _ = body.outline("Pull requests", 13, x0 + 318, 39)
+        parts.append(rect(x0, 0, 640, 56, strip)
+                     + '<rect x="%d" y="10" width="270" height="46" rx="8" fill="%s"/>' % (x0 + 12, tab)
+                     + '<g transform="translate(%d 25)">%s</g>' % (x0 + 30, fav)
+                     + '<g fill="%s">%s</g>' % (t["ink"], title)
+                     + '<g fill="%s">%s</g>' % (t["sub"], other))
+    # row B: README header on a light page and on a dark page
+    for i, (t, page, m) in enumerate(((L, C["Leader"], None), (D, GH_DARK, None))):
+        x0 = 680 * i
+        w, h, wm = wordmark(disp, t, m)
+        s = 300.0 / w
+        line1, _ = body.outline(TAGLINE, 16, x0 + 40, 90 + h * s + 32)
+        line2, _ = mono.outline("$ " + INSTALL, 14, x0 + 40, 90 + h * s + 64)
+        parts.append(rect(x0, 80, 640, 200, page)
+                     + '<g transform="translate(%d 90) scale(%.4f)">%s</g>' % (x0 + 40, s, wm)
+                     + '<g fill="%s">%s</g><g fill="%s">%s</g>' % (t["ink"], line1, t["sub"], line2))
+    # row C: avatar in GitHub's circle crops (org header 96 px, list 48 px, comment 20 px) on a light page
+    parts.append(rect(0, 300, 1320, 160, C["Leader"]))
+    for j, (r, cx) in enumerate(((48, 88), (24, 400), (10, 600))):
+        parts.append(circle_mark(mark_shapes(L), cx, 380, r, "c%d" % j, C["Leader"]))
+    org, _ = disp.outline("rewindagent", 26, 156, 372)
+    sub, _ = body.outline("Ctrl+Z for AI coding agents", 15, 156, 398)
+    parts.append('<g fill="%s">%s</g><g fill="%s">%s</g>' % (L["ink"], org, L["sub"], sub))
+    cm, _ = body.outline("rewindagent", 15, 436, 385)
+    parts.append('<g fill="%s">%s</g>' % (L["ink"], cm))
+    cm2, _ = body.outline("rewindagent commented 2 minutes ago", 13, 618, 384)
+    parts.append('<g fill="%s">%s</g>' % (L["sub"], cm2))
+    return svg(1320, 460, "".join(parts), bg="#9AA39C", title="rewindagent, in use")
 
 
 def build(fonts):
@@ -149,40 +248,50 @@ def build(fonts):
 
     # 3. PNG sources (rendered by render.mjs into brand/)
     src = {}
-    # square logos: stacked lockup (mark over the name), so the square is filled, not a strip in the middle
+    # square logos: stacked lockup, the mark 63 percent of the name's width so the two read as one unit
     _, adv100 = disp.outline("rewindagent", 100, 0, 0, tracking=-0.02)
-    size = 100 * 760 / adv100
+    name_w, mark_w, gap = 760.0, 480.0, 64.0
+    size = 100 * name_w / adv100
     asc, desc = disp.bounds("d", size)[3], disp.descent("g", size)
-    mark_px, gap = 384, 72
-    top = (1024 - (mark_px + gap + asc + desc)) / 2
+    k = mark_w / 16
+    top = (1024 - (MARK_H * k + gap + asc + desc)) / 2
     for theme, t in (("light", L), ("dark", D)):
-        name, _ = disp.outline("rewindagent", size, (1024 - 760) / 2, top + mark_px + gap + asc, tracking=-0.02)
-        g = ('<g transform="translate(%.2f %.2f) scale(%.4f)">%s</g>' % ((1024 - mark_px) / 2, top, mark_px / 16,
-                                                                         mark_shapes(t))
-             + '<g fill="%s">%s</g>' % (t["ink"], name))
-        src["logo-%s.png" % theme] = (svg(1024, 1024, g, bg=t["ground"]), 1024)
-    src["avatar-512.png"] = (svg(512, 512, '<g transform="translate(72 72) scale(23)">%s</g>' % mark_shapes(L),
-                                 bg=C["Leader"]), 512)
-    src["favicon-32.png"] = (svg(16, 16, favicon_shapes(L), bg=C["Leader"]), 32)
+        name, _ = disp.outline("rewindagent", size, (1024 - name_w) / 2, top + MARK_H * k + gap + asc,
+                               tracking=-0.02)
+        x = (1024 - mark_w) / 2
+        body_svg = place(mark_shapes(t), x, top, k) + '<g fill="%s">%s</g>' % (t["ink"], name)
+        src["logo-%s.png" % theme] = (svg(1024, 1024, body_svg, bg=t["ground"]), 1024,
+                                      [[24, 24, NAME[t["ground"]]]] + samples(MARK_SAMPLES, t, x, top, k))
+    # avatar: the visible mark centred in the 512 square (so also in the circular crop), 72 percent wide
+    k = 23.0
+    x, top = (512 - 16 * k) / 2, (512 - MARK_H * k) / 2
+    assert ((x - 256) ** 2 + (top + 12 * k - 256) ** 2) ** 0.5 < 256, "rule corner outside the circle crop"
+    src["avatar-512.png"] = (svg(512, 512, place(mark_shapes(L), x, top, k), bg=C["Leader"]), 512,
+                             [[10, 10, "Leader"]] + samples(MARK_SAMPLES, L, x, top, k))
+    src["favicon-32.png"] = (svg(16, 16, favicon_shapes(L), bg=C["Leader"]), 32,
+                             [[1, 1, "Leader"]] + samples(FAVICON_SAMPLES, L, 0, MARK_TOP, 1, scale=2))
 
-    # social preview 1280x640: name, tagline on two lines, one real command and the credit on the left;
-    # the mark, large, on the right. Everything inside a 96 px margin (GitHub crops the edges on some cards).
+    # social preview 1280x640: name, tagline on two lines, one real command in an outlined block and the
+    # credit on the left; the mark, large, on the right. Everything inside a 96 px margin (GitHub crops the
+    # edges on some cards).
     nsize = 100 * 600 / adv100
     name, _ = disp.outline("rewindagent", nsize, 96, 176, tracking=-0.02)
     head, tail = TAGLINE.split(": ")
     tag1, _ = body.outline(head + ":", 46, 96, 268)
     tag2, _ = body.outline(tail, 46, 96, 326)
     cmd, cw = mono.outline("$ " + COMMAND, 30, 122, 420)
-    cred, _ = body.outline(CREDIT, 22, 96, 560)
-    mpx = 304
+    cred, _ = body.outline(CREDIT, 24, 96, 560)
+    k = 400 / 16
+    x, top = 1184 - 400, (640 - MARK_H * k) / 2
     social = ('<g fill="%s">%s</g>' % (L["ink"], name)
               + '<g fill="%s">%s%s</g>' % (L["ink"], tag1, tag2)
-              + '<rect x="96" y="374" width="%.1f" height="70" fill="%s"/>' % (cw + 52, C["Spool"])
-              + '<g fill="%s">%s</g>' % (C["Leader"], cmd)
-              + '<g fill="%s">%s</g>' % (L["sub"], cred)
-              + '<g transform="translate(%d %d) scale(%g)">%s</g>' % (1184 - mpx, (640 - mpx) / 2, mpx / 16,
-                                                                     mark_shapes(L)))
-    src["social-preview-1280x640.png"] = (svg(1280, 640, social, bg=C["Leader"]), 1280)
+              + '<rect x="97" y="375" width="%.1f" height="68" fill="none" stroke="%s" stroke-width="2"/>'
+              % (cw + 50, C["Tape"])
+              + '<g fill="%s">%s</g>' % (L["ink"], cmd)
+              + '<g fill="%s">%s</g>' % (L["ink"], cred)
+              + place(mark_shapes(L), x, top, k))
+    src["social-preview-1280x640.png"] = (svg(1280, 640, social, bg=C["Leader"]), 1280,
+                                          [[40, 40, "Leader"]] + samples(MARK_SAMPLES, L, x, top, k))
 
     for name, text in out.items():
         with open(os.path.join(BRAND, name), "w", encoding="utf-8") as f:
@@ -190,15 +299,18 @@ def build(fonts):
     srcdir = os.path.join(HERE, "src")
     os.makedirs(srcdir, exist_ok=True)
     manifest = {}
-    for name, (text, width) in src.items():
+    for name, (text, width, pts) in src.items():
         sname = name[:-4] + ".svg"
         with open(os.path.join(srcdir, sname), "w", encoding="utf-8") as f:
             f.write(text)
-        manifest[name] = {"src": "logo/src/" + sname, "width": width}
+        manifest[name] = {"src": "logo/src/" + sname, "width": width, "samples": pts}
     with open(os.path.join(HERE, "manifest.json"), "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=1, sort_keys=True)
         f.write("\n")
-    print("wrote %d SVGs in brand/, %d PNG sources in brand/logo/src/" % (len(out), len(src)))
+    with open(os.path.join(HERE, "in-use.svg"), "w", encoding="utf-8") as f:
+        f.write(in_use(disp, body, mono))
+    print("wrote %d SVGs in brand/, %d PNG sources in brand/logo/src/, brand/logo/in-use.svg"
+          % (len(out), len(src)))
 
 
 if __name__ == "__main__":

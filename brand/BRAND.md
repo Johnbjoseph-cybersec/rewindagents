@@ -113,24 +113,33 @@ All free, open-licensed, self-hostable.
 Use: sentence case headings, left aligned, tight tracking on display only. Hashes and step numbers always in
 mono, tabular. Not used: Poppins, Plus Jakarta Sans, Inter, Space Grotesk, any serif.
 
-## Logo (RB2)
+## Logo (RB2, round 4 = RB2c)
 
 Built by brand/logo/build.py (geometry + text outlined from the OFL font files) and rendered by
-brand/logo/render.mjs (resvg). Look at brand/logo/contact-sheet.png: every asset, plus the mark at true 16, 32
-and 64 px.
+brand/logo/render.mjs (resvg). Look at brand/logo/contact-sheet.png: every asset, the 16 px drawing and the
+mark at true 16, 32 and 64 px, and brand/logo/in-use.png (browser tab, README header on a light and a dark
+page, avatar in circle crops): the reviewer reads the mark where it will be seen, not alone.
 
-- Mark: four ticks on a two-unit rule, 16-unit grid, integer coordinates. A Record red playhead stands on the
-  third tick: a bar crossing the rule, with a down-pointing marker one unit above it. The fourth tick, the
-  step that was rewound, is solid Rule grey.
+- Mark: a step ruler scrubbed back one step, on a 16-unit grid (half units allowed; sharp from 32 px).
+  Steps sit at x 2, 6, 10 and 14. Ticks are 1 unit wide on a 1-unit rule; the playhead on the third step is
+  a 2-unit Record bar with a detached down-pointing marker (4 wide, 3 tall, one unit above the bar), and the
+  bar runs half a unit below the rule. Everything after the playhead is the rewound part: the rule turns
+  Rule grey and the fourth tick is Rule grey and shorter (3 units against 5), like the unplayed end of a
+  scrubber. In the mono version the shorter tick alone carries "one step back".
 - One change from the brief below: the small left-pointing flag was dropped. Bar plus flag read as the
   digit 1, and the caps tried after it read as a pin or a T. A detached marker reads as a timeline cursor.
-  The grey tick after the playhead carries "one step back".
-- favicon.svg / favicon-32.png are a separate 16 px drawing: one tick, the playhead, the rewound tick in Tape.
+- favicon.svg / favicon-32.png are a separate drawing on whole pixels so nothing is anti-aliased at 16 px:
+  one 2 px tick, a 4 px gap, the playhead bar with a stepped 8 px marker (rows of 8, 6 and 4 px), and the
+  rewound rule and tick in Tape.
 - Files: logo-mark.svg (light), logo-mark-reverse.svg (dark), logo-mark-mono.svg (currentColor),
   logo-wordmark.svg / -reverse / -mono (horizontal), favicon.svg + favicon-32.png, avatar-512.png,
-  logo-light.png and logo-dark.png (1024, stacked: mark over the name), social-preview-1280x640.png.
+  logo-light.png and logo-dark.png (1024, stacked: the mark 480 px over a 760 px name), social-preview-1280x640.png
+  (name, tagline, one real command in an outlined block, the credit, the mark at 400 px on the right).
 - Wordmark: Bricolage Grotesque 800, tracking -0.02 em, no kerning table applied. In the horizontal lockup
-  the ruler is 1.25 x-heights tall and the text baseline is the bottom of the rule.
+  the ruler (ticks plus rule) is 1.25 x-heights tall and the text baseline is the bottom of the rule.
+- Palette fidelity is measured, not eyeballed: build.py records sample points (pixel, expected palette name)
+  for every PNG in brand/logo/manifest.json; `python3 brand/logo/pngsample.py` prints the sampled hex next to
+  the BRAND.md hex, and tests/test_logo.py fails on any mismatch.
 
 ## Logo direction brief (from RB1)
 
