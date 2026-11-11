@@ -112,20 +112,28 @@ class TestLogo(unittest.TestCase):
         for name in ("logo-mark-reverse.svg", "logo-mark-mono.svg"):
             self.assertEqual(shapes(name), base, name)
 
-    def test_rewound_step_is_drawn_after_the_playhead(self):
-        # The concept: everything right of the playhead bar is the rewound part (grey rule, grey shorter tick).
+    def test_rewound_steps_are_drawn_after_the_playhead(self):
+        # The concept: everything right of the playhead is the rewound part (grey rule, grey ticks); the ticks
+        # are short and equal at an even pitch, and the playhead is the only tall element.
         root = ET.parse(os.path.join(BRAND, "logo-mark.svg")).getroot()
         rects = [el.attrib for el in root.iter(NS + "rect")]
-        bar = next(el for el in root.iter(NS + "path"))
-        bar_x = float(re.findall(r"M(-?[\d.]+) [\d.]+H", bar.attrib["d"])[1])
+        head = next(el for el in root.iter(NS + "path")).attrib["d"]
+        xs = [float(v) for v in re.findall(r"[MHL](-?[\d.]+)", head)]
+        ys = [float(v) for v in re.findall(r"(?:[ML]-?[\d.]+ |V)(-?[\d.]+)", head)]
+        bar_x = (min(xs) + max(xs)) / 2
         ink, grey = PALETTE["Reel"].upper(), PALETTE["Rule"].upper()
-        ticks = [r for r in rects if float(r["height"]) > float(r["width"])]
+        ticks = sorted((r for r in rects if float(r["height"]) > float(r["width"])), key=lambda r: float(r["x"]))
+        self.assertGreaterEqual(len(ticks), 5)
+        self.assertEqual(len({(r["height"], r["y"], r["width"]) for r in ticks}), 1, "ticks differ")
+        centres = [float(r["x"]) + float(r["width"]) / 2 for r in ticks]
+        pitches = {round(b - a, 3) for a, b in zip(centres, centres[1:]) if not a < bar_x < b}
+        self.assertEqual(len(pitches), 1, pitches)
         for r in ticks:
-            left_of_bar = float(r["x"]) < bar_x
-            self.assertEqual(r["fill"].upper(), ink if left_of_bar else grey, r)
-        heights = {r["fill"].upper(): float(r["height"]) for r in ticks}
-        self.assertLess(heights[grey], heights[ink])
+            self.assertEqual(r["fill"].upper(), ink if float(r["x"]) < bar_x else grey, r)
         rules = [r for r in rects if float(r["width"]) > float(r["height"])]
+        visible_tick = float(rules[0]["y"]) - float(ticks[0]["y"])   # ticks overlap the rule; count what shows
+        self.assertGreater(visible_tick, 0)
+        self.assertGreater(max(ys) - min(ys), 3 * visible_tick)
         self.assertEqual({r["fill"].upper() for r in rules if float(r["x"]) < bar_x}, {ink})
         self.assertEqual({r["fill"].upper() for r in rules if float(r["x"]) >= bar_x}, {grey})
 

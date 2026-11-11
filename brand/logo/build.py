@@ -1,10 +1,10 @@
 """Build the rewindagent logo set as SVG (task RB2; round 4 is RB2c). render.mjs turns the SVGs into PNGs.
 
-The mark is a step ruler scrubbed back one step, drawn on a 16-unit grid: thin ticks on a hairline rule and a
-heavy red playhead (a bar with a detached, down-pointing marker) standing on the third of four steps. Everything
-after the playhead is the rewound part: the rule turns grey and the last tick is grey and shorter, like the
-unplayed part of a scrubber. The mark uses half units (sharp from 32 px up); favicon_shapes is a separate
-drawing on whole units for 16 px.
+The mark is a timeline playhead on a step ruler, scrubbed back, drawn on a 16-unit grid: seven short, equal
+ticks at an even pitch on a hairline rule, and a red playhead (a triangle head joined to a thin line, as audio
+and video editors draw it) standing on the ruler as its only tall element. Everything after the playhead is the
+rewound part: the rule and the ticks turn grey, like the unplayed part of a scrubber. The mark uses half units
+(sharp from 32 px up); favicon_shapes is a separate drawing on whole units for 16 px.
 
 Text is outlined from the OFL font files, so every SVG renders the same with no fonts installed.
 Usage: .venv/bin/python brand/logo/build.py <fonts-dir>
@@ -39,8 +39,8 @@ COMMAND = "rewindagent rewind 12"
 CREDIT = "made by John B Joseph"
 INSTALL = "pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagent"
 
-# Visible rows of the mark on the 16 grid (the marker top and the playhead bar bottom); x spans 0..16.
-MARK_TOP, MARK_BOTTOM = 1.0, 13.5
+# Visible rows of the mark on the 16 grid (the playhead's head top and its line bottom); x spans 0..16.
+MARK_TOP, MARK_BOTTOM = 3.5, 12.5
 MARK_H = MARK_BOTTOM - MARK_TOP
 
 
@@ -52,51 +52,44 @@ def rect(x, y, w, h, fill):
     return '<rect x="%s" y="%s" width="%s" height="%s" fill="%s"/>' % (g(x), g(y), g(w), g(h), fill)
 
 
-def playhead(bx, top, bottom, u, flare):
-    """Timeline cursor: a down-pointing marker (bar width + flare each side, 3u tall) detached by 1u above a
-    2u-wide bar whose left edge is bx. Kept apart on purpose: joined to the bar, every cap tried read as a
-    letter (1, T) or a pin."""
-    return ("M%s %sH%sL%s %sZM%s %sH%sV%sH%sZ"
-            % (g(bx - flare), g(top), g(bx + 2 * u + flare), g(bx + u), g(top + 3 * u),
-               g(bx), g(top + 4 * u), g(bx + 2 * u), g(bottom), g(bx)))
+# The playhead: an editor-style handle (flat-topped pentagon, 4 wide, 2 flat + 1.5 taper) on a 1-wide line,
+# centre x 9, ending flush with the rule bottom. No neck between head and line.
+PLAYHEAD = "M7 3.5H11V5.5L9.5 7V12.5H8.5V7L7 5.5Z"
+TICK_H = 3.0            # short ticks from y 9.5, overlapping the half-unit rule (no seams)
 
 
 def mark_shapes(t, mono=None):
-    """The mark on its 16x16 grid, for 32 px and up. Ticks are 1 unit wide on a 1-unit rule; the playhead bar
-    is 2 units. Steps sit at x 2, 6, 10 (playhead) and 14. Returns SVG elements (no wrapper)."""
+    """The mark on its 16x16 grid, for 32 px and up: a timeline playhead (an editor's handle on a thin line)
+    standing on a step ruler of seven short, equal ticks at a 2-unit pitch (x 1, 3, 5, 7 recorded; 11, 13, 15
+    rewound) on a half-unit rule. The playhead is the only tall element. Returns SVG elements (no wrapper)."""
     ink = mono or t["ink"]
     undone = mono or t["undone"]
     head = mono or t["head"]
-    return "".join([
-        rect(0, 12, 10, 1, ink),                                            # rule, recorded part
-        rect(10, 12, 6, 1, undone),                                         # rule, rewound part
-        rect(1.5, 7, 1, 5, ink),                                            # step 1
-        rect(5.5, 7, 1, 5, ink),                                            # step 2
-        rect(13.5, 9, 1, 3, undone),                                        # step 4, rewound: grey, shorter
-        '<path d="%s" fill="%s"/>' % (playhead(9, 1, 13.5, 1, 1), head),   # playhead on step 3
-    ])
+    parts = [rect(0, 12, 9, 0.5, ink), rect(9, 12, 7, 0.5, undone)]      # rule: recorded, then rewound
+    parts += [rect(x - 0.5, 9.5, 1, TICK_H, ink) for x in (1, 3, 5, 7)]
+    parts += [rect(x - 0.5, 9.5, 1, TICK_H, undone) for x in (11, 13, 15)]
+    parts.append('<path d="%s" fill="%s"/>' % (PLAYHEAD, head))
+    return "".join(parts)
 
 
 MARK_SAMPLES = [  # (grid x, grid y, theme key) of solid areas, for pixel sampling
-    (10, 9, "head"), (2, 9.5, "ink"), (14, 10.5, "undone"), (4, 12.5, "ink"), (15, 12.5, "undone")]
+    (9, 9, "head"), (1, 11, "ink"), (15, 11, "undone"), (4, 12.25, "ink"), (12, 12.25, "undone")]
 
 
 def favicon_shapes(t):
-    """A separate drawing for 16 px, whole units only so nothing is anti-aliased: one 2 px tick, the playhead
-    bar with a stepped 8 px marker (rows of 8, 6 and 4 px: a pixel drawing, not a scaled triangle), and the
-    rewound rule and tick in the secondary text colour (Tape on Leader holds 5.9:1 at 1 px)."""
-    marker = "M4 1H12V2H11V3H10V4H6V3H5V2H4Z"
-    return "".join([
-        rect(0, 12, 8, 1, t["ink"]),
-        rect(8, 12, 8, 1, t["sub"]),
-        rect(1, 7, 2, 5, t["ink"]),
-        rect(12, 9, 2, 3, t["sub"]),
-        rect(7, 5, 2, 9, t["head"]),
-        '<path d="%s" fill="%s"/>' % (marker, t["head"]),
-    ])
+    """A separate drawing for 16 px, whole units only so nothing is anti-aliased: the same ruler with 1 px
+    ticks at a 2 px pitch (three each side) on a 1 px rule, a 2 px playhead line with a flat-topped stepped
+    head (two rows of 6 px, one of 4 px), and the rewound rule and ticks in the secondary text colour (Tape
+    on Leader holds 5.9:1 at 1 px). Also used, scaled by whole pixels, at 64 px and in the 20 px avatar crop."""
+    head = "M5 3H11V5H10V6H9V13H7V6H6V5H5Z"
+    parts = [rect(0, 12, 8, 1, t["ink"]), rect(8, 12, 8, 1, t["sub"])]
+    parts += [rect(x, 9, 1, 4, t["ink"]) for x in (1, 3, 5)]
+    parts += [rect(x, 9, 1, 4, t["sub"]) for x in (11, 13, 15)]
+    parts.append('<path d="%s" fill="%s"/>' % (head, t["head"]))
+    return "".join(parts)
 
 
-FAVICON_SAMPLES = [(8, 9, "head"), (2, 9.5, "ink"), (13, 10.5, "sub"), (4, 12.5, "ink"), (12, 12.5, "sub")]
+FAVICON_SAMPLES = [(8, 9, "head"), (1.5, 10.5, "ink"), (15.5, 10.5, "sub"), (6, 12.5, "ink"), (12, 12.5, "sub")]
 
 
 def svg(w, h, body, bg=None, title="rewindagent"):
@@ -159,17 +152,16 @@ class Face:
 
 
 def wordmark(face, t, mono=None):
-    """Mark + 'rewindagent'. The ruler (ticks + rule, grid y 7..13) is 1.25 x-heights tall, so the playhead
-    bar carries about the weight of the 800 letter stems; the text baseline is the bottom of the rule."""
+    """Mark + 'rewindagent'. One grid unit is the 'd' ascender height over 8.5, so the playhead (9 units tall)
+    rises a little above the ascenders; the text baseline is the bottom of the rule and of the playhead."""
     size = 100.0
-    xh = face.x_height(size)
-    k = xh * 1.25 / 6.0
+    k = face.bounds("d", size)[3] / 8.5
     pad = 8.0
     mark_w = 16 * k
-    base_y = pad + 13 * k
+    base_y = pad + (MARK_BOTTOM - MARK_TOP) * k
     glyphs, adv = face.outline("rewindagent", size, pad + mark_w + 0.36 * size, base_y, tracking=-0.02)
     w = pad + mark_w + 0.36 * size + adv + pad
-    h = base_y + max(0.5 * k, face.descent("g", size)) + pad
+    h = base_y + face.descent("g", size) + pad
     body = (place(mark_shapes(t, mono), pad, pad, k)
             + '<g fill="%s">%s</g>' % (mono or t["ink"], glyphs))
     return w, h, body
@@ -187,23 +179,20 @@ def circle_mark(shapes, cx, cy, r, uid, bg):
 def in_use(disp, body, mono):
     """A sheet of the identity in the places it will actually be seen: a browser tab (favicon at true 16 px),
     a README header on a light and a dark page, and the avatar at GitHub's circle sizes. Review material
-    only (brand/logo/in-use.png); the dark page ground is GitHub's, not ours, on purpose."""
+    only (brand/logo/in-use.png). Palette colours only, so the two dark grounds agree."""
     L, D = THEMES["light"], THEMES["dark"]
-    GH_DARK = "#0D1117"
     parts = []
     # row A: browser tab strips, light and dark, favicon at 1:1
     for i, (t, strip, tab, fav) in enumerate(((L, C["Playhead"], C["Leader"], favicon_shapes(L)),
                                              (D, C["Spool"], C["Reel"], favicon_shapes(D)))):
         x0 = 680 * i
         title, _ = body.outline("rewindagent", 13, x0 + 54, 39)
-        other, _ = body.outline("Pull requests", 13, x0 + 318, 39)
         parts.append(rect(x0, 0, 640, 56, strip)
                      + '<rect x="%d" y="10" width="270" height="46" rx="8" fill="%s"/>' % (x0 + 12, tab)
                      + '<g transform="translate(%d 25)">%s</g>' % (x0 + 30, fav)
-                     + '<g fill="%s">%s</g>' % (t["ink"], title)
-                     + '<g fill="%s">%s</g>' % (t["sub"], other))
+                     + '<g fill="%s">%s</g>' % (t["ink"], title))
     # row B: README header on a light page and on a dark page
-    for i, (t, page, m) in enumerate(((L, C["Leader"], None), (D, GH_DARK, None))):
+    for i, (t, page, m) in enumerate(((L, C["Leader"], None), (D, C["Reel"], None))):
         x0 = 680 * i
         w, h, wm = wordmark(disp, t, m)
         s = 300.0 / w
@@ -214,15 +203,19 @@ def in_use(disp, body, mono):
                      + '<g fill="%s">%s</g><g fill="%s">%s</g>' % (t["ink"], line1, t["sub"], line2))
     # row C: avatar in GitHub's circle crops (org header 96 px, list 48 px, comment 20 px) on a light page
     parts.append(rect(0, 300, 1320, 160, C["Leader"]))
-    for j, (r, cx) in enumerate(((48, 88), (24, 400), (10, 600))):
+    for j, (r, cx) in enumerate(((48, 88), (24, 400))):
         parts.append(circle_mark(mark_shapes(L), cx, 380, r, "c%d" % j, C["Leader"]))
+    # the 20 px comment avatar uses the 16 px drawing, scaled 1.25
+    parts.append('<clipPath id="c2"><circle cx="600" cy="380" r="10"/></clipPath>'
+                 '<g clip-path="url(#c2)"><circle cx="600" cy="380" r="10" fill="%s"/>'
+                 '<g transform="translate(590 370) scale(1.25)">%s</g></g>' % (C["Leader"], favicon_shapes(L)))
     org, _ = disp.outline("rewindagent", 26, 156, 372)
     sub, _ = body.outline("Ctrl+Z for AI coding agents", 15, 156, 398)
     parts.append('<g fill="%s">%s</g><g fill="%s">%s</g>' % (L["ink"], org, L["sub"], sub))
     cm, _ = body.outline("rewindagent", 15, 436, 385)
     parts.append('<g fill="%s">%s</g>' % (L["ink"], cm))
-    cm2, _ = body.outline("rewindagent commented 2 minutes ago", 13, 618, 384)
-    parts.append('<g fill="%s">%s</g>' % (L["sub"], cm2))
+    cm2, _ = body.outline("rewindagent", 13, 618, 384)
+    parts.append('<g fill="%s">%s</g>' % (L["ink"], cm2))
     return svg(1320, 460, "".join(parts), bg="#9AA39C", title="rewindagent, in use")
 
 
@@ -248,9 +241,9 @@ def build(fonts):
 
     # 3. PNG sources (rendered by render.mjs into brand/)
     src = {}
-    # square logos: stacked lockup, the mark 63 percent of the name's width so the two read as one unit
+    # square logos: stacked lockup, the mark 72 percent of the name's width so the two read as one unit
     _, adv100 = disp.outline("rewindagent", 100, 0, 0, tracking=-0.02)
-    name_w, mark_w, gap = 760.0, 480.0, 64.0
+    name_w, mark_w, gap = 760.0, 544.0, 64.0
     size = 100 * name_w / adv100
     asc, desc = disp.bounds("d", size)[3], disp.descent("g", size)
     k = mark_w / 16
@@ -281,12 +274,13 @@ def build(fonts):
     tag2, _ = body.outline(tail, 46, 96, 326)
     cmd, cw = mono.outline("$ " + COMMAND, 30, 122, 420)
     cred, _ = body.outline(CREDIT, 24, 96, 560)
-    k = 400 / 16
-    x, top = 1184 - 400, (640 - MARK_H * k) / 2
+    k = 448 / 16
+    name_top = 176 - disp.bounds("d", nsize)[3]
+    x, top = 1184 - 448, (name_top + 443) / 2 - MARK_H * k / 2   # centred on the headline-to-command block
     social = ('<g fill="%s">%s</g>' % (L["ink"], name)
               + '<g fill="%s">%s%s</g>' % (L["ink"], tag1, tag2)
-              + '<rect x="97" y="375" width="%.1f" height="68" fill="none" stroke="%s" stroke-width="2"/>'
-              % (cw + 50, C["Tape"])
+              + '<rect x="97.5" y="375.5" width="%.1f" height="67" fill="none" stroke="%s" stroke-width="3"/>'
+              % (cw + 49, C["Tape"])
               + '<g fill="%s">%s</g>' % (L["ink"], cmd)
               + '<g fill="%s">%s</g>' % (L["ink"], cred)
               + place(mark_shapes(L), x, top, k))

@@ -120,23 +120,28 @@ brand/logo/render.mjs (resvg). Look at brand/logo/contact-sheet.png: every asset
 mark at true 16, 32 and 64 px, and brand/logo/in-use.png (browser tab, README header on a light and a dark
 page, avatar in circle crops): the reviewer reads the mark where it will be seen, not alone.
 
-- Mark: a step ruler scrubbed back one step, on a 16-unit grid (half units allowed; sharp from 32 px).
-  Steps sit at x 2, 6, 10 and 14. Ticks are 1 unit wide on a 1-unit rule; the playhead on the third step is
-  a 2-unit Record bar with a detached down-pointing marker (4 wide, 3 tall, one unit above the bar), and the
-  bar runs half a unit below the rule. Everything after the playhead is the rewound part: the rule turns
-  Rule grey and the fourth tick is Rule grey and shorter (3 units against 5), like the unplayed end of a
-  scrubber. In the mono version the shorter tick alone carries "one step back".
-- One change from the brief below: the small left-pointing flag was dropped. Bar plus flag read as the
-  digit 1, and the caps tried after it read as a pin or a T. A detached marker reads as a timeline cursor.
+- Mark: a timeline playhead on a step ruler, scrubbed back, on a 16-unit grid (half units allowed; sharp
+  from 32 px). Seven short, equal ticks (1 unit wide, 2.5 above the rule) at a 2-unit pitch on a half-unit
+  rule: x 1, 3, 5, 7 recorded in ink, then the playhead at x 9, then x 11, 13, 15 rewound in Rule grey, with
+  the rule grey after the playhead too, like the unplayed end of a scrubber. The playhead is the only tall
+  element: an editor's handle in Record (a flat-topped pentagon 4 wide, 2 flat and 1.5 taper) on a 1-unit
+  line that ends flush with the rule bottom, no neck between head and line. Ticks overlap the rule so no
+  seam renders where they meet. In the mono version the ruler and playhead alone carry the idea.
+- Changes from the brief below: the small left-pointing flag was dropped (bar plus flag read as the digit 1)
+  and the playhead is one tick behind the last recorded step rather than one tick before the end; three
+  rewound ticks read as "scrubbed back" where one grey tick needed explaining.
 - favicon.svg / favicon-32.png are a separate drawing on whole pixels so nothing is anti-aliased at 16 px:
-  one 2 px tick, a 4 px gap, the playhead bar with a stepped 8 px marker (rows of 8, 6 and 4 px), and the
-  rewound rule and tick in Tape.
+  1 px ticks at a 2 px pitch (three each side) on a 1 px rule, a 2 px playhead line with a flat-topped
+  stepped head (two rows of 6 px, one of 4 px), and the rewound rule and ticks in Tape. The same drawing,
+  scaled by whole pixels, serves 64 px tiles and the 20 px avatar crop.
 - Files: logo-mark.svg (light), logo-mark-reverse.svg (dark), logo-mark-mono.svg (currentColor),
   logo-wordmark.svg / -reverse / -mono (horizontal), favicon.svg + favicon-32.png, avatar-512.png,
-  logo-light.png and logo-dark.png (1024, stacked: the mark 480 px over a 760 px name), social-preview-1280x640.png
-  (name, tagline, one real command in an outlined block, the credit, the mark at 400 px on the right).
+  logo-light.png and logo-dark.png (1024, stacked: the mark 544 px over a 760 px name), social-preview-1280x640.png
+  (name, tagline, one real command in an outlined block, the credit, the mark at 448 px on the right, centred
+  on the headline-to-command block).
 - Wordmark: Bricolage Grotesque 800, tracking -0.02 em, no kerning table applied. In the horizontal lockup
-  the ruler (ticks plus rule) is 1.25 x-heights tall and the text baseline is the bottom of the rule.
+  one grid unit is the "d" ascender height over 8.5, so the playhead rises a little above the ascenders, and
+  the text baseline is the bottom of the rule and of the playhead.
 - Palette fidelity is measured, not eyeballed: build.py records sample points (pixel, expected palette name)
   for every PNG in brand/logo/manifest.json; `python3 brand/logo/pngsample.py` prints the sampled hex next to
   the BRAND.md hex, and tests/test_logo.py fails on any mismatch.

@@ -44,7 +44,8 @@ let body = cells.map(([n, x, y, w]) =>
   `<image x="${x}" y="${y}" width="${w}" height="${n.startsWith("social") ? w / 2 : w}" href="${b64(readFileSync(join(brand, n)))}"/>`).join("");
 let x = 820;
 for (const px of [16, 32, 64]) {
-  const pair = px === 16 ? [fav, favDark] : [mark, markDark];
+  // 16 and 64 px: the whole-pixel drawing (64 is an exact 4x scaling); 32 px: the mark itself
+  const pair = px === 32 ? [mark, markDark] : [fav, favDark];
   for (const [i, s] of pair.entries()) {
     const size = px === 64 ? 192 : px * 6;
     body += `<image x="${x}" y="${420 + i * 210}" width="${size}" height="${size}" image-rendering="optimizeSpeed" href="${b64(render(s, px))}"/>`;
