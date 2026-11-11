@@ -7,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import __version__, export, hook, log, rewind, sessions
+from . import __version__, agents, export, hook, log, rewind, sessions
 
 
 def invocation() -> str:
@@ -28,9 +28,14 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("head", help="print the current head hash")
     s = sub.add_parser("show", help="print recorded calls")
     s.add_argument("--session")
-    sub.add_parser("hook", help="Claude Code hook entry point (reads the hook JSON on stdin; never blocks)")
-    i = sub.add_parser("install", help="add the hook to a Claude Code settings file")
-    i.add_argument("--settings", default=".claude/settings.json", help="settings file (default: %(default)s)")
+    hk = sub.add_parser("hook", help="hook entry point (reads the agent's hook JSON on stdin; never blocks)")
+    hk.add_argument("--agent", choices=sorted(agents.AGENTS), default=agents.DEFAULT,
+                    help="which agent is calling (default: %(default)s)")
+    i = sub.add_parser("install", help="add the hook to an agent's config file")
+    i.add_argument("--agent", choices=sorted(agents.AGENTS), default=agents.DEFAULT,
+                   help="claude: .claude/settings.json, codex: .codex/hooks.json, cursor: .cursor/hooks.json "
+                        "(default: %(default)s)")
+    i.add_argument("--settings", help="config file to write (default: the agent's file in the current project)")
     rp = sub.add_parser("replay", help="list a session's steps, or show one step in full")
     rp.add_argument("--session", help="default: the session that wrote the last record")
     rp.add_argument("--step", type=int, help="show this step's full input, checkpoints and result")
@@ -54,10 +59,11 @@ def main(argv: list[str] | None = None) -> int:
 
     a = ap.parse_args(argv)
     if a.cmd == "hook":
-        return hook.run()
+        return hook.run(agent=a.agent)
     if a.cmd == "install":
-        changed = hook.install(a.settings)
-        print(f"{'installed in' if changed else 'already installed in'} {a.settings}")
+        target = a.settings or agents.AGENTS[a.agent].settings
+        changed = hook.install(target, agent=a.agent)
+        print(f"{'installed in' if changed else 'already installed in'} {target}")
         return 0
     if a.cmd in ("verify", "show", "replay", "rewind", "branch", "export", "sessions") and not Path(a.log).exists():
         print(f"rewindagent: no log at {a.log}", file=sys.stderr)
@@ -154,8 +160,8 @@ def _report(p: dict, dry_run: bool, root) -> None:
         print(f"  this {('branch' if p.get('branch') else 'rewind')} is step {p['steps'] + 1}; "
               f"undo it with: {invocation()} rewind {p['steps']} --session {p['session']}")
     if p["bash_uncovered"]:
-        print(f"  note: {p['bash_uncovered']} Bash step(s) after step {p['to_step']} were not scanned; "
-              f"files they changed were not put back")
+        print(f"  note: {p['bash_uncovered']} step(s) after step {p['to_step']} were not scanned before and after "
+              f"(a command or edit whose scan did not finish); files they changed were not put back")
 
 
 if __name__ == "__main__":

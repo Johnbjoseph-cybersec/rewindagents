@@ -31,7 +31,7 @@ sys.path.insert(0, os.path.join(ROOT, "src"))
 sys.path.insert(0, os.path.join(BRAND, "demo"))
 
 import rewindagent  # noqa: E402
-from rewindagent import bashscan, export, hook, sessions  # noqa: E402
+from rewindagent import agents, bashscan, export, hook, sessions  # noqa: E402
 import scenario  # noqa: E402
 
 NAME = "rewindagent"
@@ -97,16 +97,30 @@ def facts():
         "diff_lines": export.MAX_DIFF_LINES,
         "show_files": sessions.SHOW_FILES,
         "file_tools": list(hook.FILE_TOOLS),
+        "agents": {k: {"settings": a.settings, "read_only": sorted(a.read_only)} for k, a in agents.AGENTS.items()},
         "steps": len(scenario.STEPS),
         "good_step": scenario.GOOD_STEP,
         "wreck_steps": scenario.WRECK_STEPS,
         "blocks": {k: readme_block(readme, h) for k, h in (
-            ("install", "Install"), ("hook", "Claude Code hook"), ("replay", "Replay, rewind, branch"),
+            ("install", "Install"), ("hook", "Claude Code hook"), ("agents", "Codex and Cursor hooks"),
+            ("replay", "Replay, rewind, branch"),
             ("export", "Export a replay"), ("sessions", "Find a session"), ("verify", "What the chain does not catch"),
             ("record", "Use it"), ("tests", "Tests"))},
         "beats": demo["beats"],
         "gif": {k: demo["gif_facts"][k] for k in ("width", "height", "seconds", "frames")},
     }
+
+
+EYEBROW_MAX = 46   # the eyebrow is one unwrapped mono line in the 5/12 hero column at 1440; longer ran under the panel (R7)
+
+
+def eyebrow(f):
+    """The one-line tag under which the promise sits: the version is prepended by the template."""
+    text = "hooks for Claude Code, Codex, Cursor"
+    full = "v%s . %s" % (f["version"], text)
+    if len(full) > EYEBROW_MAX:
+        raise SystemExit("eyebrow is %d characters, over %d: it would run under the hero panel" % (len(full), EYEBROW_MAX))
+    return text
 
 
 def hero_rows(beats):
@@ -292,11 +306,11 @@ def index_html(cfg, f, hero, open_all=False):
     n, good = f["steps"], f["good_step"]
     desc = ("Open-source recorder for coding agents. Every tool call goes into a tamper-evident, hash-chained log and "
             "every file is saved before it changes. Replay a session step by step and rewind the working tree to any "
-            "step. Claude Code hook today; Codex and Cursor planned.")
+            "step. Hooks for Claude Code, Codex and Cursor.")
     hero_s = """
 <section class="hero" aria-labelledby="h1"><div class="wrap">
 <div class="hero-text">
-<p class="eyebrow"><b>v%(v)s</b> &middot; %(licence)s &middot; a Claude Code hook</p>
+<p class="eyebrow"><b>v%(v)s</b> &middot; %(eyebrow)s</p>
 <h1 id="h1">%(promise)s</h1>
 <p class="lede">rewindagent records every tool call your coding agent makes and saves a copy of each file before the agent changes it. Replay the session step by step. Rewind the working tree to any step, or keep the current files as a branch and then rewind. The agent works at full speed, and every step it takes can be taken back, within the <a href="#limits">limits</a> below.</p>
 <div class="cta"><a class="btn btn-primary" href="#install">Install</a><a class="btn btn-ghost" href="docs/">Read the docs</a></div>
@@ -307,7 +321,7 @@ def index_html(cfg, f, hero, open_all=False):
 <ul class="facts"><li>standard library only</li><li>no network, no account</li><li>never stops or changes a call</li><li>%(licence)s</li></ul>
 </div>
 </div></section>
-""" % {"v": e(f["version"]), "licence": LICENCE, "promise": PROMISE, "n": n, "wreck": f["wreck_steps"], "hero": panel(hero)}
+""" % {"v": e(f["version"]), "eyebrow": e(eyebrow(f)), "licence": LICENCE, "promise": PROMISE, "n": n, "wreck": f["wreck_steps"], "hero": panel(hero)}
 
     right = beat_rows(f["beats"][1]) + beat_rows(f["beats"][2]) + beat_rows(f["beats"][3])
     demo = """
@@ -333,16 +347,17 @@ def index_html(cfg, f, hero, open_all=False):
 <p class="lede">Python %(py)s. No dependencies beyond the standard library. Tested on %(tested)s. Not on PyPI yet, so install from the repository. The <a href="docs/">docs</a> walk through a first session.</p></div>
 <div class="cols">
 <div><h3>Install</h3>%(install)s<p>Or from a clone, <code>pip install .</code>. Without installing, <code>PYTHONPATH=src python3 -m rewindagent</code> runs the same CLI from a clone.</p></div>
-<div><h3>Add the hook</h3>%(hook)s<p><code>install</code> keeps everything already in the settings file and does nothing if the hook is already there. <code>.rewindagent/</code> gets its own <code>.gitignore</code>, so the log and the copies stay out of your commits.</p></div>
+<div><h3>Add the hook</h3>%(hook)s%(agents)s<p><code>install</code> keeps everything already in the file and does nothing if the hook is already there. For Codex the file is <code>%(codex)s</code> and for Cursor <code>%(cursor)s</code>; those two hooks are tested with the payloads in the vendors&#x27; documentation, not yet in a live session. <code>.rewindagent/</code> gets its own <code>.gitignore</code>, so the log and the copies stay out of your commits.</p></div>
 </div>
 </div></section>
-""" % {"label": label(2, "Install"), "py": e(f["py_req"]), "tested": e(f["tested_on"]), "install": code(b["install"]), "hook": code(b["hook"])}
+""" % {"label": label(2, "Install"), "py": e(f["py_req"]), "tested": e(f["tested_on"]), "install": code(b["install"]), "hook": code(b["hook"]),
+       "agents": code(b["agents"]), "codex": e(f["agents"]["codex"]["settings"]), "cursor": e(f["agents"]["cursor"]["settings"])}
 
     how = """
 <section class="sec" id="how" aria-labelledby="h-how"><div class="wrap">
 %(label)s
 <div class="head"><h2 id="h-how">Record. Checkpoint. Rewind.</h2>
-<p class="lede">A Claude Code hook runs before and after every tool call. It never stops a call and never changes one: it prints nothing and always exits 0, even when its own input is broken or the disk is full.</p></div>
+<p class="lede">A hook runs before and after every tool call the agent makes. It never stops a call and never changes one: it always exits 0, even when its own input is broken or the disk is full, and prints nothing but the one answer Cursor requires from a permission hook.</p></div>
 <ol class="steps">
 <li>%(r1)s<h3>Record</h3><p>Every call gets a <code>pre</code> record (tool and input) and a <code>post</code> record (tool and response) in <code>.rewindagent/log.jsonl</code>. Each record carries the SHA-256 of the one before it, so editing, deleting or reordering any record makes <code>verify</code> fail and name the first bad record. Appends are locked, so several processes can write to one log.</p></li>
 <li>%(r2)s<h3>Checkpoint</h3><p>Before <code>Write</code>, <code>Edit</code>, <code>MultiEdit</code> and <code>NotebookEdit</code>, the current bytes of the target file go to <code>.rewindagent/objects/&lt;sha256&gt;</code>. Around a <code>Bash</code> command, the project&#x27;s files are saved first and scanned after, and only the files the command changed, created or deleted are checkpointed. Copies are stored by hash, so an unchanged file is stored once.</p></li>
@@ -399,7 +414,7 @@ def index_html(cfg, f, hero, open_all=False):
         ("Does anything leave my machine?",
          "No. rewindagent makes no network connections: a test checks that no module under <code>src/</code> imports <code>socket</code>, <code>http</code> or <code>urllib</code>. The log and the file copies live in <code>.rewindagent/</code> inside your project, and nothing reads them but you."),
         ("Which agents does it work with?",
-         "Claude Code, through its <code>PreToolUse</code> and <code>PostToolUse</code> hooks. Hooks for Codex and Cursor are planned and not built; the README says the same."),
+         "Claude Code, through its <code>PreToolUse</code> and <code>PostToolUse</code> hooks; Codex, through the same hook file shape in <code>%s</code>; Cursor, through <code>%s</code>. The Claude Code hook has run in real sessions. The Codex and Cursor hooks are built from the vendors&#x27; hook documentation and tested with the documented payloads, not yet in a live session; the README says the same." % (f["agents"]["codex"]["settings"], f["agents"]["cursor"]["settings"])),
         ("Does it need git?",
          "No. Recording, replay and rewind work in any directory. Git changes two things: around <code>Bash</code> commands the scan follows <code>git ls-files</code>, so git-ignored files are left alone, and <code>branch</code> commits the current files to a git branch. Outside git, <code>branch</code> keeps them in the log only."),
         ("What happens if the log is tampered with?",
@@ -460,7 +475,7 @@ def pricing_html(cfg, f):
 def docs_html(cfg, f):
     rel = "../"
     b = f["blocks"]
-    desc = "Getting started with rewindagent: install, add the Claude Code hook, a first session, replay, rewind, branch, export, find a session, verify the log."
+    desc = "Getting started with rewindagent: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, export, find a session, verify the log."
     toc = [("install", "Install"), ("hook", "Add the hook"), ("first", "A first session"), ("recorded", "What gets recorded"),
            ("replay", "Replay and rewind"), ("branch", "Branch"), ("export", "Export"), ("sessions", "Find a session"),
            ("verify", "Verify"), ("limits", "Limits"), ("remove", "Remove it")]
@@ -487,17 +502,20 @@ def docs_html(cfg, f):
 <h2 id="hook">Add the hook</h2>
 %(hook)s
 <p><code>install</code> adds a <code>PreToolUse</code> and a <code>PostToolUse</code> hook to the settings file, keeps everything already in it, and does nothing if the hook is already there. The command it writes names the Python that rewindagent was installed into by absolute path, so it runs whether or not a virtualenv is active. To remove the hook, delete those two entries from the settings file.</p>
+%(agents)s
+<p>For Codex the file is <code>%(codex)s</code>, in the same shape as Claude Code&#x27;s settings; Codex asks you to trust the hook once (<code>/hooks</code>) and remembers the trust by the hook&#x27;s hash. For Cursor the file is <code>%(cursor)s</code> with a <code>preToolUse</code> and a <code>postToolUse</code> entry; because Cursor&#x27;s <code>preToolUse</code> is a permission hook that treats an empty answer as a failure, the hook prints <code>{"permission": "allow"}</code> before a call and <code>{}</code> after one, which changes nothing (a deny from another hook still wins). The Codex and Cursor hooks are tested with the payloads in the vendors&#x27; documentation and through the installed command, not yet in a live session.</p>
 
 <h2 id="first">A first session</h2>
 <p>The session behind the clip on the front page, as it ran. Every line below is what the command printed; <code>tests/test_demo.py</code> runs the same session and fails if a line changes.</p>
 <ol class="walk">%(first)s</ol>
 
 <h2 id="recorded">What gets recorded</h2>
-<p>In each project Claude Code works in, with the hook installed:</p>
+<p>In each project the agent works in, with the hook installed:</p>
 <ul>
 <li>every tool call gets a <code>pre</code> record (tool and input) and a <code>post</code> record (tool and response) in <code>.rewindagent/log.jsonl</code>, in one hash chain. A response longer than %(chars)s characters is cut, with the full length noted.</li>
-<li>before %(tools)s, the current bytes of the target file are copied to <code>.rewindagent/objects/&lt;sha256&gt;</code> and the hash goes into the <code>pre</code> record. A file that does not exist yet is recorded as absent. Files over %(mb)d MB are noted and not copied.</li>
+<li>in Claude Code, before %(tools)s, the current bytes of the target file are copied to <code>.rewindagent/objects/&lt;sha256&gt;</code> and the hash goes into the <code>pre</code> record. A file that does not exist yet is recorded as absent. Files over %(mb)d MB are noted and not copied.</li>
 <li>around every <code>Bash</code> call, the project&#x27;s files are saved before the command and scanned again after it; the <code>post</code> record checkpoints only the files that were changed, deleted or created. Copies are stored by SHA-256, and a stat cache in <code>.rewindagent/index.json</code> means only files whose size or modification time changed are read again.</li>
+<li>in Codex and Cursor, that same scan runs around every call except the tools their documentation names that cannot change files (Cursor: %(cursor_ro)s; Codex: %(codex_ro)s), because the input of their edit tools is not documented and the hook never reads a file path out of those payloads.</li>
 <li><code>.rewindagent/</code> gets its own <code>.gitignore</code>, so the log and the copies stay out of your commits.</li>
 </ul>
 <p>The hook never stops a call and never changes one. It prints nothing and always exits 0; any problem goes to stderr only.</p>
@@ -537,11 +555,11 @@ def docs_html(cfg, f):
 <li>In a git repository the scan follows <code>git ls-files --cached --others --exclude-standard</code>, so git-ignored files are not saved. Outside git, every file under the project except under %(skip)s.</li>
 <li>Symlinks are not saved. Files over %(mb)d MB are not copied. A project with more than %(files)s files is not scanned around <code>Bash</code> commands; the call is still recorded and <code>rewind</code> reports the step as not scanned.</li>
 <li>Directories created by later steps stay, empty, after a rewind. If anything could not be restored, <code>rewind</code> lists it and exits 1.</li>
-<li>Appends to the log are locked with <code>fcntl</code>, so it needs a Unix. Claude Code is the only agent with a hook today; Codex and Cursor are planned.</li>
+<li>Appends to the log are locked with <code>fcntl</code>, so it needs a Unix. The Claude Code hook has run in real sessions; the Codex and Cursor hooks are tested with the documented payloads, not yet in a live session.</li>
 </ul>
 
 <h2 id="remove">Remove it</h2>
-<p>Delete the two hook entries from the settings file you installed into, delete <code>.rewindagent/</code> in the project, and uninstall the package (<code>pipx uninstall rewindagent</code> or <code>pip uninstall rewindagent</code>). Nothing else was created.</p>
+<p>Delete the two hook entries from the file you installed into, delete <code>.rewindagent/</code> in the project, and uninstall the package (<code>pipx uninstall rewindagent</code> or <code>pip uninstall rewindagent</code>). Nothing else was created.</p>
 
 <h2 id="tests">Tests</h2>
 %(tests)s
@@ -552,7 +570,11 @@ def docs_html(cfg, f):
 """ % {"label": label(1, "Docs"), "toc": "".join('<a href="#%s">%s</a>' % (a, t) for a, t in toc), "py": e(f["py_req"]),
        "tested": e(f["tested_on"]), "install": code(b["install"]),
        "version": panel([("cmd", "rewindagent --version"), ("out", "rewindagent %s" % f["version"])]),
-       "hook": code(b["hook"]), "first": first, "chars": "{:,}".format(f["result_chars"]),
+       "hook": code(b["hook"]), "agents": code(b["agents"]), "codex": e(f["agents"]["codex"]["settings"]),
+       "cursor": e(f["agents"]["cursor"]["settings"]),
+       "cursor_ro": ", ".join("<code>%s</code>" % e(t) for t in f["agents"]["cursor"]["read_only"]),
+       "codex_ro": ", ".join("<code>%s</code>" % e(t) for t in f["agents"]["codex"]["read_only"]),
+       "first": first, "chars": "{:,}".format(f["result_chars"]),
        "tools": ", ".join("<code>%s</code>" % t for t in f["file_tools"]), "mb": f["file_mb"], "replay": code(b["replay"]),
        "good": f["good_step"], "n": f["steps"], "n1": f["steps"] + 1, "export": code(b["export"]), "kb": f["diff_kb"],
        "lines": f["diff_lines"], "sessions": code(b["sessions"]), "show": f["show_files"], "verify": code(b["verify"]),

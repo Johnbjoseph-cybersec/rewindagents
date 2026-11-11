@@ -9,9 +9,9 @@ exist then is deleted. Before changing anything, rewind checkpoints the current 
 will touch and records itself as a step, so a rewind can be rewound too.
 
 Safety: nothing is written unless the log's hash chain verifies and every stored copy still matches its
-SHA-256. Files outside the project (the directory holding .rewindagent/) are never touched. A Bash step
-whose before/after scan did not run (project too big, or no PostToolUse arrived) is counted and
-reported; the files it changed are not undone.
+SHA-256. Files outside the project (the directory holding .rewindagent/) are never touched. A step whose
+before/after scan did not finish (a Bash, Shell or apply_patch call in a project too big to scan, or one
+whose post event never arrived) is counted and reported; the files it changed are not undone.
 """
 from __future__ import annotations
 
@@ -71,7 +71,10 @@ def steps_from(recs: list[dict]) -> list[dict]:
         if args.get("checkpoint"):
             cps.append(args["checkpoint"])
         s = {"step": len(out) + 1, "seq": r["seq"], "event": r.get("event"), "tool": r["tool"],
-             "input": args.get("input", r.get("args")), "checkpoints": cps, "result": None}
+             "input": args.get("input", r.get("args")), "checkpoints": cps, "result": None,
+             "scanned": "bash_scan" in args}      # a before/after scan of the project was started for it
+        if args.get("agent"):
+            s["agent"] = args["agent"]
         if args.get("to_step") is not None:
             s["to_step"] = args["to_step"]
         if args.get("branch"):
@@ -106,7 +109,8 @@ def summary(step: dict, width: int = 80, root: Path | None = None) -> str:
     elif isinstance(inp, dict) and isinstance(inp.get("file_path"), str):
         text = relative(inp["file_path"], root)      # Read and other file tools: the file, not raw JSON
     elif isinstance(inp, dict) and "command" in inp:
-        text = str(inp["command"])
+        cmd = inp["command"]            # a string (Claude Code, Cursor) or a list of words
+        text = " ".join(str(w) for w in cmd) if isinstance(cmd, list) else str(cmd)
     else:
         text = json.dumps(inp, ensure_ascii=False, default=str)
     text = " ".join(text.split())
@@ -138,7 +142,9 @@ def plan(log_path: str | Path, n: int, session: str | None = None) -> dict:
             first.setdefault(cp["path"], cp)
     p: dict[str, Any] = {"session": session, "to_step": n, "steps": len(all_steps),
                          "restore": [], "delete": [], "cannot": [],
-                         "bash_uncovered": sum(1 for s in all_steps[n:] if s["tool"] == "Bash"
+                         # steps whose before/after scan did not finish: Bash, or any Codex/Cursor call that
+                         # was scanned (see agents.scans), without a "changed" count from the post event
+                         "bash_uncovered": sum(1 for s in all_steps[n:] if (s["tool"] == "Bash" or s.get("scanned"))
                                                and "changed" not in (s.get("bash_scan") or {}))}
     for path_s, cp in first.items():
         path = Path(path_s)

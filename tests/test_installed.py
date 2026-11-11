@@ -9,6 +9,7 @@ import os
 import re
 import shlex
 import subprocess
+import sys
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -16,6 +17,8 @@ from tempfile import TemporaryDirectory
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 SRC = ROOT / "src"
+sys.path.insert(0, str(SRC))
+from rewindagent import agents  # noqa: E402  (only for the agents' event names; the binary under test runs without src)
 BIN = os.environ.get("REWINDAGENT_BIN")
 VERSION = re.search(r'^__version__ = "([^"]+)"', (SRC / "rewindagent" / "__init__.py").read_text(), re.M).group(1)
 SUBCOMMANDS = set(re.findall(r'sub\.add_parser\("(\w+)"', (SRC / "rewindagent" / "cli.py").read_text()))
@@ -103,6 +106,63 @@ class InstalledCommandTest(unittest.TestCase):
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertIn("sed -i.bak", r.stdout)
             self.assertEqual(self._run("sessions", "--grep", "nothing-here", cwd=proj).returncode, 1)
+
+    def test_install_for_codex_and_cursor_writes_commands_their_payloads_drive(self):
+        """`install --agent codex|cursor` through the binary; then the command from the written file, run as the
+        agent would run it (no PYTHONPATH, the documented payload on stdin), records a shell edit that the binary
+        rewinds. Codex: stdout empty. Cursor: the required `{"permission": "allow"}` / `{}` answers."""
+        shell = "sed -i.bak s/1/2/ app.py && rm app.py.bak"
+        cases = {
+            "cursor": (".cursor/hooks.json", '{"permission": "allow"}\n', "{}\n",
+                       lambda proj, ev: {"conversation_id": "c9", "generation_id": "g1", "hook_event_name": ev,
+                                         "workspace_roots": [proj], "cwd": proj, "tool_name": "Shell", "tool_use_id": "abc123",
+                                         "tool_input": {"command": shell, "working_directory": proj}},
+                       {"tool_output": json.dumps({"output": "", "exit_code": 0}), "duration": 3}),
+            "codex": (".codex/hooks.json", "", "",
+                      lambda proj, ev: {"session_id": "c9", "cwd": proj, "hook_event_name": ev, "tool_name": "Bash",
+                                        "tool_use_id": "call_9", "tool_input": {"command": shell}},
+                      {"tool_response": {"output": ""}}),
+        }
+        for agent, (path, pre_reply, post_reply, payload, post_extra) in cases.items():
+            with TemporaryDirectory() as proj:
+                Path(proj, "app.py").write_text("x = 1\n")
+                r = self._run("install", "--agent", agent, cwd=proj)
+                self.assertEqual((r.returncode, r.stdout.strip()), (0, "installed in %s" % path), r.stderr)
+                settings = json.loads(Path(proj, path).read_text())
+                pre_event, post_event = agents.AGENTS[agent].events
+                if agent == "cursor":
+                    self.assertEqual(settings["version"], 1)
+                    cmds = {ev: [h["command"] for h in settings["hooks"][ev]] for ev in (pre_event, post_event)}
+                else:
+                    cmds = {ev: [h["command"] for g in settings["hooks"][ev] for h in g["hooks"]] for ev in (pre_event, post_event)}
+                self.assertEqual(cmds[pre_event], cmds[post_event])
+                self.assertEqual(len(cmds[pre_event]), 1)
+                cmd = cmds[pre_event][0]
+                self.assertNotIn("PYTHONPATH", cmd)
+                words = shlex.split(cmd)
+                self.assertEqual(words[1:], ["-m", "rewindagent", "hook", "--agent", agent], cmd)
+                self.assertTrue(Path(words[0]).is_absolute(), cmd)
+
+                def hook_call(ev, extra, want):
+                    p = subprocess.run(cmd, shell=True, cwd=proj, env=clean_env(), input=json.dumps({**payload(proj, ev), **extra}),
+                                       capture_output=True, text=True, timeout=120)
+                    self.assertEqual((p.returncode, p.stdout, p.stderr), (0, want, ""), agent)
+
+                hook_call(pre_event, {}, pre_reply)
+                subprocess.run(["sh", "-c", shell], cwd=proj, check=True)
+                hook_call(post_event, post_extra, post_reply)
+                self.assertEqual(Path(proj, "app.py").read_text(), "x = 2\n")
+                r = self._run("replay", cwd=proj)
+                self.assertEqual(r.returncode, 0, r.stderr)
+                self.assertIn("sed -i.bak", r.stdout)
+                self.assertIn("[1 checkpointed]", r.stdout)
+                r = self._run("rewind", "0", cwd=proj)
+                self.assertEqual(r.returncode, 0, r.stderr)
+                self.assertEqual(Path(proj, "app.py").read_text(), "x = 1\n")
+                self.assertIn("undo it with: rewindagent rewind 1 --session c9", r.stdout)
+                self.assertNotIn("not scanned", r.stdout)
+                r = self._run("verify", cwd=proj)
+                self.assertEqual((r.returncode, r.stdout.strip()), (0, "OK: 3 records, chain intact"), r.stderr)
 
 
 class ReadmeCommandsTest(unittest.TestCase):

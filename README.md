@@ -3,11 +3,12 @@
 Ctrl+Z for AI coding agents: record, replay and rewind. Every tool call your coding agent makes goes into a
 tamper-evident, hash-chained log you can verify later.
 
-**Status: v0.0.7, pre-release.** Built and tested today: the recorder and its CLI, a Claude Code hook
-that records every call and checkpoints the files that `Write`/`Edit` and `Bash` commands change,
-`replay`, `rewind` and `branch`, `export` (a session as one HTML page), `sessions` (list and search the
-sessions in a log), and a pip-installable package with a `rewindagent` command. Not on PyPI yet. Planned:
-hooks for Codex and Cursor.
+**Status: v0.0.7, pre-release.** Built and tested today: the recorder and its CLI, hooks for Claude Code,
+Codex and Cursor that record every call and checkpoint the files a step changes, `replay`, `rewind` and
+`branch`, `export` (a session as one HTML page), `sessions` (list and search the sessions in a log), and a
+pip-installable package with a `rewindagent` command. Not on PyPI yet. The Claude Code hook has run in real
+sessions; the Codex and Cursor hooks are built from the vendors' hook documentation and tested with the
+documented payloads, not yet in a live session.
 
 ![rewindagent demo: an agent's last two steps delete the tests and overwrite the config; rewindagent replay lists the fourteen steps, rewindagent rewind 12 puts the files back](brand/demo.gif)
 
@@ -65,6 +66,40 @@ files that were changed, deleted or created. Details and limits:
   (`.rewindagent/index.json`) means only files whose size or modification time changed are read again.
 - A project with more than 20,000 files is not scanned; the call is still recorded and `rewind` reports it.
 
+## Codex and Cursor hooks
+
+```sh
+rewindagent install --agent codex      # adds the hook to .codex/hooks.json in this project
+rewindagent install --agent cursor     # adds the hook to .cursor/hooks.json in this project
+rewindagent install --agent cursor --settings ~/.cursor/hooks.json   # or for every project
+```
+
+Same recorder, same log, same `replay`, `rewind`, `branch`, `export` and `sessions`. What differs is how each
+agent calls the hook, and `src/rewindagent/agents.py` quotes the vendor documentation (read 2026-11-11) it was
+built from:
+
+- Codex (`.codex/hooks.json`, the same file shape as Claude Code's settings) sends `PreToolUse` and
+  `PostToolUse` with `session_id`, `cwd`, `tool_name`, `tool_use_id`, `tool_input` and `tool_response`; shell
+  commands arrive as `Bash` and file edits as `apply_patch`. Codex asks you to trust a new hook before it runs
+  (`/hooks` inside Codex) and remembers the trust by the hook's hash, so a hook command that changes needs
+  trusting again. Project hooks load only when the project's `.codex/` folder is trusted.
+- Cursor (`.cursor/hooks.json`) sends `preToolUse` and `postToolUse` with `conversation_id` (used as the
+  session), `cwd`, `tool_name`, `tool_input`, `tool_use_id` and, after the call, `tool_output`; its tools are
+  `Shell`, `Read`, `Write`, `Grep`, `Delete`, `Task` and `MCP:<name>`. Cursor's `preToolUse` is a permission
+  hook that treats an empty or invalid answer as a failure, so for Cursor the hook prints
+  `{"permission": "allow"}` before a call and `{}` after one. "allow" is the one answer that changes nothing;
+  a deny from any other hook still wins.
+- The input of Codex's `apply_patch` and Cursor's `Write` is not documented, so the hook never reads a file
+  path out of a Codex or Cursor payload. Instead, around every Codex or Cursor call except the tools the docs
+  name that cannot change files (Cursor's `Read` and `Grep`, Codex's `update_plan`), the project is saved
+  before the call and scanned after it, exactly as around a `Bash` command, and only the files the call
+  changed, created or deleted are checkpointed. The cost is a stat of every project file per call; unchanged
+  files are not read again. The same 20 MB and 20,000-file limits apply.
+- Verified so far: the hook driven by the payloads in the vendors' documentation, in `tests/test_agents.py`
+  and through the installed binary in `tests/test_installed.py`. Not yet in a live Codex or Cursor session.
+  If a real session sends something else, open an issue with the payload (`replay --step N` prints what
+  was recorded).
+
 ## Replay, rewind, branch
 
 Run these from the project directory (the one holding `.rewindagent/`). They work on the latest session
@@ -91,8 +126,9 @@ rewindagent branch 12 --name try2   # keep the current files, then rewind to ste
   chain is broken it changes nothing. If a stored copy no longer matches, that file is reported and left
   as it is.
 - It only touches files inside the project directory. Files outside it are reported and left alone.
-- Limits: a `Bash` step whose scan did not run (more than 20,000 files, or Claude Code sent no
-  `PostToolUse` for it) is counted and reported, and its changes are not put back. Directories created by
+- Limits: a step whose before/after scan did not finish (a `Bash`, `Shell` or `apply_patch` call in a project
+  of more than 20,000 files, or one whose post event never arrived) is counted and reported, and its changes
+  are not put back. Directories created by
   later steps stay (empty). Files over 20 MB were never copied, so they are reported and not restored. If
   anything could not be restored, the exit code is 1.
 
@@ -182,7 +218,7 @@ rewindagent verify --head <pinned-hash>
 ## Roadmap
 
 - Publish on PyPI
-- Hooks for Codex and Cursor
+- Run the Codex and Cursor hooks in live sessions and keep the real payloads as test fixtures
 - A paid Cloud tier (cloud sync, shareable replay links, long retention, session search): planned, not built,
   not priced. The waitlist is a GitHub issue on this repository with the label `waitlist`; say what you would pay for.
 

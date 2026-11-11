@@ -112,7 +112,7 @@ class TestBashLimits(unittest.TestCase):
             p = rewind.rewind(a.log, 0, dry_run=True)
             self.assertEqual(p["bash_uncovered"], 1)
             code, out, _ = cli("--log", str(a.log), "rewind", "0", "--dry-run")
-            self.assertIn("1 Bash step(s) after step 0 were not scanned", out)
+            self.assertIn("1 step(s) after step 0 were not scanned", out)
 
     def test_large_file_changed_by_bash_is_reported_as_cannot(self):
         with TemporaryDirectory() as d:

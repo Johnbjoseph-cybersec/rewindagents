@@ -1,15 +1,17 @@
-"""Claude Code PreToolUse / PostToolUse hook: record every call, checkpoint files first.
+"""Pre / post tool-use hook for Claude Code, Codex and Cursor: record every call, checkpoint files first.
 
-Claude Code runs the hook with one JSON object on stdin. The hook:
+The agent runs the hook with one JSON object on stdin (field names per agent: agents.py). The hook:
 - appends a "pre" record (tool + input) before the call and a "post" record (tool + response) after it;
-- before Write, Edit, MultiEdit and NotebookEdit, copies the current bytes of the target file into a
-  content-addressed store (.rewindagent/objects/<sha256>) and puts the hash in the "pre" record, so the
-  file can be put back later. A file that does not exist yet is recorded as absent;
-- around Bash, saves the project's files before the command and checkpoints, in the "post" record,
-  the ones it changed, created or deleted (see bashscan.py).
+- Claude Code: before Write, Edit, MultiEdit and NotebookEdit, copies the current bytes of the target file
+  into a content-addressed store (.rewindagent/objects/<sha256>) and puts the hash in the "pre" record, so
+  the file can be put back later. A file that does not exist yet is recorded as absent;
+- around Bash (Claude Code, Codex) and around every Codex or Cursor call that is not known to be read-only,
+  saves the project's files before the call and checkpoints, in the "post" record, the ones it changed,
+  created or deleted (see bashscan.py).
 
-It never blocks, never decides and never changes the call: it prints nothing to stdout and always
-exits 0, even when its own input is broken or the disk is full. Problems go to stderr only.
+It never blocks, never decides and never changes the call: it always exits 0, even when its own input is
+broken or the disk is full, and prints nothing to stdout except the one answer Cursor requires from a
+permission hook (`{"permission": "allow"}`). Problems go to stderr only.
 """
 from __future__ import annotations
 
@@ -22,6 +24,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from . import agents
 from .log import Recorder
 
 FILE_TOOLS = {"Write": "file_path", "Edit": "file_path", "MultiEdit": "file_path",
@@ -65,49 +68,54 @@ def _clip(value: Any) -> Any:
     return {"truncated": True, "chars": len(text), "head": text[:MAX_RESULT_CHARS]}
 
 
-def handle(payload: dict) -> dict:
-    """Record one hook event. Returns the record written."""
-    cwd = Path(payload.get("cwd") or os.getcwd())
-    event = payload.get("hook_event_name", "")
-    tool = payload.get("tool_name", "?")
-    tool_input = payload.get("tool_input") or {}
-    session = payload.get("session_id", "unknown")
+def handle(payload: dict, agent: str = agents.DEFAULT) -> dict:
+    """Record one hook event from `agent` (a key of agents.AGENTS). Returns the record written."""
+    ag = agents.AGENTS[agent]
+    n = agents.normalize(payload)
+    cwd, event, tool, tool_input, session = n["cwd"], n["event"], n["tool"], n["input"], n["session"]
     store = store_dir(cwd)
     rec = Recorder(store / "log.jsonl")
     ignore = store / ".gitignore"
     if not ignore.exists():  # keep the log and checkpoints out of the user's commits
         ignore.write_text("*\n", encoding="utf-8")
 
-    if event == "PreToolUse":
-        args: dict[str, Any] = {"input": tool_input}
-        key = FILE_TOOLS.get(tool)
+    if event == "pre":
+        args: dict[str, Any] = {"input": tool_input, "agent": agent}
+        key = FILE_TOOLS.get(tool) if ag.file_tools else None
         if key and isinstance(tool_input, dict) and tool_input.get(key):
             target = Path(tool_input[key])
             if not target.is_absolute():
                 target = cwd / target
             args["checkpoint"] = checkpoint(target, store / "objects")
-        elif tool == "Bash":
+        elif agents.scans(ag, tool):
             from . import bashscan
             args["bash_scan"] = bashscan.before(payload, cwd, store)
         return rec.record(session, tool, args, None, event="pre")
-    if event == "PostToolUse":
-        args = {"input": tool_input}
-        if tool == "Bash":
+    if event == "post":
+        args = {"input": tool_input, "agent": agent}
+        if agents.scans(ag, tool):
             from . import bashscan
             args["bash_scan"], args["checkpoints"] = bashscan.after(payload, cwd, store)
-        return rec.record(session, tool, args, _clip(payload.get("tool_response")), event="post")
-    return rec.record(session, tool, {"input": tool_input}, None, event=event or "unknown")
+        return rec.record(session, tool, args, _clip(n["response"]), event="post")
+    return rec.record(session, tool, {"input": tool_input, "agent": agent}, None, event=event)
 
 
-def run(stdin=None) -> int:
-    """Hook entry point. Always returns 0 and writes nothing to stdout."""
+def run(stdin=None, agent: str = agents.DEFAULT) -> int:
+    """Hook entry point. Always returns 0. Writes nothing to stdout, except the agent's required reply
+    (Cursor: `{"permission": "allow"}` before a call, `{}` after one; the same allow if the input could not
+    be read, so a broken payload still never turns into a block)."""
+    event = "unknown"
     try:
         payload = json.load(stdin or sys.stdin)
         if not isinstance(payload, dict):
             raise ValueError("hook input is not a JSON object")
-        handle(payload)
+        event = agents.normalize(payload)["event"]
+        handle(payload, agent)
     except Exception as e:  # never let a recording failure reach the agent as a block
         print(f"rewindagent hook: not recorded: {e}", file=sys.stderr)
+    reply = agents.AGENTS[agent].reply.get(event, agents.AGENTS[agent].reply.get("unknown", ""))
+    if reply:
+        print(reply)
     return 0
 
 
@@ -126,39 +134,26 @@ def installed() -> bool:
     return any(here.is_relative_to(Path(d).resolve()) for d in dirs if d)
 
 
-def hook_command() -> str:
-    """The command Claude Code will run for every hook event.
+def hook_command(agent: str = agents.DEFAULT) -> str:
+    """The command the agent will run for every hook event.
 
     It names the interpreter by absolute path, so it works whether or not a virtualenv is active.
     From a clone (not installed) it carries the PYTHONPATH that makes the package importable.
+    For Codex and Cursor it carries `--agent`, so the hook reads their payload and answers their way.
     """
     run = f"{shlex.quote(sys.executable)} -m rewindagent hook"
+    if agent != agents.DEFAULT:
+        run += f" --agent {agent}"
     if installed():
         return run
     src = Path(__file__).resolve().parent.parent
     return f"PYTHONPATH={shlex.quote(str(src))} {run}"
 
 
-def install(settings_path: str | Path, command: str | None = None) -> bool:
-    """Add the hook to a Claude Code settings file. Keeps everything already there.
-
-    Returns True if the file changed, False if the hook was already installed.
+def install(settings_path: str | Path | None = None, command: str | None = None,
+            agent: str = agents.DEFAULT) -> bool:
+    """Add the hook to the agent's config file (default: the agent's project file, agents.AGENTS[agent].settings).
+    Keeps everything already there. Returns True if the file changed, False if the hook was already installed.
     """
-    p = Path(settings_path)
-    cmd = command or hook_command()
-    text = p.read_text(encoding="utf-8") if p.exists() else ""
-    settings = json.loads(text) if text.strip() else {}
-    hooks = settings.setdefault("hooks", {})
-    changed = False
-    for event in ("PreToolUse", "PostToolUse"):
-        groups = hooks.setdefault(event, [])
-        present = any(h.get("command") == cmd for g in groups for h in g.get("hooks", []))
-        if not present:
-            groups.append({"matcher": "*", "hooks": [{"type": "command", "command": cmd}]})
-            changed = True
-    if changed:
-        p.parent.mkdir(parents=True, exist_ok=True)
-        tmp = p.with_name(p.name + ".rewindagent.tmp")
-        tmp.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
-        os.replace(tmp, p)
-    return changed
+    ag = agents.AGENTS[agent]
+    return agents.install(ag, settings_path or ag.settings, command or hook_command(agent))

@@ -11,7 +11,31 @@
  "checkout": false,
  "credit": "made by John B Joseph",
  "facts": {
+  "agents": {
+   "claude": {
+    "read_only": [],
+    "settings": ".claude/settings.json"
+   },
+   "codex": {
+    "read_only": [
+     "update_plan"
+    ],
+    "settings": ".codex/hooks.json"
+   },
+   "cursor": {
+    "read_only": [
+     "Grep",
+     "Read"
+    ],
+    "settings": ".cursor/hooks.json"
+   }
+  },
   "blocks": {
+   "agents": [
+    "rewindagent install --agent codex      # adds the hook to .codex/hooks.json in this project",
+    "rewindagent install --agent cursor     # adds the hook to .cursor/hooks.json in this project",
+    "rewindagent install --agent cursor --settings ~/.cursor/hooks.json   # or for every project"
+   ],
    "export": [
     "rewindagent export                                  # writes .rewindagent/replay-<session>.html",
     "rewindagent export --session abc --out replay.html  # a given session, to a given file",

@@ -23,7 +23,7 @@ sys.path.insert(0, BRAND)
 
 from contrast_check import PALETTE  # noqa: E402
 import rewindagent  # noqa: E402
-from rewindagent import bashscan, export, hook  # noqa: E402
+from rewindagent import agents, bashscan, export, hook  # noqa: E402
 
 PAGES = ["index.html", "pricing.html", "docs/index.html"]
 SKIP_DIRS = {".git", ".venv", ".brandcache", "node_modules", "__pycache__", "build", "dist", "assets", "frames", "fonts"}
@@ -308,9 +308,19 @@ class TestSite(unittest.TestCase):
             for sentence in re.split(r"(?<=[.!?])\s+", text):
                 low = sentence.lower()
                 if "codex" in low or "cursor" in low:
-                    self.assertIn("planned", low, "%s: Codex/Cursor without 'planned': %s" % (p, sentence))
+                    # R7: the hooks exist; a page may not call them planned, and every mention is about the hook
+                    self.assertIn("hook", low, "%s: Codex/Cursor outside the hook: %s" % (p, sentence))
+                    self.assertNotIn("planned", low, "%s: the Codex/Cursor hooks are built: %s" % (p, sentence))
                 if "pypi" in low:
                     self.assertRegex(low, r"not on pypi|no package on pypi", "%s: %s" % (p, sentence))
+        # the pages carry the same caveat the README does, and name the unscanned tools from the code
+        for p in ("index.html", "docs/index.html"):
+            self.assertIn("not yet in a live session", text_of(p), p)
+        docs = text_of("docs/index.html")
+        for t in sorted(agents.AGENTS["cursor"].read_only | agents.AGENTS["codex"].read_only):
+            self.assertIn(t, docs, t)
+        for a in agents.AGENTS.values():
+            self.assertIn(a.settings, docs, a.settings)
         # the "no network connections" answer is a test, not a sentence
         for name in sorted(os.listdir(SRC)):
             if name.endswith(".py"):

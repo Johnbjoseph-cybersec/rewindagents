@@ -12,7 +12,7 @@ Ctrl+Z for AI coding agents: record, replay, rewind.
 ## Positioning
 
 rewindagent is an open-source recorder for coding agents. It writes every tool call an agent makes
-(Claude Code today; Codex and Cursor planned) into a tamper-evident, hash-chained JSONL log and saves a
+(Claude Code, Codex and Cursor) into a tamper-evident, hash-chained JSONL log and saves a
 copy of each file before the agent changes it. You can replay a session step by step, rewind the working
 tree to any step, or keep the current files as a branch and then rewind. It never blocks, judges or stops an
 action: the agent works at full speed and every action stays undoable. It is a developer tool, not a security
@@ -34,7 +34,7 @@ Plain, exact, a little dry. We say what exists and what does not.
 1. **Exact.** We give the real behaviour and the real limit.
    Example: "Files a Bash command changes are saved too, except git-ignored files and files over 20 MB; rewind tells you which ones it could not put back."
 2. **Honest about status.** Planned things are called planned.
-   Example: "Not on PyPI yet. Install it from the repository with pip; Codex and Cursor hooks are planned."
+   Example: "Not on PyPI yet. Install it from the repository with pip. The Codex and Cursor hooks are tested with the documented payloads, not yet in a live session."
 3. **Calm.** Mistakes happen; we do not dramatise them.
    Example: "The agent deleted the wrong folder. Step back one."
 4. **Dry.** One small joke at most, never at the reader's expense.
@@ -214,7 +214,7 @@ stepped back to.
 
 ## Don't
 
-- Don't claim more than the code does: Codex and Cursor support, a PyPI release and anything paid are planned.
+- Don't claim more than the code does: a PyPI release, a live-session run of the Codex and Cursor hooks, and anything paid are still to come.
 - Don't present it as a security, compliance or monitoring product.
 - Don't use purple, violet, neon, gradients, glass, blobs, sparkles, emoji or stock robot imagery.
 - Don't invent users, quotes, logos, stars, downloads, numbers or benchmarks.
