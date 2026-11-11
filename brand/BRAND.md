@@ -208,6 +208,20 @@ judged on full-resolution frames by an independent reviewer, never by the builde
 - The claims are checked by claim-verifier, not by the writer or the builder, into brand/vsl/claims.json; the
   review carries the SHA-256 of the beats it read, and the tests fail if the beats change after it.
 
+## Launch kit (RB5)
+
+brand/launch/ holds the launch drafts: producthunt.md, show-hn.md, x-thread.md, reddit.md, linkedin-for-jj.md (JJ
+decides and posts; FIRE never touches LinkedIn), waitlist-welcome.md and onboarding-3-emails.md (sent by hand, one
+person at a time; there is no mailing list). None is posted while the launch is on hold.
+
+- The address is `{site_url}`, `{repo_url}` or `{waitlist_url}` in every file; `python3 brand/launch/fill.py <file>`
+  prints the file filled from brand/site/config.json, ready to paste.
+- Every command is a README command or one of the demo session's, every number is a limit of the package, a number
+  that session printed or a platform limit named in tests/test_launch.py, and posts fit their platform's length.
+- The claims are checked by claim-verifier into brand/launch/claims.json, pinned to the SHA-256 of the seven files.
+- How the authorship is put in a post is John's call (state/NEEDS_JOHN.md in FIRE); the drafts leave it out.
+- Still to make: the five Product Hunt gallery images, brand/launch/ph-1.png to ph-5.png (task RB5b).
+
 ## Logo direction brief (from RB1)
 
 Concept: a **playhead on a step ruler**. A single vertical line (the playhead) crossing a row of evenly spaced
