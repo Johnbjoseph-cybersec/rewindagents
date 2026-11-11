@@ -1,0 +1,699 @@
+{
+ "beats_sha256": "60aac5c932df43dd4d438ce58a3e3f8a76368037cfc37b66d1ae9fc028f2d1c9",
+ "note": "Written by brand/vsl/render.py. The address in the videos comes from brand/site/config.json at render time; this file keeps no address.",
+ "videos": {
+  "vsl-15s-vertical": {
+   "aspect": "9:16",
+   "audio": {
+    "master": "loudnorm=I=-16:TP=-1.5:LRA=7",
+    "measured": {
+     "integrated_lufs": -16.2,
+     "true_peak_dbfs": -7.6
+    },
+    "music": "synthesised by render.py score(), 84 BPM Am-F-C-G pad, quarter-note ticks, beat-change ticks, a sweep under the rewind",
+    "voice": "none: captions carry the words until John approves his cloned voice for product videos"
+   },
+   "beats": [
+    {
+     "end_ms": 2500,
+     "id": "b01",
+     "kind": "term",
+     "start_ms": 0
+    },
+    {
+     "end_ms": 4500,
+     "id": "b02",
+     "kind": "term",
+     "start_ms": 2500
+    },
+    {
+     "end_ms": 6500,
+     "id": "b03",
+     "kind": "term",
+     "start_ms": 4500
+    },
+    {
+     "end_ms": 10000,
+     "id": "b04",
+     "kind": "term",
+     "start_ms": 6500
+    },
+    {
+     "end_ms": 13500,
+     "id": "b05",
+     "kind": "end",
+     "start_ms": 10000
+    }
+   ],
+   "captions_burnt_in": [
+    "Your agent just deleted the tests.",
+    "And overwrote the config.",
+    "Rewind to step twelve.",
+    "Four files back, as they were after step twelve.",
+    "Your editor has undo. Now your agent does."
+   ],
+   "contact_sheet": "vsl/vsl-15s-vertical-contact-sheet.png",
+   "fps": 30,
+   "frames": 405,
+   "height": 1920,
+   "keyframes": [
+    {
+     "beat": "b01",
+     "ms": 1250,
+     "png": "vsl/keyframes/vsl-15s-vertical/b01a.png"
+    },
+    {
+     "beat": "b01",
+     "ms": 2300,
+     "png": "vsl/keyframes/vsl-15s-vertical/b01b.png"
+    },
+    {
+     "beat": "b02",
+     "ms": 3500,
+     "png": "vsl/keyframes/vsl-15s-vertical/b02a.png"
+    },
+    {
+     "beat": "b02",
+     "ms": 4300,
+     "png": "vsl/keyframes/vsl-15s-vertical/b02b.png"
+    },
+    {
+     "beat": "b03",
+     "ms": 5500,
+     "png": "vsl/keyframes/vsl-15s-vertical/b03a.png"
+    },
+    {
+     "beat": "b03",
+     "ms": 6300,
+     "png": "vsl/keyframes/vsl-15s-vertical/b03b.png"
+    },
+    {
+     "beat": "b04",
+     "ms": 8250,
+     "png": "vsl/keyframes/vsl-15s-vertical/b04a.png"
+    },
+    {
+     "beat": "b04",
+     "ms": 9800,
+     "png": "vsl/keyframes/vsl-15s-vertical/b04b.png"
+    },
+    {
+     "beat": "b05",
+     "ms": 11750,
+     "png": "vsl/keyframes/vsl-15s-vertical/b05a.png"
+    },
+    {
+     "beat": "b05",
+     "ms": 13300,
+     "png": "vsl/keyframes/vsl-15s-vertical/b05b.png"
+    }
+   ],
+   "mp4": "vsl-15s-vertical.mp4",
+   "mp4_facts": {
+    "audio_codec": "mp4a",
+    "audio_seconds": 13.521,
+    "bytes": 582471,
+    "channels": 2,
+    "faststart": true,
+    "fps": 30.0,
+    "frames": 405,
+    "height": 1920,
+    "sample_rate": 48000,
+    "seconds": 13.5,
+    "sha256": "2c639b303ccb1a24576f27082704e932f3e865806eedcf07460577d0c6c00b97",
+    "video_codec": "avc1",
+    "video_seconds": 13.5,
+    "width": 1080
+   },
+   "srt": "vsl-15s-vertical.srt",
+   "storyboard_ms": 13500,
+   "unique_frames": 41,
+   "width": 1080
+  },
+  "vsl-30s": {
+   "aspect": "16:9",
+   "audio": {
+    "master": "loudnorm=I=-16:TP=-1.5:LRA=7",
+    "measured": {
+     "integrated_lufs": -16.1,
+     "true_peak_dbfs": -5.7
+    },
+    "music": "synthesised by render.py score(), 84 BPM Am-F-C-G pad, quarter-note ticks, beat-change ticks, a sweep under the rewind",
+    "voice": "none: captions carry the words until John approves his cloned voice for product videos"
+   },
+   "beats": [
+    {
+     "end_ms": 3000,
+     "id": "b01",
+     "kind": "term",
+     "start_ms": 0
+    },
+    {
+     "end_ms": 6000,
+     "id": "b02",
+     "kind": "term",
+     "start_ms": 3000
+    },
+    {
+     "end_ms": 10500,
+     "id": "b03",
+     "kind": "term",
+     "start_ms": 6000
+    },
+    {
+     "end_ms": 13000,
+     "id": "b04",
+     "kind": "term",
+     "start_ms": 10500
+    },
+    {
+     "end_ms": 16500,
+     "id": "b05",
+     "kind": "term",
+     "start_ms": 13000
+    },
+    {
+     "end_ms": 19500,
+     "id": "b06",
+     "kind": "term",
+     "start_ms": 16500
+    },
+    {
+     "end_ms": 24500,
+     "id": "b07",
+     "kind": "page",
+     "start_ms": 19500
+    },
+    {
+     "end_ms": 29000,
+     "id": "b08",
+     "kind": "end",
+     "start_ms": 24500
+    }
+   ],
+   "captions_burnt_in": [
+    "Step thirteen. The agent deletes your tests.",
+    "Step fourteen. It overwrites the config.",
+    "rewindagent replay lists every step. Twelve was the last good one.",
+    "So rewind to twelve.",
+    "Four files back. The tests, and the config.",
+    "And the rewind itself can be undone.",
+    "Install it from the repository, then run rewindagent install in your project.",
+    "Your editor has had undo for decades. Now your agent does."
+   ],
+   "contact_sheet": "vsl/vsl-30s-contact-sheet.png",
+   "fps": 30,
+   "frames": 870,
+   "height": 1080,
+   "keyframes": [
+    {
+     "beat": "b01",
+     "ms": 1500,
+     "png": "vsl/keyframes/vsl-30s/b01a.png"
+    },
+    {
+     "beat": "b01",
+     "ms": 2800,
+     "png": "vsl/keyframes/vsl-30s/b01b.png"
+    },
+    {
+     "beat": "b02",
+     "ms": 4500,
+     "png": "vsl/keyframes/vsl-30s/b02a.png"
+    },
+    {
+     "beat": "b02",
+     "ms": 5800,
+     "png": "vsl/keyframes/vsl-30s/b02b.png"
+    },
+    {
+     "beat": "b03",
+     "ms": 8250,
+     "png": "vsl/keyframes/vsl-30s/b03a.png"
+    },
+    {
+     "beat": "b03",
+     "ms": 10300,
+     "png": "vsl/keyframes/vsl-30s/b03b.png"
+    },
+    {
+     "beat": "b04",
+     "ms": 11750,
+     "png": "vsl/keyframes/vsl-30s/b04a.png"
+    },
+    {
+     "beat": "b04",
+     "ms": 12800,
+     "png": "vsl/keyframes/vsl-30s/b04b.png"
+    },
+    {
+     "beat": "b05",
+     "ms": 14750,
+     "png": "vsl/keyframes/vsl-30s/b05a.png"
+    },
+    {
+     "beat": "b05",
+     "ms": 16300,
+     "png": "vsl/keyframes/vsl-30s/b05b.png"
+    },
+    {
+     "beat": "b06",
+     "ms": 18000,
+     "png": "vsl/keyframes/vsl-30s/b06a.png"
+    },
+    {
+     "beat": "b06",
+     "ms": 19300,
+     "png": "vsl/keyframes/vsl-30s/b06b.png"
+    },
+    {
+     "beat": "b07",
+     "ms": 22000,
+     "png": "vsl/keyframes/vsl-30s/b07a.png"
+    },
+    {
+     "beat": "b07",
+     "ms": 24300,
+     "png": "vsl/keyframes/vsl-30s/b07b.png"
+    },
+    {
+     "beat": "b08",
+     "ms": 26750,
+     "png": "vsl/keyframes/vsl-30s/b08a.png"
+    },
+    {
+     "beat": "b08",
+     "ms": 28800,
+     "png": "vsl/keyframes/vsl-30s/b08b.png"
+    }
+   ],
+   "mp4": "vsl-30s.mp4",
+   "mp4_facts": {
+    "audio_codec": "mp4a",
+    "audio_seconds": 29.021,
+    "bytes": 1205756,
+    "channels": 2,
+    "faststart": true,
+    "fps": 30.0,
+    "frames": 870,
+    "height": 1080,
+    "sample_rate": 48000,
+    "seconds": 29.0,
+    "sha256": "51caa7870d86151a0f96a76e008f7049330c157be3f8a1fecaf0052778b9672b",
+    "video_codec": "avc1",
+    "video_seconds": 29.0,
+    "width": 1920
+   },
+   "srt": "vsl-30s.srt",
+   "storyboard_ms": 29000,
+   "unique_frames": 92,
+   "width": 1920
+  },
+  "vsl-90s": {
+   "aspect": "16:9",
+   "audio": {
+    "master": "loudnorm=I=-16:TP=-1.5:LRA=7",
+    "measured": {
+     "integrated_lufs": -16.0,
+     "true_peak_dbfs": -5.5
+    },
+    "music": "synthesised by render.py score(), 84 BPM Am-F-C-G pad, quarter-note ticks, beat-change ticks, a sweep under the rewind",
+    "voice": "none: captions carry the words until John approves his cloned voice for product videos"
+   },
+   "beats": [
+    {
+     "end_ms": 3000,
+     "id": "b01",
+     "kind": "term",
+     "start_ms": 0
+    },
+    {
+     "end_ms": 6000,
+     "id": "b02",
+     "kind": "term",
+     "start_ms": 3000
+    },
+    {
+     "end_ms": 9500,
+     "id": "b03",
+     "kind": "term",
+     "start_ms": 6000
+    },
+    {
+     "end_ms": 14500,
+     "id": "b04",
+     "kind": "term",
+     "start_ms": 9500
+    },
+    {
+     "end_ms": 17500,
+     "id": "b05",
+     "kind": "term",
+     "start_ms": 14500
+    },
+    {
+     "end_ms": 20500,
+     "id": "b06",
+     "kind": "term",
+     "start_ms": 17500
+    },
+    {
+     "end_ms": 22500,
+     "id": "b07",
+     "kind": "term",
+     "start_ms": 20500
+    },
+    {
+     "end_ms": 26500,
+     "id": "b08",
+     "kind": "term",
+     "start_ms": 22500
+    },
+    {
+     "end_ms": 31000,
+     "id": "b09",
+     "kind": "term",
+     "start_ms": 26500
+    },
+    {
+     "end_ms": 35000,
+     "id": "b10",
+     "kind": "term",
+     "start_ms": 31000
+    },
+    {
+     "end_ms": 41000,
+     "id": "b11",
+     "kind": "page",
+     "start_ms": 35000
+    },
+    {
+     "end_ms": 45500,
+     "id": "b12",
+     "kind": "page",
+     "start_ms": 41000
+    },
+    {
+     "end_ms": 51500,
+     "id": "b13",
+     "kind": "term",
+     "start_ms": 45500
+    },
+    {
+     "end_ms": 57000,
+     "id": "b14",
+     "kind": "term",
+     "start_ms": 51500
+    },
+    {
+     "end_ms": 65000,
+     "id": "b15",
+     "kind": "term",
+     "start_ms": 57000
+    },
+    {
+     "end_ms": 71500,
+     "id": "b16",
+     "kind": "page",
+     "start_ms": 65000
+    },
+    {
+     "end_ms": 76000,
+     "id": "b17",
+     "kind": "term",
+     "start_ms": 71500
+    },
+    {
+     "end_ms": 81000,
+     "id": "b18",
+     "kind": "page",
+     "start_ms": 76000
+    },
+    {
+     "end_ms": 85000,
+     "id": "b19",
+     "kind": "page",
+     "start_ms": 81000
+    },
+    {
+     "end_ms": 89500,
+     "id": "b20",
+     "kind": "end",
+     "start_ms": 85000
+    }
+   ],
+   "captions_burnt_in": [
+    "Step thirteen. The agent deletes your tests.",
+    "Step fourteen. It overwrites the config.",
+    "Git status agrees. Two test files, gone.",
+    "There were three. The third was never committed. Git can't return it.",
+    "But rewindagent recorded all fourteen steps.",
+    "Step twelve was the last good one.",
+    "So rewind to it.",
+    "Four files back: all three tests and the config.",
+    "And the rewind is step fifteen. You can undo the undo.",
+    "The first twelve steps stay. So does the new test.",
+    "Every tool call goes into a hash-chained log. Edit one record and verify names it.",
+    "Before every edit, the hook copies the file as it is.",
+    "Around every Bash command it saves first, scans after. So step thirteen kept three",
+    "copies.",
+    "rewindagent install adds the Claude Code hook. It has run in real sessions.",
+    "Codex and Cursor: built from the vendors' hook documentation, tested with the",
+    "documented payloads. Not yet in a live session.",
+    "Files over twenty megabytes aren't copied. Over twenty thousand files, no scan, and",
+    "rewind says so.",
+    "Export it as one HTML page. Find it later with sessions.",
+    "Apache-2.0, standard library only. Not on PyPI yet: install from the repository.",
+    "A paid Cloud tier is planned. Not built, not priced.",
+    "Your editor has had undo for decades. Now your agent does."
+   ],
+   "contact_sheet": "vsl/vsl-90s-contact-sheet.png",
+   "fps": 30,
+   "frames": 2685,
+   "height": 1080,
+   "keyframes": [
+    {
+     "beat": "b01",
+     "ms": 1500,
+     "png": "vsl/keyframes/vsl-90s/b01a.png"
+    },
+    {
+     "beat": "b01",
+     "ms": 2800,
+     "png": "vsl/keyframes/vsl-90s/b01b.png"
+    },
+    {
+     "beat": "b02",
+     "ms": 4500,
+     "png": "vsl/keyframes/vsl-90s/b02a.png"
+    },
+    {
+     "beat": "b02",
+     "ms": 5800,
+     "png": "vsl/keyframes/vsl-90s/b02b.png"
+    },
+    {
+     "beat": "b03",
+     "ms": 7750,
+     "png": "vsl/keyframes/vsl-90s/b03a.png"
+    },
+    {
+     "beat": "b03",
+     "ms": 9300,
+     "png": "vsl/keyframes/vsl-90s/b03b.png"
+    },
+    {
+     "beat": "b04",
+     "ms": 12000,
+     "png": "vsl/keyframes/vsl-90s/b04a.png"
+    },
+    {
+     "beat": "b04",
+     "ms": 14300,
+     "png": "vsl/keyframes/vsl-90s/b04b.png"
+    },
+    {
+     "beat": "b05",
+     "ms": 16000,
+     "png": "vsl/keyframes/vsl-90s/b05a.png"
+    },
+    {
+     "beat": "b05",
+     "ms": 17300,
+     "png": "vsl/keyframes/vsl-90s/b05b.png"
+    },
+    {
+     "beat": "b06",
+     "ms": 19000,
+     "png": "vsl/keyframes/vsl-90s/b06a.png"
+    },
+    {
+     "beat": "b06",
+     "ms": 20300,
+     "png": "vsl/keyframes/vsl-90s/b06b.png"
+    },
+    {
+     "beat": "b07",
+     "ms": 21500,
+     "png": "vsl/keyframes/vsl-90s/b07a.png"
+    },
+    {
+     "beat": "b07",
+     "ms": 22300,
+     "png": "vsl/keyframes/vsl-90s/b07b.png"
+    },
+    {
+     "beat": "b08",
+     "ms": 24500,
+     "png": "vsl/keyframes/vsl-90s/b08a.png"
+    },
+    {
+     "beat": "b08",
+     "ms": 26300,
+     "png": "vsl/keyframes/vsl-90s/b08b.png"
+    },
+    {
+     "beat": "b09",
+     "ms": 28750,
+     "png": "vsl/keyframes/vsl-90s/b09a.png"
+    },
+    {
+     "beat": "b09",
+     "ms": 30800,
+     "png": "vsl/keyframes/vsl-90s/b09b.png"
+    },
+    {
+     "beat": "b10",
+     "ms": 33000,
+     "png": "vsl/keyframes/vsl-90s/b10a.png"
+    },
+    {
+     "beat": "b10",
+     "ms": 34800,
+     "png": "vsl/keyframes/vsl-90s/b10b.png"
+    },
+    {
+     "beat": "b11",
+     "ms": 38000,
+     "png": "vsl/keyframes/vsl-90s/b11a.png"
+    },
+    {
+     "beat": "b11",
+     "ms": 40800,
+     "png": "vsl/keyframes/vsl-90s/b11b.png"
+    },
+    {
+     "beat": "b12",
+     "ms": 43250,
+     "png": "vsl/keyframes/vsl-90s/b12a.png"
+    },
+    {
+     "beat": "b12",
+     "ms": 45300,
+     "png": "vsl/keyframes/vsl-90s/b12b.png"
+    },
+    {
+     "beat": "b13",
+     "ms": 48500,
+     "png": "vsl/keyframes/vsl-90s/b13a.png"
+    },
+    {
+     "beat": "b13",
+     "ms": 51300,
+     "png": "vsl/keyframes/vsl-90s/b13b.png"
+    },
+    {
+     "beat": "b14",
+     "ms": 54250,
+     "png": "vsl/keyframes/vsl-90s/b14a.png"
+    },
+    {
+     "beat": "b14",
+     "ms": 56800,
+     "png": "vsl/keyframes/vsl-90s/b14b.png"
+    },
+    {
+     "beat": "b15",
+     "ms": 61000,
+     "png": "vsl/keyframes/vsl-90s/b15a.png"
+    },
+    {
+     "beat": "b15",
+     "ms": 64800,
+     "png": "vsl/keyframes/vsl-90s/b15b.png"
+    },
+    {
+     "beat": "b16",
+     "ms": 68250,
+     "png": "vsl/keyframes/vsl-90s/b16a.png"
+    },
+    {
+     "beat": "b16",
+     "ms": 71300,
+     "png": "vsl/keyframes/vsl-90s/b16b.png"
+    },
+    {
+     "beat": "b17",
+     "ms": 73750,
+     "png": "vsl/keyframes/vsl-90s/b17a.png"
+    },
+    {
+     "beat": "b17",
+     "ms": 75800,
+     "png": "vsl/keyframes/vsl-90s/b17b.png"
+    },
+    {
+     "beat": "b18",
+     "ms": 78500,
+     "png": "vsl/keyframes/vsl-90s/b18a.png"
+    },
+    {
+     "beat": "b18",
+     "ms": 80800,
+     "png": "vsl/keyframes/vsl-90s/b18b.png"
+    },
+    {
+     "beat": "b19",
+     "ms": 83000,
+     "png": "vsl/keyframes/vsl-90s/b19a.png"
+    },
+    {
+     "beat": "b19",
+     "ms": 84800,
+     "png": "vsl/keyframes/vsl-90s/b19b.png"
+    },
+    {
+     "beat": "b20",
+     "ms": 87250,
+     "png": "vsl/keyframes/vsl-90s/b20a.png"
+    },
+    {
+     "beat": "b20",
+     "ms": 89300,
+     "png": "vsl/keyframes/vsl-90s/b20b.png"
+    }
+   ],
+   "mp4": "vsl-90s.mp4",
+   "mp4_facts": {
+    "audio_codec": "mp4a",
+    "audio_seconds": 89.521,
+    "bytes": 3360558,
+    "channels": 2,
+    "faststart": true,
+    "fps": 30.0,
+    "frames": 2685,
+    "height": 1080,
+    "sample_rate": 48000,
+    "seconds": 89.5,
+    "sha256": "480aa32da108f4cdb623f6c50b999b8b3b5ce36de5d706a5b50af038257e42e7",
+    "video_codec": "avc1",
+    "video_seconds": 89.5,
+    "width": 1920
+   },
+   "srt": "vsl-90s.srt",
+   "storyboard_ms": 89500,
+   "unique_frames": 403,
+   "width": 1920
+  }
+ }
+}
