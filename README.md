@@ -222,6 +222,28 @@ rewindagent verify --head <pinned-hash>
 - A paid Cloud tier (cloud sync, shareable replay links, long retention, session search): planned, not built,
   not priced. The waitlist is a GitHub issue on this repository with the label `waitlist`; say what you would pay for.
 
+## Payments code (not live)
+
+`billing/polar.py` is the checkout and webhook code for that Cloud tier, written against Polar's API documentation
+(the pages and the date are cited at the top of the file). It is not part of the `rewindagent` package and is never
+installed with it; the CLI itself makes no network connections. No product exists yet, so nothing can be bought.
+
+```sh
+python3 billing/polar.py link --product <id>              # a reusable checkout link, printed
+python3 billing/polar.py checkout --product <id>          # a single-use checkout session, printed
+python3 billing/polar.py verify --headers h.json --body b.json   # check a saved webhook delivery
+```
+
+- The sandbox (`sandbox-api.polar.sh`) unless `--production` is given. The token is read from
+  `POLAR_ACCESS_TOKEN` and the webhook secret from `POLAR_WEBHOOK_SECRET`; neither is ever an argument, and
+  error messages replace the token with `[token]`.
+- `link --write-config` also sets `checkout_url` in `brand/site/config.json`, which turns the pricing page's
+  waitlist button into a buy button. The return address after paying comes from `site_url` in the same file.
+- `verify` checks the Standard Webhooks signature (HMAC-SHA256 over `id.timestamp.body`) with both keys Polar
+  documents (secrets made before 8 September 2026 use the whole secret string as the key), and refuses a
+  timestamp more than 5 minutes from now. The 5 minutes is our choice; Polar does not give a number.
+- Tested in `tests/test_polar.py` with a fake network; it has not yet talked to Polar's sandbox.
+
 ## Site
 
 `brand/site/` holds the landing page, the pricing page and the getting-started docs, published with GitHub Pages
