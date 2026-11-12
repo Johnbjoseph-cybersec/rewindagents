@@ -10,8 +10,12 @@ DIRECTION table below says which kind of card each beat is and what moves in it,
 
 Motion, all of it in the brand system (paper and ink, one accent, the step ruler and its playhead):
 - the rewind wipe: between scenes the playhead drops from the ruler and scrubs right to left across the frame; the
-  new scene is revealed behind it while the old one slides back under it. Time going back is the transition.
-- a scene that continues (beats.json "cont") keeps its canvas: the old line masks up and out, the new one rises in.
+  new scene is revealed behind it while the old one slides back under it. Time going back is the transition. It
+  comes in three weights (WIPES: light within a section, section, story for the two rewinds of the story, slower
+  with a longer tape trail); the new card's line starts 170 ms in so it is revealed behind the playhead, and the
+  ruler's own playhead hides while the wipe's is on screen, then drops back into place.
+- a scene that continues (beats.json "cont") keeps its canvas: the old line accelerates up out of its mask and
+  fades, the new one starts rising before it has gone, so no frame shows an empty slot or a leftover descender.
 - masked word builds for every line of text; terminal commands type, output lines rise out of their row.
 - the step ruler at the top is one persistent spine: ticks grow, the playhead scrubs back when the story rewinds.
 - deleted paths are struck through; in the rewind the strikes pull back right to left as the files are restored.
@@ -19,10 +23,12 @@ Motion, all of it in the brand system (paper and ink, one accent, the step ruler
   (brand/ui-timeline.png), whose current-step stripe the playhead becomes.
 Nothing spins, bounces or blurs. Easing is smoothstep / ease-out cubic.
 
-Sound: the music bed only, synthesised here (score()): a slow four-chord pad, a soft tick every quarter note, a firmer
-tick on every card change and a short falling sweep under every rewind (the ruler going back, the rewind command).
-Mastered with ffmpeg loudnorm; the measured loudness and the bed's sha256 go into the manifest. There is no voice
-track and nothing else is mixed in (tests/test_vsl_render.py).
+Sound: music and two SFX only (score()). The studio's produced bed per cut and its sfx-rewind / sfx-tick
+(brand/vsl/audio/, AUDIO.md there) are used when on disk: the rewind sound under every wipe (by weight), under the
+ruler going back and the rewind command; the tick where the ruler grows a tick and on every swap. If a file is
+missing, the old synthesised pad stands in and the manifest's audio.music says "synth fallback". Mastered with a
+one measured linear gain to -16 LUFS and the studio limiter; the measured loudness, the source files' sha256 and the mix's sha256 go into the
+manifest. There is no voice track (tests/test_vsl_render.py).
 
 Text is outlined from the OFL font files, so frames render the same with no fonts installed.
 
@@ -66,8 +72,22 @@ def load(name, path):
 vsl = load("vsl_build", os.path.join(HERE, "build.py"))
 
 FPS = 30
-WIPE_MS = 650           # the rewind wipe between scenes
 SWAP_MS = 320           # a continuing scene: the old line leaves in this long
+SWAP_LEAD_MS = 160      # ...and the new line starts rising this long before the old one has left (no empty slot)
+SWAP_TRAVEL = 1.6       # the leaving line travels this many font sizes: its descenders clear the mask too
+WIPE_HEAD_MS = 170      # a wiped-in card's first word starts this far into the wipe, revealed behind the playhead
+HEAD_DROP_MS = 240      # after a wipe the ruler's own playhead drops back into place (hidden while the wipe's runs)
+# the rewind wipe in three weights (review-textcut.json fix 7): quick within a section, the full wipe at a section
+# change, a slow wide one with a long tape trail for the story's own rewinds. trail: (offset px, opacity) per line.
+WIPES = {
+    "light": dict(ms=450, slide=60, ease="out", head=4.5, line=3,
+                  trail=((16, 0.45), (36, 0.22))),
+    "section": dict(ms=650, slide=90, ease="smooth", head=5.0, line=4,
+                    trail=((18, 0.5), (40, 0.28), (70, 0.14))),
+    "story": dict(ms=900, slide=160, ease="smooth", head=6.0, line=5,
+                  trail=((16, 0.62), (38, 0.44), (66, 0.32), (104, 0.22), (150, 0.13), (210, 0.07))),
+}
+SFX_GAIN = {"light": 0.35, "section": 0.55, "story": 1.0}   # the rewind sound under a wipe, by its weight
 WORD_MS = 420           # one word rising out of its mask
 WORD_GAP_MS = 48        # between the start of one word and the next
 TYPE_MS = 28            # a command types at about 36 characters a second
@@ -80,10 +100,18 @@ SLOTS = 15              # the ruler has room for fifteen steps (the session has 
 SAMPLE_RATE = 48000
 HEAD_GAP = 40           # the least room between a card's line (its descenders) and the proof under it
 SAFE = 60               # no text closer than this to a frame edge (feeds crop and overlay the edges)
-LOUDNESS = "loudnorm=I=-16:TP=-1.5:LRA=7"
+TARGET_LUFS = -16.0
+# the stream's own VUI says BT.709 primaries, transfer and matrix, limited range (libx264 left primaries/transfer unset)
+BT709_BSF = "h264_metadata=colour_primaries=1:transfer_characteristics=1:matrix_coefficients=1:video_full_range_flag=0"
+LOUDNESS = "linear gain to -16 LUFS integrated + alimiter limit 0.76 (true peak <= -1.5 dBTP, measured after AAC)"
+AUDIO_DIR = os.path.join(HERE, "audio")        # the studio's produced bed and SFX (AUDIO.md there says what they are)
+FADE_MS = 1500                                 # the bed fades out over the last 1.5 s of every film
+REWIND_LAND_MS = 720                           # sfx-rewind.wav lands (thump + bell) this far into the file (AUDIO.md)
+LIMITER = "alimiter=limit=0.76:attack=5:release=50:level=0"   # AUDIO.md's mix advice for bed + SFX
 UI_SHOT = os.path.join(BRAND, "ui-timeline.png")
 UI_CROP = (241, 104, 999, 740)   # x, y, w, h in the 1440 x 900 screenshot: the timeline column from its red stripe
-UI_STEP15_Y = 728                # screenshot y of the step 15 (Rewind) row, the push's anchor
+UI_CLOSE = (241, 612, 232)       # x, y, h of the push's end: steps 14 and 15, the Rewind row and its '<< to step 12'
+UI_HOLD_MS, UI_PUSH_MS = 1500, 3400   # the whole column for 1.5 s, then the push to the close crop (fix 5)
 
 # Lines on screen that are commands (typed at a prompt) and lines that are terminal output; anything else in a
 # terminal card is a note. Same patterns as tests/test_vsl.py, plus `cd`.
@@ -101,6 +129,7 @@ OUTPUT = re.compile(r"^\s*(\d+\s+(Read|Edit|Write|Bash|MultiEdit|NotebookEdit)\b
 # word: [at, index, text] that text on that line turns Rewind. notes_side: notes beside a panel sized to its lines.
 # panel_fit: the panel as wide as its lines need, notes under it. bullets: notes under a panel get the bullet squares.
 # appear_on: per row, the word of the card's line on which that row rises in.
+# wipe: light / section / story (WIPES); unset, a wipe is "section" where beats.json's section changes, else "light".
 # brackets: two Rule brackets round that ruler tick. rows_colour: per row Reel/Tape/Record; new_rows: rows that
 #   arrive in this card (the others are already there).
 DIRECTION = {
@@ -109,7 +138,7 @@ DIRECTION = {
         "b02": dict(kind="term", accent=[[300, [1, 2]]]),
         "b03": dict(kind="term", strike=[250, [4, 5]]),
         "b04": dict(kind="roadmap"),
-        "b05": dict(kind="term", ruler=(14, 6, -200, 900), brackets=6, accent=[[150, [0]]]),
+        "b05": dict(kind="term", ruler=(14, 6, -200, 900), brackets=6, accent=[[150, [0]]], wipe="story"),
         "b06": dict(kind="quote", underline="isn't tracked"),
         "b07": dict(kind="type"),
         "b08": dict(kind="map", rows_colour=["Reel"], new_rows=[0]),
@@ -118,29 +147,29 @@ DIRECTION = {
         "b11": dict(kind="term", ruler=(14, 13, -200, 300), brackets=13, word=[250, 0, "[3 checkpointed]"]),
         "b12": dict(kind="term", ruler=(14, 14, -200, 300)),
         "b13": dict(kind="term", accent=[[-250, [2]]], ruler=(14, 12, -150, 600)),
-        "b14": dict(kind="term", struck=[2, 3, 4, 5], unstrike=[250, [2, 3, 4, 5], 260]),
+        "b14": dict(kind="term", struck=[2, 3, 4, 5], unstrike=[250, [2, 3, 4, 5], 260], wipe="story"),
         "b15": dict(kind="term", accent=[[100, [6]]], ruler=(15, 12, 100, 300)),
         "b16": dict(kind="map", rows_colour=["Tape", "Tape", "Reel"], new_rows=[2]),
         "b17": dict(kind="map", rows_colour=["Tape", "Tape", "Tape", "Record"], new_rows=[3]),
         "b18": dict(kind="rows", appear_on=["diff", "--only"]),
-        "b19": dict(kind="ui"),
-        "b20": dict(kind="term", panel_fit=True, bullets=True, note_accent=1),
-        "b21": dict(kind="rows", accent_row=1),
-        "b22": dict(kind="end"),
+        "b19": dict(kind="ui", wipe="section"),   # the match cut keeps the full wipe
+        "b20": dict(kind="rows"),     # the old b20 'Up next' card folded in here (fix 6); no row in the accent (fix 8)
+        "b21": dict(kind="end", wipe="section"),
     },
     "vsl-30s": {
         "b01": dict(kind="type", ruler=(14, 14, -300, 1500)),
         "b02": dict(kind="term", accent=[[300, [1, 2]]]),
         "b03": dict(kind="term", strike=[250, [4, 5]]),
-        "b04": dict(kind="term", ruler=(14, 14, -200, 300)),
+        "b04": dict(kind="term", ruler=(14, 14, -200, 300), wipe="section"),
         "b05": dict(kind="term", accent=[[-250, [2]]], ruler=(14, 12, -150, 600)),
-        "b06": dict(kind="term", struck=[2, 3, 4, 5], unstrike=[250, [2, 3, 4, 5], 260]),
-        "b07": dict(kind="end"),
+        "b06": dict(kind="term", struck=[2, 3, 4, 5], unstrike=[250, [2, 3, 4, 5], 260], wipe="story"),
+        "b07": dict(kind="end", wipe="section"),
     },
     "vsl-15s-vertical": {
         "b01": dict(kind="term", ruler=(14, 14, -600, 1), strike=[200, [0, 1]]),
-        "b02": dict(kind="term", ruler=(14, 12, -200, 600), struck=[1, 2, 3, 4], unstrike=[250, [1, 2, 3, 4], 230]),
-        "b03": dict(kind="end"),
+        "b02": dict(kind="term", ruler=(14, 12, -200, 600), struck=[1, 2, 3, 4], unstrike=[250, [1, 2, 3, 4], 230],
+                    wipe="story"),
+        "b03": dict(kind="end", wipe="section"),
     },
 }
 
@@ -296,11 +325,16 @@ def plan(video, cfg, L, kit):
         if not cont:
             scene += 1
             lines = []
-        hs = 160 if i == 0 else (SWAP_MS - 100 if cont else int(WIPE_MS * 0.62))
+        wipe = None
+        if i > 0 and not cont:
+            prev_section = video["beats"][i - 1].get("section")
+            wipe = d.get("wipe") or ("section" if b.get("section") != prev_section else "light")
+        hs = 160 if i == 0 else (SWAP_MS - SWAP_LEAD_MS if cont else WIPE_HEAD_MS)
         n_words = len(b["text"].split())
         p = hs + WORD_GAP_MS * (n_words - 1) + WORD_MS + 120
         card = {"i": i, "id": b["id"], "beat": b, "d": d, "kind": d["kind"], "start": t0, "end": t0 + b["ms"],
                 "cont": cont, "scene": scene, "hs": hs, "P": p, "screen": [fill(s, cfg) for s in b["screen"]],
+                "wipe": wipe, "wipe_ms": WIPES[wipe]["ms"] if wipe else 0,
                 "accent_idx": accent_words(b["text"], b.get("accent")),
                 "prev_kind": cards[-1]["kind"] if cards else None}
         if d["kind"] == "term":
@@ -334,16 +368,22 @@ def plan(video, cfg, L, kit):
         cards.append(card)
         t0 += b["ms"]
     # each scene's panel is as tall as the most it ever shows (lines plus the prompt)
+    adv = kit.mono.width("x", 100) / 100
+    # a line too long for the panel at full size breaks at its semicolon onto a second, indented row (the text stays
+    # the session's own line, only the break is added: review-textcut.json fix 4) instead of shrinking the type
+    full_cols = int((L["X1"] - L["X0"] - 2 * L["PAD"] - 4) / (adv * L["MONO"]))
+    for c in cards:
+        for ln in c.get("lines", []):
+            ln["segs"] = split_line(ln["text"], full_cols - 2)
     rows = {}
     for c in cards:
         if c["kind"] == "term":
-            rows[c["scene"]] = max(rows.get(c["scene"], 0), len(c["lines"]))
+            rows[c["scene"]] = max(rows.get(c["scene"], 0), sum(len(x["segs"]) for x in c["lines"]))
     # and its type as big as the longest line it ever shows allows
     longest = {}
     for c in cards:
         if c["kind"] == "term":
-            longest[c["scene"]] = max([longest.get(c["scene"], 0)] + [len(x["text"]) + 2 for x in c["lines"]])
-    adv = kit.mono.width("x", 100) / 100
+            longest[c["scene"]] = max([longest.get(c["scene"], 0)] + [len(g) + 2 for x in c["lines"] for g in x["segs"]])
     for c in cards:
         if c["kind"] == "term":
             c["rows"] = rows[c["scene"]]
@@ -357,6 +397,17 @@ def plan(video, cfg, L, kit):
                                                      + L["NOTE"] * 0.7 for n in c["notes"])
             c["mono"] = min(L["MONO"], int((w - 2 * L["PAD"] - 4) / (longest[c["scene"]] * adv)))
             c["lh"] = round(c["mono"] * 1.5)
+            c["prompt"] = True
+            # a panel taller than the frame allows first drops its trailing prompt, then closes its line spacing
+            # (never below 1.3 lines); the type size is never what gives
+            room = L["BOTTOM"] - L["PROOF"] - L["TITLE"] - 2 * L["PAD"] - c["mono"]
+            if (c["rows"]) * c["lh"] > room:
+                c["prompt"] = False
+                n = max(1, c["rows"] - 1)
+                if n * c["lh"] > room:
+                    c["lh"] = int(room / n)
+                    if c["lh"] < 1.3 * c["mono"]:
+                        raise SystemExit("card %s: its panel does not fit at %d px" % (c["id"], c["mono"]))
     # a proof never sits on its line: a card whose line runs to three rows moves its proof down (the whole scene
     # moves the same, so a continuing scene never jumps)
     for c in cards:
@@ -395,11 +446,21 @@ def plan(video, cfg, L, kit):
             "ruled_from": first_ruled["start"] if first_ruled else 0}
 
 
+def split_line(text, cols):
+    """A terminal line as the rows it is shown on: itself, or, when longer than `cols` and it has a semicolon, the
+    part up to the semicolon and the rest on a second row indented two more spaces than the line."""
+    if len(text) <= cols or "; " not in text:
+        return [text]
+    a, b = text.split("; ", 1)
+    indent = len(text) - len(text.lstrip()) + 2
+    return [a + ";", " " * indent + b]
+
+
 def proof_bottom(L, c):
     """Where a card's proof ends (an estimate from its layout), for balancing the scene vertically."""
     k, top = c["kind"], L["PROOF"]
     if k == "term":
-        n = max(2, c["rows"] + 1)
+        n = max(2, c["rows"] + (1 if c["prompt"] else 0))
         h = L["TITLE"] + 2 * L["PAD"] + n * c["lh"] - (c["lh"] - c["mono"])
         if c["d"].get("notes_side"):
             return top + max(h, c["notes_h"])
@@ -434,18 +495,57 @@ def ruler_state(p, t):
     return n, ph
 
 
-def sweeps(p):
-    """Where the bed gets its falling sweep: every time the ruler's playhead goes back, and the rewind command."""
-    out, last = [], 0
+def tick_times(p):
+    """ms at which a ruler tick is born (its count passes i + 0.5); ticks closer than 40 ms are one sound."""
+    out, n = [], 0.0
     for at, tn, tph, ms in p["moves"]:
-        if tph < last:
-            out.append(at)
+        if tn > n + 0.25:
+            for i in range(int(math.floor(n + 0.5)), int(math.ceil(tn - 0.5))):
+                want = (i + 0.5 - n) / (tn - n)
+                lo, hi = 0.0, 1.0
+                for _ in range(30):                       # invert the smoothstep the ruler eases with
+                    mid = (lo + hi) / 2
+                    lo, hi = (mid, hi) if ease(mid) < want else (lo, mid)
+                out.append(at + lo * max(1, ms))
+        n = tn
+    merged = []
+    for t in sorted(out):
+        if not merged or t - merged[-1] >= 40:
+            merged.append(t)
+    return merged
+
+
+def sfx_events(p):
+    """{"rewind": [(ms, gain)], "tick": [(ms, gain)]}: the rewind sound under every wipe (louder the heavier the
+    wipe), under the ruler going back outside a wipe and under the rewind command; a tick where the ruler grows a
+    tick and on every swap. Nothing at 0 ms (review-textcut.json: the old bed clicked at sample 0). A rewind's ms is
+    where it LANDS: the wipe's end, the scrub's end, the command's enter (AUDIO.md: the sound lands REWIND_LAND_MS in)."""
+    rewind, tick = [], []
+    wipes = [(c["start"], c["start"] + c["wipe_ms"]) for c in p["cards"] if c["wipe"]]
+    for c in p["cards"]:
+        if c["wipe"]:
+            rewind.append((c["start"] + c["wipe_ms"], SFX_GAIN[c["wipe"]]))
+    last = 0
+    for at, tn, tph, ms in p["moves"]:
+        if tph < last and not any(a <= at <= b for a, b in wipes):
+            rewind.append((at + ms, 0.7))
         last = tph
     for c in p["cards"]:
         for ln in c.get("lines", []):
             if ln["kind"] == "cmd" and ln["text"].startswith("rewindagents rewind") and c["start"] <= ln["at"] < c["end"]:
-                out.append(ln["typed"] + ENTER_MS)
-    return sorted(set(out))
+                rewind.append((ln["typed"] + ENTER_MS, 0.8))
+    kept = []
+    for t, g in sorted(rewind):
+        if t >= 40 and (not kept or t - kept[-1][0] >= 600):
+            kept.append((t, g))
+    tick = [(t, 0.8) for t in tick_times(p) if t >= 40]
+    tick += [(c["start"], 0.5) for c in p["cards"] if c["cont"]]
+    return {"rewind": kept, "tick": sorted(tick)}
+
+
+def sweeps(p):
+    """ms of every rewind sound (the manifest lists them)."""
+    return [int(t) for t, _ in sfx_events(p)["rewind"]]
 
 
 # ---- drawing ------------------------------------------------------------------------------------------------
@@ -469,7 +569,8 @@ def playhead_shape(x, top, k, colour):
             % (x - 2 * k, top, k, C[colour]))
 
 
-def draw_ruler(cv, kit, L, state, brackets=None):
+def draw_ruler(cv, kit, L, state, brackets=None, head=1.0):
+    """The step ruler. head: None hides its playhead (a wipe's playhead is on screen); 0..1 drops it into place."""
     nf, ph = state
     if nf <= 0.001:
         return
@@ -499,11 +600,14 @@ def draw_ruler(cv, kit, L, state, brackets=None):
             cv.add(rect(x - 1, y - th - 16, 2, th + 30, C["Rule"]))
             cv.add(rect(min(x, x - side * 14), y - th - 16, 14, 2, C["Rule"]))
             cv.add(rect(min(x, x - side * 14), y + 12, 14, 2, C["Rule"]))
-    if ph >= 1:
+    if ph >= 1 and head is not None and head > 0:
         k = 5.0 if L["W"] > L["H"] else 5.5
         top = y - th - 40
-        cv.add(playhead_shape(php, top, k, "Record"))
-        cv.add(rect(php - 1.5, top + 3.5 * k - 1, 3, y + 2 - (top + 3.5 * k - 1), C["Record"]))
+        drop = (1 - head) * 30
+        cv.add('<g opacity="%.2f">' % head)
+        cv.add(playhead_shape(php, top - drop, k, "Record"))
+        cv.add(rect(php - 1.5, top - drop + 3.5 * k - 1, 3, y + 2 - (top + 3.5 * k - 1), C["Record"]))
+        cv.add("</g>")
 
 
 def headline_layout(kit, L, card):
@@ -529,14 +633,30 @@ def headline_layout(kit, L, card):
     return size, [(ln.split(), top + cap + k * lh) for k, ln in enumerate(lines)], L["X0"]
 
 
+def proof_accented(card):
+    """True when the card's proof carries the accent (a Rewind/Record row, strike, word, underline, label, the
+    screenshot's red stripe). BRAND.md allows one Record/Rewind per view, so on such a card the proof keeps it and
+    the line's accent phrase is set in the ink at the same weight (review-textcut.json fix 8: one rule, every card)."""
+    d, kind = card["d"], card["kind"]
+    return bool(d.get("accent") or d.get("strike") or d.get("struck") or d.get("unstrike") or d.get("word")
+                or d.get("underline") or d.get("note_accent") is not None or d.get("accent_row") is not None
+                or "Record" in d.get("rows_colour", []) or kind in ("roadmap", "chain", "ui"))
+
+
 def draw_headline(cv, kit, L, card, u, leaving=None, dark=False):
-    """The card's line, word by word out of a mask; `leaving` = ms since it began to leave (it rises out)."""
+    """The card's line, word by word out of a mask; `leaving` = ms since it began to leave: it rises out by
+    SWAP_TRAVEL sizes, far enough that its descenders and full stop clear the mask as well (fix 1)."""
     size, lines, x = headline_layout(kit, L, card)
-    acc = card["accent_idx"]
+    acc = set() if proof_accented(card) else card["accent_idx"]
     space = kit.disp.width(" ", size)
     idx = 0
     ink, accent = ("Leader", "Rewind") if dark else ("Reel", "Record")
-    out_k = out_cubic(leaving / SWAP_MS) if leaving is not None else 0.0
+    # the old line accelerates up out of its mask and fades as it goes: a mask alone lets the descenders and the
+    # full stop trail behind for frames (review-textcut.json fix 1); the new line has begun rising by then
+    pl = min(max(leaving / SWAP_MS, 0.0), 1.0) if leaving is not None else 0.0
+    out_k = pl * pl
+    if leaving is not None:
+        cv.add('<g opacity="%.3f">' % (1 - ease((pl - 0.15) / 0.45)))
     for words, base in lines:
         cid = cv.clip(x - 20, base - size * 1.02, L["X1"] - x + 40, size * 1.32)
         cv.add('<g clip-path="url(#%s)">' % cid)
@@ -544,7 +664,7 @@ def draw_headline(cv, kit, L, card, u, leaving=None, dark=False):
         for w in words:
             t_w = card["hs"] + WORD_GAP_MS * idx
             k = out_cubic((u - t_w) / WORD_MS)
-            dy = (1 - k) * size * 1.05 - out_k * size * 1.3
+            dy = (1 - k) * size * 1.05 - out_k * size * SWAP_TRAVEL
             wd = kit.disp.width(w, size, -0.01)
             if k > 0:
                 cv.text(kit.disp, w, size, cx, base + dy, accent if idx in acc else ink, tracking=-0.01, check=False)
@@ -553,12 +673,14 @@ def draw_headline(cv, kit, L, card, u, leaving=None, dark=False):
         cv.add("</g>")
         if cx - space > L["X1"] + 1:
             raise SystemExit("headline too wide: %r" % " ".join(words))
+    if leaving is not None:
+        cv.add("</g>")
 
 
 def panel_geom(L, card, side):
     x, y = L["X0"], L["PROOF"]
     w = card.get("panel_w") or (L["SIDE_W"] if side else L["X1"] - L["X0"])
-    n = max(2, card["rows"] + 1)
+    n = max(2, card["rows"] + (1 if card["prompt"] else 0))
     h = L["TITLE"] + 2 * L["PAD"] + n * card["lh"] - (card["lh"] - card["mono"])
     return x, y, w, h
 
@@ -611,8 +733,21 @@ def draw_panel(cv, kit, L, card, t):
     for ln in shown:
         base = base0 + r * lh
         cx = x + pad
-        if len(ln["text"]) > cols:
+        if max(len(g) for g in ln["segs"]) > cols:
             raise SystemExit("line of %d characters does not fit %d columns: %r" % (len(ln["text"]), cols, ln["text"]))
+        if len(ln["segs"]) > 1:
+            # a line broken at its semicolon: each row rises like an output line, the second 90 ms after the first
+            colour = "Rewind" if id(ln) in hot else "Leader"
+            for j, seg in enumerate(ln["segs"]):
+                k = out_cubic((t - ln["at"] - 90 * j) / RISE_MS)
+                b = base + j * lh
+                cid = cv.clip(x, b - size * 1.0, w, lh)
+                cv.add('<g clip-path="url(#%s)">' % cid)
+                if k > 0:
+                    cv.text(mono, seg, size, cx, b + (1 - k) * lh * 0.9, colour)
+                cv.add("</g>")
+            r += len(ln["segs"])
+            continue
         if ln["kind"] == "cmd":
             n = min(len(ln["text"]), int((t - ln["at"]) // TYPE_MS) + 1)
             cv.text(mono, "$ ", size, cx, base, "Playhead")
@@ -649,7 +784,7 @@ def draw_panel(cv, kit, L, card, t):
                     cv.add(rect(sx - 4, base - size * 0.34, (sw + 8) * frac, 3, C["Rewind"]))
         r += 1
     prompt_after = max([ln.get("typed", ln["at"]) + (RISE_MS if ln["kind"] == "out" else 0) for ln in card["lines"]] or [0])
-    if card["lines"] and t >= prompt_after and shown and shown[-1]["kind"] == "out":
+    if card["prompt"] and card["lines"] and t >= prompt_after and shown and shown[-1]["kind"] == "out":
         base = base0 + r * lh
         cv.text(mono, "$ ", size, x + pad, base, "Playhead")
         cv.add(rect(x + pad + 2 * adv, base - size * 0.78, adv, size * 0.98, C["Leader"]))
@@ -868,14 +1003,22 @@ def draw_ui(cv, kit, L, card, t):
     """The real rewindagents ui timeline (screenshot of the demo session), its red current-step stripe placed where
     the wipe's playhead stops: the match cut. The command chip and the 127.0.0.1 note sit to its right."""
     u = t - card["start"]
-    s, ox, oy, vw, vh = ui_geom(L)
-    push = 1 + 0.06 * ease((u - 300) / max(1, card["end"] - card["start"] - 300))
-    ax, ay = L["X0"], oy + UI_STEP15_Y * s
+    s0, _, _, vw, vh = ui_geom(L)
+    # the whole column first (the wipe's playhead lands on its red stripe), then a push into steps 14 and 15 until
+    # the step numbers, the Rewind row and its '<< to step 12' chip read at full size (fix 5). The push is a zoom
+    # about the one screenshot point that stays put, so the left edge (the stripe) never moves.
+    cx, cy, cw, ch = UI_CROP
+    x1, y1, h1 = UI_CLOSE
+    z1 = h1 / ch
+    fx, fy = (x1 - cx * z1) / (1 - z1), (y1 - cy * z1) / (1 - z1)
+    z = z1 ** ease((u - UI_HOLD_MS) / UI_PUSH_MS)
+    rx, ry = fx + (cx - fx) * z, fy + (cy - fy) * z
+    s = s0 / z
     cid = cv.clip(L["X0"], L["PROOF"], vw, vh)
-    cv.add('<g clip-path="url(#%s)"><g transform="translate(%.2f %.2f) scale(%.4f) translate(%.2f %.2f)">'
-           % (cid, ax, ay, push, -ax, -ay))
-    cv.add('<image x="%.2f" y="%.2f" width="%.2f" height="%.2f" href="%s"/>' % (ox, oy, 1440 * s, 900 * s, kit.ui_href))
-    cv.add("</g></g>")
+    cv.add('<g clip-path="url(#%s)">' % cid)
+    cv.add('<image x="%.2f" y="%.2f" width="%.2f" height="%.2f" href="%s"/>'
+           % (L["X0"] - rx * s, L["PROOF"] - ry * s, 1440 * s, 900 * s, kit.ui_href))
+    cv.add("</g>")
     cv.add(outline(L["X0"] - 1, L["PROOF"] - 1, vw + 2, vh + 2, "Rule", 1))
     rx = L["X0"] + vw + 56
     cmd, note = card["screen"]
@@ -904,7 +1047,9 @@ def draw_end(cv, kit, L, cfg, card, t):
     s = target / ww
     x = L["X0"] if wide else (W - target) / 2
     top = 450 if wide else 920
-    P = card["P"]
+    # the end card builds with its line, not after it: the wordmark rises while the line's words do, so the wipe
+    # never lands on a near-empty frame and the whole card is settled for the last ~4 s (fixes 6 and 7)
+    P = card["hs"] + 300
 
     def rise(at, h):
         k = out_cubic((u - at) / 420)
@@ -916,7 +1061,7 @@ def draw_end(cv, kit, L, cfg, card, t):
         cv.add('<g clip-path="url(#%s)"><g transform="translate(%.2f %.2f) scale(%.4f)">%s</g></g>'
                % (cid, x, top + dy, s, body))
     y = top + wh * s + (70 if wide else 110)
-    psize = 46 if wide else 56
+    psize = 46 if wide else 60                  # on a phone (9:16) every end-card line reads at >= 40 px cap (fix 10)
     promise = vsl.PROMISE
     plines = [promise] if wide else [promise.split(": ")[0] + ":", promise.split(": ")[1]]
     k, dy = rise(P + 160, 40)
@@ -925,7 +1070,9 @@ def draw_end(cv, kit, L, cfg, card, t):
             cv.text(kit.body, line, psize, x, y + dy, "Playhead")
         y += psize * 1.3
     url = cfg["site_url"]
-    usize = 34.0 if wide else 36.0
+    usize = 34.0 if wide else 64.0
+    if not wide and kit.mono.width(url, usize) > target:      # a phone shows the address as it is typed
+        url = re.sub(r"^https?://", "", url).rstrip("/")
     ulines = [url]
     if kit.mono.width(url, usize) > target:
         cut = url.index("/", len("https://")) + 1
@@ -938,7 +1085,7 @@ def draw_end(cv, kit, L, cfg, card, t):
         y += usize * 1.35
     y += 16
     cv.add(rect(x, y, target * ease((u - P - 420) / 500), 1.5, C["Rule"]))
-    csize = 32 if wide else 40
+    csize = 32 if wide else 52
     y += 30 + csize
     k, dy = rise(P + 520, 20)
     if k > 0:
@@ -975,12 +1122,14 @@ def frame(kit, L, p, cfg, t):
     card = next(c for c in p["cards"] if c["start"] <= t < c["end"])
     u = t - card["start"]
     dark = card["kind"] == "end"
-    wiping = card["i"] > 0 and not card["cont"] and u < WIPE_MS
+    wiping = bool(card["wipe"]) and u < card["wipe_ms"]
     prev = p["cards"][card["i"] - 1] if card["i"] > 0 else None
     ground = "Reel" if dark and not wiping else "Leader"
     cv = Canvas(L["W"], L["H"], ground)
     if wiping:
-        k = ease(u / WIPE_MS)
+        wp = WIPES[card["wipe"]]
+        x = u / card["wipe_ms"]
+        k = out_cubic(x) if wp["ease"] == "out" else ease(x)
         stop = L["X0"] if card["kind"] == "ui" else -40        # the match cut: the playhead becomes the UI's stripe
         lx = L["W"] + 40 + (stop - L["W"] - 40) * k
         # the old scene, left of the playhead, sliding back under it
@@ -988,7 +1137,7 @@ def frame(kit, L, p, cfg, t):
         cv.add('<g clip-path="url(#%s)">' % cid)
         if prev["kind"] == "end":
             cv.add(rect(0, 0, L["W"], L["H"], C["Reel"]))
-        cv.add('<g transform="translate(%.2f 0)">' % (90 * k))
+        cv.add('<g transform="translate(%.2f 0)">' % (wp["slide"] * k))
         draw_scene(cv, kit, L, cfg, p, prev, prev["end"] - 1, swap=False)
         cv.add("</g></g>")
         # the new scene, right of it
@@ -1005,14 +1154,20 @@ def frame(kit, L, p, cfg, t):
         if t >= p["ruled_from"]:
             if wiping and dark:
                 cv.add('<g clip-path="url(#%s)">' % cv.clip(0, 0, max(0.0, lx), L["H"]))
-            draw_ruler(cv, kit, L, ruler_state(p, t), brackets=bracket)
+            # one Record playhead on screen at a time: the ruler's is hidden while the wipe's runs, then drops back
+            # into place at the new step (fix 7)
+            head = 1.0
+            if card["wipe"]:
+                head = None if wiping else ease((u - card["wipe_ms"]) / HEAD_DROP_MS)
+            draw_ruler(cv, kit, L, ruler_state(p, t), brackets=bracket, head=head)
             if wiping and dark:
                 cv.add("</g>")
     if wiping:
         top = L["RULER_Y"] - 66
-        cv.add(rect(lx - 2, top + 16, 4, L["H"] - top, C["Record"]))
-        cv.add(playhead_shape(lx, top, 5.0, "Record"))
-        for j, (off, op) in enumerate(((18, 0.5), (40, 0.28), (70, 0.14))):   # the tape running back: a short trail
+        lw = wp["line"]
+        cv.add(rect(lx - lw / 2, top + 16, lw, L["H"] - top, C["Record"]))
+        cv.add(playhead_shape(lx, top, wp["head"], "Record"))
+        for off, op in wp["trail"]:                       # the tape running back: a trail, longer the bigger the rewind
             cv.add('<rect x="%.2f" y="%.2f" width="1.5" height="%.2f" fill="%s" opacity="%.2f"/>'
                    % (lx + off * (1 - k * 0.3), top + 16, L["H"] - top, C["Rule"], op * (1 - abs(2 * k - 1))))
     palette = {v.upper() for v in C.values()}
@@ -1024,10 +1179,58 @@ def frame(kit, L, p, cfg, t):
 
 
 # ---- sound ----------------------------------------------------------------------------------------------------
-def score(total_ms, beat_starts, sweep_at, path):
-    """Synthesise the music bed: 84 BPM, A minor / F / C / G, one chord a bar; pad (sine + a soft octave),
-    a low root, a quiet tick every quarter note, a firmer tick on every card change, a falling sweep under every
-    rewind, the last chord held and faded over the final 1.5 s. Mono, 48 kHz, 16-bit."""
+def studio_audio(name):
+    """The studio's files for this cut, or None when any is missing: (bed, rewind sfx, tick sfx)."""
+    paths = (os.path.join(AUDIO_DIR, "bed-%s.wav" % name), os.path.join(AUDIO_DIR, "sfx-rewind.wav"),
+             os.path.join(AUDIO_DIR, "sfx-tick.wav"))
+    return paths if all(os.path.isfile(x) and os.path.getsize(x) > 44 for x in paths) else None
+
+
+def score(name, total_ms, p, path):
+    """The film's sound, written to `path` (48 kHz stereo WAV, before mastering); returns what it is made of.
+
+    The studio's produced bed (brand/vsl/audio/bed-<name>.wav, see AUDIO.md there for its source and licence) is
+    used when it and both SFX are on disk: trimmed or padded to the film, a 20 ms fade in, FADE_MS out, with
+    sfx-rewind.wav under the wipes and sfx-tick.wav on the ruler's ticks (sfx_events). Only when a file is missing
+    does the old synthesised pad stand in (synth_score), and the manifest says so ("source": "synth fallback")."""
+    ev = sfx_events(p)
+    files = studio_audio(name)
+    if not files:
+        synth_score(total_ms, ev, path)
+        return {"source": "synth fallback: brand/vsl/audio/ files missing; render.py synth_score(), 84 BPM Am-F-C-G "
+                          "sine pad (placeholder, not release grade)", "files": {}}
+    bed, rew, tic = files
+    T = total_ms / 1000
+    graph = ["[0:a]aresample=%d,aformat=sample_fmts=fltp:channel_layouts=stereo,apad,atrim=0:%.3f,"
+             "afade=t=in:d=0.02,afade=t=out:st=%.3f:d=%.3f[bed]" % (SAMPLE_RATE, T, T - FADE_MS / 1000, FADE_MS / 1000)]
+    labels = ["[bed]"]
+    for idx, (key, src) in ((1, ("rewind", rew)), (2, ("tick", tic))):
+        events = ev[key]
+        if not events:
+            continue
+        graph.append("[%d:a]aresample=%d,aformat=sample_fmts=fltp:channel_layouts=stereo,asplit=%d%s"
+                     % (idx, SAMPLE_RATE, len(events), "".join("[%s%d]" % (key, j) for j in range(len(events)))))
+        for j, (ms, gain) in enumerate(events):
+            at = max(0, ms - (REWIND_LAND_MS if key == "rewind" else 0))     # the rewind sound lands on the event
+            graph.append("[%s%d]volume=%.3f,adelay=%d:all=1[%s%dd]" % (key, j, gain, int(round(at)), key, j))
+            labels.append("[%s%dd]" % (key, j))
+    # AUDIO.md: ticks and sweeps land on bed peaks, so the sum goes through the studio's limiter before mastering
+    graph.append("%samix=inputs=%d:normalize=0:duration=first,atrim=0:%.3f,%s[out]" % ("".join(labels), len(labels), T,
+                                                                                     LIMITER))
+    script = path + ".filter"
+    with open(script, "w", encoding="utf-8") as f:
+        f.write(";\n".join(graph))
+    subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", bed, "-i", rew, "-i", tic,
+                    "-/filter_complex", script, "-map", "[out]", "-c:a", "pcm_s24le", "-ar", str(SAMPLE_RATE),
+                    path], check=True)
+    return {"source": "studio: brand/vsl/audio/ (bed-%s.wav, sfx-rewind.wav, sfx-tick.wav; AUDIO.md)" % name,
+            "files": {os.path.relpath(x, BRAND): sha256(x) for x in files}}
+
+
+def synth_score(total_ms, ev, path):
+    """Fallback only (studio files missing): the old synthesised bed. 84 BPM, A minor / F / C / G, one chord a
+    bar; pad (sine + a soft octave), a low root, a quiet tick every quarter note from 40 ms in, the event ticks and
+    falling sweeps of sfx_events, the last chord faded over FADE_MS. Mono, 48 kHz, 16-bit."""
     sr = SAMPLE_RATE
     n = int(sr * total_ms / 1000)
     out = array.array("f", [0.0]) * n
@@ -1057,19 +1260,19 @@ def score(total_ms, beat_starts, sweep_at, path):
     rnd = random.Random(7)
     click = [rnd.uniform(-1, 1) * math.exp(-i / (0.0025 * sr)) for i in range(int(0.03 * sr))]
     q = 60.0 / 84
-    t = 0.0
+    t = 0.04
     while t * 1000 < total_ms:
         s0 = int(t * sr)
         for i, v in enumerate(click):
             if s0 + i < n:
                 out[s0 + i] += 0.05 * v
         t += q
-    for ms in beat_starts:
+    for ms, gain in ev["tick"]:
         s0 = int(ms * sr / 1000)
         for i, v in enumerate(click):
             if s0 + i < n:
-                out[s0 + i] += 0.16 * v
-    for ms in sweep_at:
+                out[s0 + i] += 0.16 * gain * v
+    for ms, gain in ev["rewind"]:
         s0 = int(ms * sr / 1000)
         dur = int(0.7 * sr)
         ph = 0.0
@@ -1079,8 +1282,8 @@ def score(total_ms, beat_starts, sweep_at, path):
             f = 900 * (1 - i / dur) + 140
             ph += f * 4096 / sr
             env = math.sin(math.pi * i / dur)
-            out[s0 + i] += 0.07 * env * table[int(ph) & 4095]
-    fade = int(1.5 * sr)
+            out[s0 + i] += 0.07 * gain * env * table[int(ph) & 4095]
+    fade = int(FADE_MS / 1000 * sr)
     for i in range(fade):
         out[n - fade + i] *= 1 - i / fade
     peak = max(abs(v) for v in out) or 1.0
@@ -1090,6 +1293,22 @@ def score(total_ms, beat_starts, sweep_at, path):
         w.setsampwidth(2)
         w.setframerate(sr)
         w.writeframes(pcm.tobytes())
+
+
+def master(src, dst):
+    """Measure the mix's integrated loudness, then one linear gain to TARGET_LUFS and the studio's limiter (a
+    no-op unless the gain pushes a peak up): the bed's own dynamics are kept (loudnorm fell back to its dynamic mode
+    on these beds, LRA 10-13 LU, and still let the 90 s reach -1.4 dBTP after AAC). Returns the measurement."""
+    p = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", src, "-af", "ebur128=peak=true", "-f", "null", "-"],
+                       capture_output=True, text=True, check=True)
+    i = float(re.findall(r"I:\s+(-?[\d.]+) LUFS", p.stderr)[-1])
+    lra = float(re.findall(r"LRA:\s+(-?[\d.]+) LU", p.stderr)[-1])
+    tp = float(re.findall(r"Peak:\s+(-?[\d.]+) dBFS", p.stderr)[-1])
+    gain = TARGET_LUFS - i
+    subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", src, "-af",
+                    "volume=%.2fdB,%s,aresample=%d" % (gain, LIMITER, SAMPLE_RATE), "-ar", str(SAMPLE_RATE),
+                    "-c:a", "pcm_s24le", dst], check=True)
+    return {"input_i": i, "input_lra": lra, "input_tp": tp, "gain_db": round(gain, 2)}
 
 
 def loudness(path):
@@ -1143,13 +1362,17 @@ def render_video(kit, video, cfg, cache):
     for f, u in enumerate(seq):
         os.symlink(os.path.join(fdir, uniq[u][:-4] + ".png"), os.path.join(sdir, "%05d.png" % f))
 
-    beat_starts = [c["start"] for c in p["cards"]]
     wav = os.path.join(fdir, "score.wav")
-    score(total, beat_starts, sweeps(p), wav)
+    sound = score(name, total, p, wav)
+    mastered = os.path.join(fdir, "master.wav")
+    pass1 = master(wav, mastered)
     mp4 = os.path.join(BRAND, name + ".mp4")
+    # BT.709 matrix, limited range, and the file says so (review-textcut.json: color_range was untagged)
     cmd = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-framerate", str(FPS), "-i", os.path.join(sdir, "%05d.png"),
-           "-i", wav, "-map", "0:v", "-map", "1:a", "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-tune", "animation",
-           "-pix_fmt", "yuv420p", "-r", str(FPS), "-af", LOUDNESS + ",aresample=48000", "-c:a", "aac", "-b:a", "160k",
+           "-i", mastered, "-map", "0:v", "-map", "1:a", "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-tune", "animation",
+           "-vf", "scale=out_color_matrix=bt709:out_range=tv,format=yuv420p", "-colorspace", "bt709",
+           "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv", "-bsf:v", BT709_BSF,
+           "-r", str(FPS), "-c:a", "aac", "-b:a", "160k",
            "-ac", "2", "-t", "%.3f" % (total / 1000), "-movflags", "+faststart", "-map_metadata", "-1",
            "-metadata", "title=" + video["title"], mp4]
     subprocess.run(cmd, check=True)
@@ -1162,7 +1385,7 @@ def render_video(kit, video, cfg, cache):
     os.makedirs(kdir)
     keys = []
     for c in p["cards"]:
-        marks = [("a", c["start"] + (WIPE_MS // 2 if not c["cont"] else SWAP_MS // 2)) if c["i"] > 0 else None,
+        marks = [("a", c["start"] + (c["wipe_ms"] // 2 if not c["cont"] else SWAP_MS // 2)) if c["i"] > 0 else None,
                  ("b", (c["start"] + c["end"]) // 2), ("c", c["end"] - 120)]
         for tag, ms in [m for m in marks if m]:
             out = os.path.join(kdir, "%s%s.png" % (c["id"], tag))
@@ -1179,14 +1402,15 @@ def render_video(kit, video, cfg, cache):
         "mp4": name + ".mp4", "srt": name + ".srt", "aspect": video["aspect"], "fps": FPS,
         "width": L["W"], "height": L["H"], "storyboard_ms": total, "frames": nframes, "unique_frames": len(uniq),
         "beats": [{"id": c["id"], "kind": c["kind"], "start_ms": c["start"], "end_ms": c["end"],
-                   "transition": "first" if c["i"] == 0 else ("swap" if c["cont"] else
-                                                               ("match cut" if c["kind"] == "ui" else "rewind wipe"))}
+                   "transition": "first" if c["i"] == 0 else ("swap" if c["cont"] else "%s (%s, %d ms)" % (
+                       "match cut" if c["kind"] == "ui" else "rewind wipe", c["wipe"], c["wipe_ms"]))}
                   for c in p["cards"]],
         "cards_on_screen": shown,
         "audio": {"voice": "none: no voice over (John, 2026-11-12); the cards carry the words",
-                  "music": "synthesised by render.py score(), 84 BPM Am-F-C-G pad, quarter-note ticks, card-change ticks, "
-                           "a sweep under every rewind", "bed_sha256": sha256(wav), "sweeps_ms": sweeps(p),
-                  "master": LOUDNESS, "measured": loudness(mp4), "audio_stream_md5": stream_md5(mp4, "a")},
+                  "music": sound["source"], "files": sound["files"], "bed_sha256": sha256(wav),
+                  "sweeps_ms": sweeps(p), "ticks_ms": [int(t) for t, _ in sfx_events(p)["tick"]],
+                  "master": LOUDNESS, "first_pass": pass1,
+                  "measured": loudness(mp4), "audio_stream_md5": stream_md5(mp4, "a")},
         "keyframes": keys, "contact_sheet": "vsl/%s-contact-sheet.png" % name,
         "mp4_facts": facts,
     }

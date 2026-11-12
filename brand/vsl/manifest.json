@@ -1,21 +1,36 @@
 {
- "beats_sha256": "bcc02bfa2a25cba0226f9ca2a17fb84fc65f678316f6ddd4b58619294b0a3cef",
+ "beats_sha256": "01088f2788feb522acc7e49669d2423c52f8e3bded1c67f77d09f6d0b2f8d564",
  "note": "Written by brand/vsl/render.py. The address in the videos comes from brand/site/config.json at render time; this file keeps no address.",
  "videos": {
   "vsl-15s-vertical": {
    "aspect": "9:16",
    "audio": {
-    "audio_stream_md5": "3c84e146790e482f6516dc291e5360ea",
-    "bed_sha256": "2bba730910813965932f2dae8c45521b8092add872e97b5a2bf9fe50589a459c",
-    "master": "loudnorm=I=-16:TP=-1.5:LRA=7",
-    "measured": {
-     "integrated_lufs": -16.2,
-     "true_peak_dbfs": -6.6
+    "audio_stream_md5": "af01fdbc9e89fc8864523d3804c84ae7",
+    "bed_sha256": "73c7acad7cf50377b3337c49d1487934007f3cdcafc52ec3d192e25f76b53041",
+    "files": {
+     "vsl/audio/bed-vsl-15s-vertical.wav": "8f59236315a54ece4074de429c6f46919767fbc585f8797a064116d41f72821b",
+     "vsl/audio/sfx-rewind.wav": "d101db53a52832e3801def4b438f6e734af45a14ea07a20cf8a8d1cfaaade884",
+     "vsl/audio/sfx-tick.wav": "e4fc16617cd90919f3112c3a56fd622cc73c68dbb5723fd152d23529cf17138a"
     },
-    "music": "synthesised by render.py score(), 84 BPM Am-F-C-G pad, quarter-note ticks, card-change ticks, a sweep under every rewind",
+    "first_pass": {
+     "gain_db": -2.0,
+     "input_i": -14.0,
+     "input_lra": 9.9,
+     "input_tp": -1.9
+    },
+    "master": "linear gain to -16 LUFS integrated + alimiter limit 0.76 (true peak <= -1.5 dBTP, measured after AAC)",
+    "measured": {
+     "integrated_lufs": -16.1,
+     "true_peak_dbfs": -3.4
+    },
+    "music": "studio: brand/vsl/audio/ (bed-vsl-15s-vertical.wav, sfx-rewind.wav, sfx-tick.wav; AUDIO.md)",
     "sweeps_ms": [
-     3650,
-     5517
+     4350,
+     5284,
+     8850
+    ],
+    "ticks_ms": [
+     600
     ],
     "voice": "none: no voice over (John, 2026-11-12); the cards carry the words"
    },
@@ -32,14 +47,14 @@
      "id": "b02",
      "kind": "term",
      "start_ms": 3450,
-     "transition": "rewind wipe"
+     "transition": "rewind wipe (story, 900 ms)"
     },
     {
-     "end_ms": 13250,
+     "end_ms": 14000,
      "id": "b03",
      "kind": "end",
      "start_ms": 8200,
-     "transition": "rewind wipe"
+     "transition": "rewind wipe (section, 650 ms)"
     }
    ],
    "cards_on_screen": [
@@ -49,7 +64,7 @@
    ],
    "contact_sheet": "vsl/vsl-15s-vertical-contact-sheet.png",
    "fps": 30,
-   "frames": 397,
+   "frames": 420,
    "height": 1920,
    "keyframes": [
     {
@@ -64,7 +79,7 @@
     },
     {
      "beat": "b02",
-     "ms": 3775,
+     "ms": 3900,
      "png": "vsl/keyframes/vsl-15s-vertical/b02a.png"
     },
     {
@@ -84,51 +99,84 @@
     },
     {
      "beat": "b03",
-     "ms": 10725,
+     "ms": 11100,
      "png": "vsl/keyframes/vsl-15s-vertical/b03b.png"
     },
     {
      "beat": "b03",
-     "ms": 13130,
+     "ms": 13880,
      "png": "vsl/keyframes/vsl-15s-vertical/b03c.png"
     }
    ],
    "mp4": "vsl-15s-vertical.mp4",
    "mp4_facts": {
     "audio_codec": "mp4a",
-    "audio_seconds": 13.271,
-    "bytes": 3273992,
+    "audio_seconds": 14.021,
+    "bytes": 3908796,
     "channels": 2,
     "faststart": true,
     "fps": 30.0,
-    "frames": 397,
+    "frames": 420,
     "height": 1920,
     "sample_rate": 48000,
-    "seconds": 13.25,
-    "sha256": "f3c856ff98fc6eed12a4fc794d9ce086080fb488ee8d7f92264474935d3c2bfa",
+    "seconds": 14.0,
+    "sha256": "80b97870abdccaa131db9756357d7b6bf3bdbaff28f49e5c892d50021fd19272",
     "video_codec": "avc1",
-    "video_seconds": 13.233,
+    "video_seconds": 14.0,
     "width": 1080
    },
    "srt": "vsl-15s-vertical.srt",
-   "storyboard_ms": 13250,
-   "unique_frames": 397,
+   "storyboard_ms": 14000,
+   "unique_frames": 420,
    "width": 1080
   },
   "vsl-30s": {
    "aspect": "16:9",
    "audio": {
-    "audio_stream_md5": "9b1009d04c5c2ed0d8c73137c6c556b1",
-    "bed_sha256": "e2a2f5cd256b3ed5c30c96b7b9ff32c830241ca05614cada06a0c6ff7a3758f0",
-    "master": "loudnorm=I=-16:TP=-1.5:LRA=7",
-    "measured": {
-     "integrated_lufs": -16.1,
-     "true_peak_dbfs": -6.3
+    "audio_stream_md5": "7a92e240bcf73e57d13e72cab5e8a75d",
+    "bed_sha256": "43f65d9879b9f68fbb19973c02751ab9590ed0486f58960fa044e48db9c5623f",
+    "files": {
+     "vsl/audio/bed-vsl-30s.wav": "bf9c31b2209f8ee88e4a132c72bdca5ceb6c74012fd27266de7d1ea9b974c9b5",
+     "vsl/audio/sfx-rewind.wav": "d101db53a52832e3801def4b438f6e734af45a14ea07a20cf8a8d1cfaaade884",
+     "vsl/audio/sfx-tick.wav": "e4fc16617cd90919f3112c3a56fd622cc73c68dbb5723fd152d23529cf17138a"
     },
-    "music": "synthesised by render.py score(), 84 BPM Am-F-C-G pad, quarter-note ticks, card-change ticks, a sweep under every rewind",
+    "first_pass": {
+     "gain_db": -0.1,
+     "input_i": -15.9,
+     "input_lra": 12.4,
+     "input_tp": -1.9
+    },
+    "master": "linear gain to -16 LUFS integrated + alimiter limit 0.76 (true peak <= -1.5 dBTP, measured after AAC)",
+    "measured": {
+     "integrated_lufs": -16.2,
+     "true_peak_dbfs": -2.0
+    },
+    "music": "studio: brand/vsl/audio/ (bed-vsl-30s.wav, sfx-rewind.wav, sfx-tick.wav; AUDIO.md)",
     "sweeps_ms": [
-     15100,
-     20217
+     8100,
+     11450,
+     17050,
+     20400,
+     21334,
+     24400
+    ],
+    "ticks_ms": [
+     470,
+     604,
+     704,
+     789,
+     867,
+     942,
+     1014,
+     1085,
+     1157,
+     1232,
+     1310,
+     1395,
+     1495,
+     1629,
+     3300,
+     16300
     ],
     "voice": "none: no voice over (John, 2026-11-12); the cards carry the words"
    },
@@ -152,35 +200,35 @@
      "id": "b03",
      "kind": "term",
      "start_ms": 7650,
-     "transition": "rewind wipe"
+     "transition": "rewind wipe (light, 450 ms)"
     },
     {
-     "end_ms": 14950,
+     "end_ms": 16300,
      "id": "b04",
      "kind": "term",
      "start_ms": 10800,
-     "transition": "rewind wipe"
+     "transition": "rewind wipe (section, 650 ms)"
     },
     {
-     "end_ms": 18150,
+     "end_ms": 19500,
      "id": "b05",
      "kind": "term",
-     "start_ms": 14950,
+     "start_ms": 16300,
      "transition": "swap"
     },
     {
-     "end_ms": 22400,
+     "end_ms": 23750,
      "id": "b06",
      "kind": "term",
-     "start_ms": 18150,
-     "transition": "rewind wipe"
+     "start_ms": 19500,
+     "transition": "rewind wipe (story, 900 ms)"
     },
     {
-     "end_ms": 27450,
+     "end_ms": 29550,
      "id": "b07",
      "kind": "end",
-     "start_ms": 22400,
-     "transition": "rewind wipe"
+     "start_ms": 23750,
+     "transition": "rewind wipe (section, 650 ms)"
     }
    ],
    "cards_on_screen": [
@@ -194,7 +242,7 @@
    ],
    "contact_sheet": "vsl/vsl-30s-contact-sheet.png",
    "fps": 30,
-   "frames": 823,
+   "frames": 886,
    "height": 1080,
    "keyframes": [
     {
@@ -224,7 +272,7 @@
     },
     {
      "beat": "b03",
-     "ms": 7975,
+     "ms": 7875,
      "png": "vsl/keyframes/vsl-30s/b03a.png"
     },
     {
@@ -244,97 +292,144 @@
     },
     {
      "beat": "b04",
-     "ms": 12875,
+     "ms": 13550,
      "png": "vsl/keyframes/vsl-30s/b04b.png"
     },
     {
      "beat": "b04",
-     "ms": 14830,
+     "ms": 16180,
      "png": "vsl/keyframes/vsl-30s/b04c.png"
     },
     {
      "beat": "b05",
-     "ms": 15110,
+     "ms": 16460,
      "png": "vsl/keyframes/vsl-30s/b05a.png"
     },
     {
      "beat": "b05",
-     "ms": 16550,
+     "ms": 17900,
      "png": "vsl/keyframes/vsl-30s/b05b.png"
     },
     {
      "beat": "b05",
-     "ms": 18030,
+     "ms": 19380,
      "png": "vsl/keyframes/vsl-30s/b05c.png"
     },
     {
      "beat": "b06",
-     "ms": 18475,
+     "ms": 19950,
      "png": "vsl/keyframes/vsl-30s/b06a.png"
     },
     {
      "beat": "b06",
-     "ms": 20275,
+     "ms": 21625,
      "png": "vsl/keyframes/vsl-30s/b06b.png"
     },
     {
      "beat": "b06",
-     "ms": 22280,
+     "ms": 23630,
      "png": "vsl/keyframes/vsl-30s/b06c.png"
     },
     {
      "beat": "b07",
-     "ms": 22725,
+     "ms": 24075,
      "png": "vsl/keyframes/vsl-30s/b07a.png"
     },
     {
      "beat": "b07",
-     "ms": 24925,
+     "ms": 26650,
      "png": "vsl/keyframes/vsl-30s/b07b.png"
     },
     {
      "beat": "b07",
-     "ms": 27330,
+     "ms": 29430,
      "png": "vsl/keyframes/vsl-30s/b07c.png"
     }
    ],
    "mp4": "vsl-30s.mp4",
    "mp4_facts": {
     "audio_codec": "mp4a",
-    "audio_seconds": 27.471,
-    "bytes": 6576860,
+    "audio_seconds": 29.571,
+    "bytes": 7354708,
     "channels": 2,
     "faststart": true,
     "fps": 30.0,
-    "frames": 823,
+    "frames": 886,
     "height": 1080,
     "sample_rate": 48000,
-    "seconds": 27.45,
-    "sha256": "3cb519efcdccff0d2de2bff08376e774c3fa83e7401ad0d78a45306878d8d70c",
+    "seconds": 29.55,
+    "sha256": "1caa536f73197e3e766e4fd1afe7f5ef0877ec9484c246e957b614d01059e74b",
     "video_codec": "avc1",
-    "video_seconds": 27.433,
+    "video_seconds": 29.533,
     "width": 1920
    },
    "srt": "vsl-30s.srt",
-   "storyboard_ms": 27450,
-   "unique_frames": 819,
+   "storyboard_ms": 29550,
+   "unique_frames": 881,
    "width": 1920
   },
   "vsl-90s": {
    "aspect": "16:9",
    "audio": {
-    "audio_stream_md5": "9d0093870550bb9a64a88fdb01bc9a43",
-    "bed_sha256": "faba8cdf7dcc39909cf0b477cc3a707c2365cbdce393a974331f59f9a759a266",
-    "master": "loudnorm=I=-16:TP=-1.5:LRA=7",
-    "measured": {
-     "integrated_lufs": -16.0,
-     "true_peak_dbfs": -4.8
+    "audio_stream_md5": "588fbb191b8792565ca346e78636e976",
+    "bed_sha256": "af97d8ab161ec3351daf84da2886d658982d1761847712aea7a1a06cb08672d6",
+    "files": {
+     "vsl/audio/bed-vsl-90s.wav": "79e5a94b15fed30f5b810b28926138536ef63d203d5eb7890769b18f4ceb3b74",
+     "vsl/audio/sfx-rewind.wav": "d101db53a52832e3801def4b438f6e734af45a14ea07a20cf8a8d1cfaaade884",
+     "vsl/audio/sfx-tick.wav": "e4fc16617cd90919f3112c3a56fd622cc73c68dbb5723fd152d23529cf17138a"
     },
-    "music": "synthesised by render.py score(), 84 BPM Am-F-C-G pad, quarter-note ticks, card-change ticks, a sweep under every rewind",
+    "first_pass": {
+     "gain_db": -0.1,
+     "input_i": -15.9,
+     "input_lra": 10.0,
+     "input_tp": -1.9
+    },
+    "master": "linear gain to -16 LUFS integrated + alimiter limit 0.76 (true peak <= -1.5 dBTP, measured after AAC)",
+    "measured": {
+     "integrated_lufs": -16.1,
+     "true_peak_dbfs": -1.9
+    },
+    "music": "studio: brand/vsl/audio/ (bed-vsl-90s.wav, sfx-rewind.wav, sfx-tick.wav; AUDIO.md)",
     "sweeps_ms": [
-     15150,
-     47900,
-     53017
+     8100,
+     11250,
+     15850,
+     20300,
+     24250,
+     28000,
+     35800,
+     39900,
+     44550,
+     50150,
+     53500,
+     54434,
+     62000,
+     70450,
+     74700,
+     79850,
+     84850
+    ],
+    "ticks_ms": [
+     470,
+     604,
+     704,
+     789,
+     867,
+     942,
+     1014,
+     1085,
+     1157,
+     1232,
+     1310,
+     1395,
+     1495,
+     1629,
+     3300,
+     31800,
+     49400,
+     56850,
+     58039,
+     65850
     ],
     "voice": "none: no voice over (John, 2026-11-12); the cards carry the words"
    },
@@ -358,140 +453,133 @@
      "id": "b03",
      "kind": "term",
      "start_ms": 7650,
-     "transition": "rewind wipe"
+     "transition": "rewind wipe (light, 450 ms)"
     },
     {
      "end_ms": 14950,
      "id": "b04",
      "kind": "roadmap",
      "start_ms": 10800,
-     "transition": "rewind wipe"
+     "transition": "rewind wipe (light, 450 ms)"
     },
     {
      "end_ms": 19850,
      "id": "b05",
      "kind": "term",
      "start_ms": 14950,
-     "transition": "rewind wipe"
+     "transition": "rewind wipe (story, 900 ms)"
     },
     {
-     "end_ms": 23300,
+     "end_ms": 23600,
      "id": "b06",
      "kind": "quote",
      "start_ms": 19850,
-     "transition": "rewind wipe"
+     "transition": "rewind wipe (light, 450 ms)"
     },
     {
-     "end_ms": 27250,
+     "end_ms": 27550,
      "id": "b07",
      "kind": "type",
-     "start_ms": 23300,
-     "transition": "rewind wipe"
+     "start_ms": 23600,
+     "transition": "rewind wipe (section, 650 ms)"
     },
     {
-     "end_ms": 31500,
+     "end_ms": 31800,
      "id": "b08",
      "kind": "map",
-     "start_ms": 27250,
-     "transition": "rewind wipe"
+     "start_ms": 27550,
+     "transition": "rewind wipe (light, 450 ms)"
     },
     {
-     "end_ms": 35050,
+     "end_ms": 35350,
      "id": "b09",
      "kind": "map",
-     "start_ms": 31500,
+     "start_ms": 31800,
      "transition": "swap"
     },
     {
-     "end_ms": 39150,
+     "end_ms": 39450,
      "id": "b10",
      "kind": "chain",
-     "start_ms": 35050,
-     "transition": "rewind wipe"
+     "start_ms": 35350,
+     "transition": "rewind wipe (light, 450 ms)"
     },
     {
-     "end_ms": 43600,
+     "end_ms": 43900,
      "id": "b11",
      "kind": "term",
-     "start_ms": 39150,
-     "transition": "rewind wipe"
+     "start_ms": 39450,
+     "transition": "rewind wipe (light, 450 ms)"
     },
     {
-     "end_ms": 47750,
+     "end_ms": 49400,
      "id": "b12",
      "kind": "term",
-     "start_ms": 43600,
-     "transition": "rewind wipe"
+     "start_ms": 43900,
+     "transition": "rewind wipe (section, 650 ms)"
     },
     {
-     "end_ms": 50950,
+     "end_ms": 52600,
      "id": "b13",
      "kind": "term",
-     "start_ms": 47750,
+     "start_ms": 49400,
      "transition": "swap"
     },
     {
-     "end_ms": 55200,
+     "end_ms": 56850,
      "id": "b14",
      "kind": "term",
-     "start_ms": 50950,
-     "transition": "rewind wipe"
+     "start_ms": 52600,
+     "transition": "rewind wipe (story, 900 ms)"
     },
     {
-     "end_ms": 58500,
+     "end_ms": 61350,
      "id": "b15",
      "kind": "term",
-     "start_ms": 55200,
+     "start_ms": 56850,
      "transition": "swap"
     },
     {
-     "end_ms": 63000,
+     "end_ms": 65850,
      "id": "b16",
      "kind": "map",
-     "start_ms": 58500,
-     "transition": "rewind wipe"
+     "start_ms": 61350,
+     "transition": "rewind wipe (section, 650 ms)"
     },
     {
-     "end_ms": 66950,
+     "end_ms": 69800,
      "id": "b17",
      "kind": "map",
-     "start_ms": 63000,
+     "start_ms": 65850,
      "transition": "swap"
     },
     {
-     "end_ms": 71200,
+     "end_ms": 74050,
      "id": "b18",
      "kind": "rows",
-     "start_ms": 66950,
-     "transition": "rewind wipe"
+     "start_ms": 69800,
+     "transition": "rewind wipe (section, 650 ms)"
     },
     {
-     "end_ms": 76350,
+     "end_ms": 79200,
      "id": "b19",
      "kind": "ui",
-     "start_ms": 71200,
-     "transition": "match cut"
+     "start_ms": 74050,
+     "transition": "match cut (section, 650 ms)"
     },
     {
-     "end_ms": 81150,
+     "end_ms": 84200,
      "id": "b20",
-     "kind": "term",
-     "start_ms": 76350,
-     "transition": "rewind wipe"
-    },
-    {
-     "end_ms": 84950,
-     "id": "b21",
      "kind": "rows",
-     "start_ms": 81150,
-     "transition": "rewind wipe"
+     "start_ms": 79200,
+     "transition": "rewind wipe (section, 650 ms)"
     },
     {
      "end_ms": 90000,
-     "id": "b22",
+     "id": "b21",
      "kind": "end",
-     "start_ms": 84950,
-     "transition": "rewind wipe"
+     "start_ms": 84200,
+     "transition": "rewind wipe (section, 650 ms)"
     }
    ],
    "cards_on_screen": [
@@ -513,8 +601,7 @@
     "Where does the analogy break? Recorders can't undo a crash.",
     "Unlike a recorder, this one puts your files back.",
     "Preview with diff. Take back one file with --only.",
-    "You can now see every step and undo any of it.",
-    "Up next: rewindagents init finds the seven agents it supports.",
+    "You can now see every step and the change it made.",
     "Apache-2.0. Standard library only. Not on PyPI yet.",
     "Your editor has had undo for decades. Now your agent does."
    ],
@@ -550,7 +637,7 @@
     },
     {
      "beat": "b03",
-     "ms": 7975,
+     "ms": 7875,
      "png": "vsl/keyframes/vsl-90s/b03a.png"
     },
     {
@@ -565,7 +652,7 @@
     },
     {
      "beat": "b04",
-     "ms": 11125,
+     "ms": 11025,
      "png": "vsl/keyframes/vsl-90s/b04a.png"
     },
     {
@@ -580,7 +667,7 @@
     },
     {
      "beat": "b05",
-     "ms": 15275,
+     "ms": 15400,
      "png": "vsl/keyframes/vsl-90s/b05a.png"
     },
     {
@@ -595,265 +682,250 @@
     },
     {
      "beat": "b06",
-     "ms": 20175,
+     "ms": 20075,
      "png": "vsl/keyframes/vsl-90s/b06a.png"
     },
     {
      "beat": "b06",
-     "ms": 21575,
+     "ms": 21725,
      "png": "vsl/keyframes/vsl-90s/b06b.png"
     },
     {
      "beat": "b06",
-     "ms": 23180,
+     "ms": 23480,
      "png": "vsl/keyframes/vsl-90s/b06c.png"
     },
     {
      "beat": "b07",
-     "ms": 23625,
+     "ms": 23925,
      "png": "vsl/keyframes/vsl-90s/b07a.png"
     },
     {
      "beat": "b07",
-     "ms": 25275,
+     "ms": 25575,
      "png": "vsl/keyframes/vsl-90s/b07b.png"
     },
     {
      "beat": "b07",
-     "ms": 27130,
+     "ms": 27430,
      "png": "vsl/keyframes/vsl-90s/b07c.png"
     },
     {
      "beat": "b08",
-     "ms": 27575,
+     "ms": 27775,
      "png": "vsl/keyframes/vsl-90s/b08a.png"
     },
     {
      "beat": "b08",
-     "ms": 29375,
+     "ms": 29675,
      "png": "vsl/keyframes/vsl-90s/b08b.png"
     },
     {
      "beat": "b08",
-     "ms": 31380,
+     "ms": 31680,
      "png": "vsl/keyframes/vsl-90s/b08c.png"
     },
     {
      "beat": "b09",
-     "ms": 31660,
+     "ms": 31960,
      "png": "vsl/keyframes/vsl-90s/b09a.png"
     },
     {
      "beat": "b09",
-     "ms": 33275,
+     "ms": 33575,
      "png": "vsl/keyframes/vsl-90s/b09b.png"
     },
     {
      "beat": "b09",
-     "ms": 34930,
+     "ms": 35230,
      "png": "vsl/keyframes/vsl-90s/b09c.png"
     },
     {
      "beat": "b10",
-     "ms": 35375,
+     "ms": 35575,
      "png": "vsl/keyframes/vsl-90s/b10a.png"
     },
     {
      "beat": "b10",
-     "ms": 37100,
+     "ms": 37400,
      "png": "vsl/keyframes/vsl-90s/b10b.png"
     },
     {
      "beat": "b10",
-     "ms": 39030,
+     "ms": 39330,
      "png": "vsl/keyframes/vsl-90s/b10c.png"
     },
     {
      "beat": "b11",
-     "ms": 39475,
+     "ms": 39675,
      "png": "vsl/keyframes/vsl-90s/b11a.png"
     },
     {
      "beat": "b11",
-     "ms": 41375,
+     "ms": 41675,
      "png": "vsl/keyframes/vsl-90s/b11b.png"
     },
     {
      "beat": "b11",
-     "ms": 43480,
+     "ms": 43780,
      "png": "vsl/keyframes/vsl-90s/b11c.png"
     },
     {
      "beat": "b12",
-     "ms": 43925,
+     "ms": 44225,
      "png": "vsl/keyframes/vsl-90s/b12a.png"
     },
     {
      "beat": "b12",
-     "ms": 45675,
+     "ms": 46650,
      "png": "vsl/keyframes/vsl-90s/b12b.png"
     },
     {
      "beat": "b12",
-     "ms": 47630,
+     "ms": 49280,
      "png": "vsl/keyframes/vsl-90s/b12c.png"
     },
     {
      "beat": "b13",
-     "ms": 47910,
+     "ms": 49560,
      "png": "vsl/keyframes/vsl-90s/b13a.png"
     },
     {
      "beat": "b13",
-     "ms": 49350,
+     "ms": 51000,
      "png": "vsl/keyframes/vsl-90s/b13b.png"
     },
     {
      "beat": "b13",
-     "ms": 50830,
+     "ms": 52480,
      "png": "vsl/keyframes/vsl-90s/b13c.png"
     },
     {
      "beat": "b14",
-     "ms": 51275,
+     "ms": 53050,
      "png": "vsl/keyframes/vsl-90s/b14a.png"
     },
     {
      "beat": "b14",
-     "ms": 53075,
+     "ms": 54725,
      "png": "vsl/keyframes/vsl-90s/b14b.png"
     },
     {
      "beat": "b14",
-     "ms": 55080,
+     "ms": 56730,
      "png": "vsl/keyframes/vsl-90s/b14c.png"
     },
     {
      "beat": "b15",
-     "ms": 55360,
+     "ms": 57010,
      "png": "vsl/keyframes/vsl-90s/b15a.png"
     },
     {
      "beat": "b15",
-     "ms": 56850,
+     "ms": 59100,
      "png": "vsl/keyframes/vsl-90s/b15b.png"
     },
     {
      "beat": "b15",
-     "ms": 58380,
+     "ms": 61230,
      "png": "vsl/keyframes/vsl-90s/b15c.png"
     },
     {
      "beat": "b16",
-     "ms": 58825,
+     "ms": 61675,
      "png": "vsl/keyframes/vsl-90s/b16a.png"
     },
     {
      "beat": "b16",
-     "ms": 60750,
+     "ms": 63600,
      "png": "vsl/keyframes/vsl-90s/b16b.png"
     },
     {
      "beat": "b16",
-     "ms": 62880,
+     "ms": 65730,
      "png": "vsl/keyframes/vsl-90s/b16c.png"
     },
     {
      "beat": "b17",
-     "ms": 63160,
+     "ms": 66010,
      "png": "vsl/keyframes/vsl-90s/b17a.png"
     },
     {
      "beat": "b17",
-     "ms": 64975,
+     "ms": 67825,
      "png": "vsl/keyframes/vsl-90s/b17b.png"
     },
     {
      "beat": "b17",
-     "ms": 66830,
+     "ms": 69680,
      "png": "vsl/keyframes/vsl-90s/b17c.png"
     },
     {
      "beat": "b18",
-     "ms": 67275,
+     "ms": 70125,
      "png": "vsl/keyframes/vsl-90s/b18a.png"
     },
     {
      "beat": "b18",
-     "ms": 69075,
+     "ms": 71925,
      "png": "vsl/keyframes/vsl-90s/b18b.png"
     },
     {
      "beat": "b18",
-     "ms": 71080,
+     "ms": 73930,
      "png": "vsl/keyframes/vsl-90s/b18c.png"
     },
     {
      "beat": "b19",
-     "ms": 71525,
+     "ms": 74375,
      "png": "vsl/keyframes/vsl-90s/b19a.png"
     },
     {
      "beat": "b19",
-     "ms": 73775,
+     "ms": 76625,
      "png": "vsl/keyframes/vsl-90s/b19b.png"
     },
     {
      "beat": "b19",
-     "ms": 76230,
+     "ms": 79080,
      "png": "vsl/keyframes/vsl-90s/b19c.png"
     },
     {
      "beat": "b20",
-     "ms": 76675,
+     "ms": 79525,
      "png": "vsl/keyframes/vsl-90s/b20a.png"
     },
     {
      "beat": "b20",
-     "ms": 78750,
+     "ms": 81700,
      "png": "vsl/keyframes/vsl-90s/b20b.png"
     },
     {
      "beat": "b20",
-     "ms": 81030,
+     "ms": 84080,
      "png": "vsl/keyframes/vsl-90s/b20c.png"
     },
     {
      "beat": "b21",
-     "ms": 81475,
+     "ms": 84525,
      "png": "vsl/keyframes/vsl-90s/b21a.png"
     },
     {
      "beat": "b21",
-     "ms": 83050,
+     "ms": 87100,
      "png": "vsl/keyframes/vsl-90s/b21b.png"
     },
     {
      "beat": "b21",
-     "ms": 84830,
-     "png": "vsl/keyframes/vsl-90s/b21c.png"
-    },
-    {
-     "beat": "b22",
-     "ms": 85275,
-     "png": "vsl/keyframes/vsl-90s/b22a.png"
-    },
-    {
-     "beat": "b22",
-     "ms": 87475,
-     "png": "vsl/keyframes/vsl-90s/b22b.png"
-    },
-    {
-     "beat": "b22",
      "ms": 89880,
-     "png": "vsl/keyframes/vsl-90s/b22c.png"
+     "png": "vsl/keyframes/vsl-90s/b21c.png"
     }
    ],
    "mp4": "vsl-90s.mp4",
    "mp4_facts": {
     "audio_codec": "mp4a",
     "audio_seconds": 90.021,
-    "bytes": 20698879,
+    "bytes": 21510384,
     "channels": 2,
     "faststart": true,
     "fps": 30.0,
@@ -861,28 +933,28 @@
     "height": 1080,
     "sample_rate": 48000,
     "seconds": 90.0,
-    "sha256": "507a85553da7c11820e456540ebc4408fd03e55012887ffded754f0c040f51f0",
+    "sha256": "83bfc5a4f1dfa6cf950ae9cc624501fb5dc10630cc25d387e205966a3832898c",
     "video_codec": "avc1",
     "video_seconds": 90.0,
     "width": 1920
    },
    "srt": "vsl-90s.srt",
    "storyboard_ms": 90000,
-   "unique_frames": 2688,
+   "unique_frames": 2681,
    "width": 1920
   }
  },
  "web": {
-  "bytes": 11911142,
+  "bytes": 12238228,
   "from": "re-encoded from brand/vsl-90s.mp4 at crf 23 to fit 12582912 bytes, sound copied",
   "mp4": "vsl/vsl-90s-web.mp4",
   "poster": "vsl/vsl-90s-poster.jpg",
   "poster_beat": "b14",
-  "poster_mean_luma": 158.8,
-  "poster_ms": 55000,
-  "poster_sha256": "1f55094d6353455916b680434af314d98a9872235892f487b4c43e8481d58f73",
-  "sha256": "5e2dfda3beca45ebeb7628e1f06649e1e0d687cee41eecf0584b3a0037f8663c",
-  "source_sha256": "507a85553da7c11820e456540ebc4408fd03e55012887ffded754f0c040f51f0",
+  "poster_mean_luma": 148.1,
+  "poster_ms": 56650,
+  "poster_sha256": "e67a3d2ebad7e8a94db671fb35ea87c01de8993a4d320cb3556a36e11a887830",
+  "sha256": "3a1d892c8d0e0ad104c34bc9a6c5c661aea8bb95bf50af572994597407a01237",
+  "source_sha256": "83bfc5a4f1dfa6cf950ae9cc624501fb5dc10630cc25d387e205966a3832898c",
   "voice": false
  }
 }

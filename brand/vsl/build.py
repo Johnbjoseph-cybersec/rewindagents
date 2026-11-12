@@ -66,7 +66,33 @@ def srt_time(ms):
     return "%02d:%02d:%02d,%03d" % (h, m, s, ms)
 
 
+CONJUNCTIONS = ("and", "but", "or", "so", "because", "then", "unlike")
+CAPTION_MIN_WORDS = 3   # a second caption line carries at least this many words (review-textcut.json fix 9)
+
+
 def wrap_caption(text, width=CAPTION_CHARS):
+    """Caption lines, broken by phrase (review-textcut.json fix 9: no 1-2 word second line). A cue that fits one line
+    stays on one line. Otherwise the break goes, in order of preference, after punctuation, then before a
+    conjunction, then wherever the two lines are most even; each line fits `width` and each carries at least
+    CAPTION_MIN_WORDS words. Only when no such break exists does the greedy wrap below decide."""
+    ws = words(text)
+    if len(text.strip()) <= width:
+        return [" ".join(ws)]
+    best = None
+    for i in range(CAPTION_MIN_WORDS, len(ws) - CAPTION_MIN_WORDS + 1):
+        a, b = " ".join(ws[:i]), " ".join(ws[i:])
+        if len(a) > width or len(b) > width:
+            continue
+        rank = 0 if re.search(r"[.?!:;,]$", ws[i - 1]) else (1 if ws[i].lower() in CONJUNCTIONS else 2)
+        key = (rank, abs(len(a) - len(b)))
+        if best is None or key < best[0]:
+            best = (key, [a, b])
+    if best:
+        return best[1]
+    return greedy_caption(text, width)
+
+
+def greedy_caption(text, width=CAPTION_CHARS):
     """Greedy wrap into lines of at most `width` characters (a word longer than that stands alone)."""
     lines, cur = [], ""
     for w in words(text):

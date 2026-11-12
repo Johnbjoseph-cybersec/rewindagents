@@ -129,21 +129,47 @@ class TestVslRender(unittest.TestCase):
                                   "-f", "md5", "-"], capture_output=True, text=True, check=True).stdout.strip()
             self.assertEqual(md5.split("=", 1)[1], self.manifest["videos"][name]["audio"]["audio_stream_md5"], name)
 
-    def test_frame_review_is_independent_and_passed(self):
-        path = os.path.join(VSL, "review.json")
-        if not os.path.exists(path):
-            self.skipTest("no independent review yet")
-        r = json.loads(read(path))
-        self.assertNotIn(r["reviewer"], ("", "fire", "builder"))
-        self.assertEqual(sorted(r["videos"]), sorted(VIDEOS))
+    def sheets(self):
+        """{file name: review sheet} for every frame review in brand/vsl (review*.json; claims files are not reviews)."""
+        return {f: json.loads(read(os.path.join(VSL, f))) for f in sorted(os.listdir(VSL))
+                if f.startswith("review") and f.endswith(".json")}
+
+    @staticmethod
+    def sheet_hashes(r):
+        """{video: mp4 sha256} as the sheet pins them (two layouts: videos.<name>.mp4_sha256 and files.<name>.mp4.sha256)."""
+        out = {}
         for name in VIDEOS:
-            self.assertEqual(r["videos"][name]["mp4_sha256"], self.manifest["videos"][name]["mp4_facts"]["sha256"],
-                             "%s changed after the review" % name)
-        # a hash re-pinned by FIRE after a re-render must say so, and say whether the scores are of these frames
-        if "repinned" in r:
-            self.assertIn("scores_of_this_cut", r)
-            if not r["scores_of_this_cut"]:
-                self.assertNotEqual(r.get("overall"), "PASS", "old scores cannot pass a cut they did not see")
+            v = r.get("videos", {}).get(name, {})
+            f = r.get("files", {}).get(name + ".mp4", {})
+            if v.get("mp4_sha256") or f.get("sha256"):
+                out[name] = v.get("mp4_sha256") or f.get("sha256")
+        return out
+
+    def test_frame_review_is_independent_and_passed(self):
+        # review-textcut.json hold 2 (2026-11-12): brand/vsl/review.json was the voiced cut's sheet with its hashes
+        # re-pinned by FIRE to films it never saw. Every sheet now names the cut it scored, no hash is re-pinned by
+        # anyone but the reviewer, and a sheet whose hashes are the films on disk must be the reviewer's own.
+        sheets = self.sheets()
+        self.assertFalse(os.path.exists(os.path.join(VSL, "review.json")), "review.json was retired: name the cut")
+        current = {name: self.manifest["videos"][name]["mp4_facts"]["sha256"] for name in VIDEOS}
+        of_these = []
+        for f, r in sheets.items():
+            self.assertNotIn(r["reviewer"].split(" ")[0], ("", "fire", "builder"), f)
+            self.assertTrue(str(r.get("cut", "")).strip(), "%s does not say which cut it scored" % f)
+            self.assertNotIn("repinned", r, "%s: a review hash re-pinned by someone other than the reviewer" % f)
+            pins = self.sheet_hashes(r)
+            self.assertTrue(pins, "%s pins no film" % f)
+            if any(pins.get(n) == current[n] for n in VIDEOS):
+                self.assertEqual(pins, current, "%s matches some of the films on disk but not all" % f)
+                of_these.append(f)
+        voiced = sheets.get("review-voiced-cut.json")
+        if voiced:
+            self.assertIn("voiced", voiced["cut"])
+            self.assertNotIn("review-voiced-cut.json", of_these, "the voiced cut's sheet cannot describe these films")
+        if not of_these:
+            self.skipTest("no independent review of the films on disk yet (re-review needed: brand/vsl/review-textcut.json "
+                          "scored the previous render)")
+        self.assertEqual(len(of_these), 1, of_these)
 
 
 if __name__ == "__main__":

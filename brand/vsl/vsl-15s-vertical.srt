@@ -7,6 +7,6 @@ Can you get them back?
 One command, and four files come back.
 
 3
-00:00:08,200 --> 00:00:13,250
-Your editor has had undo for decades. Now
-your agent does.
+00:00:08,200 --> 00:00:14,000
+Your editor has had undo for decades.
+Now your agent does.

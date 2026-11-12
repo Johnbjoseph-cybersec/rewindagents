@@ -4,8 +4,8 @@ Your agent just ran fourteen steps.
 
 2
 00:00:03,300 --> 00:00:07,650
-Then it deleted your tests and overwrote
-your config.
+Then it deleted your tests
+and overwrote your config.
 
 3
 00:00:07,650 --> 00:00:10,800
@@ -13,90 +13,85 @@ Can you get them back?
 
 4
 00:00:10,800 --> 00:00:14,950
-Three parts: the problem, how it works,
-the fix.
+Three parts: the problem,
+how it works, the fix.
 
 5
 00:00:14,950 --> 00:00:19,850
-Why can't git help? The third test was
-never committed.
+Why can't git help?
+The third test was never committed.
 
 6
-00:00:19,850 --> 00:00:23,300
-Claude Code's docs: shell-only changes
-aren't tracked.
+00:00:19,850 --> 00:00:23,600
+Claude Code's docs:
+shell-only changes aren't tracked.
 
 7
-00:00:23,300 --> 00:00:27,250
-So what would help? Think of a flight
-recorder.
+00:00:23,600 --> 00:00:27,550
+So what would help?
+Think of a flight recorder.
 
 8
-00:00:27,250 --> 00:00:31,500
+00:00:27,550 --> 00:00:31,800
 It keeps every move, so you can replay it.
 
 9
-00:00:31,500 --> 00:00:35,050
-So how does rewindagents record your
-agent?
+00:00:31,800 --> 00:00:35,350
+So how does rewindagents
+record your agent?
 
 10
-00:00:35,050 --> 00:00:39,150
-Every tool call goes into one hash-chained
-log.
+00:00:35,350 --> 00:00:39,450
+Every tool call goes into
+one hash-chained log.
 
 11
-00:00:39,150 --> 00:00:43,600
-Before each edit or shell command, files
-are saved.
+00:00:39,450 --> 00:00:43,900
+Before each edit or shell command,
+files are saved.
 
 12
-00:00:43,600 --> 00:00:47,750
+00:00:43,900 --> 00:00:49,400
 So which step would you rewind to?
 
 13
-00:00:47,750 --> 00:00:50,950
+00:00:49,400 --> 00:00:52,600
 Twelve, because thirteen is the delete.
 
 14
-00:00:50,950 --> 00:00:55,200
+00:00:52,600 --> 00:00:56,850
 One command, and four files come back.
 
 15
-00:00:55,200 --> 00:00:58,500
+00:00:56,850 --> 00:01:01,350
 Even the rewind can be undone.
 
 16
-00:00:58,500 --> 00:01:03,000
-Where does the analogy break? Recorders
-can't undo a crash.
+00:01:01,350 --> 00:01:05,850
+Where does the analogy break?
+Recorders can't undo a crash.
 
 17
-00:01:03,000 --> 00:01:06,950
-Unlike a recorder, this one puts your
-files back.
+00:01:05,850 --> 00:01:09,800
+Unlike a recorder,
+this one puts your files back.
 
 18
-00:01:06,950 --> 00:01:11,200
-Preview with diff. Take back one file with
---only.
+00:01:09,800 --> 00:01:14,050
+Preview with diff.
+Take back one file with --only.
 
 19
-00:01:11,200 --> 00:01:16,350
-You can now see every step and undo any of
-it.
+00:01:14,050 --> 00:01:19,200
+You can now see every step
+and the change it made.
 
 20
-00:01:16,350 --> 00:01:21,150
-Up next: rewindagents init finds the seven
-agents it supports.
+00:01:19,200 --> 00:01:24,200
+Apache-2.0. Standard library only.
+Not on PyPI yet.
 
 21
-00:01:21,150 --> 00:01:24,950
-Apache-2.0. Standard library only. Not on
-PyPI yet.
-
-22
-00:01:24,950 --> 00:01:30,000
-Your editor has had undo for decades. Now
-your agent does.
+00:01:24,200 --> 00:01:30,000
+Your editor has had undo for decades.
+Now your agent does.

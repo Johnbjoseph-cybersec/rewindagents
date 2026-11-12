@@ -249,7 +249,7 @@ CHAPTERS = [("Your agent just ran", "The wreck"), ("Why can't git help?", "What 
             ("So what would help?", "The analogy"), ("Every tool call goes", "The record"),
             ("So which step", "Which step?"), ("One command", "Rewind"),
             ("Even the rewind", "Undo the undo"), ("You can now see", "The timeline"),
-            ("Up next", "Install"), ("Your editor has had undo", "Undo, for agents")]      # brand/<FILM>.mp4 is the film on the landing page; its captions are brand/vsl/<FILM>.srt
+            ("Apache-2.0.", "Status"), ("Your editor has had undo", "Undo, for agents")]      # brand/<FILM>.mp4 is the film on the landing page; its captions are brand/vsl/<FILM>.srt
 
 
 def srt_cues(path):

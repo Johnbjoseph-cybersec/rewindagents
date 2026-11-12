@@ -100,11 +100,11 @@
         },
         {
           "id": "b06",
-          "ms": 3450,
+          "ms": 3750,
           "section": "WHY IT MATTERS",
           "text": "Claude Code's docs: shell-only changes aren't tracked.",
           "accent": "aren't tracked",
-          "proof_ms": 200,
+          "proof_ms": 500,
           "screen": [
             "\"A file that only Bash commands changed isn't tracked ...\"",
             "Claude Code docs, checkpointing"
@@ -192,11 +192,11 @@
         },
         {
           "id": "b12",
-          "ms": 4150,
+          "ms": 5500,
           "section": "WORKED EXAMPLE",
           "text": "So which step would you rewind to?",
           "accent": "which step",
-          "proof_ms": 900,
+          "proof_ms": 2250,
           "screen": [
             "rewindagents replay",
             "   10  Edit          README.md  [1 checkpointed]",
@@ -260,11 +260,11 @@
         },
         {
           "id": "b15",
-          "ms": 3300,
+          "ms": 4500,
           "section": "REVEAL",
           "text": "Even the rewind can be undone.",
           "accent": "undone",
-          "proof_ms": 400,
+          "proof_ms": 1600,
           "screen": [
             "rewindagents rewind 12",
             "session demo: rewind to step 12 of 14 (did change 4 files)",
@@ -351,19 +351,23 @@
         },
         {
           "id": "b20",
-          "ms": 4800,
+          "ms": 5000,
           "section": "BRIDGE",
-          "text": "Up next: rewindagents init finds the seven agents it supports.",
-          "accent": "seven agents",
-          "proof_ms": 500,
+          "text": "Apache-2.0. Standard library only. Not on PyPI yet.",
+          "accent": "Not on PyPI yet.",
+          "proof_ms": 1400,
           "screen": [
             "rewindagents init",
             "Claude Code: has run in real sessions",
-            "Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen Code:",
-            "tested with documented payloads, not yet in a live session"
+            "Six other agents: tested, not yet in a live session",
+            "{repo_url}"
           ],
-          "visual": "Rewind wipe. rewindagents init types in a Spool panel only as wide as the command; under it two bullet notes: Claude Code has run in real sessions (Reel), then the other six by name with their status on the line under, tested with documented payloads, not yet in a live session (both lines in Record).",
+          "visual": "Rewind wipe. The three short sentences build one a line; under them four ruled rows rise in: rewindagents init in a small Spool chip, Claude Code's status, the other six agents' status (tested, not yet in a live session), then the repository address in Tape. One red thing on the card: the headline's 'Not on PyPI yet.' (The old 'Up next' bridge card is folded in here: review-textcut.json fix 6.)",
           "cites": [
+            "Apache-2.0",
+            "No dependencies beyond the standard library",
+            "Not on PyPI yet.",
+            "From the repository",
             "looks for the agents it supports (Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen Code)",
             "The Claude Code hook has run in real sessions",
             "tested with the documented payloads, not yet in a live session of any of them"
@@ -371,31 +375,11 @@
         },
         {
           "id": "b21",
-          "ms": 3800,
-          "section": "BRIDGE",
-          "text": "Apache-2.0. Standard library only. Not on PyPI yet.",
-          "accent": "Not on PyPI yet.",
-          "proof_ms": 200,
-          "screen": [
-            "Python 3.10 or newer, standard library only",
-            "{repo_url}"
-          ],
-          "visual": "Rewind wipe. The three short sentences build one a line; under them two ruled rows in Commit Mono rise in (the Python requirement, then the repository address, the one Record line), so the card never repeats its own words.",
-          "cites": [
-            "Apache-2.0",
-            "Python 3.10 or newer",
-            "No dependencies beyond the standard library",
-            "Not on PyPI yet.",
-            "From the repository"
-          ]
-        },
-        {
-          "id": "b22",
-          "ms": 5050,
+          "ms": 5800,
           "section": "BRIDGE",
           "text": "Your editor has had undo for decades. Now your agent does.",
           "accent": "Now your agent does.",
-          "proof_ms": 400,
+          "proof_ms": 1150,
           "screen": [
             "rewindagents",
             "Ctrl+Z for AI coding agents: record, replay, rewind.",
@@ -467,10 +451,10 @@
         },
         {
           "id": "b04",
-          "ms": 4150,
+          "ms": 5500,
           "text": "So which step would you rewind to?",
           "accent": "which step",
-          "proof_ms": 900,
+          "proof_ms": 2250,
           "screen": [
             "rewindagents replay",
             "   10  Edit          README.md  [1 checkpointed]",
@@ -529,10 +513,10 @@
         },
         {
           "id": "b07",
-          "ms": 5050,
+          "ms": 5800,
           "text": "Your editor has had undo for decades. Now your agent does.",
           "accent": "Now your agent does.",
-          "proof_ms": 400,
+          "proof_ms": 1150,
           "screen": [
             "rewindagents",
             "Ctrl+Z for AI coding agents: record, replay, rewind.",
@@ -594,10 +578,10 @@
         },
         {
           "id": "b03",
-          "ms": 5050,
+          "ms": 5800,
           "text": "Your editor has had undo for decades. Now your agent does.",
           "accent": "Now your agent does.",
-          "proof_ms": 400,
+          "proof_ms": 1150,
           "screen": [
             "rewindagents",
             "Ctrl+Z for AI coding agents: record, replay, rewind.",

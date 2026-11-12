@@ -29,6 +29,8 @@ WEB_NAME = "vsl-90s"
 WEB_MP4 = os.path.join(HERE, "vsl-90s-web.mp4")
 WEB_POSTER = os.path.join(HERE, "vsl-90s-poster.jpg")
 WEB_MAX_BYTES = 12 * 1024 * 1024
+# the stream's own VUI says BT.709 primaries, transfer and matrix, limited range (libx264 left primaries/transfer unset)
+BT709_BSF = "h264_metadata=colour_primaries=1:transfer_characteristics=1:matrix_coefficients=1:video_full_range_flag=0"
 POSTER_BEAT = "b14"       # "One command, and four files come back." - its last moment has every restore line lit
 POSTER_BEFORE_END_MS = 200
 
@@ -69,7 +71,8 @@ def web(workdir):
         how = "stream copy of brand/%s.mp4 (picture and sound unchanged)" % WEB_NAME
     else:
         ff("-i", src, "-map", "0:v:0", "-map", "0:a:0", "-c:v", "libx264", "-preset", "slow", "-crf", "23",
-           "-pix_fmt", "yuv420p", "-c:a", "copy", "-movflags", "+faststart", "-map_metadata", "-1",
+           "-pix_fmt", "yuv420p", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709",
+           "-color_range", "tv", "-bsf:v", BT709_BSF, "-c:a", "copy", "-movflags", "+faststart", "-map_metadata", "-1",
            "-metadata", "title=" + video["title"], tmp)
         how = "re-encoded from brand/%s.mp4 at crf 23 to fit %d bytes, sound copied" % (WEB_NAME, WEB_MAX_BYTES)
     if os.path.getsize(tmp) > WEB_MAX_BYTES:

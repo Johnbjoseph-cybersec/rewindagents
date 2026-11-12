@@ -4,26 +4,26 @@ Your agent just ran fourteen steps.
 
 2
 00:00:03,300 --> 00:00:07,650
-Then it deleted your tests and overwrote
-your config.
+Then it deleted your tests
+and overwrote your config.
 
 3
 00:00:07,650 --> 00:00:10,800
 Can you get them back?
 
 4
-00:00:10,800 --> 00:00:14,950
+00:00:10,800 --> 00:00:16,300
 So which step would you rewind to?
 
 5
-00:00:14,950 --> 00:00:18,150
+00:00:16,300 --> 00:00:19,500
 Twelve, because thirteen is the delete.
 
 6
-00:00:18,150 --> 00:00:22,400
+00:00:19,500 --> 00:00:23,750
 One command, and four files come back.
 
 7
-00:00:22,400 --> 00:00:27,450
-Your editor has had undo for decades. Now
-your agent does.
+00:00:23,750 --> 00:00:29,550
+Your editor has had undo for decades.
+Now your agent does.
