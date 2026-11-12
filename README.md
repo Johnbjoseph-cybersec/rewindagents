@@ -120,6 +120,20 @@ rewindagents uninstall --agent cursor --settings ~/.cursor/hooks.json   # same f
 so every other hook and setting stays. If the file holds none, it is not rewritten and says so. It never
 touches `.rewindagents/`: sessions already recorded can still be replayed and rewound.
 
+## Overhead
+
+<!-- overhead:start -->
+Measured by `bench/hook_overhead.py` on macOS 27.0.1, Apple M6, 12 CPUs, Python 3.15.0, on 2026-11-12 (commit b11b369, load average 22.2 at the start). Time the hook adds to one tool call: both hook processes (before and after the call), median of 15 calls with the 90th percentile in brackets. Each hook event is a new Python process; starting one and importing the package alone takes 108 ms (median), and every call starts two. Raw numbers: `bench/results.json`.
+
+| Project files | Read | Edit | Bash | First Bash (empty store) |
+|---:|---:|---:|---:|---:|
+| 100 | 228 ms (273 ms) | 210 ms (281 ms) | 281 ms (438 ms) | 410 ms |
+| 1,000 | 224 ms (241 ms) | 220 ms (277 ms) | 351 ms (495 ms) | 605 ms |
+| 10,000 | 226 ms (292 ms) | 223 ms (351 ms) | 1,003 ms (1,180 ms) | 4,554 ms |
+
+Other machines, disks and projects will differ; run `python3 bench/hook_overhead.py` to measure yours.
+<!-- overhead:end -->
+
 ## Codex and Cursor hooks
 
 ```sh

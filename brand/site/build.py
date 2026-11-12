@@ -18,6 +18,7 @@ tests/test_site.py rebuilds the pages into a temp folder and fails if the commit
                                             DIR/index-open.html with every answer open, for review renders only
 """
 import html
+import importlib.util
 import json
 import os
 import re
@@ -619,7 +620,7 @@ def docs_html(cfg, f):
     desc = "Getting started with rewindagents: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, export, find a session, verify the log."
     toc = [("install", "Install"), ("hook", "Add the hook"), ("first", "A first session"), ("recorded", "What gets recorded"),
            ("replay", "Replay and rewind"), ("branch", "Branch"), ("export", "Export"), ("sessions", "Find a session"),
-           ("verify", "Verify"), ("limits", "Limits"), ("remove", "Remove it")]
+           ("verify", "Verify"), ("overhead", "Overhead"), ("limits", "Limits"), ("remove", "Remove it")]
     first = "".join('<li><p>%s</p>%s</li>' % (text, panel(beat_rows(bt, lit=(i == 2)))) for i, (text, bt) in enumerate(zip((
         "Ask Claude Code for anything in a project with the hook installed; here, %d steps that add a timeout to a small service, then two steps that delete the tests and overwrite the config. <code>replay</code> lists every step with its number." % f["good_step"],
         "git shows the damage: three files changed, two deleted.",
@@ -691,6 +692,9 @@ def docs_html(cfg, f):
 <p>The recorder also works on its own, without the hook:</p>
 %(record)s
 
+<h2 id="overhead">Overhead</h2>
+%(overhead)s
+
 <h2 id="limits">Limits</h2>
 <ul>
 <li>Only the project directory is scanned, saved and restored. A command that changes files elsewhere is recorded, not saved, and files outside the project are reported and left alone.</li>
@@ -722,8 +726,30 @@ def docs_html(cfg, f):
        "good": f["good_step"], "n": f["steps"], "n1": f["steps"] + 1, "export": code(b["export"]), "kb": f["diff_kb"],
        "lines": f["diff_lines"], "sessions": code(b["sessions"]), "show": f["show_files"], "verify": code(b["verify"]),
        "record": code(b["record"]), "skip": ", ".join("<code>%s</code>" % e(d) for d in f["skip_dirs"]),
-       "files": "{:,}".format(f["scan_files"]), "tests": code(b["tests"])}
+       "files": "{:,}".format(f["scan_files"]), "tests": code(b["tests"]), "overhead": overhead_html()}
     return page(cfg, "docs/index.html", "Getting started: %s" % NAME, desc, body, "docs")
+
+
+def overhead_html():
+    """The docs page's Overhead section: only what bench/hook_overhead.py wrote to bench/results.json, with the
+    machine and the date, worded by that script's own helpers."""
+    spec = importlib.util.spec_from_file_location("hook_overhead", os.path.join(ROOT, "bench", "hook_overhead.py"))
+    bench = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(bench)
+    r = json.loads(read("bench", "results.json"))
+    ms = bench._ms
+    rows = "".join(
+        "<li>{:,} files: <code>Read</code> {}, <code>Edit</code> {}, <code>Bash</code> {} (90th percentile {}, {}, {}); "
+        "the first <code>Bash</code> call, which copies every file into the empty store, {}.</li>".format(
+            x["files"], *(ms(x["tools"][t]["median_ms"]) for t in bench.TOOLS),
+            *(ms(x["tools"][t]["p90_ms"]) for t in bench.TOOLS), ms(x["first_bash_ms"]))
+        for x in r["results"])
+    return ("<p>Time the hook adds to one tool call (both hook processes, before and after the call), median of %d "
+            "calls, measured by <code>bench/hook_overhead.py</code> on %s. Each hook event is a new Python process; "
+            "starting one and importing the package alone takes %s (median), and every call starts two.</p>\n"
+            "<ul>%s</ul>\n<p>Other machines, disks and projects will differ; <code>python3 bench/hook_overhead.py</code> "
+            "measures yours. The raw numbers are in <code>bench/results.json</code>.</p>"
+            % (r["results"][0]["tools"]["Read"]["runs"], e(bench.where(r)), ms(r["startup"]["median_ms"]), rows))
 
 
 # ---- build ------------------------------------------------------------------------------------------------

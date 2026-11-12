@@ -12,6 +12,7 @@ project file. That call is reported on its own ("first Bash"), not mixed into th
 
     python3 bench/hook_overhead.py                     # prints the table, writes bench/results.json
     python3 bench/hook_overhead.py --write-readme      # also puts the table into README.md
+    python3 bench/hook_overhead.py --readme-only       # README table from the existing results, no measuring
     python3 bench/hook_overhead.py --files 50 --runs 3 --out /tmp/r.json   # a quick run
 
 Stdlib only. The README and the site show only what this script wrote to bench/results.json, with the machine and
@@ -173,8 +174,9 @@ def readme_block(r: dict) -> str:
     return "\n".join([
         START,
         "Measured by `bench/hook_overhead.py` on %s. Time the hook adds to one tool call: both hook processes (before "
-        "and after the call), median of %d calls with the 90th percentile in brackets. A new Python process starting "
-        "and importing the package takes %s of that (median). Raw numbers: `bench/results.json`."
+        "and after the call), median of %d calls with the 90th percentile in brackets. Each hook event is a new "
+        "Python process; starting one and importing the package alone takes %s (median), and every call starts "
+        "two. Raw numbers: `bench/results.json`."
         % (where(r), runs, _ms(r["startup"]["median_ms"])),
         "",
         table(r),
@@ -196,10 +198,16 @@ def main(argv=None) -> int:
     ap.add_argument("--runs", type=int, default=15)
     ap.add_argument("--out", type=Path, default=RESULTS)
     ap.add_argument("--write-readme", action="store_true")
+    ap.add_argument("--readme-only", action="store_true",
+                    help="measure nothing: rewrite the README table from the results already in --out")
     a = ap.parse_args(argv)
-    r = run(a.files, a.runs)
-    a.out.parent.mkdir(parents=True, exist_ok=True)
-    a.out.write_text(json.dumps(r, indent=2) + "\n", encoding="utf-8")
+    if a.readme_only:
+        r = json.loads(a.out.read_text(encoding="utf-8"))
+        a.write_readme = True
+    else:
+        r = run(a.files, a.runs)
+        a.out.parent.mkdir(parents=True, exist_ok=True)
+        a.out.write_text(json.dumps(r, indent=2) + "\n", encoding="utf-8")
     print(where(r))
     print(table(r))
     if a.write_readme:
