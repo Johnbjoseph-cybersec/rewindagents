@@ -1,12 +1,12 @@
 1
-00:00:00,000 --> 00:00:03,450
+00:00:00,000 --> 00:00:04,150
 Can you get them back?
 
 2
-00:00:03,450 --> 00:00:08,200
+00:00:04,150 --> 00:00:08,900
 One command, and four files come back.
 
 3
-00:00:08,200 --> 00:00:14,000
+00:00:08,900 --> 00:00:14,700
 Your editor has had undo for decades.
 Now your agent does.

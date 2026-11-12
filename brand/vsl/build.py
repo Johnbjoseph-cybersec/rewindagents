@@ -54,9 +54,15 @@ def words(text):
     return [w for w in re.split(r"\s+", text.strip()) if w]
 
 
+STRAP = "strap: "   # a screen line set as a small label over the card's line (render.py); its words are read too
+
+
 def reading_ms(beat):
-    """How long a card must stay up: reading time of its text (twice), plus its proof animation."""
-    return max(MIN_BEAT_MS, READ_MS_PER_WORD * len(words(beat["text"])) + READ_MS_BASE) + beat.get("proof_ms", 0)
+    """How long a card must stay up: reading time of its text (twice), plus its proof animation, plus the reading
+    time of its strap's words, if it has one."""
+    strap = sum(len(words(s[len(STRAP):])) for s in beat.get("screen", []) if s.startswith(STRAP))
+    return (max(MIN_BEAT_MS, READ_MS_PER_WORD * len(words(beat["text"])) + READ_MS_BASE) + beat.get("proof_ms", 0)
+            + READ_MS_PER_WORD * strap)
 
 
 def srt_time(ms):

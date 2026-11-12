@@ -76,6 +76,11 @@ SWAP_MS = 320           # a continuing scene: the old line leaves in this long
 SWAP_LEAD_MS = 160      # ...and the new line starts rising this long before the old one has left (no empty slot)
 SWAP_TRAVEL = 1.6       # the leaving line travels this many font sizes: its descenders clear the mask too
 WIPE_HEAD_MS = 170      # a wiped-in card's first word starts this far into the wipe, revealed behind the playhead
+# ...except after a light wipe, whose words start with it (review-textcut-r3.json fix 3): the 450 ms out-eased playhead
+# is at x~550 by 150 ms and only words right of it show, so a head of 170 (or the sheet's 100) left 150-250 ms of bare
+# paper; 0 puts headline ink right of the playhead from 150 ms on all seven light wipes (the outgoing line still
+# fades on WIPE_HEAD_MS, so no frame carries two lines: tests/test_vsl_wipes.py)
+WIPE_HEAD_LIGHT_MS = 0
 ERASE_RAMP = 240        # in a wipe each word of the outgoing line fades over this many px ahead of the playhead
 HEAD_DROP_MS = 240      # after a wipe the ruler's own playhead drops back into place (hidden while the wipe's runs)
 # the rewind wipe in three weights (review-textcut.json fix 7): quick within a section, the full wipe at a section
@@ -98,6 +103,7 @@ RISE_MS = 300           # an output line rising out of its row
 STRIKE_MS = 360
 CHAPTER_MS = 950        # a chapter card (b04's roadmap, one part further on) holds this long before its line builds
 CHAPTER_OUT_MS = 300    # ...then rises out and fades as the line starts
+CHAPTER_INK_MS = 150    # the part reached turns from Record to ink over the hold's last 150 ms (r3 fix 5)
 PANEL_OPEN_MS = 260     # a new terminal panel opens to its title bar and prompt row in this long...
 PANEL_LEAD_MS = 120     # ...and grows a row this long before the line that needs it arrives
 PANEL_GROW_MS = 220     # over this long         # a strike drawing through a path, or pulling back
@@ -116,19 +122,30 @@ REWIND_LAND_MS = 720                           # sfx-rewind.wav lands (thump + b
 LIMITER = "alimiter=limit=0.76:attack=5:release=50:level=0"   # AUDIO.md's mix advice for bed + SFX
 UI_SHOT = os.path.join(BRAND, "ui-timeline.png")
 UI_CROP = (241, 104, 999, 740)   # x, y, w, h in the 1440 x 900 screenshot: the timeline column from its red stripe
-# x, y, w, h of the push's end: step 14's chips and the whole step 15 Rewind row, every chip and the timestamp whole
-# (review-textcut-r2.json fix 2: the old 232 px-high close sliced 'tests/test_confi' and '1 checkpoi' mid-word)
-UI_CLOSE = (241, 672, 524, 160)
+# x, y, w, h of the push's end: from step 14's '14 Write' header (ink from y 635) to the bottom of step 15's last chip
+# row (y 819), every chip and timestamp whole (review-textcut-r2.json fix 2: the old 232 px-high close sliced
+# 'tests/test_confi'; r3 fix 2: the 160 px close opened on step 14's chips without their header). w sets the scale:
+# 1600 / 528 = 3.03, so the 9 px timestamp digits run >= 27 px; the window is then 190 x 3.03 = 576 px high
+UI_CLOSE = (241, 632, 528, 190)
 UI_COLUMN_X1 = 773               # the timeline column's right edge in the screenshot (the diff pane starts there)
 UI_STRIP = 96                    # source rows per strip of the screenshot (Kit.ui_strips)
-UI_BOX_H = 488                   # the window's height on screen; it widens from the column's width to X1 as it pushes
-UI_HOLD_MS, UI_PUSH_MS = 1500, 3400   # the whole column for 1.5 s, then the push to the close crop (fix 5)
+UI_BOX_H = 576                   # the window's height on screen; it widens from the column's width to X1 as it pushes
+UI_TOP = 440                     # its top: under the headline's descenders; the chip + note sit right of the line's end
+UI_LABEL = 34                    # the 127.0.0.1 note's size there (40 does not fit beside the chip and the line)
+# the whole column for 0.7 s, then the push to the close crop, which lands ~2.9 s in and holds ~2.25 s (r3 fix 2)
+UI_HOLD_MS, UI_PUSH_MS = 700, 2200
 
 # Lines on screen that are commands (typed at a prompt) and lines that are terminal output; anything else in a
 # terminal card is a note. Same patterns as tests/test_vsl.py, plus `cd`.
 COMMAND = re.compile(r"^(rewindagents|python3 -m rewindagents|pipx|pip|git|echo|cd)\b")
 OUTPUT = re.compile(r"^\s*(\d+\s+(Read|Edit|Write|Bash|MultiEdit|NotebookEdit)\b|restore\s|session \w+: rewind|"
                     r"this rewind is step|[ MD?]{2,3}\S)")
+
+# A screen line "strap: <words>" is the card's strap: a small label set over its line, not a panel line. The words
+# count toward the card's reading time (build.py reading_ms). The vertical's b01 uses it so the 14 s cut says what
+# the tool is before its question (review-textcut-r3.json, vertical story row).
+STRAP = "strap: "
+STRAP_SIZE = {"16:9": 40, "9:16": 46}
 
 # ---- direction: what each card is and what moves in it ----------------------------------------------------
 # kind: type (the line alone, centred), term (a terminal panel), rows (ruled rows on paper), roadmap, quote, map,
@@ -162,8 +179,9 @@ DIRECTION = {
         "b15": dict(kind="term", accent=[[100, [6]]], ruler=(15, 12, 100, 300)),
         "b16": dict(kind="map", rows_colour=["Tape", "Tape", "Reel"], new_rows=[2]),
         "b17": dict(kind="map", rows_colour=["Tape", "Tape", "Tape", "Record"], new_rows=[3]),
-        # one real line of diff 12's output under it (r2 fix 5): 'preview with diff' shown, not asserted
-        "b18": dict(kind="rows", appear_on=["diff", None, "--only"], out_rows=[1]),
+        # one real line of output under each chip (r2 fix 5, r3 fix 4): diff 12's '+++' line, and the second line
+        # `rewind 12 --only app/config.py` prints on the demo session; the second chip waits for the first's output
+        "b18": dict(kind="rows", appear_on=["diff", None, "--only", None], out_rows=[1, 3]),
         "b19": dict(kind="ui", wipe="section"),   # the match cut keeps the full wipe
         "b20": dict(kind="rows"),     # the old b20 'Up next' card folded in here (fix 6); no row in the accent (fix 8)
         "b21": dict(kind="end", wipe="section"),
@@ -341,13 +359,17 @@ def plan(video, cfg, L, kit):
         if i > 0 and not cont:
             prev_section = video["beats"][i - 1].get("section")
             wipe = d.get("wipe") or ("section" if b.get("section") != prev_section else "light")
-        hs = 160 if i == 0 else (SWAP_MS - SWAP_LEAD_MS if cont else WIPE_HEAD_MS)
+        hs = 160 if i == 0 else (SWAP_MS - SWAP_LEAD_MS if cont else
+                                 WIPE_HEAD_LIGHT_MS if wipe == "light" else WIPE_HEAD_MS)
         if d.get("chapter"):
             hs = d["chapter"][1] + CHAPTER_OUT_MS // 2      # the line starts rising as the roadmap leaves
         n_words = len(b["text"].split())
         p = hs + WORD_GAP_MS * (n_words - 1) + WORD_MS + 120
+        screen = [fill(s, cfg) for s in b["screen"]]
+        strap = [s[len(STRAP):] for s in screen if s.startswith(STRAP)]
+        screen = [s for s in screen if not s.startswith(STRAP)]
         card = {"i": i, "id": b["id"], "beat": b, "d": d, "kind": d["kind"], "start": t0, "end": t0 + b["ms"],
-                "cont": cont, "scene": scene, "hs": hs, "P": p, "screen": [fill(s, cfg) for s in b["screen"]],
+                "cont": cont, "scene": scene, "hs": hs, "P": p, "screen": screen, "strap": strap[0] if strap else None,
                 "wipe": wipe, "wipe_ms": WIPES[wipe]["ms"] if wipe else 0,
                 "accent_idx": accent_words(b["text"], b.get("accent")),
                 "prev_kind": cards[-1]["kind"] if cards else None}
@@ -707,6 +729,19 @@ def draw_headline(cv, kit, L, card, u, leaving=None, dark=False, erase=None):
         cv.add("</g>")
         if cx - space > L["X1"] + 1:
             raise SystemExit("headline too wide: %r" % " ".join(words))
+    if card.get("strap"):
+        # the strap: Hanken bold in Tape over the line, rising out of its mask just before the line's first word,
+        # and fading with the line in a wipe (its own right edge, the same time bound)
+        ssize = STRAP_SIZE["9:16" if L["H"] > L["W"] else "16:9"]
+        sbase = lines[0][1] - kit.disp.cap(size) - ssize * 0.9
+        sw = kit.bold.width(card["strap"], ssize)
+        fade = 1.0 if erase is None else min(1.0, max(0.0, (erase[0] - (x + sw)) / ERASE_RAMP), erase[1])
+        k = out_cubic((u - max(0, card["hs"] - 60)) / WORD_MS)
+        if k > 0 and fade > 0:
+            cid = cv.clip(x - 20, sbase - ssize * 1.1, sw + 40, ssize * 1.4)
+            cv.add('<g clip-path="url(#%s)" opacity="%.3f">' % (cid, fade))
+            cv.text(kit.bold, card["strap"], ssize, x, sbase + (1 - k) * ssize * 1.1, "Tape")
+            cv.add("</g>")
     if leaving is not None:
         cv.add("</g>")
 
@@ -931,7 +966,8 @@ def draw_rows(cv, kit, L, card, t, rows, colours, appear, mono_size=None, out_ro
             if k > 0:
                 cid = cv.clip(x - 10, base - size - 6, w + 20, size * 1.5)
                 cv.add('<g clip-path="url(#%s)">' % cid)
-                cv.text(kit.mono, row, size, x + 28 + kit.mono.width("$ ", size), base + (1 - k) * size, "Tape")
+                # the printed line without the terminal's own indent, so it starts under the command's first letter
+                cv.text(kit.mono, row.lstrip(), size, x + 28 + kit.mono.width("$ ", size), base + (1 - k) * size, "Tape")
                 cv.add("</g>")
             pull -= size * 0.35                  # and the next chip keeps a gap under the output
             continue
@@ -956,6 +992,27 @@ def draw_rows(cv, kit, L, card, t, rows, colours, appear, mono_size=None, out_ro
         cv.add("</g>")
 
 
+def rows_appear(card):
+    """Per row of a "rows" card, the ms (card time) it rises in: every 220 ms from P, or with appear_on each row on
+    the word of the line that names it, None = the output of the command above it, once that has typed and entered.
+    One cursor at a time: a chip types only after the row above it has typed or printed (r3 fix 4: '$ rewindagents
+    di' over '$ rewin' at 72.2 s)."""
+    d, rows = card["d"], card["screen"]
+    if not d.get("appear_on"):
+        return [card["P"] + 220 * i for i in range(len(rows))]
+    appear = []
+    for i, w in enumerate(d["appear_on"]):
+        if not w:
+            appear.append(appear[-1] + TYPE_MS * len(rows[i - 1]) + ENTER_MS)
+            continue
+        at = word_time(card, w)
+        if i > 0:
+            prev = appear[-1] + (TYPE_MS * len(rows[i - 1]) if COMMAND.match(rows[i - 1]) else 0)
+            at = max(at, prev + LINE_MS)
+        appear.append(at)
+    return appear
+
+
 def draw_proof(cv, kit, L, card, t, p):
     d, kind = card["d"], card["kind"]
     u = t - card["start"]
@@ -964,11 +1021,7 @@ def draw_proof(cv, kit, L, card, t, p):
     if kind == "term":
         draw_panel(cv, kit, L, card, t)
     elif kind == "rows":
-        appear = [P + 220 * i for i in range(len(rows))]
-        if d.get("appear_on"):                 # each row on the word of the line that names it; None = the output
-            appear = []                        # of the command above it, once that has typed and entered
-            for i, w in enumerate(d["appear_on"]):
-                appear.append(word_time(card, w) if w else appear[-1] + TYPE_MS * len(rows[i - 1]) + ENTER_MS)
+        appear = rows_appear(card)
         colours = ["Record" if i == d.get("accent_row") else "Reel" for i in range(len(rows))]
         draw_rows(cv, kit, L, card, t, rows, colours, appear, out_rows=d.get("out_rows", ()))
     elif kind == "map":
@@ -1027,15 +1080,27 @@ def draw_chapter(cv, kit, L, p, card, u):
     lift = out * out * 90
     cv.add('<g opacity="%.3f" transform="translate(0 %.2f)">' % (1 - out, -lift))
     cv.add(rect(x0, y, x1 - x0 - 200 + 4, 2, C["Rule"]))
-    # the progress: the rule in Record up to the part reached, drawn on as the card opens
-    cv.add(rect(x0, y - 1, (idx * span) * ease((u - 150) / 600), 4, C["Record"]))
     size = 44
     for i, label in enumerate(labels):
-        x = x0 + i * span
-        here = i == idx
-        cv.add(rect(x - 2, y - 30, 4, 30, C["Record"] if here else C["Rule"]))
-        cv.text(kit.mono, str(i + 1), 26, x - kit.mono.width("1", 26) / 2, y + 30 + 26, "Tape")
-        cv.text(kit.bold, label, size, x - 2, y + 64 + size, "Record" if here else "Tape")
+        if i != idx:
+            x = x0 + i * span
+            cv.add(rect(x - 2, y - 30, 4, 30, C["Rule"]))
+            cv.text(kit.mono, str(i + 1), 26, x - kit.mono.width("1", 26) / 2, y + 30 + 26, "Tape")
+            cv.text(kit.bold, label, size, x - 2, y + 64 + size, "Tape")
+    # the part reached: progress rule, tick and label in Record, which turn to ink over the hold's last CHAPTER_INK_MS
+    # so the accent has left the rule before the line's own Record words rise (review-textcut-r3.json fix 5: 'the
+    # fix' and 'which step' both in Record for ~150 ms at 45.9 s); two layers, as a colour tween leaves the palette
+    m = ease((u - (hold - CHAPTER_INK_MS)) / CHAPTER_INK_MS)
+    x = x0 + idx * span
+    for colour, op in (("Record", 1 - m), ("Reel", m)):
+        if op <= 0:
+            continue
+        cv.add('<g opacity="%.3f">' % op)
+        cv.add(rect(x0, y - 1, (idx * span) * ease((u - 150) / 600), 4, C[colour]))   # drawn on as the card opens
+        cv.add(rect(x - 2, y - 30, 4, 30, C[colour]))
+        cv.text(kit.mono, str(idx + 1), 26, x - kit.mono.width("1", 26) / 2, y + 30 + 26, "Tape")
+        cv.text(kit.bold, labels[idx], size, x - 2, y + 64 + size, colour)
+        cv.add("</g>")
     cv.add("</g>")
 
 
@@ -1139,26 +1204,32 @@ def draw_ui(cv, kit, L, card, t):
                      % (UI_CROP[0], a, UI_COLUMN_X1 - UI_CROP[0], h, href)
                      for a, h, href in kit.ui_strips if a < sy + vh / s and a + h > sy)
     cv.add('<svg x="%.2f" y="%.2f" width="%.2f" height="%.2f" viewBox="%.3f %.3f %.3f %.3f" preserveAspectRatio="none">'
-           '%s</svg>' % (L["X0"], L["PROOF"], vw, vh, sx, sy, vw / s, vh / s, strips))
-    cv.add(outline(L["X0"] - 1, L["PROOF"] - 1, vw + 2, vh + 2, "Rule", 1))
+           '%s</svg>' % (L["X0"], UI_TOP, vw, vh, sx, sy, vw / s, vh / s, strips))
+    cv.add(outline(L["X0"] - 1, UI_TOP - 1, vw + 2, vh + 2, "Rule", 1))
+    if UI_TOP + vh > L["H"] - SAFE:
+        raise SystemExit("the ui window runs into the bottom margin: %d" % (UI_TOP + vh))
+    # the command chip and the 127.0.0.1 note on the headline's last baseline, right-aligned to X1 (the window takes
+    # the room under it: r3 fix 2 needs a 576 px window to show step 14's header to step 15's last chip at 3x)
     cmd, note = card["screen"]
+    hsize, hlines, hx = headline_layout(kit, L, card)
+    last_words, last_base = hlines[-1]
+    line_end = hx + kit.disp.width(" ".join(last_words), hsize, -0.01)
+    size = 28
+    mono_w = kit.mono.width("$ " + cmd, size)
+    x0 = L["X1"] - (mono_w + 48 + 32 + kit.body.width(note, UI_LABEL))
+    if x0 < line_end + 48:
+        raise SystemExit("the ui chip and note do not fit beside the line: %r" % note)
     k = out_cubic((u - card["P"]) / RISE_MS)
     if k > 0:
-        size = 28
         n = min(len(cmd), int(max(0, u - card["P"]) // TYPE_MS) + 1)
-        mono_w = kit.mono.width("$ " + cmd, size)
-        y = L["PROOF"] + vh + 20
         dy = (1 - k) * 24
-        base = y + 15 + size * 0.8 + dy
-        cv.add(rect(L["X0"], y + dy, mono_w + 48, size + 30, C["Spool"]))
-        cv.text(kit.mono, "$ ", size, L["X0"] + 24, base, "Playhead")
-        cv.text(kit.mono, cmd[:n], size, L["X0"] + 24 + kit.mono.width("$ ", size), base, "Leader")
+        base = last_base + dy
+        cv.add(rect(x0, base - 15 - size * 0.8, mono_w + 48, size + 30, C["Spool"]))
+        cv.text(kit.mono, "$ ", size, x0 + 24, base, "Playhead")
+        cv.text(kit.mono, cmd[:n], size, x0 + 24 + kit.mono.width("$ ", size), base, "Leader")
         k2 = out_cubic((u - card["P"] - 500) / RISE_MS)
         if k2 > 0:
-            nx = L["X0"] + mono_w + 48 + 40
-            if nx + kit.body.width(note, L["NOTE"]) > L["X1"]:
-                raise SystemExit("the ui note does not fit beside its chip: %r" % note)
-            cv.text(kit.body, note, L["NOTE"], nx, base + (1 - k2) * 24, "Tape")
+            cv.text(kit.body, note, UI_LABEL, x0 + mono_w + 48 + 32, last_base + (1 - k2) * 24, "Tape")
 
 
 def draw_end(cv, kit, L, cfg, card, t):

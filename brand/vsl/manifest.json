@@ -1,33 +1,33 @@
 {
- "beats_sha256": "de4a4abae6f4f712661c533b407f906f1ab75c8043fe7fec32c0dd235e61c6b9",
+ "beats_sha256": "c17eccb1db13ec882c5f56f88084fe78dbed3f2abcf510c1f80dca30ffe7c878",
  "note": "Written by brand/vsl/render.py. The address in the videos comes from brand/site/config.json at render time; this file keeps no address.",
  "videos": {
   "vsl-15s-vertical": {
    "aspect": "9:16",
    "audio": {
-    "audio_stream_md5": "94ead37ca1f810ef9c14bd5d6f166d73",
-    "bed_sha256": "d727eb7b93d9320cdfb77ed5a81eb14629ae2d9007fe435764a291badfc99851",
+    "audio_stream_md5": "95235db29d7f683466057d6b2dfab45e",
+    "bed_sha256": "034d898cf03eb7c9948727a88d9738919fd300a6357321acbde183dd7205f6c1",
     "files": {
-     "vsl/audio/bed-vsl-15s-vertical.wav": "100f8257dc455130d97681ea000870628f6a4fe0c8bf82f769ccfcf70a3efe84",
+     "vsl/audio/bed-vsl-15s-vertical.wav": "842d905770a482abc31f6b6fc2f44b3010a4c5dd0cc8e75c55f736aecf2d06dd",
      "vsl/audio/sfx-rewind.wav": "930a2c56f29a0c4d3df3c9ce544d58b96553407d3ea590a6ef7568b8b38c3c08",
      "vsl/audio/sfx-tick.wav": "e4fc16617cd90919f3112c3a56fd622cc73c68dbb5723fd152d23529cf17138a"
     },
     "first_pass": {
      "gain_db": -2.0,
      "input_i": -14.0,
-     "input_lra": 10.3,
+     "input_lra": 10.2,
      "input_tp": -1.9
     },
     "master": "linear gain to -16 LUFS integrated + alimiter limit 0.76 (true peak <= -1.5 dBTP, measured after AAC)",
     "measured": {
      "integrated_lufs": -16.1,
-     "true_peak_dbfs": -3.5
+     "true_peak_dbfs": -3.6
     },
     "music": "studio: brand/vsl/audio/ (bed-vsl-15s-vertical.wav, sfx-rewind.wav, sfx-tick.wav; AUDIO.md)",
     "sweeps_ms": [
-     4350,
-     5284,
-     8850
+     5050,
+     5984,
+     9550
     ],
     "ticks_ms": [
      600
@@ -36,24 +36,24 @@
    },
    "beats": [
     {
-     "end_ms": 3450,
+     "end_ms": 4150,
      "id": "b01",
      "kind": "term",
      "start_ms": 0,
      "transition": "first"
     },
     {
-     "end_ms": 8200,
+     "end_ms": 8900,
      "id": "b02",
      "kind": "term",
-     "start_ms": 3450,
+     "start_ms": 4150,
      "transition": "rewind wipe (story, 900 ms)"
     },
     {
-     "end_ms": 14000,
+     "end_ms": 14700,
      "id": "b03",
      "kind": "end",
-     "start_ms": 8200,
+     "start_ms": 8900,
      "transition": "rewind wipe (section, 650 ms)"
     }
    ],
@@ -64,70 +64,70 @@
    ],
    "contact_sheet": "vsl/vsl-15s-vertical-contact-sheet.png",
    "fps": 30,
-   "frames": 420,
+   "frames": 441,
    "height": 1920,
    "keyframes": [
     {
      "beat": "b01",
-     "ms": 1725,
+     "ms": 2075,
      "png": "vsl/keyframes/vsl-15s-vertical/b01b.png"
     },
     {
      "beat": "b01",
-     "ms": 3330,
+     "ms": 4030,
      "png": "vsl/keyframes/vsl-15s-vertical/b01c.png"
     },
     {
      "beat": "b02",
-     "ms": 3900,
+     "ms": 4600,
      "png": "vsl/keyframes/vsl-15s-vertical/b02a.png"
     },
     {
      "beat": "b02",
-     "ms": 5825,
+     "ms": 6525,
      "png": "vsl/keyframes/vsl-15s-vertical/b02b.png"
     },
     {
      "beat": "b02",
-     "ms": 8080,
+     "ms": 8780,
      "png": "vsl/keyframes/vsl-15s-vertical/b02c.png"
     },
     {
      "beat": "b03",
-     "ms": 8525,
+     "ms": 9225,
      "png": "vsl/keyframes/vsl-15s-vertical/b03a.png"
     },
     {
      "beat": "b03",
-     "ms": 11100,
+     "ms": 11800,
      "png": "vsl/keyframes/vsl-15s-vertical/b03b.png"
     },
     {
      "beat": "b03",
-     "ms": 13880,
+     "ms": 14580,
      "png": "vsl/keyframes/vsl-15s-vertical/b03c.png"
     }
    ],
    "mp4": "vsl-15s-vertical.mp4",
    "mp4_facts": {
     "audio_codec": "mp4a",
-    "audio_seconds": 14.021,
-    "bytes": 3922341,
+    "audio_seconds": 14.721,
+    "bytes": 4041107,
     "channels": 2,
     "faststart": true,
     "fps": 30.0,
-    "frames": 420,
+    "frames": 441,
     "height": 1920,
     "sample_rate": 48000,
-    "seconds": 14.0,
-    "sha256": "f14811c9d51b2ad8cfcd14ed747fe19dbc3698e224a7497a34b2af1773f66f97",
+    "seconds": 14.7,
+    "sha256": "f8373d0dad39c940e31165519909c6fe428a6a2e6ed84357a9b30eede78e5a8b",
     "video_codec": "avc1",
-    "video_seconds": 14.0,
+    "video_seconds": 14.7,
     "width": 1080
    },
    "srt": "vsl-15s-vertical.srt",
-   "storyboard_ms": 14000,
-   "unique_frames": 420,
+   "storyboard_ms": 14700,
+   "unique_frames": 440,
    "width": 1080
   },
   "vsl-30s": {
@@ -350,7 +350,7 @@
    "mp4_facts": {
     "audio_codec": "mp4a",
     "audio_seconds": 29.571,
-    "bytes": 7398351,
+    "bytes": 7412992,
     "channels": 2,
     "faststart": true,
     "fps": 30.0,
@@ -358,7 +358,7 @@
     "height": 1080,
     "sample_rate": 48000,
     "seconds": 29.55,
-    "sha256": "03c146cd328824eb5dac84be79a00d25fbff9cf149032ca2e80a423ce21b6a39",
+    "sha256": "9b79d28ffffb676f88387caa0809309714e448b866e048702ca0e444b08c84f8",
     "video_codec": "avc1",
     "video_seconds": 29.533,
     "width": 1920
@@ -925,7 +925,7 @@
    "mp4_facts": {
     "audio_codec": "mp4a",
     "audio_seconds": 90.021,
-    "bytes": 20218828,
+    "bytes": 20166825,
     "channels": 2,
     "faststart": true,
     "fps": 30.0,
@@ -933,19 +933,19 @@
     "height": 1080,
     "sample_rate": 48000,
     "seconds": 90.0,
-    "sha256": "4abdb662cdb165a857e80c58388a592fc195efc891b569d85e47e1b5ddc397e9",
+    "sha256": "fa562ca419e84a50802ff9dea1405706930cb5a23d65c1744159486823c6716d",
     "video_codec": "avc1",
     "video_seconds": 90.0,
     "width": 1920
    },
    "srt": "vsl-90s.srt",
    "storyboard_ms": 90000,
-   "unique_frames": 2681,
+   "unique_frames": 2624,
    "width": 1920
   }
  },
  "web": {
-  "bytes": 11754148,
+  "bytes": 11736655,
   "from": "re-encoded from brand/vsl-90s.mp4 at crf 23 to fit 12582912 bytes, sound copied",
   "mp4": "vsl/vsl-90s-web.mp4",
   "poster": "vsl/vsl-90s-poster.jpg",
@@ -953,8 +953,8 @@
   "poster_mean_luma": 167.2,
   "poster_ms": 58250,
   "poster_sha256": "4949cce73517dd29345b293172575754add7ee9c8a971fd3b0a2109cca0148ef",
-  "sha256": "80917b58c939f58833177ce4a4185b636decc9b8a8120f5900c5a279b3c77a0b",
-  "source_sha256": "4abdb662cdb165a857e80c58388a592fc195efc891b569d85e47e1b5ddc397e9",
+  "sha256": "5656508e1d2976c3c0bced382d24f2307b06c1295ef580c965792a84b391f3e7",
+  "source_sha256": "fa562ca419e84a50802ff9dea1405706930cb5a23d65c1744159486823c6716d",
   "voice": false
  }
 }

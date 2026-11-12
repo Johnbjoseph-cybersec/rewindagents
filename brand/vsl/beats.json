@@ -325,13 +325,15 @@
           "screen": [
             "rewindagents diff 12",
             "+++ b/tests/test_config.py",
-            "rewindagents rewind 12 --only src/db.py"
+            "rewindagents rewind 12 --only app/config.py",
+            "  restore  app/config.py"
           ],
-          "visual": "Rewind wipe. Two commands from the README, each typing into its own Spool chip as its sentence lands.",
+          "visual": "Rewind wipe. Two commands, each typing into its own Spool chip as its sentence lands, one after the other, each with one real line of its output under it in Tape: diff 12's '+++ b/tests/test_config.py' and the restore line rewind 12 --only app/config.py prints. The README's example path (src/db.py) is not in the demo session, where that command prints 'nothing to put back', so the chip names a file the session changed (review-textcut-r3.json fix 4).",
           "cites": [
             "what taking it back to step 12 would change",
             "`rewind N --only PATH` puts back only those files",
-            "+++ b/tests/test_config.py: printed by `rewindagents diff 12` on the demo session (brand/demo/scenario.py, tests/test_vsl_render.py)"
+            "+++ b/tests/test_config.py: printed by `rewindagents diff 12` on the demo session (brand/demo/scenario.py, tests/test_vsl_render.py)",
+            "  restore  app/config.py: printed by `rewindagents rewind 12 --only app/config.py` on the demo session (brand/demo/scenario.py; tests/test_vsl.py test_every_command_on_screen_is_a_readme_or_demo_command)"
           ]
         },
         {
@@ -540,20 +542,22 @@
       "beats": [
         {
           "id": "b01",
-          "ms": 3450,
+          "ms": 4150,
           "text": "Can you get them back?",
           "accent": "back",
           "proof_ms": 900,
           "screen": [
             " D tests/test_config.py",
             " D tests/test_server.py",
-            " M app/config.py"
+            " M app/config.py",
+            "strap: Agent undo"
           ],
-          "visual": "Frame one, vertical: the question builds big at the top; a tall Spool panel shows the three git status lines large, the two deleted test paths struck through in Rewind.",
+          "visual": "Frame one, vertical: the question builds big at the top; a tall Spool panel shows the three git status lines large, the two deleted test paths struck through in Rewind. Over the question, a two-word strap in Tape, 'Agent undo', says what the tool is before the question is asked (review-textcut-r3.json vertical story row); its two words add 700 ms to the card (build.py reading_ms).",
           "cites": [
             " D tests/test_config.py",
             " D tests/test_server.py",
-            " M app/config.py"
+            " M app/config.py",
+            "Ctrl+Z for AI coding agents: record, replay and rewind."
           ]
         },
         {

@@ -163,13 +163,46 @@ class TestVsl(unittest.TestCase):
                 self.assertTrue(os.path.isfile(os.path.join(VSL, name + ext)), name + ext)
 
     def test_every_command_on_screen_is_a_readme_or_demo_command(self):
+        # ...or one that RUNS on the demo session (exit 0), with the output line shown under it one that run printed
+        # (review-textcut-r3.json fix 4: the README's `rewind 12 --only src/db.py` prints 'nothing to put back' on
+        # the demo session, which never touched src/db.py, so b18 shows `--only app/config.py` and its real line)
         ok = readme_commands() | demo_commands()
+        ran = 0
         for v in beats()["videos"]:
             for b in v["beats"][:-1]:  # the end card names the product, it is not a command
-                for s in b["screen"]:
-                    if COMMAND.match(s.strip()):
-                        self.assertIn(s.strip(), ok, "%s %s shows a command neither the README nor the demo has: %r"
-                                      % (v["name"], b["id"], s))
+                for i, s in enumerate(b["screen"]):
+                    if not COMMAND.match(s.strip()):
+                        continue
+                    nxt = b["screen"][i + 1] if i + 1 < len(b["screen"]) else ""
+                    shows_output = bool(OUTPUT.match(nxt) or nxt.startswith("+++ ")) and not COMMAND.match(nxt.strip())
+                    # a command with no output under it may be any README command; one shown with its output must
+                    # run on the demo session and print that line (the manifest's own commands are checked against
+                    # what they recorded by test_every_terminal_line_on_screen_is_one_the_demo_session_printed)
+                    if s.strip() in demo_commands() or (s.strip() in ok and not shows_output):
+                        continue
+                    out, code = self.run_on_demo(s.strip())
+                    self.assertEqual(code, 0, "%s %s shows a command that fails on the demo session: %r -> %s"
+                                     % (v["name"], b["id"], s, out))
+                    if shows_output:
+                        self.assertIn(nxt.rstrip(), out.split("\n"), "%s %s: %r is not what %r prints"
+                                      % (v["name"], b["id"], nxt, s))
+                    ran += 1
+        self.assertGreaterEqual(ran, 1, "b18's --only command should have been run on the demo session")
+
+    @staticmethod
+    def run_on_demo(command):
+        """Play the demo session (brand/demo/scenario.py) into a fresh project and run one shown command there."""
+        import tempfile
+        from pathlib import Path
+        sys.path.insert(0, os.path.join(ROOT, "brand", "demo"))
+        import scenario
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(os.path.realpath(d))
+            scenario.make_project(root)
+            agent = scenario.Agent(root)
+            for tool, spec in scenario.STEPS:
+                agent.step(tool, spec)
+            return scenario.run_shown(root, command)
 
     def test_every_terminal_line_on_screen_is_one_the_demo_session_printed(self):
         printed = demo_output_lines()

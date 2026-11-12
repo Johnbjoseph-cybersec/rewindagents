@@ -391,48 +391,49 @@
  },
  "vsl-15s-vertical": {
   "file": "bed-vsl-15s-vertical.wav",
-  "duration": 14.0,
+  "duration": 14.7,
   "sections": [
    {
     "name": "1 tension (cold open)",
     "t0": 0.0,
-    "t1": 3.45,
-    "bars": 1,
-    "bpm": 69.57,
+    "t1": 4.15,
+    "bars": 2,
+    "bpm": 115.66,
     "chords": [
+     "Am",
      "Esus"
     ],
     "layer_bars": {
      "drone": [
       0,
-      1
+      2
      ],
      "heart": [
       0,
-      1
+      2
      ],
      "air": [
       0,
-      1
+      2
      ],
      "tick": [
       0,
-      1
+      2
      ],
      "pulse": [
       0,
-      1
+      2
      ],
      "pluck4": [
       0,
-      1
+      2
      ]
     }
    },
    {
     "name": "2 payoff + warm close",
-    "t0": 3.45,
-    "t1": 14.0,
+    "t0": 4.15,
+    "t1": 14.7,
     "bars": 4,
     "bpm": 91.0,
     "chords": [
