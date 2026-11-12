@@ -1,7 +1,7 @@
 """Site (RB3): the pages are a build output of brand/site/build.py; every command on them is the README's, every
 number is the code's, every terminal line is one the real session printed (brand/demo/manifest.json, which
 tests/test_demo.py replays); the only hostname for the product lives in brand/site/config.json; the pages are
-well-formed, self-contained (one local deferred script under a 'self'-only CSP, nothing loaded from outside) and every local link resolves. Stdlib
+well-formed, self-contained (no scripts, nothing loaded from outside) and every local link resolves. Stdlib
 only: no browser is needed here. The looking step is bin/render_html.sh in FIRE, run by hand."""
 import importlib.util
 import io
@@ -169,13 +169,7 @@ class TestSite(unittest.TestCase):
                 self.assertEqual(doc.errors, [], p)
                 self.assertEqual(doc.stack, [], "%s: unclosed %s" % (p, doc.stack))
                 self.assertEqual(doc.h1, 1, "%s: one h1" % p)
-                # one local script (site.js, deferred) and the JSON-LD block; nothing inline runs, CSP says so
-                self.assertEqual(sorted(doc.scripts), ["", "application/ld+json"], "%s: site.js and JSON-LD only" % p)
-                raw = read(p, d)
-                self.assertRegex(raw, r'<script src="(\.\./)?site\.js" defer></script>', p)
-                self.assertIn("content=\"default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; "
-                              "font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'\"", raw, p)
-                self.assertNotRegex(raw, r' style="| on[a-z]+="', "%s: inline style/handler would be blocked by the CSP" % p)
+                self.assertEqual(doc.scripts, ["application/ld+json"], "%s: only the JSON-LD block may be a script" % p)
                 ld = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', read(p, d), re.S).group(1))
                 self.assertEqual(ld["url"], cfg["site_url"] + build.PAGES[p])
                 here = os.path.dirname(os.path.join(d, p))
@@ -223,25 +217,8 @@ class TestSite(unittest.TestCase):
         self.assertTrue(all(t.startswith("  restore") for t in hits), hits)
         self.assertTrue(any("undo it with: rewindagents rewind" in t for _, t in m["hero"]))
         index = read("index.html")
-        for kind, text in m["hero"]:
-            if kind != "gap":
-                self.assertIn(text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"), index, text)
-        # the hero player's data is the replay itself: every step's tool and target, the wreck and the rewind
-        import html as _html
-        player = json.loads(_html.unescape(re.search(r'data-session="([^"]+)"', index).group(1)))
-        replay = [ln for ln in demo["beats"][0]["output"].rstrip("\n").split("\n") if ln.strip()]
-        self.assertEqual(len(player["steps"]), len(replay) + 1)
-        for st, ln in zip(player["steps"][1:], replay):
-            self.assertTrue(ln.lstrip().startswith(str(st["n"])) and st["tool"] in ln and st["target"] in ln, ln)
-        last, good = player["steps"][-1]["state"], player["steps"][player["good"]]["state"]
-        self.assertEqual(sorted(k for k, v in last.items() if v == "gone"),
-                         sorted(ln.split("restore", 1)[1].strip() for ln in demo["beats"][2]["output"].split("\n")
-                                if "restore" in ln and ln.split("restore", 1)[1].strip().startswith("tests/")))
-        self.assertNotIn("gone", good.values(), "after the rewind step nothing is deleted")
-        self.assertEqual(player["rewind"], demo["beats"][2]["command"])
-        js = read("site.js")
-        self.assertNotRegex(js, r"\bfetch\(|XMLHttpRequest|WebSocket|\beval\(|new Function|innerHTML|document\.write|import\(",
-                            "site.js only rearranges what is on the page; it loads and injects nothing")
+        for _, text in m["hero"]:
+            self.assertIn(text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"), index, text)
         # the clip's four commands and every line they printed are on the page as text too
         for b in demo["beats"]:
             self.assertIn(b["command"], index)

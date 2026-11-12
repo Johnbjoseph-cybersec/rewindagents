@@ -182,7 +182,7 @@ one-line change there plus a redirect.
   Rule grey. Left aligned; hairlines do the structuring. The footer is Reel, like the end of a tape.
 - Type: Bricolage Grotesque 800 for headings, Hanken Grotesk 400 and 600 for text, Commit Mono for every command,
   number and label. Self-hosted WOFF2 files in brand/site/fonts/ with their OFL licences beside them.
-- No cookies, no analytics, nothing fetched from outside the site. One local script (site.js) under a self-only Content-Security-Policy makes the hero player live; every page reads complete without it.
+- No scripts, no cookies, no analytics, nothing fetched from outside the site. Static HTML.
 - Look at it before judging it: `bash ~/team-agents/fire/bin/render_html.sh brand/site/index.html 1440 <height> out.png`
   renders a page at 1440 and, through an iframe, at 390.
 
