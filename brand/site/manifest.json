@@ -1,5 +1,6 @@
 {
  "assets": [
+  "ui-timeline.png",
   "demo.gif",
   "logo-wordmark.svg",
   "logo-wordmark-reverse.svg",
@@ -92,6 +93,9 @@
     "pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagents     # or: pip install git+https://...",
     "rewindagents --version"
    ],
+   "quick": [
+    "pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagents && cd your-project && rewindagents init"
+   ],
    "record": [
     "echo '{\"tool\": \"Bash\", \"args\": {\"command\": \"ls\"}}' | rewindagents record --session s1",
     "rewindagents verify     # OK: 1 records, chain intact",
@@ -115,6 +119,10 @@
    "tests": [
     "python3 -m unittest discover -s tests -v"
    ],
+   "ui": [
+    "rewindagents ui                      # opens the timeline in your browser; Ctrl+C stops it",
+    "rewindagents ui --session abc --no-open --port 8765"
+   ],
    "verify": [
     "rewindagents verify --head <pinned-hash>"
    ]
@@ -136,6 +144,11 @@
   },
   "good_step": 12,
   "py_req": ">=3.10",
+  "quick_use": [
+   "rewindagents replay                    # what it did, one line per step",
+   "rewindagents diff 12                   # what taking it back to step 12 would change",
+   "rewindagents rewind 12 --only src/db.py   # take back just that file"
+  ],
   "result_chars": 4000,
   "scan_files": 20000,
   "show_files": 5,

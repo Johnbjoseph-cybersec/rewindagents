@@ -144,7 +144,7 @@
 
   /* ---- 3. rows and tiles arrive by row ---------------------------------------------------------------- */
   safe("rows", function () {
-    var groups = [".session > div", ".cols > div", ".steps > li", ".ledger > li", ".cmdrow", ".plan", ".faq details", ".walk > li", ".doc > section"];
+    var groups = [".trio > div", ".shot", ".session > div", ".cols > div", ".steps > li", ".ledger > li", ".cmdrow", ".plan", ".faq details", ".walk > li", ".doc > section"];
     groups.forEach(function (sel) {
       var els = $$(sel); if (!els.length) return;
       gsap.set(els, { y: 46, opacity: 0 });

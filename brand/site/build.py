@@ -41,7 +41,7 @@ LICENCE = "Apache-2.0"
 PAGES = {"index.html": "", "pricing.html": "pricing.html", "docs/index.html": "docs/"}
 # brand/ files the pages use, copied into brand/site/assets/ at build time (assets/ is git-ignored; the Pages
 # workflow runs this build, so the published site carries the current clip and logo files).
-ASSETS = ["demo.gif", "logo-wordmark.svg", "logo-wordmark-reverse.svg", "logo-mark.svg", "favicon.svg",
+ASSETS = ["ui-timeline.png", "demo.gif", "logo-wordmark.svg", "logo-wordmark-reverse.svg", "logo-mark.svg", "favicon.svg",
           "favicon-32.png", "social-preview-1280x640.png"]
 FONTS = {"bricolage-grotesque": (700, 800), "hanken-grotesk": (400, 600), "commit-mono": (400, 700)}
 C = {"Leader": "#F2F4F1", "Reel": "#121412", "Spool": "#1C201D", "Tape": "#55605A",
@@ -79,6 +79,14 @@ def readme_block(readme, heading):
     return m.group(1).rstrip("\n").split("\n")
 
 
+def readme_blocks(readme, heading):
+    """Every ```sh block in the section under a README heading (up to the next ## heading), as lists of lines."""
+    m = re.search(r"^## %s\n(.*?)(?=^## |\Z)" % re.escape(heading), readme, re.S | re.M)
+    if not m:
+        raise SystemExit("README has no section '## %s'" % heading)
+    return [blk.rstrip("\n").split("\n") for blk in re.findall(r"```sh\n(.*?)```", m.group(1), re.S)]
+
+
 def facts():
     readme = read("README.md")
     demo = json.loads(read("brand", "demo", "manifest.json"))
@@ -105,7 +113,8 @@ def facts():
             ("install", "Install"), ("hook", "Claude Code hook"), ("agents", "Codex and Cursor hooks"),
             ("replay", "Replay, rewind, branch"),
             ("export", "Export a replay"), ("sessions", "Find a session"), ("verify", "What the chain does not catch"),
-            ("record", "Use it"), ("tests", "Tests"))},
+            ("record", "Use it"), ("tests", "Tests"), ("quick", "Quick start"), ("ui", "Timeline UI"))},
+        "quick_use": readme_blocks(readme, "Quick start")[1],
         "beats": demo["beats"],
         "gif": {k: demo["gif_facts"][k] for k in ("width", "height", "seconds", "frames")},
     }
@@ -307,7 +316,7 @@ def ruler(at, n=7, w=84, h=18):
 
 
 def label(n, text):
-    return '<p class="label">%s<span class="n">%02d</span><span>%s</span></p>' % (ruler(n), n, e(text))
+    return '<p class="label">%s<span class="n">%02d</span><span>%s</span></p>' % (ruler(n, n=8), n, e(text))
 
 
 def page(cfg, path, title, description, body, current):
@@ -451,6 +460,23 @@ def index_html(cfg, f, hero, open_all=False):
        "gh": f["gif"]["height"], "secs": ("%.1f" % f["gif"]["seconds"]).rstrip("0").rstrip("."), "frames": f["gif"]["frames"],
        "left": panel(beat_rows(f["beats"][0], lit=False), "fill"), "right": panel(right, "fill")}
 
+
+    timeline = """
+<section class="sec" id="timeline" aria-labelledby="h-timeline"><div class="wrap">
+%(label)s
+<div class="head" data-reveal><h2 id="h-timeline">The flight recorder for your coding agent.</h2>
+<p class="lede">See exactly what your agent did, step by step, with the diff each step made. Take back the whole session, one step, or one file, and preview the change before you make it.</p></div>
+<figure class="shot"><img src="assets/ui-timeline.png" alt="rewindagents ui: the demo session as a timeline. Steps 13 and 14 are struck through as rewound by step 15; the right panel shows the diff step 15 restored, with Preview rewind to here and Rewind to here buttons" width="1440" height="900" loading="lazy">
+<figcaption><code>rewindagents ui</code> on the demo session: steps 13 and 14 struck through, rewound by step 15. Local only, on 127.0.0.1, behind a one-time token.</figcaption></figure>
+<div class="trio">
+<div><h3>One command to set up</h3><p><code>init</code> finds the agents you have and adds the hook to each one, keeping every hook already there.</p>%(quick)s</div>
+<div><h3>See it</h3><p>The timeline in your browser: every step, every file, every diff. <kbd>j</kbd> <kbd>k</kbd> to move, <kbd>r</kbd> to rewind.</p>%(ui)s</div>
+<div><h3>Take back exactly what you mean</h3><p>Preview a rewind as a diff, then take back the whole session or a single file. Every rewind is a new step, so it can be undone.</p>%(precise)s</div>
+</div>
+</div></section>
+""" % {"label": label(2, "The timeline"), "quick": code(b["quick"][:1]), "ui": code(b["ui"][:1]),
+       "precise": code([ln for ln in f["quick_use"] if ln.lstrip().startswith(("rewindagents diff", "rewindagents rewind"))])}
+
     install = """
 <section class="sec" id="install" aria-labelledby="h-install"><div class="wrap">
 %(label)s
@@ -460,7 +486,7 @@ def index_html(cfg, f, hero, open_all=False):
 <div class="pair"><div><h3>Add the Claude Code hook</h3>%(hook)s</div><div><h3>Codex and Cursor hooks</h3>%(agents)s</div></div>
 <div class="pair-note"><p><code>install</code> keeps everything already in the file and does nothing if the hook is already there. For Codex the file is <code>%(codex)s</code> and for Cursor <code>%(cursor)s</code>; those two hooks are tested with the payloads in the vendors&#x27; documentation, not yet in a live session. <code>.rewindagents/</code> gets its own <code>.gitignore</code>, so the log and the copies stay out of your commits.</p></div>
 </div></section>
-""" % {"label": label(2, "Install"), "py": e(f["py_req"]), "tested": e(f["tested_on"]), "install": code(b["install"]), "hook": code(b["hook"]),
+""" % {"label": label(3, "Install"), "py": e(f["py_req"]), "tested": e(f["tested_on"]), "install": code(b["install"]), "hook": code(b["hook"]),
        "agents": code(b["agents"]), "codex": e(f["agents"]["codex"]["settings"]), "cursor": e(f["agents"]["cursor"]["settings"])}
 
     how = """
@@ -474,7 +500,7 @@ def index_html(cfg, f, hero, open_all=False):
 <li>%(r3)s<h3>Rewind</h3><p><code>rewind N</code> puts back every file a later step changed and deletes the files later steps created. It first checks the hash chain and the hash of every stored copy; if the chain is broken it changes nothing. A rewind saves the current files and records itself as a new step, so a rewind is undone with another rewind.</p></li>
 </ol>
 </div></section>
-""" % {"label": label(3, "How it works"), "r1": ruler(2, n=5, w=60, h=16), "r2": ruler(3, n=5, w=60, h=16), "r3": ruler(4, n=5, w=60, h=16)}
+""" % {"label": label(4, "How it works"), "r1": ruler(2, n=5, w=60, h=16), "r2": ruler(3, n=5, w=60, h=16), "r3": ruler(4, n=5, w=60, h=16)}
 
     limits = """
 <section class="sec" id="limits" aria-labelledby="h-limits"><div class="wrap">
@@ -490,7 +516,7 @@ def index_html(cfg, f, hero, open_all=False):
 <li><span class="k">the end of the log</span><span>A hash chain proves the records are unchanged relative to each other. It cannot tell that records were cut off the end or that the whole file was rewritten and re-hashed. Pin the head hash somewhere the agent cannot write and check against it with <code>verify --head</code>.</span></li>
 </ul>
 </div></section>
-""" % {"label": label(4, "Limits"), "chars": "{:,}".format(f["result_chars"]), "mb": f["file_mb"],
+""" % {"label": label(5, "Limits"), "chars": "{:,}".format(f["result_chars"]), "mb": f["file_mb"],
        "files": "{:,}".format(f["scan_files"]), "skip": ", ".join("<code>%s</code>" % e(d) for d in f["skip_dirs"])}
 
     commands = """
@@ -505,7 +531,7 @@ def index_html(cfg, f, hero, open_all=False):
 <div class="cmdrow"><div><h3>Verify the chain</h3><p>Checks every record against the one before it and names the first bad one. With <code>--head</code>, also catches records cut from the end.</p></div>%(verify)s</div>
 </div>
 </div></section>
-""" % {"label": label(5, "Commands"), "replay": code(b["replay"]), "export": code(b["export"]), "sessions": code(b["sessions"]),
+""" % {"label": label(6, "Commands"), "replay": code(b["replay"]), "export": code(b["export"]), "sessions": code(b["sessions"]),
        "verify": code(b["verify"]), "kb": f["diff_kb"], "lines": f["diff_lines"]}
 
     pricing = """
@@ -516,7 +542,7 @@ def index_html(cfg, f, hero, open_all=False):
 %(plans)s
 <p class="small more">Details on the <a href="pricing.html">pricing page</a>.</p>
 </div></section>
-""" % {"label": label(6, "Pricing"), "licence": LICENCE, "plans": plans(cfg, rel)}
+""" % {"label": label(7, "Pricing"), "licence": LICENCE, "plans": plans(cfg, rel)}
 
     faq_items = [
         ("Does it stop or change what the agent does?",
@@ -538,7 +564,7 @@ def index_html(cfg, f, hero, open_all=False):
 <div class="head"><h2 id="h-faq">Questions.</h2></div>
 %(items)s
 </div></section>
-""" % {"label": label(7, "Questions"), "items": faq_html(faq_items, open_all)}
+""" % {"label": label(8, "Questions"), "items": faq_html(faq_items, open_all)}
 
     closing = """
 <section class="sec close" aria-labelledby="h-close"><div class="wrap">
@@ -548,7 +574,7 @@ def index_html(cfg, f, hero, open_all=False):
 </div></section>
 """ % {"install": code(b["install"][:1])}
 
-    body = hero_s + demo + install + how + limits + commands + pricing + faq + closing
+    body = hero_s + demo + timeline + install + how + limits + commands + pricing + faq + closing
     return page(cfg, "index.html", "%s: %s" % (NAME, PROMISE.rstrip(".")), desc, body, "home")
 
 

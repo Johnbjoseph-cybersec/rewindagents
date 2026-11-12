@@ -590,3 +590,15 @@ main > section, .foot, #demo > .wrap { transition: opacity .6s var(--ease); }
   .session .small::after { content: " Scroll sideways."; }
 }
 @media (prefers-reduced-motion: reduce) { .plan, .cmdrow { transition: none; } .plan:hover { transform: none; } }
+
+/* ---- the timeline section: the real UI as a framed screen, then three ways in ---- */
+.shot { margin: 0 0 56px; }
+.shot img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--reel); background: var(--spool); }
+.shot figcaption { margin-top: 14px; font-size: 14px; color: var(--tape); max-width: var(--measure); }
+.trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 40px; row-gap: 32px; border-top: 2px solid var(--reel); padding-top: 32px; }
+.trio > div { display: flex; flex-direction: column; }
+.trio h3 { font-size: 21px; margin-bottom: 10px; }
+.trio p { font-size: 15.5px; color: var(--tape); margin-bottom: 16px; }
+.trio pre.term { margin-top: auto; font-size: 12.5px; }
+kbd { font-family: var(--mono); font-size: 12px; border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 3px; padding: 1px 6px; color: var(--reel); }
+@media (max-width: 960px) { .trio { grid-template-columns: minmax(0, 1fr); } }
