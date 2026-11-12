@@ -207,7 +207,9 @@
 <span class="l"><span class="c"># a given session, to a given file</span></span>
 <span class="l"><span class="p">$ </span>rewindagents export --session abc --out replay.html</span>
 <span class="l"><span class="c"># steps, tools and paths only: no inputs, results or diffs</span></span>
-<span class="l"><span class="p">$ </span>rewindagents export <span class="nb">--no-contents</span></span></code></pre></div>
+<span class="l"><span class="p">$ </span>rewindagents export <span class="nb">--no-contents</span></span>
+<span class="l"><span class="c"># keep secrets as recorded (they are replaced by default)</span></span>
+<span class="l"><span class="p">$ </span>rewindagents export <span class="nb">--no-redact</span></span></code></pre></div>
 <div class="cmdrow"><div><h3>Find a session</h3><p>One line per session: id, first and last time, steps (with how many are rewinds), files touched. The latest session is marked. <code>--grep</code> keeps the sessions with a step whose command, file or input mentions the text, and lists those steps with their numbers.</p></div><pre class="term"><code><span class="l"><span class="c"># every session in the log: id, first and last time, steps, files touched</span></span>
 <span class="l"><span class="p">$ </span>rewindagents sessions</span>
 <span class="l"><span class="c"># only sessions with a step that mentions it, and those steps</span></span>

@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Any
 
 from . import __version__, log, rewind
+from . import redact as _redact
 
 # BRAND.md palette; tests/test_export.py checks every value against the table there.
 PALETTE = {"Leader": "#F2F4F1", "Reel": "#121412", "Spool": "#1C201D", "Tape": "#55605A",
@@ -104,13 +105,15 @@ def file_change(before: bytes | None, after: bytes | None, before_label: str, af
     return out
 
 
-def build(log_path: str | Path, session: str | None = None, contents: bool = True) -> dict:
+def build(log_path: str | Path, session: str | None = None, contents: bool = True, redact: bool = True) -> dict:
     """Everything the page needs, as data. Reads only.
 
     contents=False leaves out inputs, results and diffs (a Write's input is the file's content), so the
     page holds steps, tools and paths only, plus the one-line summary `replay` prints for each step.
+    redact=True replaces secrets (redact.py) in every summary, input, result and diff; 'redacted' counts them.
     """
     diffs = contents
+    redacted = 0
     root = rewind.project_root(log_path)
     # The project's location is scrubbed from everything the page prints: the resolved root and the root
     # as the log was addressed (macOS gives /var/... and /private/var/... for the same directory).
@@ -142,18 +145,32 @@ def build(log_path: str | Path, session: str | None = None, contents: bool = Tru
                         if after_label.startswith("unknown"):
                             entry["change"] = {"kind": "note", "note": after_label, "lines": [], "more": 0}
                         else:
+                            changed = before != after
+                            if redact:
+                                env = _redact.is_env_file(rel)
+                                before, k1 = _redact.data(before, env)
+                                after, k2 = _redact.data(after, env)
+                                redacted += k1 + k2
                             entry["change"] = file_change(before, after, f"{rel} (before step {s['step']})",
                                                           f"{rel} (after step {s['step']})")
+                            if changed and entry["change"]["note"] == "unchanged":
+                                entry["change"]["note"] = "changed only inside redacted values"
             files.append(entry)
+        (summary, k), step_in, step_res = _summary(s, root, roots, redact=redact), s.get("input"), s.get("result")
+        redacted += k
+        if redact:
+            step_in, k1 = _redact.value(step_in)
+            step_res, k2 = _redact.value(step_res)
+            redacted += (k1 + k2) if contents else 0
         steps_out.append({"step": s["step"], "tool": s["tool"], "event": s["event"],
-                          "summary": _summary(s, root, roots),
-                          "input": s.get("input"), "result": s.get("result"), "files": files,
+                          "summary": summary,
+                          "input": step_in, "result": step_res, "files": files,
                           "to_step": s.get("to_step"), "branch": s.get("branch"),
                           "bash_scan": s.get("bash_scan")})
     return {"project": root.name, "roots": roots, "session": session, "steps": steps_out,
             "records": n, "chain_ok": ok, "chain_msg": msg, "head": log.head(log_path),
             "exported": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
-            "version": __version__, "contents": contents}
+            "version": __version__, "contents": contents, "redact": redact, "redacted": redacted}
 
 
 _CSS = """
@@ -199,10 +216,13 @@ def scrub(text: str, roots: list[str]) -> str:
     return text
 
 
-def _summary(step: dict, root: Path, roots: list[str], width: int = 120) -> str:
-    """The `replay` line, scrubbed before it is cut so a cut cannot leave half the root behind."""
-    text = scrub(rewind.summary(step, width=sys.maxsize, root=root), roots)
-    return text if len(text) <= width else text[: width - 3] + "..."
+def _summary(step: dict, root: Path, roots: list[str], width: int = 120, redact: bool = False) -> tuple[str, int]:
+    """The `replay` line and how many secrets it lost, scrubbed and redacted before it is cut so a cut
+    cannot leave half the root, or half a token, behind."""
+    text, n = scrub(rewind.summary(step, width=sys.maxsize, root=root), roots), 0
+    if redact:
+        text, n = _redact.text(text)
+    return (text if len(text) <= width else text[: width - 3] + "..."), n
 
 
 def _json(value: Any, roots: list[str]) -> str:
@@ -218,6 +238,14 @@ def _diff_html(change: dict) -> str:
         parts.append(f'<span class="{cls}">{_esc(l)}</span>' if cls else _esc(l))
     more = f'\n<span class="hunk">... {change["more"]} more lines</span>' if change["more"] else ""
     return f'<pre class="diff">{chr(10).join(parts)}{more}</pre>'
+
+
+def _redaction_note(data: dict) -> str:
+    if not data.get("redact", False):
+        return "Exported with --no-redact: secrets were not looked for."
+    n = data.get("redacted", 0)
+    return (f"{n} secret value{'s' if n != 1 else ''} replaced with [redacted ...]."
+            " Secrets of other shapes are not caught: read the page before you pass it on.")
 
 
 def render(data: dict) -> str:
@@ -278,7 +306,8 @@ def render(data: dict) -> str:
 <h1>rewind<span>agents</span> replay</h1>
 <p class="meta">{_esc(data["project"])}, session <code>{_esc(data["session"])}</code>: {n} step{"s" if n != 1 else ""}.
 Log: {data["records"]} records, {chain}, head <code>{_esc(_short(data["head"]))}</code>. Exported {_esc(data["exported"])}.
-{"File changes are shown as diffs." if data["contents"] else "Exported without contents: no inputs, results or diffs."}</p>
+{"File changes are shown as diffs." if data["contents"] else "Exported without contents: no inputs, results or diffs."}
+{_redaction_note(data)}</p>
 {tamper}
 <ol class="steps">
 {chr(10).join(items)}
@@ -291,9 +320,9 @@ Log: {data["records"]} records, {chain}, head <code>{_esc(_short(data["head"]))}
 
 
 def export(log_path: str | Path, session: str | None = None, out: str | Path | None = None,
-           contents: bool = True) -> dict:
+           contents: bool = True, redact: bool = True) -> dict:
     """Write the page. Returns the build data plus 'out' (the path written) and 'bytes'."""
-    data = build(log_path, session, contents)
+    data = build(log_path, session, contents, redact)
     page = render(data)
     path = Path(out) if out else rewind.project_root(log_path) / ".rewindagents" / f"replay-{data['session']}.html"
     path.parent.mkdir(parents=True, exist_ok=True)

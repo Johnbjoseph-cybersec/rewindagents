@@ -121,7 +121,7 @@ def _check_session(log_path: str | Path, session: Any) -> str:
 
 def _build(log_path: str | Path, session: str) -> tuple[dict, list[dict], dict[int, float]]:
     try:
-        data = export.build(log_path, session, contents=True)
+        data = export.build(log_path, session, contents=True, redact=False)  # 127.0.0.1 only: nothing leaves
     except export.ExportError as e:
         raise UIError(404, str(e))
     raw = rewind.steps(log_path, session)

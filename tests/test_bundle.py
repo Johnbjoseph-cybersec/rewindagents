@@ -245,7 +245,8 @@ class TestCli(unittest.TestCase):
             code, text, err = cli("--log", str(a.log), "bundle", "--out", str(out))
             self.assertEqual((code, err), (0, ""))
             self.assertRegex(text.strip(), r"^wrote s1\.bundle: session s1, 4 steps, 8 records, \d+ stored files, "
-                                           r"[\d,]+ bytes$")
+                                           r"[\d,]+ bytes\n  0 secret values replaced with \[redacted \.\.\.\]; "
+                                           r"--no-redact keeps them$")
             dest_log = Path(dst, ".rewindagents", "log.jsonl")
             code, text, err = cli("--log", str(dest_log), "import", str(out))
             self.assertEqual((code, err), (0, ""))

@@ -82,7 +82,8 @@
    "export": [
     "rewindagents export                                  # writes .rewindagents/replay-<session>.html",
     "rewindagents export --session abc --out replay.html  # a given session, to a given file",
-    "rewindagents export --no-contents                    # steps, tools and paths only: no inputs, results or diffs"
+    "rewindagents export --no-contents                    # steps, tools and paths only: no inputs, results or diffs",
+    "rewindagents export --no-redact                      # keep secrets as recorded (they are replaced by default)"
    ],
    "hook": [
     "cd /path/to/your/project",

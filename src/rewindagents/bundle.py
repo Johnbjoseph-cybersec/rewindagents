@@ -22,6 +22,11 @@ the source project is moved under the destination project (the directory holding
 text as recorded. The source project can appear under more than one spelling (on macOS a temporary
 directory is /var/... in the hook's input and /private/var/... once resolved); `bundle` lists each
 spelling the records use, and `import` moves all of them.
+
+Secrets: by default `bundle` replaces secrets (redact.py) in the records' inputs and results and in the
+stored copies. A copy that changed is carried under its new SHA-256, and a record that changed carries the
+SHA-256 of its new body, so `import` checks them as it checks any other. Rewinding such a file in the
+other clone writes the placeholder, not the secret. `--no-redact` carries everything exactly as recorded.
 """
 from __future__ import annotations
 
@@ -34,6 +39,7 @@ from pathlib import Path
 from typing import Any
 
 from . import __version__, log, rewind
+from . import redact as _redact
 from .hook import store_lock
 
 FORMAT = "rewindagents-bundle"
@@ -114,8 +120,67 @@ def move_paths(obj: Any, spellings: list[str], dest: Path) -> Any:
     return obj
 
 
-def bundle(log_path: str | Path, out: str | Path, session: str | None = None) -> dict:
-    """Write one session of the log, and the stored copies it names, to `out`."""
+def _repoint(obj: Any, moved: dict[str, str]) -> Any:
+    """obj with every {"path": ..., "sha256": old} naming a redacted copy pointed at the redacted one."""
+    if isinstance(obj, dict):
+        out = {k: _repoint(v, moved) for k, v in obj.items()}
+        if "path" in out and out.get("sha256") in moved:
+            out["sha256"] = moved[out["sha256"]]
+        return out
+    if isinstance(obj, list):
+        return [_repoint(v, moved) for v in obj]
+    return obj
+
+
+def _copy_paths(obj: Any) -> dict[str, set[str]]:
+    """sha256 -> the paths the record names it under."""
+    out: dict[str, set[str]] = {}
+    if isinstance(obj, dict):
+        if isinstance(obj.get("path"), str) and isinstance(obj.get("sha256"), str):
+            out.setdefault(obj["sha256"], set()).add(obj["path"])
+        for v in obj.values():
+            for k, ps in _copy_paths(v).items():
+                out.setdefault(k, set()).update(ps)
+    elif isinstance(obj, list):
+        for v in obj:
+            for k, ps in _copy_paths(v).items():
+                out.setdefault(k, set()).update(ps)
+    return out
+
+
+def redact_session(records: list[dict], objects: dict[str, bytes]) -> tuple[list[dict], dict[str, bytes], int]:
+    """Records and stored copies with secrets replaced (redact.py). A copy whose bytes change is stored
+    under its new SHA-256 and every record naming it is pointed there; a record whose body changes gets
+    the SHA-256 of its new body, so `check` still holds. Returns (records, objects, values replaced)."""
+    total, moved, out_objects = 0, {}, {}
+    paths: dict[str, set[str]] = {}
+    for r in records:
+        for k, ps in _copy_paths(r.get("args")).items():
+            paths.setdefault(k, set()).update(ps)
+    for sha, raw in objects.items():
+        env = any(_redact.is_env_file(p) for p in paths.get(sha, ()))
+        new, n = _redact.data(raw, env)
+        total += n
+        new_sha = hashlib.sha256(new).hexdigest() if n else sha
+        moved.update({sha: new_sha} if n else {})
+        out_objects[new_sha] = new
+    out_records = []
+    for r in records:
+        args, n1 = _redact.value(r.get("args"))
+        result, n2 = _redact.value(r.get("result"))
+        total += n1 + n2
+        args = _repoint(args, moved)
+        if n1 or n2 or args != r.get("args"):
+            body = {k: v for k, v in r.items() if k != "hash"}
+            body.update(args=args, result=result)
+            r = {**body, "hash": hashlib.sha256(_canon(body)).hexdigest()}
+        out_records.append(r)
+    return out_records, out_objects, total
+
+
+def bundle(log_path: str | Path, out: str | Path, session: str | None = None, redact: bool = True) -> dict:
+    """Write one session of the log, and the stored copies it names, to `out`. redact=True replaces
+    secrets in the records and the stored copies first (see redact_session)."""
     ok, _, msg = log.verify(log_path)
     if not ok:
         raise BundleError(f"log does not verify ({msg}); refusing to bundle from it")
@@ -125,17 +190,22 @@ def bundle(log_path: str | Path, out: str | Path, session: str | None = None) ->
         raise BundleError(f"no session {session!r} in the log")
     root = rewind.project_root(log_path)
     store = root / ".rewindagents" / "objects"
-    objects: dict[str, str] = {}
+    raw: dict[str, bytes] = {}
     for sha in sorted(set().union(*(named_objects(r.get("args")) for r in records))):
         obj = store / sha
         data = obj.read_bytes() if _SHA.fullmatch(sha) and obj.is_file() else None
         if data is None or hashlib.sha256(data).hexdigest() != sha:
             raise BundleError(f"stored copy {sha[:12]} is missing or altered; refusing to bundle a session "
                               f"that could not be rewound")
-        objects[sha] = base64.b64encode(data).decode("ascii")
+        raw[sha] = data
+    spellings = root_spellings(records, root)
+    redacted = 0
+    if redact:
+        records, raw, redacted = redact_session(records, raw)
+    objects = {sha: base64.b64encode(data).decode("ascii") for sha, data in sorted(raw.items())}
     b = {"format": FORMAT, "version": VERSION, "made_with": f"rewindagents {__version__}",
-         "session": session, "root": str(root), "root_spellings": root_spellings(records, root),
-         "records": records, "objects": objects}
+         "session": session, "root": str(root), "root_spellings": spellings,
+         "records": records, "objects": objects, "redacted": redacted if redact else None}
     b["digest"] = digest(b)
     out = Path(out)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -143,7 +213,8 @@ def bundle(log_path: str | Path, out: str | Path, session: str | None = None) ->
     tmp.write_bytes(_canon(b) + b"\n")
     os.replace(tmp, out)
     return {"out": out, "session": session, "records": len(records),
-            "steps": len(rewind.steps_from(records)), "objects": len(objects), "bytes": out.stat().st_size}
+            "steps": len(rewind.steps_from(records)), "objects": len(objects), "bytes": out.stat().st_size,
+            "redacted": b["redacted"]}
 
 
 def check(b: Any) -> dict[str, bytes]:

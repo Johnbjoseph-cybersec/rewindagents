@@ -71,6 +71,8 @@ def main(argv: list[str] | None = None) -> int:
     ex.add_argument("--out", help="file to write (default: .rewindagents/replay-<session>.html)")
     ex.add_argument("--no-contents", action="store_true",
                     help="leave inputs, results and diffs out: steps, tools and paths only")
+    ex.add_argument("--no-redact", action="store_true",
+                    help="keep secrets (API keys, tokens, private keys, .env values) as recorded")
     se = sub.add_parser("sessions", help="list every session in the log: id, first and last time, steps, files touched")
     se.add_argument("--grep", metavar="TEXT",
                     help="only sessions with a step whose command, file or input mentions TEXT (any case); "
@@ -79,6 +81,8 @@ def main(argv: list[str] | None = None) -> int:
                                        "to replay and rewind it on another machine or clone")
     bu.add_argument("--session", help="default: the session that wrote the last record")
     bu.add_argument("--out", required=True, help="file to write")
+    bu.add_argument("--no-redact", action="store_true",
+                    help="carry secrets (API keys, tokens, private keys, .env values) as recorded")
     im = sub.add_parser("import", help="check a bundle, then add its session to this project's log; "
                                        "file paths move to this project")
     im.add_argument("file", help="a file written by `bundle`")
@@ -128,7 +132,7 @@ def main(argv: list[str] | None = None) -> int:
         root = rewind.project_root(a.log)
         try:
             if a.cmd == "bundle":
-                d = bundle.bundle(a.log, a.out, a.session)
+                d = bundle.bundle(a.log, a.out, a.session, redact=not a.no_redact)
             else:
                 d = bundle.import_bundle(a.file, a.log)
         except bundle.BundleError as e:
@@ -137,6 +141,7 @@ def main(argv: list[str] | None = None) -> int:
         if a.cmd == "bundle":
             print(f"wrote {rewind.relative(d['out'], root)}: session {d['session']}, {d['steps']} steps, "
                   f"{d['records']} records, {d['objects']} stored files, {d['bytes']:,} bytes")
+            print(_redaction_line(d["redacted"]))
         else:
             print(f"imported session {d['session']}: {d['steps']} steps, {d['records']} records, "
                   f"{d['objects']} stored files ({d['already_here']} already here)")
@@ -157,12 +162,13 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if a.cmd == "export":
         try:
-            d = export.export(a.log, a.session, a.out, contents=not a.no_contents)
+            d = export.export(a.log, a.session, a.out, contents=not a.no_contents, redact=not a.no_redact)
         except export.ExportError as e:
             print(f"rewindagents: {e}", file=sys.stderr)
             return 1
         print(f"wrote {rewind.relative(d['out'], rewind.project_root(a.log))}: session {d['session']}, "
               f"{len(d['steps'])} steps, {d['bytes']:,} bytes")
+        print(_redaction_line(d["redacted"] if d["redact"] else None))
         if not d["chain_ok"]:
             print(f"rewindagents: the log does not verify ({d['chain_msg']}); the page says so", file=sys.stderr)
             return 1
@@ -204,6 +210,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{rec['seq']:>5}  {rec['session']}  {rec.get('event', '')}  {rec['tool']}  "
               f"{json.dumps(rec['args'], ensure_ascii=False)}")
     return 0
+
+
+def _redaction_line(n: int | None) -> str:
+    if n is None:
+        return "  secrets kept as recorded (--no-redact)"
+    return f"  {n} secret value{'s' if n != 1 else ''} replaced with [redacted ...]; --no-redact keeps them"
 
 
 def _replay(log_path: str, session: str | None, step: int | None) -> int:

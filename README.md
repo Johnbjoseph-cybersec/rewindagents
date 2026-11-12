@@ -276,6 +276,7 @@ rewindagents branch 12 --name try2   # keep the current files, then rewind to st
 rewindagents export                                  # writes .rewindagents/replay-<session>.html
 rewindagents export --session abc --out replay.html  # a given session, to a given file
 rewindagents export --no-contents                    # steps, tools and paths only: no inputs, results or diffs
+rewindagents export --no-redact                      # keep secrets as recorded (they are replaced by default)
 ```
 
 One HTML file with the whole session: every step with its tool, input and result, and for every file a
@@ -292,6 +293,12 @@ bug report or a code review, or keep it with the session.
   the one-line summary `replay` prints, so a `Bash` command line is still on the page.
 - If the log's hash chain does not verify, the page is still written, with a notice naming the first bad
   record, and the command exits 1.
+- Secrets are replaced with `[redacted <kind>]` in every input, result, diff and step line, and the page
+  says how many: AWS access key ids, GitHub, Polar, OpenAI and Anthropic tokens, webhook secrets
+  (`whsec_`), private key blocks, the credential in an `Authorization` header, the value of anything named
+  like a secret (`..._TOKEN`, `PASSWORD`, `API_KEY`, `client_secret`), and every value in a `.env` or
+  `.env.*` file. It is pattern matching: a secret of another shape stays, so read the page before you pass
+  it on. A file whose change was only inside a replaced value says so. `--no-redact` turns this off.
 
 ## Find a session
 
@@ -319,13 +326,18 @@ last record, the one `replay` and `rewind` use by default, is marked `(latest)`.
 ```sh
 rewindagents bundle --out s1.bundle                 # the latest session, and the file copies it names, in one file
 rewindagents bundle --session abc --out abc.bundle  # a given session
+rewindagents bundle --no-redact --out s1.bundle     # carry secrets as recorded (they are replaced by default)
 rewindagents import s1.bundle                       # in another clone: check the file, then add the session to its log
 ```
 
 Then `replay`, `rewind` and `branch` work on that session in the other clone, with `--session <id>`.
 
-- One JSON file: the session's log records exactly as the log holds them, each with its hash, and every
+- One JSON file: the session's log records as the log holds them (secrets aside: next line), each with its hash, and every
   stored file copy they name. Nothing goes over a network; carry the file however you like.
+- By default, secrets are replaced in the records and the stored copies, as `export` replaces them. A
+  record or copy that changed carries the hash of its new contents, so `import` checks it like any other,
+  and rewinding that file in the other clone writes the placeholder, not the secret. `--no-redact`
+  carries the session exactly as recorded.
 - `bundle` refuses a log whose chain does not verify, and a session whose stored copies are missing or altered.
 - `import` writes nothing until everything checks out: the file's own SHA-256, every record's hash, that every
   record belongs to the session and is in log order, every stored copy against its SHA-256, that no copy a

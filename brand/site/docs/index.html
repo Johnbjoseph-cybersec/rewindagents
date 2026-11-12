@@ -145,7 +145,9 @@
 <span class="l"><span class="c"># a given session, to a given file</span></span>
 <span class="l"><span class="p">$ </span>rewindagents export --session abc --out replay.html</span>
 <span class="l"><span class="c"># steps, tools and paths only: no inputs, results or diffs</span></span>
-<span class="l"><span class="p">$ </span>rewindagents export <span class="nb">--no-contents</span></span></code></pre>
+<span class="l"><span class="p">$ </span>rewindagents export <span class="nb">--no-contents</span></span>
+<span class="l"><span class="c"># keep secrets as recorded (they are replaced by default)</span></span>
+<span class="l"><span class="p">$ </span>rewindagents export <span class="nb">--no-redact</span></span></code></pre>
 <p>One HTML file with the whole session: every step with its tool, input and result, and for every file a step checkpointed, the change that step made as a unified diff (the file before the step against the file after it: its next checkpoint in the session, or the file as it is now). Inline CSS only, no scripts, nothing fetched. Paths are shown relative to the project; where the project lives on disk is not in the page.</p>
 <ul>
 <li>A file over 256 KB on either side is described, not diffed. A diff longer than 400 lines is cut, with the count of lines left out. Binary files show their size before and after.</li>
