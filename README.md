@@ -43,7 +43,8 @@ pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagents && cd your
 `init` looks for the agents it supports (Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen
 Code): their config directory in the project or your home directory, or their command on `PATH`. It prints
 the plan, asks `[y/N]`, and adds the hook to each one it found, one line per agent: `installed`,
-`already there` or `not found`. It never adds a second copy and keeps every hook already in the file.
+`already there`, `replaced` or `not found`. It never adds a second copy and keeps every hook already in the
+file.
 `--yes` skips the question. `--global` writes each agent's user config instead, so every project is
 recorded. Without `--yes` and without a terminal to ask on, it only prints the plan.
 
@@ -84,7 +85,19 @@ rewindagents install --settings ~/.claude/settings.json   # or for every project
 `install` keeps everything already in the settings file and does nothing if the hook is already there. The
 hook command it writes names the Python that rewindagents was installed into by absolute path, so it runs
 whether or not a virtualenv is active; from an uninstalled clone it carries the `PYTHONPATH` instead.
-After that, in each project Claude Code works in:
+
+If that Python goes away later (the venv is deleted, Python is upgraded, the clone is moved), the agent still
+runs the hook, the hook fails, and nothing is recorded. `status` checks for that:
+
+```sh
+rewindagents status             # per agent config file in this project: ok, STALE, partial or no hook
+```
+
+A hook is stale when its interpreter path or its `PYTHONPATH` directory no longer exists; `status` then exits
+1. `install` and `init --yes` replace a stale rewindagents hook with the current one and leave every other
+hook in the file as it is.
+
+Once the hook is in, in each project Claude Code works in:
 
 - every tool call gets a `pre` record (tool and input) and a `post` record (tool and response) in
   `.rewindagents/log.jsonl`, in one hash chain. Responses longer than 4,000 characters are cut, with the

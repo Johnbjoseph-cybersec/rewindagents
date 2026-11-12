@@ -11,7 +11,9 @@ are looked for.
 
 The hook is written by hook.install(), the code path `rewindagents install` uses, so it is never added twice
 and every other hook in the file stays. An agent whose file already holds a different rewindagents hook
-command (another interpreter, or a clone) is reported and left alone rather than given a second hook.
+command (another interpreter, or a clone) is reported and left alone rather than given a second hook, unless
+that command can no longer run (hook.stale: its interpreter or PYTHONPATH is gone); then it is replaced.
+`rewindagents status` reports the same per file and writes nothing.
 
 Where `--global` writes (the user-level file of each agent, from the docs cited in agents.py): Claude Code
 ~/.claude/settings.json; Codex ~/.codex/hooks.json; Cursor ~/.cursor/hooks.json; Gemini CLI
@@ -67,7 +69,11 @@ def detect(root: Path, home: Path, global_: bool = False, path: str | None = Non
 
 
 def state(name: str, path: Path, command: str) -> tuple[str, str]:
-    """("install" | "already" | "other" | "error", detail) for this agent's config file."""
+    """("install" | "stale" | "already" | "other" | "error", detail) for this agent's config file.
+
+    "stale": the file holds a rewindagents hook that can no longer run (hook.stale: its interpreter or
+    PYTHONPATH is gone), so the agent records nothing; applying replaces it with `command`.
+    """
     try:
         if not path.exists() or not path.read_text(encoding="utf-8").strip():
             return "install", ""     # agents.install reads a blank file as {}
@@ -78,12 +84,54 @@ def state(name: str, path: Path, command: str) -> tuple[str, str]:
     except (ValueError, OSError, AttributeError, TypeError, KeyError) as e:
         return "error", f"cannot read it: {e}"
     events = list(have.values())
+    dead = hook.stale_hooks(path, name)
+    if dead:
+        return "stale", f"stale: {dead[0][1]}; replaced by this Python's hook"
     if events and all(command in cmds for cmds in events):
         return "already", ""
-    others = sorted({c for cmds in events for c in cmds if "rewindagents hook" in c and c != command})
+    others = sorted({c for cmds in events for c in cmds if hook.ours(c) and c != command})
     if others:
         return "other", f"holds another rewindagents hook ({others[0]}); left as is"
     return "install", ""
+
+
+def status(global_: bool = False, root: Path | None = None, home: Path | None = None, out=None) -> int:
+    """`rewindagents status`: one line per agent config file that exists: hook ok, stale, another one, or none.
+    Writes nothing. Exit 1 when any file holds a stale hook (or cannot be read), else 0."""
+    root = Path(root or Path.cwd()).resolve()
+    home = Path(home or Path.home())
+    out = out or sys.stdout
+    run = "rewindagents" if hook.installed() else "python3 -m rewindagents"
+    bad, shown = 0, 0
+    for name in agents.AGENTS:
+        t = target(name, root, home, global_)
+        if not t.is_file():
+            continue
+        shown += 1
+        where = str(t.relative_to(home if global_ else root))
+        where = ("~/" if global_ else "") + where
+        st, detail = state(name, t, hook.hook_command(name))
+        if st == "stale":
+            bad += 1
+            line, why = "STALE", detail.split("; ")[0].removeprefix("stale: ")
+        elif st == "error":
+            bad += 1
+            line, why = "error", detail
+        elif st == "already":
+            line, why = "ok", ""
+        elif st == "other":
+            line, why = "ok", "another rewindagents hook, which can run"
+        elif any(hook.ours(c) for cmds in agents.commands_in(agents.AGENTS[name], t).values() for c in cmds):
+            line, why = "partial", "not on every event"
+        else:
+            line, why = "no hook", ""
+        print((f"  {name:<8} {line:<8} {where}" + (f"  ({why})" if why else "")).rstrip(), file=out)
+    if not shown:
+        print(f"No agent config file {'in your home directory' if global_ else 'in this project'}. "
+              f"To add the hook: {run} init", file=out)
+    if bad:
+        print(f"A stale hook records nothing. Fix: {run} init --yes" + (" --global" if global_ else ""), file=out)
+    return 1 if bad else 0
 
 
 def main(yes: bool = False, global_: bool = False, root: Path | None = None, home: Path | None = None,
@@ -124,6 +172,9 @@ def main(yes: bool = False, global_: bool = False, root: Path | None = None, hom
         if st == "install":
             todo.append(f)
             rows.append((name, "will install", show(f["target"]), why))
+        elif st == "stale":
+            todo.append(f)
+            rows.append((name, "will replace", show(f["target"]), detail))
         elif st == "already":
             rows.append((name, "already there", show(f["target"]), ""))
         elif st == "other":
@@ -160,12 +211,19 @@ def main(yes: bool = False, global_: bool = False, root: Path | None = None, hom
             continue
         t = next(f["target"] for f in todo if f["agent"] == name)
         try:
+            dead = hook.replace_stale(t, agent=name)
+            if dead and state(name, t, hook.hook_command(name))[0] == "other":
+                say(name, "removed stale", where, "another rewindagents hook, which can run, is left as is")
+                continue
             changed = hook.install(t, agent=name)
         except (ValueError, OSError) as e:
             errors += 1
             say(name, "error", where, f"not written: {e}")
             continue
-        say(name, "installed" if changed else "already there", where)
+        if dead:
+            say(name, "replaced", where, f"was stale: {dead[0][1]}")
+        else:
+            say(name, "installed" if changed else "already there", where)
         if name in NOTES:
             notes.append(f"{name}: {NOTES[name]}")
     for n in notes:

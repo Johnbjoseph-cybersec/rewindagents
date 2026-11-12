@@ -285,6 +285,34 @@ class InstalledCommandTest(unittest.TestCase):
                 self.assertEqual(Path(proj, ".rewindagents", "log.jsonl").read_text(), "kept\n")
 
 
+    def test_status_flags_a_hook_whose_interpreter_was_deleted_and_install_replaces_it(self):
+        """A config naming a deleted venv's python: status exits 1 STALE, install swaps in the binary's own
+        hook (the user's hook stays), status exits 0."""
+        with TemporaryDirectory() as proj:
+            gone = Path(proj, "deleted-venv", "bin", "python")
+            f = Path(proj, ".claude", "settings.json")
+            f.parent.mkdir()
+            f.write_text(json.dumps({"hooks": {e: [{"matcher": "*", "hooks": [
+                {"type": "command", "command": "my-own-hook"},
+                {"type": "command", "command": f"{gone} -m rewindagents hook"}]}]
+                for e in ("PreToolUse", "PostToolUse")}}))
+            r = self._run("status", cwd=proj)
+            self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+            self.assertRegex(r.stdout, r"claude\s+STALE\s+\.claude/settings\.json")
+            self.assertIn("Fix: rewindagents init --yes", r.stdout)
+            r = self._run("install", cwd=proj)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn("replaced a stale rewindagents hook", r.stdout)
+            cmds = {h["command"] for ev in ("PreToolUse", "PostToolUse")
+                    for g in json.loads(f.read_text())["hooks"][ev] for h in g["hooks"]}
+            self.assertEqual(len(cmds), 2, cmds)
+            self.assertIn("my-own-hook", cmds)
+            self.assertNotIn(f"{gone} -m rewindagents hook", cmds)
+            r = self._run("status", cwd=proj)
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            self.assertRegex(r.stdout, r"claude\s+ok\s+")
+
+
 class ReadmeCommandsTest(unittest.TestCase):
     def test_every_rewindagents_command_in_the_readme_is_a_real_subcommand(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")

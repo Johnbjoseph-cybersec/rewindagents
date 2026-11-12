@@ -246,6 +246,54 @@ def hook_command(agent: str = agents.DEFAULT) -> str:
     return run + " || true" if agents.AGENTS[agent].fail_closed else run
 
 
+def ours(command: str) -> bool:
+    """True for a hook command that runs rewindagents' hook (any interpreter, any agent)."""
+    return "rewindagents hook" in command
+
+
+def stale(command: str) -> str | None:
+    """Why this hook command can no longer run, or None when nothing it names is missing.
+
+    A hook names its interpreter by absolute path (and, from a clone, a PYTHONPATH directory). When that
+    venv is deleted, a uv/pipx cache is cleared or Python is upgraded, the agent still runs the command, it
+    fails, and nothing is recorded, with no message the user sees. Only absolute paths are judged: a bare
+    command name is looked up on PATH at run time and may well work.
+    """
+    try:
+        words = shlex.split(command)
+    except ValueError:
+        return None
+    env = {}
+    while words and "=" in words[0] and words[0].split("=", 1)[0].isidentifier():
+        k, v = words.pop(0).split("=", 1)
+        env[k] = v
+    if words and os.path.isabs(words[0]) and not Path(words[0]).exists():
+        return f"{words[0]} no longer exists"
+    pp = env.get("PYTHONPATH")
+    if pp and os.path.isabs(pp) and not Path(pp).is_dir():
+        return f"PYTHONPATH {pp} no longer exists"
+    return None
+
+
+def stale_hooks(settings_path: str | Path, agent: str = agents.DEFAULT) -> list[tuple[str, str]]:
+    """(command, why) for each rewindagents hook in the config file that can no longer run."""
+    p = Path(settings_path)
+    if not p.is_file() or not p.read_text(encoding="utf-8").strip():
+        return []
+    have = agents.commands_in(agents.AGENTS[agent], p)
+    seen = dict.fromkeys(c for cmds in have.values() for c in cmds if ours(c))
+    return [(c, why) for c in seen if (why := stale(c))]
+
+
+def replace_stale(settings_path: str | Path, agent: str = agents.DEFAULT) -> list[tuple[str, str]]:
+    """Remove every rewindagents hook in the file that can no longer run (agents.uninstall: exact command
+    match, every other hook and key stays). Returns what was removed; the caller installs the current one."""
+    dead = stale_hooks(settings_path, agent)
+    for cmd, _ in dead:
+        agents.uninstall(agents.AGENTS[agent], settings_path, cmd)
+    return dead
+
+
 def install(settings_path: str | Path | None = None, command: str | None = None,
             agent: str = agents.DEFAULT) -> bool:
     """Add the hook to the agent's config file (default: the agent's project file, agents.AGENTS[agent].settings).

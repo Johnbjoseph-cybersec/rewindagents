@@ -1,5 +1,5 @@
-"""rewindagents command line: init, record, verify, head, show, hook, install, uninstall, replay, diff, rewind,
-branch, export, sessions, bundle, import, gc."""
+"""rewindagents command line: init, status, record, verify, head, show, hook, install, uninstall, replay, diff,
+rewind, branch, export, sessions, bundle, import, gc."""
 from __future__ import annotations
 
 import argparse
@@ -62,6 +62,9 @@ def main(argv: list[str] | None = None) -> int:
     ini.add_argument("--yes", "-y", action="store_true", help="install without asking")
     ini.add_argument("--global", dest="global_", action="store_true",
                      help="write each agent's user config (every project) instead of this project's")
+    st = sub.add_parser("status", help="say, per agent config file, whether the rewindagents hook is there and "
+                                       "can still run (exit 1 when one is stale)")
+    st.add_argument("--global", dest="global_", action="store_true", help="check each agent's user config instead")
     br = sub.add_parser("branch", help="keep the current files as a branch, then rewind to step N")
     br.add_argument("step", type=int)
     br.add_argument("--name", required=True, help="branch name (git: rewindagents/<name>)")
@@ -105,13 +108,18 @@ def main(argv: list[str] | None = None) -> int:
         return hook.run(agent=a.agent)
     if a.cmd == "install":
         target = a.settings or agents.config_path(agents.AGENTS[a.agent])
-        try:
-            changed = hook.install(target, agent=a.agent)
-        except hook.EphemeralPython as e:
-            print(f"rewindagents: not installed: {e}", file=sys.stderr)
+        kind = hook.ephemeral()
+        if kind:
+            print(f"rewindagents: not installed: {hook.ephemeral_message(kind)}", file=sys.stderr)
             return 2
+        dead = hook.replace_stale(target, agent=a.agent)
+        changed = hook.install(target, agent=a.agent)
         print(f"{'installed in' if changed else 'already installed in'} {target}")
+        for _, why in dead:
+            print(f"  replaced a stale rewindagents hook: {why}")
         return 0
+    if a.cmd == "status":
+        return setup.status(global_=a.global_)
     if a.cmd == "uninstall":
         target = a.settings or agents.config_path(agents.AGENTS[a.agent])
         changed = hook.uninstall(target, agent=a.agent)

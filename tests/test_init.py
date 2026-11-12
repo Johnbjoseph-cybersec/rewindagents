@@ -144,7 +144,8 @@ class TestInit(Base):
 
     def test_another_rewindagents_hook_is_left_alone_not_doubled(self):
         (self.root / ".claude").mkdir()
-        old = "PYTHONPATH=/old/clone/src /usr/bin/python3 -m rewindagents hook"
+        # a different command that can still run (both paths exist); a missing one is stale (test_stale.py)
+        old = f"PYTHONPATH={self.root} {sys.executable} -m rewindagents hook"
         s = {"hooks": {e: [{"matcher": "*", "hooks": [{"type": "command", "command": old}]}]
                        for e in ("PreToolUse", "PostToolUse")}}
         (self.root / ".claude/settings.json").write_text(json.dumps(s))
