@@ -192,6 +192,24 @@ def beat_rows(b, lit=True):
     return rows
 
 
+AGENT_MARKS = {"claude": ("Claude Code", "claude-code.svg"), "codex": ("Codex", None), "cursor": ("Cursor", "cursor.svg")}
+
+
+def agent_strip(rel=""):
+    """'Hooks for' + the agents rewindagents has a hook for, read from the package. A mark is shown only for an
+    agent in agents.AGENTS (no logo for an agent without a tested hook); Codex is shown by name (no OpenAI mark)."""
+    missing = set(agents.AGENTS) - set(AGENT_MARKS)
+    extra = set(AGENT_MARKS) - set(agents.AGENTS)
+    if missing or extra:
+        raise SystemExit("agent strip out of step with agents.AGENTS: missing %s, extra %s" % (sorted(missing), sorted(extra)))
+    items = []
+    for key in agents.AGENTS:
+        name, mark = AGENT_MARKS[key]
+        img = ('<img src="%svendor/logos/%s" alt="" width="22" height="22">' % (rel, mark)) if mark else '<span class="ag-glyph" aria-hidden="true">&gt;_</span>'
+        items.append('<li class="ag">%s<span>%s</span></li>' % (img, e(name)))
+    return '<div class="agents"><span class="ag-label">Hooks for</span><ul>%s</ul></div>' % "".join(items)
+
+
 FILM = "vsl-90s"      # brand/<FILM>.mp4 is the film on the landing page; its captions are brand/vsl/<FILM>.srt
 
 
@@ -374,6 +392,7 @@ def index_html(cfg, f, hero, open_all=False):
 <h1 id="h1">%(promise)s</h1>
 <p class="lede">rewindagents records every tool call your coding agent makes and saves a copy of each file before the agent changes it. Replay the session step by step. Rewind the working tree to any step, or keep the current files as a branch and then rewind. The agent works at full speed, and every step it takes can be taken back, within the <a href="#limits">limits</a> below.</p>
 <div class="cta"><a class="btn btn-primary" href="#install">Install</a><a class="btn btn-ghost" href="docs/">Read the docs</a></div>
+%(agents)s
 </div>
 <div class="hero-panel">
 <div class="panel"><div class="panel-head"><span>a session of %(n)d steps; the last %(wreck)d wrecked the repo</span></div>%(hero)s</div>
@@ -381,7 +400,7 @@ def index_html(cfg, f, hero, open_all=False):
 <ul class="facts"><li>standard library only</li><li>no network, no account</li><li>never stops or changes a call</li><li>%(licence)s</li></ul>
 </div>
 </div></section>
-""" % {"v": e(f["version"]), "eyebrow": e(eyebrow(f)), "licence": LICENCE, "promise": PROMISE, "n": n, "wreck": f["wreck_steps"], "hero": panel(hero)}
+""" % {"v": e(f["version"]), "eyebrow": e(eyebrow(f)), "licence": LICENCE, "promise": PROMISE, "n": n, "wreck": f["wreck_steps"], "hero": panel(hero), "agents": agent_strip()}
 
     right = beat_rows(f["beats"][1]) + beat_rows(f["beats"][2]) + beat_rows(f["beats"][3])
     demo = """

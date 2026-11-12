@@ -100,7 +100,8 @@
     tl.from($(".eyebrow", hero), { y: 16, opacity: 0, duration: 0.7 })
       .from(lines, { yPercent: 110, duration: 1.1, stagger: 0.09 }, 0.1)
       .from($(".lede", hero), { y: 24, opacity: 0, duration: 0.9 }, 0.55)
-      .from($$(".cta .btn", hero), { y: 18, opacity: 0, duration: 0.7, stagger: 0.08 }, 0.7);
+      .from($$(".cta .btn", hero), { y: 18, opacity: 0, duration: 0.7, stagger: 0.08 }, 0.7)
+      .from($$(".agents .ag-label, .agents .ag", hero), { y: 14, opacity: 0, duration: 0.6, stagger: 0.07 }, 0.95);
     var panel = $(".hero-panel .panel", hero);
     if (panel) {
       var rows = $$(".l", panel);

@@ -215,6 +215,15 @@ class TestSite(unittest.TestCase):
             self.assertIn("3.13.0", head, name)
             self.assertNotIn("sourceMappingURL", read(os.path.join("vendor", name)), name)
 
+    def test_agent_strip_shows_only_agents_with_a_hook(self):
+        index = read("index.html")
+        strip = re.search(r'<div class="agents">(.*?)</div>', index, re.S).group(1)
+        names = re.findall(r'<li class="ag">.*?<span>([^<]+)</span></li>', strip)
+        self.assertEqual(len(names), len(agents.AGENTS), names)
+        for logo in re.findall(r'vendor/logos/([\w.-]+)', strip):
+            self.assertTrue(os.path.isfile(os.path.join(SITE, "vendor", "logos", logo)), logo)
+        self.assertNotRegex(strip, r"(?i)openai", "no OpenAI mark: Codex is shown by name")
+
     def test_film_captions_are_the_vsl_captions(self):
         build = load_build()
         cues = build.srt_cues("brand/vsl/%s.srt" % build.FILM)
