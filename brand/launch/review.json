@@ -1,0 +1,86 @@
+{
+  "reviewer": "cs-iris-kapoor",
+  "round": 2,
+  "date": "2026-11-12",
+  "pass_rule": "mean >= 9.0 and no row < 8",
+  "images": {
+    "ph-1.png": {
+      "png_sha256": "881c7ae7a4691da22b4492c36330e8d3098bcddb31e895f920ca358a50ddeecf",
+      "scores": {
+        "first_read": {"score": 9, "evidence": "Stacked lockup: mark about 208 px wide (x64-272, y186-303) over an 800-weight name about 800 px wide, then the tagline. Name and mark both land at thumbnail; the red playhead is the single lit element."},
+        "legibility": {"score": 9, "evidence": "Wordmark about 120 px and tagline about 36 px are readable at 635 px wide; only the 15 px credit goes small, and it is a footer."},
+        "brand_fidelity": {"score": 9, "evidence": "Leader ground, Reel type, Record on the playhead only, left aligned on x64, Bricolage 800 plus Hanken. Mark geometry as logo-light.png. The flat-topped head still reads a little like a funnel, but that is the approved logo, not this shot."},
+        "composition": {"score": 9, "evidence": "Block sits y186-540, a little above centre, with the credit on the same baseline (y706, x48) as the other shots. Left edge of the lockup (x64) is 16 px inside the credit and headline margin (x48); small, but visible on the sheet."},
+        "truthfulness": {"score": 9, "evidence": "Name, BRAND.md promise word for word, credit line; nothing implied."}
+      }
+    },
+    "ph-2.png": {
+      "png_sha256": "be8aa16ac213cfcd63cbb7c887ed528db822e3c71834d0ddaefc239039a56133",
+      "scores": {
+        "first_read": {"score": 8, "evidence": "One-line headline now reads; window starts at y114 and the 14 rows fill it with only rows 13 and 14 in orange. At thumbnail it is still a dense list, but the two lit rows say where the damage is."},
+        "legibility": {"score": 8, "evidence": "Mono 23.5 px, about 11.7 px at thumbnail: borderline but legible, and row spacing (32 px) is generous. Full size is clean; longest line ends x1003 of 1222."},
+        "brand_fidelity": {"score": 9, "evidence": "Spool window, Leader text, one Rewind accent on the last two rows, left aligned, no title bar chrome, no gradient. Prompt in Playhead."},
+        "composition": {"score": 9, "evidence": "Window x48-1222, y114-668 holds the rows with about 55 px below row 14; headline and credit on the same positions as ph-3 and ph-4. Balanced and full."},
+        "truthfulness": {"score": 9, "evidence": "All 14 rows are the recorded replay; last two marked as the gallery list says; headline is a clause of the session comment."}
+      }
+    },
+    "ph-3.png": {
+      "png_sha256": "e3247c88fad19df96a38911f17f3411da8028144992d00f1e77bf8662b1ee0a2",
+      "scores": {
+        "first_read": {"score": 8, "evidence": "Two orange D lines under 'Its last two steps deleted the tests' land fast, but the five lines sit in the top 30 percent of a huge black slab, so the thumbnail is mostly dark nothing with a small cluster of text."},
+        "legibility": {"score": 9, "evidence": "23.5 px mono, about 11.7 px at thumbnail, five short lines with clear space; the orange D rows are the strongest contrast on the shot."},
+        "brand_fidelity": {"score": 9, "evidence": "One Rewind accent on the two deleted files, Spool window, left aligned, no decoration."},
+        "composition": {"score": 7, "evidence": "Window y114-668 but text ends at y320 and stops at x396: about 350 px of empty black below and about 830 px empty to the right, 60 percent of the window is void. Matching the window across shots 2-4 made this shot a heavy dark slab with a tiny cluster at the top left."},
+        "truthfulness": {"score": 9, "evidence": "Headline cut to the part the output shows; git status lines are verbatim from the session."}
+      }
+    },
+    "ph-4.png": {
+      "png_sha256": "b33c54fa10873f16bd75802127834edc6fb62a0508f92db5e3779953d4db39e0",
+      "scores": {
+        "first_read": {"score": 8, "evidence": "Four orange restore rows read as 'files came back' at thumbnail, matching gallery item 4's 'four files restored'. The undo line is plain Leader on the last line and is the longest, so it is found second, on a second look."},
+        "legibility": {"score": 9, "evidence": "23.5 px mono; undo line ends x1143, 79 px from the window edge, so the margin problem is gone."},
+        "brand_fidelity": {"score": 8, "evidence": "Judged on merits: accenting the four restore rows is defensible (it is what the headline and the list item lead with, and the GIF does the same), but the accent covers a block of four rows plus the word 'restore' as well as the path, which dilutes 'one thing to look at'; the undo line, the product's distinct claim, is unlit. Marked down one point, not failing."},
+        "composition": {"score": 7, "evidence": "Same issue as ph-3: text runs y114-350, then about 320 px of blank black under it; window is 70 percent void in height and the right 20 percent is empty. Consistent with ph-2/3, but dead space is the dominant impression."},
+        "truthfulness": {"score": 9, "evidence": "Rewind output verbatim, four files, step 15, undo command with --session demo."}
+      }
+    },
+    "ph-5.png": {
+      "png_sha256": "0522455f9f4efd622e172665fdfa84bf928f6fa51b7030608e586cae1389b1b5",
+      "scores": {
+        "first_read": {"score": 8, "evidence": "'Install in two commands' with two labelled strips reads at once and the quiet no-accent shot is a calm finish; the two command strips are only about 70 px tall each so at thumbnail it is a few dark bars on a pale page."},
+        "legibility": {"score": 8, "evidence": "Mono 23.5 px; the Playhead comment (#B9C2BB on Spool) is the weakest text, and the notes are Tape at 22 px, both pass contrast but are small at thumbnail."},
+        "brand_fidelity": {"score": 8, "evidence": "Palette, type and left alignment right; no accent at all on this view where BRAND.md says one per view (the coordinator chose none; it is allowed to omit but the page lacks a focal point). Title bars removed, which is cleaner."},
+        "composition": {"score": 7, "evidence": "Content ends at y465, then about 240 px of empty paper before the credit at y706; upper-heavy. Windows here are 72 px strips while shots 2-4 use a 554 px window, so the set looks like two layouts."},
+        "truthfulness": {"score": 9, "evidence": "Two README commands and the comment verbatim; 'Not on PyPI yet' stated; nothing overclaimed."}
+      }
+    }
+  },
+  "set": {
+    "sequence": {"score": 9, "evidence": "Name, recorded replay, wreck, rewind, install, in that order; headline tops, window tops and credit baseline now line up across 2-5. Story reads."}
+  },
+  "mean": 8.46,
+  "lowest": 7,
+  "verdict": "FAIL",
+  "fixes": [
+    "ph-3 and ph-4 (composition 7): the window is now sized to the space, not to the text. Cut the window height to the content plus an even padding (for example about 24 px top and bottom) on shots 3 and 4, keep the top at y114, and leave the paper below. Or keep the full-height window and run the text at a larger size on those two shots only (they have far fewer lines); one mono size across 2-5 is a self-imposed rule, not a BRAND.md rule.",
+    "ph-5 (composition 7): move the credit or the block so the 240 px void under the notes is used, for example scale the command strips and labels up to the 23.5 px size at the same window width as ph-2 to 4, or give both strips taller padding so the content reaches about y600.",
+    "ph-4 (brand 8): optional: put the undo line, not the restore rows, in Rewind, or accent only the paths. Not required to pass the bar."
+  ],
+  "history": [
+    {
+      "round": 1,
+      "mean": 8.23,
+      "lowest": 7,
+      "verdict": "FAIL",
+      "fixes": [
+        "Fix the composition of ph-3 and ph-4 first (both 7): drop the 130 px void between headline and panel. Pin the panel to the same top (about y150, as in ph-2) in all four terminal shots, so the headline-panel gap is identical and the credit sits at the same baseline.",
+        "Make the mono size consistent across ph-2, ph-3, ph-4 (21.5, 34, 24.5 today). Pick one size that fits the longest line of the set, or at most two sizes, and fill the panel height by line spacing and padding, not by blowing the type up.",
+        "ph-2 (first_read and legibility 7): the 15-line wall needs a way in at thumbnail. Keep all 14 rows, drop the title bar, shorten the headline to one line from the same source, and leave the two orange rows as the one accent.",
+        "ph-4: accent the one line the gallery list names, the step 15 undo line, in Rewind, and return the four 'restore' rows to Leader (or only the paths). Keep the line inside the panel with a right margin equal to the left padding (24 px).",
+        "ph-5: drop the second title bar, and give the view one accent, such as the 'rewindagent install' command in Rewind, or leave the shot with no accent. Make the notes smaller than the labels.",
+        "ph-1: scale the mark up (about 200 px wide) and move the lockup up a little toward the optical centre line. Do not alter the logo geometry.",
+        "ph-3: either show config.py as the second wreck by accenting ' M app/config.py' as well as the D lines, or shorten the headline to the part the output shows."
+      ]
+    }
+  ]
+}

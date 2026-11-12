@@ -220,7 +220,11 @@ person at a time; there is no mailing list). None is posted while the launch is 
   that session printed or a platform limit named in tests/test_launch.py, and posts fit their platform's length.
 - The claims are checked by claim-verifier into brand/launch/claims.json, pinned to the SHA-256 of the seven files.
 - How the authorship is put in a post is John's call (state/NEEDS_JOHN.md in FIRE); the drafts leave it out.
-- Still to make: the five Product Hunt gallery images, brand/launch/ph-1.png to ph-5.png (task RB5b).
+- The five Product Hunt gallery images, brand/launch/ph-1.png to ph-5.png (1270 x 760, task RB5b), are built by
+  brand/launch/gallery.py from the demo session (brand/demo/manifest.json), README lines and the promise above;
+  one terminal size and one window across the set, Rewind on the one block each list item names. Look at
+  brand/launch/gallery-sheet.png, then each image; the independent review is brand/launch/review.json and
+  tests/test_gallery.py fails if an image changes after it.
 
 ## Logo direction brief (from RB1)
 
