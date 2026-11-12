@@ -245,12 +245,11 @@ def agent_strip(rel=""):
 FILM = "vsl-90s"
 # Chapters of the film, named by the caption that opens each one (matched by its first words, so a re-cut of the
 # film that drops a line fails the build instead of mislabelling the ruler).
-CHAPTERS = [("Step thirteen.", "The wreck"), ("There were three.", "What git can't return"),
-            ("But rewindagents recorded", "The record"), ("So rewind to it.", "Rewind"),
-            ("And the rewind is step fifteen.", "Undo the undo"), ("Every tool call goes", "The hash chain"),
-            ("Before every edit", "Checkpoints"), ("rewindagents install", "Install"),
-            ("Files over twenty", "Limits"), ("Export it as one HTML", "Export"),
-            ("Your editor has had undo", "Undo, for agents")]      # brand/<FILM>.mp4 is the film on the landing page; its captions are brand/vsl/<FILM>.srt
+CHAPTERS = [("Your agent just ran", "The wreck"), ("Why can't git help?", "What git can't return"),
+            ("So what would help?", "The analogy"), ("Every tool call goes", "The record"),
+            ("So which step", "Which step?"), ("One command", "Rewind"),
+            ("Even the rewind", "Undo the undo"), ("You can now see", "The timeline"),
+            ("Up next", "Install"), ("Your editor has had undo", "Undo, for agents")]      # brand/<FILM>.mp4 is the film on the landing page; its captions are brand/vsl/<FILM>.srt
 
 
 def srt_cues(path):

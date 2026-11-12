@@ -1,9 +1,11 @@
-"""brand/vsl (RB4a): the three VSL scripts and their captions are rendered from beats.json; every command on
-screen is a README command or one of the four commands of the recorded demo session; every terminal line on
-screen is a line that session printed; every number spoken or shown comes from the code or that session; the
-words BRAND.md never uses are absent; nothing is blocked, judged or stopped except in a sentence that says so;
-planned things are called planned; the product's address is a placeholder, never typed; narration fits the time;
-the end card is the end card; the claim review is someone else's. Stdlib only."""
+"""brand/vsl (RB4a, remade 2026-11-12 as text-led films with no voice): the three VSL scripts and their captions
+are rendered from beats.json, one card per beat; every command on screen is a README command (a command inside a
+README `&&` chain counts) or one of the commands of the recorded demo session; every terminal line on screen is a
+line that session printed; every number on a card or on screen comes from the code or that session; the words
+BRAND.md never uses are absent; nothing is blocked, judged or stopped except in a sentence that says so; planned
+things are called planned; the product's address is a placeholder, never typed; every card stays up long enough to
+read (build.violations); the captions are the cards; the end card is the end card; the claim review is someone
+else's. Stdlib only."""
 import hashlib
 import importlib.util
 import json
@@ -61,13 +63,15 @@ def manifest():
 
 
 def readme_commands():
-    """Every command line of every ```sh block in README.md, without its trailing comment."""
+    """Every command line of every ```sh block in README.md, without its trailing comment; a line that chains
+    commands with && also gives each of its commands."""
     out = set()
     for block in re.findall(r"```sh\n(.*?)```", read(os.path.join(ROOT, "README.md")), re.S):
         for line in block.split("\n"):
             cmd = re.sub(r"\s+#.*$", "", line).strip()
             if cmd:
                 out.add(cmd)
+                out.update(c.strip() for c in cmd.split("&&") if c.strip())
     return out
 
 
@@ -101,7 +105,7 @@ def allowed_numbers():
 
 def text_fields(video):
     for b in video["beats"]:
-        yield b["id"], "voice", b["voice"]
+        yield b["id"], "text", b["text"]
         for s in b["screen"]:
             yield b["id"], "screen", s
         yield b["id"], "visual", b["visual"]
@@ -129,7 +133,10 @@ class TestVsl(unittest.TestCase):
             ids = [b["id"] for b in v["beats"]]
             self.assertEqual(ids, ["b%02d" % i for i in range(1, len(ids) + 1)], v["name"])
             for b in v["beats"]:
-                self.assertEqual(set(b), {"id", "ms", "voice", "screen", "visual", "cites"}, b["id"])
+                self.assertLessEqual({"id", "ms", "text", "screen", "visual", "cites"}, set(b), b["id"])
+                self.assertLessEqual(set(b), {"id", "ms", "text", "screen", "visual", "cites", "accent", "proof_ms",
+                                              "section", "cont", "pause"}, b["id"])
+                self.assertNotIn("voice", b, "%s %s: the films have no voice over" % (v["name"], b["id"]))
                 self.assertIsInstance(b["ms"], int)
                 self.assertIsInstance(b["screen"], list)
                 self.assertIsInstance(b["cites"], list)
@@ -181,8 +188,9 @@ class TestVsl(unittest.TestCase):
             self.assertTrue(any(s.rstrip() in printed for s in screen), "%s shows no real output" % v["name"])
         long = next(v for v in beats()["videos"] if v["name"] == "vsl-90s")
         texts = " ".join(t for _, _, t in text_fields(long))
-        for phrase in ("rewindagents replay", "rm -rf tests", "restore  tests/test_config.py", "Apache-2.0",
-                       "planned", "hash", "not yet in a live session", "undo it with"):
+        for phrase in ("rewindagents replay", "rm -rf tests", "restore  tests/test_config.py", "Apache-2.0", "hash",
+                       "not yet in a live session", "undo it with", "rewindagents init", "rewindagents ui",
+                       "diff 12", "--only", "127.0.0.1", "isn't tracked"):
             self.assertIn(phrase, texts, "vsl-90s does not say %r" % phrase)
 
     def test_numbers_come_from_the_code_or_the_session(self):
@@ -196,6 +204,7 @@ class TestVsl(unittest.TestCase):
                 for line in quoted:  # a command or output line shown on screen is quoted, not claimed
                     t = t.replace(line.strip(), " ")
                 t = t.replace(__version__, " ").replace("3.10", " ").replace("SHA-256", " ").replace("Apache-2.0", " ")
+                t = t.replace("127.0.0.1", " ")  # ui.HOST, pinned by tests/test_ui.py
                 t = re.sub(r"\{site_url\}|\{repo_url\}|\b9:16\b|\b16:9\b|Ctrl\+Z", " ", t)
                 for n in re.findall(r"\d[\d,]*(?:\.\d+)?", t):
                     self.assertIn(n, allowed, "%s %s %s states the number %s: %r" % (v["name"], bid, field, n, text))
@@ -233,7 +242,7 @@ class TestVsl(unittest.TestCase):
                     self.assertNotRegex(low, r"\b(buy|price|pricing|subscribe)\b", text)
                 if "pypi" in low:
                     self.assertRegex(low, r"\b(not|yet|no)\b", "%s %s %s: PyPI without the status: %r" % (v["name"], bid, field, text))
-                if re.search(r"\b(codex|cursor)\b", low) and field == "voice":
+                if re.search(r"\b(codex|cursor)\b", low) and field in ("text", "screen"):
                     self.assertNotRegex(low, r"\b(has run|have run|live session[s]? (has|have)|runs in)\b",
                                         "%s %s claims a live Codex or Cursor run: %r" % (v["name"], bid, text))
 
@@ -249,16 +258,19 @@ class TestVsl(unittest.TestCase):
         for name in VIDEOS:
             self.assertIn("{site_url}", read(os.path.join(VSL, name + ".md")))
 
-    def test_captions_cover_every_spoken_word_in_order_and_fit_two_lines(self):
+    def test_captions_are_the_cards_in_order_and_fit_two_lines(self):
         b = load_build()
         for v in beats()["videos"]:
-            spoken = " ".join(" ".join(b.words(x["voice"])) for x in v["beats"] if x["voice"].strip())
+            spoken = " ".join(" ".join(b.words(x["text"])) for x in v["beats"] if x["text"].strip())
             text = read(os.path.join(VSL, v["name"] + ".srt"))
             cues = re.findall(r"(\d+)\n(\d\d:\d\d:\d\d,\d{3}) --> (\d\d:\d\d:\d\d,\d{3})\n((?:.+\n?)+?)(?:\n|\Z)", text)
             self.assertTrue(cues, v["name"])
             self.assertEqual([int(c[0]) for c in cues], list(range(1, len(cues) + 1)))
             captioned = " ".join(" ".join(c[3].split()) for c in cues)
             self.assertEqual(captioned, spoken, v["name"])
+            # one cue per card, and the cue is the card's text
+            self.assertEqual([" ".join(c[3].split()) for c in cues], [" ".join(x["text"].split()) for x in v["beats"]],
+                             v["name"])
             last_end = 0
             for _, start, end, body in cues:
                 lines = body.strip("\n").split("\n")

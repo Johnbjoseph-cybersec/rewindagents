@@ -1,173 +1,411 @@
 {
-  "written_by": "cs-rohan-iyer",
-  "date": "2026-11-11",
-  "note": "Source of truth for the three VSLs. Every command on screen is an sh line of README.md or a command of brand/demo/manifest.json, every terminal output line is a verbatim line of a manifest output field, every number comes from README.md or the manifest. {site_url} and {repo_url} are filled at render time.",
+  "written_by": "fire-vsl-remake",
+  "date": "2026-11-12",
+  "note": "Source of truth for the three VSLs (remake of 2026-11-12, John: no voice over, explain through text, very clear, motion graphics). Each beat is one card: `text` is the line on screen and in the .srt, `accent` the one phrase in the accent colour, `screen` the proof under it. Every command on screen is an sh line of README.md (a command inside a README `&&` chain counts) or a command of brand/demo/manifest.json, every terminal output line is a verbatim line of a manifest output field, every number comes from README.md, the package or the manifest. `ms` is not written by hand: build.py fit sets it from reading time (READ_MS_PER_WORD a word + READ_MS_BASE, at least MIN_BEAT_MS) plus the card's `proof_ms` for its animation. {site_url} and {repo_url} are filled at render time.",
   "videos": [
     {
       "name": "vsl-90s",
       "aspect": "16:9",
       "max_ms": 90000,
-      "title": "Step back to twelve: rewindagents on a real session",
+      "title": "Your agent deleted the tests. Here is how you get them back.",
+      "new_terms": [
+        "rewind",
+        "hash-chained log"
+      ],
       "beats": [
         {
           "id": "b01",
-          "ms": 3000,
-          "voice": "Step thirteen. The agent deletes your tests.",
-          "screen": ["   13  Bash          rm -rf tests  [3 checkpointed]"],
-          "visual": "Frame one, no fade-in: a Spool terminal panel on Leader, one replay row in Commit Mono, the row in Rewind. Above the panel the step ruler: thirteen Rule ticks on a hairline, the playhead in Record on the last one.",
-          "cites": ["   13  Bash          rm -rf tests  [3 checkpointed]"]
+          "ms": 3300,
+          "section": "HOOK",
+          "text": "Your agent just ran fourteen steps.",
+          "accent": "fourteen steps",
+          "proof_ms": 400,
+          "screen": [],
+          "visual": "Frame one on Leader paper: the line builds word by word out of a mask, big, in Bricolage Grotesque; the step ruler at the top draws fourteen ticks left to right, the Record playhead riding the newest tick.",
+          "cites": [
+            "brand/demo/manifest.json: fourteen replay rows"
+          ]
         },
         {
           "id": "b02",
-          "ms": 3000,
-          "voice": "Step fourteen. It overwrites the config.",
-          "screen": ["   13  Bash          rm -rf tests  [3 checkpointed]", "   14  Write         app/config.py  [1 checkpointed]"],
-          "visual": "The second row types in under the first; both rows now one Rewind pair, the thing to look at. The ruler gains a fourteenth tick and the Record playhead moves onto it.",
-          "cites": ["   14  Write         app/config.py  [1 checkpointed]"]
+          "ms": 4350,
+          "section": "HOOK",
+          "text": "Then it deleted your tests and overwrote your config.",
+          "accent": "deleted your tests",
+          "proof_ms": 400,
+          "screen": [
+            "   12  Read          tests/test_server.py",
+            "   13  Bash          rm -rf tests  [3 checkpointed]",
+            "   14  Write         app/config.py  [1 checkpointed]"
+          ],
+          "visual": "Same scene, the camera still pushing in: the headline swaps (old line masks up and out, the new one rises in). A Spool panel under it: row twelve in Leader, then rows thirteen and fourteen type in and take the Rewind.",
+          "cites": [
+            "   13  Bash          rm -rf tests  [3 checkpointed]",
+            "   14  Write         app/config.py  [1 checkpointed]"
+          ],
+          "cont": true
         },
         {
           "id": "b03",
-          "ms": 3500,
-          "voice": "Git status agrees. Two test files, gone.",
-          "screen": ["git status --short", " M README.md", " M app/config.py", " M app/server.py", " D tests/test_config.py", " D tests/test_server.py"],
-          "visual": "Same Spool panel. The command types at the Playhead prompt in Leader, the five status lines print in Leader, then the two D lines turn Rewind.",
-          "cites": [" D tests/test_config.py", " D tests/test_server.py"]
+          "ms": 3150,
+          "section": "HOOK",
+          "text": "Can you get them back?",
+          "accent": "back",
+          "proof_ms": 600,
+          "screen": [
+            "git status --short",
+            " M README.md",
+            " M app/config.py",
+            " M app/server.py",
+            " D tests/test_config.py",
+            " D tests/test_server.py"
+          ],
+          "visual": "Rewind wipe: the playhead sweeps right to left across the frame and the old scene slides back under it. git status prints; the two deleted test paths are struck through in Rewind, one after the other.",
+          "cites": [
+            " D tests/test_config.py",
+            " D tests/test_server.py"
+          ]
         },
         {
           "id": "b04",
-          "ms": 5000,
-          "voice": "There were three. The third was never committed. Git can't return it.",
-          "screen": ["    6  Write         tests/test_timeout.py  [1 checkpointed]", "never committed"],
-          "visual": "The step ruler slides back: the Record playhead travels from tick fourteen to tick six. In the Spool panel the row for step six appears in Rewind; under the panel, never committed in Hanken Grotesk, Tape on Leader.",
-          "cites": ["    6  Write         tests/test_timeout.py  [1 checkpointed]", "tracked and untracked files, but not git-ignored ones"]
+          "ms": 4150,
+          "section": "HOOK",
+          "text": "Three parts: the problem, how it works, the fix.",
+          "accent": "the problem",
+          "proof_ms": 200,
+          "screen": [
+            "the problem",
+            "how it works",
+            "the fix"
+          ],
+          "visual": "A roadmap: three ticks on a short rule, each label rising in under its tick as the line names it; the problem in Record, the parts still to come in Tape.",
+          "cites": []
         },
         {
           "id": "b05",
-          "ms": 3000,
-          "voice": "But rewindagents recorded all fourteen steps.",
-          "screen": ["rewindagents replay", "   10  Edit          README.md  [1 checkpointed]", "   11  Bash          git status --short", "   12  Read          tests/test_server.py", "   13  Bash          rm -rf tests  [3 checkpointed]", "   14  Write         app/config.py  [1 checkpointed]"],
-          "visual": "The command types in Leader at the Playhead prompt, then the replay list prints one row per tick while the ruler fills to fourteen ticks in Rule; the panel settles on the last five rows. Rows thirteen and fourteen in Rewind, the rest in Leader.",
-          "cites": ["one line per step: number, tool, file or command", "   13  Bash          rm -rf tests  [3 checkpointed]", "   14  Write         app/config.py  [1 checkpointed]"]
+          "ms": 4900,
+          "section": "WHY IT MATTERS",
+          "text": "Why can't git help? The third test was never committed.",
+          "accent": "never committed",
+          "proof_ms": 600,
+          "screen": [
+            "    6  Write         tests/test_timeout.py  [1 checkpointed]",
+            "untracked: git has no copy of it"
+          ],
+          "visual": "Rewind wipe. The ruler's playhead scrubs back from fourteen to six and two Rule brackets close round tick six. The step six row (the agent wrote tests/test_timeout.py) prints in Rewind; a never committed tag in Tape under it.",
+          "cites": [
+            "    6  Write         tests/test_timeout.py  [1 checkpointed]",
+            "tracked and untracked files, but not git-ignored ones"
+          ]
         },
         {
           "id": "b06",
-          "ms": 3000,
-          "voice": "Step twelve was the last good one.",
-          "screen": ["   12  Read          tests/test_server.py"],
-          "visual": "Rows thirteen and fourteen return to Leader; row twelve takes the Rewind. On the ruler the Record playhead steps back two ticks and sits on twelve, the two ticks after it in Rule grey.",
-          "cites": ["   12  Read          tests/test_server.py"]
+          "ms": 3450,
+          "section": "WHY IT MATTERS",
+          "text": "Claude Code's docs: shell-only changes aren't tracked.",
+          "accent": "aren't tracked",
+          "proof_ms": 200,
+          "screen": [
+            "\"A file that only Bash commands changed isn't tracked ...\"",
+            "Claude Code docs, checkpointing"
+          ],
+          "visual": "Rewind wipe to a quote card: the sentence from Claude Code's checkpointing page in Commit Mono builds in, isn't tracked underlined in Record; the source in Tape.",
+          "cites": [
+            "A file that only Bash commands changed isn't tracked and stays as it is."
+          ]
         },
         {
           "id": "b07",
-          "ms": 2000,
-          "voice": "So rewind to it.",
-          "screen": ["rewindagents rewind 12"],
-          "visual": "The Playhead prompt comes back and the command types in Leader in Commit Mono. The ruler holds still, playhead on twelve.",
-          "cites": ["files back to how they were right after step 12"]
+          "ms": 3950,
+          "section": "ANALOGY",
+          "text": "So what would help? Think of a flight recorder.",
+          "accent": "flight recorder",
+          "proof_ms": 0,
+          "screen": [],
+          "visual": "Rewind wipe to a type card: the question, then the analogy, centred on paper, flight recorder in Record.",
+          "cites": []
         },
         {
           "id": "b08",
-          "ms": 4000,
-          "voice": "Four files back: all three tests and the config.",
-          "screen": ["session demo: rewind to step 12 of 14 (did change 4 files)", "  restore  tests/test_config.py", "  restore  tests/test_server.py", "  restore  tests/test_timeout.py", "  restore  app/config.py"],
-          "visual": "The report prints in the Spool panel. The four restore lines turn Rewind, one per spoken item, the header line stays Leader.",
-          "cites": ["session demo: rewind to step 12 of 14 (did change 4 files)", "  restore  tests/test_config.py", "  restore  tests/test_server.py", "  restore  tests/test_timeout.py", "  restore  app/config.py"]
+          "ms": 4250,
+          "section": "ANALOGY",
+          "text": "It keeps every move, so you can replay it.",
+          "accent": "replay",
+          "proof_ms": 300,
+          "screen": [
+            "flight recorder   every move, kept"
+          ],
+          "visual": "The analogy map draws: a hairline grid of two columns; flight recorder on the left, every move, kept on the right.",
+          "cites": []
         },
         {
           "id": "b09",
-          "ms": 4500,
-          "voice": "And the rewind is step fifteen. You can undo the undo.",
-          "screen": ["  this rewind is step 15; undo it with: rewindagents rewind 14 --session demo", "A rewind is undoable."],
-          "visual": "The restore lines return to Leader and the last line of the report, the one that gives the undo command, takes the Rewind. On the ruler a fifteenth tick draws itself after fourteen in Rule. The caption sits under the panel in Hanken Grotesk, Reel on Leader.",
-          "cites": ["  this rewind is step 15; undo it with: rewindagents rewind 14 --session demo", "A rewind is undoable."]
+          "ms": 3550,
+          "section": "CONCEPT",
+          "text": "So how does rewindagents record your agent?",
+          "accent": "record your agent",
+          "proof_ms": 300,
+          "screen": [
+            "flight recorder   every move, kept",
+            "the agent's log   every tool call, kept"
+          ],
+          "visual": "Same map, held: the second row lands under the first, aligned column for column, the agent's log in Record.",
+          "cites": [
+            "Every tool call goes into a tamper-evident, hash-chained log"
+          ],
+          "cont": true
         },
         {
           "id": "b10",
-          "ms": 4000,
-          "voice": "The first twelve steps stay. So does the new test.",
-          "screen": ["git status --short", " M README.md", " M app/config.py", " M app/server.py", "?? tests/test_timeout.py"],
-          "visual": "The status prints in Leader; the untracked line, the file git could not return, is the one Rewind line. On the ruler ticks one to twelve are solid Reel, the playhead in Record on twelve.",
-          "cites": [" M README.md", " M app/config.py", " M app/server.py", "?? tests/test_timeout.py", "the tests are back; the first 12 steps stay"]
+          "ms": 4100,
+          "section": "CONCEPT",
+          "text": "Every tool call goes into one hash-chained log.",
+          "accent": "hash-chained log",
+          "proof_ms": 500,
+          "screen": [
+            ".rewindagents/log.jsonl",
+            "each record holds the SHA-256 of the one before"
+          ],
+          "visual": "Rewind wipe. Seven record cards in Spool draw in left to right, each joined to the one before by a hairline that draws as the card lands (the chain); the log path and the SHA-256 rule under them.",
+          "cites": [
+            "tamper-evident, hash-chained log",
+            "Each record holds the SHA-256 of the record before it"
+          ]
         },
         {
           "id": "b11",
-          "ms": 6000,
-          "voice": "Every tool call goes into a hash-chained log. Edit one record and verify names it.",
-          "screen": ["rewindagents verify", ".rewindagents/log.jsonl", "each record holds the SHA-256 of the one before"],
-          "visual": "Cut to Leader. The step ruler fills the width, and each tick becomes a short line of JSONL in Commit Mono, Reel, joined to the next by a Rule hairline. One record in the middle shifts a character; its hairline breaks and that record alone is marked in Record. Then the verify command in a small Spool panel.",
-          "cites": ["tamper-evident, hash-chained log", "Each record holds the SHA-256 of the record before it", "makes `verify` fail and name the first bad record"]
+          "ms": 4450,
+          "section": "CONCEPT",
+          "text": "Before each edit or shell command, files are saved.",
+          "accent": "saved",
+          "proof_ms": 500,
+          "screen": [
+            "   13  Bash          rm -rf tests  [3 checkpointed]",
+            "saved before, scanned after"
+          ],
+          "visual": "Rewind wipe. Two Rule brackets close round tick thirteen on the ruler; the step thirteen row in a Spool panel; on the beat only its three checkpointed mark turns Rewind; the note saved before, scanned after in Tape.",
+          "cites": [
+            "the current bytes of the target file are copied",
+            "project's files before the command, scans again after it",
+            "   13  Bash          rm -rf tests  [3 checkpointed]"
+          ]
         },
         {
           "id": "b12",
-          "ms": 4500,
-          "voice": "Before every edit, the hook copies the file as it is.",
-          "screen": ["Write  Edit  MultiEdit  NotebookEdit", ".rewindagents/objects/<sha256>"],
-          "visual": "Leader ground. Four tool names in Commit Mono, Tape, on one row. Under one tick of the ruler a small file card in Spool drops a copy into a row labelled with the objects path; the copy is outlined in Record.",
-          "cites": ["the current bytes of the target file are copied", "to `.rewindagents/objects/<sha256>`"]
+          "ms": 4150,
+          "section": "WORKED EXAMPLE",
+          "text": "So which step would you rewind to?",
+          "accent": "which step",
+          "proof_ms": 900,
+          "screen": [
+            "rewindagents replay",
+            "   10  Edit          README.md  [1 checkpointed]",
+            "   11  Bash          git status --short",
+            "   12  Read          tests/test_server.py",
+            "   13  Bash          rm -rf tests  [3 checkpointed]",
+            "   14  Write         app/config.py  [1 checkpointed]"
+          ],
+          "visual": "Rewind wipe. rewindagents replay types; the last five rows print in Leader with nothing highlighted, the ruler full at fourteen. The frame holds: no answer shows before the next card.",
+          "cites": [
+            "one line per step: number, tool, file or command"
+          ],
+          "pause": {
+            "answer": "Step twelve, the last step before the delete."
+          }
         },
         {
           "id": "b13",
-          "ms": 6000,
-          "voice": "Around every Bash command it saves first, scans after. So step thirteen kept three copies.",
-          "screen": ["   13  Bash          rm -rf tests  [3 checkpointed]", "saved before, scanned after"],
-          "visual": "Two Rule brackets close around tick thirteen on the ruler, one before it, one after it, labelled in Hanken Grotesk, Tape. Below, the step thirteen row in a Spool panel, and only the three checkpointed mark in Rewind.",
-          "cites": ["project's files before the command, scans again after it", "   13  Bash          rm -rf tests  [3 checkpointed]"]
+          "ms": 3200,
+          "section": "REVEAL",
+          "text": "Twelve, because thirteen is the delete.",
+          "accent": "Twelve,",
+          "proof_ms": 300,
+          "screen": [
+            "   10  Edit          README.md  [1 checkpointed]",
+            "   11  Bash          git status --short",
+            "   12  Read          tests/test_server.py",
+            "   13  Bash          rm -rf tests  [3 checkpointed]",
+            "   14  Write         app/config.py  [1 checkpointed]"
+          ],
+          "visual": "Same panel: row twelve takes the Rewind and the ruler's playhead scrubs back two ticks to twelve.",
+          "cites": [
+            "   12  Read          tests/test_server.py"
+          ],
+          "cont": true
         },
         {
           "id": "b14",
-          "ms": 5500,
-          "voice": "rewindagents install adds the Claude Code hook. It has run in real sessions.",
-          "screen": ["cd /path/to/your/project", "rewindagents install", "Claude Code: has run in real sessions"],
-          "visual": "Spool panel on Leader, both commands type in Leader at the Playhead prompt. Beside the panel a status row in Hanken Grotesk, Reel, with one Record tick in front of it.",
-          "cites": ["adds the hook to .claude/settings.json in this project", "The Claude Code hook has run in real"]
+          "ms": 4250,
+          "section": "REVEAL",
+          "text": "One command, and four files come back.",
+          "accent": "four files",
+          "proof_ms": 1000,
+          "screen": [
+            "rewindagents rewind 12",
+            "session demo: rewind to step 12 of 14 (did change 4 files)",
+            "  restore  tests/test_config.py",
+            "  restore  tests/test_server.py",
+            "  restore  tests/test_timeout.py",
+            "  restore  app/config.py"
+          ],
+          "visual": "Rewind wipe (the rewind itself). rewindagents rewind 12 types; the report prints with the four paths struck through, then the strikes pull back right to left one by one and the paths turn Rewind: the deleted files restoring in reverse.",
+          "cites": [
+            "files back to how they were right after step 12",
+            "session demo: rewind to step 12 of 14 (did change 4 files)",
+            "  restore  tests/test_config.py",
+            "  restore  tests/test_server.py",
+            "  restore  tests/test_timeout.py",
+            "  restore  app/config.py"
+          ]
         },
         {
           "id": "b15",
-          "ms": 8000,
-          "voice": "Codex and Cursor: built from the vendors' hook documentation, tested with the documented payloads. Not yet in a live session.",
-          "screen": ["rewindagents install --agent codex", "rewindagents install --agent cursor", "built from the vendors' hook documentation", "tested with the documented payloads", "not yet in a live session"],
-          "visual": "The same panel, two more install lines in Leader. Beside it the status rows continue in Reel, each set as spoken; the last row, not yet in a live session, is the one Record line, and its tick on the ruler is drawn open, an outline in Rule.",
-          "cites": ["built from the vendors' hook documentation", "documented payloads, not yet in a live session"]
+          "ms": 3300,
+          "section": "REVEAL",
+          "text": "Even the rewind can be undone.",
+          "accent": "undone",
+          "proof_ms": 400,
+          "screen": [
+            "rewindagents rewind 12",
+            "session demo: rewind to step 12 of 14 (did change 4 files)",
+            "  restore  tests/test_config.py",
+            "  restore  tests/test_server.py",
+            "  restore  tests/test_timeout.py",
+            "  restore  app/config.py",
+            "  this rewind is step 15; undo it with: rewindagents rewind 14 --session demo"
+          ],
+          "visual": "Same panel: the restore lines settle to Leader, the undo line prints in Rewind and a fifteenth tick grows on the ruler.",
+          "cites": [
+            "  this rewind is step 15; undo it with: rewindagents rewind 14 --session demo",
+            "A rewind is undoable."
+          ],
+          "cont": true
         },
         {
           "id": "b16",
-          "ms": 6500,
-          "voice": "Files over twenty megabytes aren't copied. Over twenty thousand files, no scan, and rewind says so.",
-          "screen": ["files over 20 MB: noted, not copied", "over 20,000 files: not scanned, reported"],
-          "visual": "Leader page headed limits in Bricolage Grotesque, Reel. Two rows in Commit Mono, Reel, each under a Rule hairline, the numbers tabular. The word reported is the one Record word.",
-          "cites": ["Files over 20 MB are noted and not copied.", "A project with more than 20,000 files is not scanned; the call is still recorded and `rewind` reports it."]
+          "ms": 4500,
+          "section": "BREAK",
+          "text": "Where does the analogy break? Recorders can't undo a crash.",
+          "accent": "can't undo",
+          "proof_ms": 200,
+          "screen": [
+            "flight recorder   every move, kept",
+            "the agent's log   every tool call, kept",
+            "flight recorder   can't undo the crash"
+          ],
+          "visual": "Rewind wipe back to the analogy map: the two rows return in Tape and a third row draws under them, flight recorder, can't undo the crash.",
+          "cites": []
         },
         {
           "id": "b17",
-          "ms": 4500,
-          "voice": "Export it as one HTML page. Find it later with sessions.",
-          "screen": ["rewindagents export", ".rewindagents/replay-<session>.html", "rewindagents sessions"],
-          "visual": "Spool panel: the export command and the path it writes in Leader. A plain page in Leader slides in beside it, the step ruler across its top, one step row with its diff in Commit Mono. Then the sessions command, its line marked latest in Rewind.",
-          "cites": ["writes .rewindagents/replay-<session>.html", "One HTML file with the whole session", "every session in the log"]
+          "ms": 3950,
+          "section": "BREAK",
+          "text": "Unlike a recorder, this one puts your files back.",
+          "accent": "files back",
+          "proof_ms": 0,
+          "screen": [
+            "flight recorder   every move, kept",
+            "the agent's log   every tool call, kept",
+            "flight recorder   can't undo the crash",
+            "the agent's log   rewind 12: files back"
+          ],
+          "visual": "Same map: the fourth row, the agent's log, rewind 12: files back, lands in Record; the one row that has no flight-recorder twin.",
+          "cites": [
+            "files back to how they were right after step 12"
+          ],
+          "cont": true
         },
         {
           "id": "b18",
-          "ms": 5000,
-          "voice": "Apache-2.0, standard library only. Not on PyPI yet: install from the repository.",
-          "screen": ["Apache-2.0", "Python 3.10 or newer, standard library only", "not on PyPI yet", "{repo_url}"],
-          "visual": "Leader page, four rows in Commit Mono, Reel, separated by Rule hairlines, left aligned. The repository placeholder row is the one Record line.",
-          "cites": ["Apache-2.0", "Python 3.10 or newer", "no dependencies beyond the Python standard library", "Not on PyPI yet.", "From the repository"]
+          "ms": 4250,
+          "section": "RECAP",
+          "text": "Preview with diff. Take back one file with --only.",
+          "accent": "one file",
+          "proof_ms": 300,
+          "screen": [
+            "rewindagents diff 12",
+            "rewindagents rewind 12 --only src/db.py"
+          ],
+          "visual": "Rewind wipe. Two commands from the README, each typing into its own Spool chip as its sentence lands.",
+          "cites": [
+            "what taking it back to step 12 would change",
+            "`rewind N --only PATH` puts back only those files"
+          ]
         },
         {
           "id": "b19",
-          "ms": 4000,
-          "voice": "A paid Cloud tier is planned. Not built, not priced.",
-          "screen": ["Cloud tier: planned", "planned: cloud sync, shareable replay links", "not built, not priced"],
-          "visual": "Leader page with a small planned label outlined in Record beside the heading. The items in Tape on ruled rows, their ticks drawn open in Rule because nothing here is built.",
-          "cites": ["A paid Cloud tier (cloud sync, shareable replay links, long retention, session search): planned, not built", "not priced"]
+          "ms": 5150,
+          "section": "RECAP",
+          "text": "You can now see every step and undo any of it.",
+          "accent": "every step",
+          "proof_ms": 500,
+          "screen": [
+            "rewindagents ui",
+            "the timeline runs on 127.0.0.1 only"
+          ],
+          "visual": "Match cut: the ruler's playhead drops into the real rewindagents ui timeline (screenshot of the demo session), the camera pushes in on the rewound steps; the command in a small Spool chip, the 127.0.0.1 note in Tape.",
+          "cites": [
+            "opens the timeline in your browser",
+            "It listens on 127.0.0.1 only"
+          ]
         },
         {
           "id": "b20",
-          "ms": 4500,
-          "voice": "Your editor has had undo for decades. Now your agent does.",
-          "screen": ["rewindagents", "Ctrl+Z for AI coding agents: record, replay, rewind.", "{site_url}", "made by John B Joseph"],
-          "visual": "End card on Reel, like the end of a tape: the wordmark in Bricolage Grotesque 800, Leader, with the mark beside it, the playhead in Rewind one tick behind the last. The promise in Hanken Grotesk, Playhead; the address in Commit Mono, Leader; a Rule hairline; the credit line in Playhead.",
-          "cites": ["Ctrl+Z for AI coding agents: record, replay and rewind."]
+          "ms": 4800,
+          "section": "BRIDGE",
+          "text": "Up next: rewindagents init finds the seven agents it supports.",
+          "accent": "seven agents",
+          "proof_ms": 500,
+          "screen": [
+            "rewindagents init",
+            "Claude Code: has run in real sessions",
+            "Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen Code:",
+            "tested with documented payloads, not yet in a live session"
+          ],
+          "visual": "Rewind wipe. rewindagents init types in a Spool panel only as wide as the command; under it two bullet notes: Claude Code has run in real sessions (Reel), then the other six by name with their status on the line under, tested with documented payloads, not yet in a live session (both lines in Record).",
+          "cites": [
+            "looks for the agents it supports (Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen Code)",
+            "The Claude Code hook has run in real sessions",
+            "tested with the documented payloads, not yet in a live session of any of them"
+          ]
+        },
+        {
+          "id": "b21",
+          "ms": 3800,
+          "section": "BRIDGE",
+          "text": "Apache-2.0. Standard library only. Not on PyPI yet.",
+          "accent": "Not on PyPI yet.",
+          "proof_ms": 200,
+          "screen": [
+            "Python 3.10 or newer, standard library only",
+            "{repo_url}"
+          ],
+          "visual": "Rewind wipe. The three short sentences build one a line; under them two ruled rows in Commit Mono rise in (the Python requirement, then the repository address, the one Record line), so the card never repeats its own words.",
+          "cites": [
+            "Apache-2.0",
+            "Python 3.10 or newer",
+            "No dependencies beyond the standard library",
+            "Not on PyPI yet.",
+            "From the repository"
+          ]
+        },
+        {
+          "id": "b22",
+          "ms": 5050,
+          "section": "BRIDGE",
+          "text": "Your editor has had undo for decades. Now your agent does.",
+          "accent": "Now your agent does.",
+          "proof_ms": 400,
+          "screen": [
+            "rewindagents",
+            "Ctrl+Z for AI coding agents: record, replay, rewind.",
+            "{site_url}",
+            "made by John B Joseph"
+          ],
+          "visual": "The last rewind wipe turns the paper to Reel: the line builds at the top in Leader, then the wordmark with its playhead in Rewind, the promise in Playhead, the address in Commit Mono and the credit line.",
+          "cites": [
+            "Ctrl+Z for AI coding agents: record, replay and rewind."
+          ]
         }
       ]
     },
@@ -179,67 +417,132 @@
       "beats": [
         {
           "id": "b01",
-          "ms": 3000,
-          "voice": "Step thirteen. The agent deletes your tests.",
-          "screen": ["   13  Bash          rm -rf tests  [3 checkpointed]"],
-          "visual": "Frame one, no fade-in: Spool terminal panel on Leader, the replay row in Commit Mono in Rewind. Above it the step ruler, thirteen Rule ticks, the playhead in Record on the last.",
-          "cites": ["   13  Bash          rm -rf tests  [3 checkpointed]"]
+          "ms": 3300,
+          "text": "Your agent just ran fourteen steps.",
+          "accent": "fourteen steps",
+          "proof_ms": 400,
+          "screen": [],
+          "visual": "Frame one on Leader paper: the line builds word by word out of a mask, big, in Bricolage Grotesque; the step ruler at the top draws fourteen ticks left to right, the Record playhead riding the newest tick.",
+          "cites": [
+            "brand/demo/manifest.json: fourteen replay rows"
+          ]
         },
         {
           "id": "b02",
-          "ms": 3000,
-          "voice": "Step fourteen. It overwrites the config.",
-          "screen": ["   13  Bash          rm -rf tests  [3 checkpointed]", "   14  Write         app/config.py  [1 checkpointed]"],
-          "visual": "The second row types in; both rows are the one Rewind pair. A fourteenth tick appears and the Record playhead moves onto it.",
-          "cites": ["   14  Write         app/config.py  [1 checkpointed]"]
+          "ms": 4350,
+          "text": "Then it deleted your tests and overwrote your config.",
+          "accent": "deleted your tests",
+          "proof_ms": 400,
+          "screen": [
+            "   12  Read          tests/test_server.py",
+            "   13  Bash          rm -rf tests  [3 checkpointed]",
+            "   14  Write         app/config.py  [1 checkpointed]"
+          ],
+          "visual": "Same scene, the camera still pushing in: the headline swaps (old line masks up and out, the new one rises in). A Spool panel under it: row twelve in Leader, then rows thirteen and fourteen type in and take the Rewind.",
+          "cites": [
+            "   13  Bash          rm -rf tests  [3 checkpointed]",
+            "   14  Write         app/config.py  [1 checkpointed]"
+          ],
+          "cont": true
         },
         {
           "id": "b03",
-          "ms": 4500,
-          "voice": "rewindagents replay lists every step. Twelve was the last good one.",
-          "screen": ["rewindagents replay", "   12  Read          tests/test_server.py", "   13  Bash          rm -rf tests  [3 checkpointed]", "   14  Write         app/config.py  [1 checkpointed]"],
-          "visual": "The command types in Leader at the Playhead prompt and the list prints. On the second sentence row twelve takes the Rewind, rows thirteen and fourteen go back to Leader, and the Record playhead steps back to tick twelve.",
-          "cites": ["one line per step: number, tool, file or command", "   12  Read          tests/test_server.py"]
+          "ms": 3150,
+          "text": "Can you get them back?",
+          "accent": "back",
+          "proof_ms": 600,
+          "screen": [
+            "git status --short",
+            " M README.md",
+            " M app/config.py",
+            " M app/server.py",
+            " D tests/test_config.py",
+            " D tests/test_server.py"
+          ],
+          "visual": "Rewind wipe: the playhead sweeps right to left across the frame and the old scene slides back under it. git status prints; the two deleted test paths are struck through in Rewind, one after the other.",
+          "cites": [
+            " D tests/test_config.py",
+            " D tests/test_server.py"
+          ]
         },
         {
           "id": "b04",
-          "ms": 2500,
-          "voice": "So rewind to twelve.",
-          "screen": ["rewindagents rewind 12"],
-          "visual": "Prompt back in Playhead, the command types in Leader in Commit Mono. The ruler holds, playhead on twelve.",
-          "cites": ["files back to how they were right after step 12"]
+          "ms": 4150,
+          "text": "So which step would you rewind to?",
+          "accent": "which step",
+          "proof_ms": 900,
+          "screen": [
+            "rewindagents replay",
+            "   10  Edit          README.md  [1 checkpointed]",
+            "   11  Bash          git status --short",
+            "   12  Read          tests/test_server.py",
+            "   13  Bash          rm -rf tests  [3 checkpointed]",
+            "   14  Write         app/config.py  [1 checkpointed]"
+          ],
+          "visual": "Rewind wipe. rewindagents replay types; the last five rows print in Leader with nothing highlighted, the ruler full at fourteen. The frame holds: no answer shows before the next card.",
+          "cites": [
+            "one line per step: number, tool, file or command"
+          ]
         },
         {
           "id": "b05",
-          "ms": 3500,
-          "voice": "Four files back. The tests, and the config.",
-          "screen": ["session demo: rewind to step 12 of 14 (did change 4 files)", "  restore  tests/test_config.py", "  restore  tests/test_server.py", "  restore  tests/test_timeout.py", "  restore  app/config.py"],
-          "visual": "The report prints; the four restore lines are the Rewind lines, the header in Leader.",
-          "cites": ["session demo: rewind to step 12 of 14 (did change 4 files)", "  restore  tests/test_config.py", "  restore  tests/test_server.py", "  restore  tests/test_timeout.py", "  restore  app/config.py"]
+          "ms": 3200,
+          "text": "Twelve, because thirteen is the delete.",
+          "accent": "Twelve,",
+          "proof_ms": 300,
+          "screen": [
+            "   10  Edit          README.md  [1 checkpointed]",
+            "   11  Bash          git status --short",
+            "   12  Read          tests/test_server.py",
+            "   13  Bash          rm -rf tests  [3 checkpointed]",
+            "   14  Write         app/config.py  [1 checkpointed]"
+          ],
+          "visual": "Same panel: row twelve takes the Rewind and the ruler's playhead scrubs back two ticks to twelve.",
+          "cites": [
+            "   12  Read          tests/test_server.py"
+          ],
+          "cont": true
         },
         {
           "id": "b06",
-          "ms": 3000,
-          "voice": "And the rewind itself can be undone.",
-          "screen": ["A rewind is undoable."],
-          "visual": "The last report line, the undo command, takes the Rewind; a fifteenth tick draws itself on the ruler in Rule. Caption under the panel in Hanken Grotesk, Reel on Leader.",
-          "cites": ["  this rewind is step 15; undo it with: rewindagents rewind 14 --session demo", "A rewind is undoable."]
+          "ms": 4250,
+          "text": "One command, and four files come back.",
+          "accent": "four files",
+          "proof_ms": 1000,
+          "screen": [
+            "rewindagents rewind 12",
+            "session demo: rewind to step 12 of 14 (did change 4 files)",
+            "  restore  tests/test_config.py",
+            "  restore  tests/test_server.py",
+            "  restore  tests/test_timeout.py",
+            "  restore  app/config.py"
+          ],
+          "visual": "Rewind wipe (the rewind itself). rewindagents rewind 12 types; the report prints with the four paths struck through, then the strikes pull back right to left one by one and the paths turn Rewind: the deleted files restoring in reverse.",
+          "cites": [
+            "files back to how they were right after step 12",
+            "session demo: rewind to step 12 of 14 (did change 4 files)",
+            "  restore  tests/test_config.py",
+            "  restore  tests/test_server.py",
+            "  restore  tests/test_timeout.py",
+            "  restore  app/config.py"
+          ]
         },
         {
           "id": "b07",
-          "ms": 5000,
-          "voice": "Install it from the repository, then run rewindagents install in your project.",
-          "screen": ["{repo_url}", "not on PyPI yet", "rewindagents install"],
-          "visual": "Leader page, the repository placeholder in Commit Mono as the one Record line, the not-on-PyPI note under a Rule hairline in Tape. Then a small Spool panel with the install command in Leader.",
-          "cites": ["From the repository", "Not on PyPI yet.", "adds the hook to .claude/settings.json in this project"]
-        },
-        {
-          "id": "b08",
-          "ms": 4500,
-          "voice": "Your editor has had undo for decades. Now your agent does.",
-          "screen": ["rewindagents", "Ctrl+Z for AI coding agents: record, replay, rewind.", "{site_url}", "made by John B Joseph"],
-          "visual": "End card on Reel: wordmark in Bricolage Grotesque 800, Leader, the mark with its Rewind playhead one tick behind the last; promise in Hanken Grotesk, Playhead; address in Commit Mono, Leader; a Rule hairline; the credit line in Playhead.",
-          "cites": ["Ctrl+Z for AI coding agents: record, replay and rewind."]
+          "ms": 5050,
+          "text": "Your editor has had undo for decades. Now your agent does.",
+          "accent": "Now your agent does.",
+          "proof_ms": 400,
+          "screen": [
+            "rewindagents",
+            "Ctrl+Z for AI coding agents: record, replay, rewind.",
+            "{site_url}",
+            "made by John B Joseph"
+          ],
+          "visual": "The last rewind wipe turns the paper to Reel: the line builds at the top in Leader, then the wordmark with its playhead in Rewind, the promise in Playhead, the address in Commit Mono and the credit line.",
+          "cites": [
+            "Ctrl+Z for AI coding agents: record, replay and rewind."
+          ]
         }
       ]
     },
@@ -251,43 +554,60 @@
       "beats": [
         {
           "id": "b01",
-          "ms": 2500,
-          "voice": "Your agent just deleted the tests.",
-          "screen": [" D tests/test_config.py", " D tests/test_server.py"],
-          "visual": "Frame one: a tall Spool panel fills the middle of a Leader frame, the two lines large in Commit Mono in Rewind. Above it a short step ruler, fourteen Rule ticks, the playhead in Record on the last.",
-          "cites": [" D tests/test_config.py", " D tests/test_server.py"]
+          "ms": 3450,
+          "text": "Can you get them back?",
+          "accent": "back",
+          "proof_ms": 900,
+          "screen": [
+            " D tests/test_config.py",
+            " D tests/test_server.py",
+            " M app/config.py"
+          ],
+          "visual": "Frame one, vertical: the question builds big at the top; a tall Spool panel shows the three git status lines large, the two deleted test paths struck through in Rewind.",
+          "cites": [
+            " D tests/test_config.py",
+            " D tests/test_server.py",
+            " M app/config.py"
+          ]
         },
         {
           "id": "b02",
-          "ms": 2000,
-          "voice": "And overwrote the config.",
-          "screen": [" M app/config.py"],
-          "visual": "The two lines return to Leader; the new line below them is the Rewind line, set as large.",
-          "cites": [" M app/config.py", "   14  Write         app/config.py  [1 checkpointed]"]
+          "ms": 4750,
+          "text": "One command, and four files come back.",
+          "accent": "four files",
+          "proof_ms": 1500,
+          "screen": [
+            "rewindagents rewind 12",
+            "  restore  tests/test_config.py",
+            "  restore  tests/test_server.py",
+            "  restore  tests/test_timeout.py",
+            "  restore  app/config.py"
+          ],
+          "visual": "Rewind wipe, right to left. The rewind command types; the four restore lines print large and struck through, then the strikes pull back one by one and the paths turn Rewind.",
+          "cites": [
+            "files back to how they were right after step 12",
+            "  restore  tests/test_config.py",
+            "  restore  tests/test_server.py",
+            "  restore  tests/test_timeout.py",
+            "  restore  app/config.py"
+          ]
         },
         {
           "id": "b03",
-          "ms": 2000,
-          "voice": "Rewind to step twelve.",
-          "screen": ["rewindagents rewind 12"],
-          "visual": "The panel clears to the Playhead prompt; the command types in Leader. On the ruler the Record playhead steps back two ticks.",
-          "cites": ["files back to how they were right after step 12"]
-        },
-        {
-          "id": "b04",
-          "ms": 3500,
-          "voice": "Four files back, as they were after step twelve.",
-          "screen": ["  restore  tests/test_config.py", "  restore  tests/test_server.py", "  restore  tests/test_timeout.py", "  restore  app/config.py"],
-          "visual": "The four restore lines print large in Commit Mono, all four in Rewind as one group, readable at phone size.",
-          "cites": ["session demo: rewind to step 12 of 14 (did change 4 files)", "  restore  tests/test_config.py", "  restore  tests/test_server.py", "  restore  tests/test_timeout.py", "  restore  app/config.py"]
-        },
-        {
-          "id": "b05",
-          "ms": 3500,
-          "voice": "Your editor has undo. Now your agent does.",
-          "screen": ["rewindagents", "Ctrl+Z for AI coding agents: record, replay, rewind.", "{site_url}", "made by John B Joseph"],
-          "visual": "Vertical end card on Reel: wordmark in Bricolage Grotesque 800, Leader, stacked over the promise in Hanken Grotesk, Playhead, wrapped to two lines; the address in Commit Mono, Leader; a Rule hairline; the credit in Playhead. The mark's playhead in Rewind.",
-          "cites": ["Ctrl+Z for AI coding agents: record, replay and rewind."]
+          "ms": 5050,
+          "text": "Your editor has had undo for decades. Now your agent does.",
+          "accent": "Now your agent does.",
+          "proof_ms": 400,
+          "screen": [
+            "rewindagents",
+            "Ctrl+Z for AI coding agents: record, replay, rewind.",
+            "{site_url}",
+            "made by John B Joseph"
+          ],
+          "visual": "Vertical end card on Reel: the line at the top in Leader, the wordmark stacked over the promise, the address and the credit.",
+          "cites": [
+            "Ctrl+Z for AI coding agents: record, replay and rewind."
+          ]
         }
       ]
     }

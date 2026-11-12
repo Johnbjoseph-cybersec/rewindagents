@@ -1,13 +1,18 @@
-"""brand/vsl-*.mp4 (RB4b): the three VSL renders exist and are what the scripts say. Size, frame rate, length and
-codecs are read from the files themselves (brand/vsl/mp4info.py, stdlib); the length is the beats' total; the
-captions burnt into the picture are the cues of brand/vsl/build.py word for word, and the .srt beside each video
-is the committed brand/vsl/<name>.srt; the manifest describes the committed files (SHA-256); the render code types
-no address and draws only palette colours; the frame review is someone else's. Stdlib only."""
+"""brand/vsl-*.mp4 (RB4b, remade 2026-11-12 as text-led films with no voice): the three VSL renders exist and are
+what the scripts say. Size, frame rate, length and codecs are read from the files themselves (brand/vsl/mp4info.py,
+stdlib); the length is the beats' total; the cards on screen are the cards of beats.json word for word, and the .srt
+beside each video is the committed brand/vsl/<name>.srt; the manifest describes the committed files (SHA-256); there
+is no speech: no narration block, the voice is stated as none, each mp4 has exactly one audio stream and it is the
+music bed the manifest pins (its md5, read back with ffmpeg); the render code types no address and draws only palette
+colours; the frame review is someone else's and says whether its scores are of this cut. Stdlib only, plus ffmpeg
+where it is on PATH."""
 import hashlib
 import importlib.util
 import json
 import os
 import re
+import shutil
+import subprocess
 import sys
 import unittest
 
@@ -71,15 +76,15 @@ class TestVslRender(unittest.TestCase):
             self.assertTrue(os.path.isfile(os.path.join(BRAND, m["contact_sheet"])))
             loud = m["audio"]["measured"]
             self.assertIsNotNone(loud["integrated_lufs"], name)
-            narrated = self.manifest.get("narration", {}).get("videos", {}).get(name)
-            target = narrated["master"]["integrated_lufs_target"] if narrated else -16
-            self.assertLess(abs(loud["integrated_lufs"] - target), 1.5, name)
+            self.assertLess(abs(loud["integrated_lufs"] - -16), 1.5, name)
 
-    def test_burnt_in_captions_are_the_srt_cues_and_the_srt_sits_beside_the_video(self):
+    def test_cards_on_screen_are_the_beats_and_the_srt_sits_beside_the_video(self):
         for name in VIDEOS:
             cues = [" ".join(lines) for _, _, lines in self.build.cues(self.videos[name])]
-            shown = self.manifest["videos"][name]["captions_burnt_in"]
+            shown = self.manifest["videos"][name]["cards_on_screen"]
             self.assertEqual([" ".join(c.split()) for c in shown], cues, name)
+            self.assertEqual(shown, [b["text"] for b in self.videos[name]["beats"]], name)
+            self.assertNotIn("captions_burnt_in", self.manifest["videos"][name])
             self.assertEqual(read(os.path.join(BRAND, name + ".srt")), read(os.path.join(VSL, name + ".srt")), name)
 
     def test_cues_end_on_a_sentence_and_stay_up_long_enough_to_read(self):
@@ -102,15 +107,27 @@ class TestVslRender(unittest.TestCase):
         self.assertNotIn(chr(0xA7), src)
         self.assertIsNone(re.search(r"#[0-9A-Fa-f]{6}\b", src), "colours come from contrast_check.PALETTE only")
 
-    def test_voice_status_is_stated_not_implied(self):
-        # "none" until brand/vsl/narration.py mix has run (RB4d); then it must point at the narration block
-        narrated = self.manifest.get("narration", {}).get("videos", {})
+    def test_no_voice_the_bed_is_the_only_sound(self):
+        # John, 2026-11-12: "remove the voice over altogether, explain through text"
+        self.assertNotIn("narration", self.manifest)
+        self.assertFalse(os.path.exists(os.path.join(VSL, "voice")), "brand/vsl/voice/ (voice clips) must not ship")
+        self.assertFalse(os.path.exists(os.path.join(VSL, "narrate_synth.py")))
         for name in VIDEOS:
-            voice = self.manifest["videos"][name]["audio"]["voice"]
-            if name in narrated:
-                self.assertEqual(voice, "narration: see narration.videos.%s" % name)
-            else:
-                self.assertTrue(voice.startswith("none"), name)
+            audio = self.manifest["videos"][name]["audio"]
+            self.assertTrue(audio["voice"].startswith("none"), name)
+            self.assertRegex(audio["bed_sha256"], r"^[0-9a-f]{64}$", name)
+            self.assertRegex(audio["audio_stream_md5"], r"^[0-9a-f]{32}$", name)
+
+    @unittest.skipUnless(shutil.which("ffprobe") and shutil.which("ffmpeg"), "ffmpeg not on PATH")
+    def test_one_audio_stream_and_it_is_the_pinned_bed(self):
+        for name in VIDEOS:
+            mp4 = os.path.join(BRAND, name + ".mp4")
+            kinds = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=codec_type", "-of", "csv=p=0",
+                                    mp4], capture_output=True, text=True, check=True).stdout.split()
+            self.assertEqual(sorted(kinds), ["audio", "video"], "%s: streams %s" % (name, kinds))
+            md5 = subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-i", mp4, "-map", "0:a", "-c", "copy",
+                                  "-f", "md5", "-"], capture_output=True, text=True, check=True).stdout.strip()
+            self.assertEqual(md5.split("=", 1)[1], self.manifest["videos"][name]["audio"]["audio_stream_md5"], name)
 
     def test_frame_review_is_independent_and_passed(self):
         path = os.path.join(VSL, "review.json")
@@ -122,6 +139,11 @@ class TestVslRender(unittest.TestCase):
         for name in VIDEOS:
             self.assertEqual(r["videos"][name]["mp4_sha256"], self.manifest["videos"][name]["mp4_facts"]["sha256"],
                              "%s changed after the review" % name)
+        # a hash re-pinned by FIRE after a re-render must say so, and say whether the scores are of these frames
+        if "repinned" in r:
+            self.assertIn("scores_of_this_cut", r)
+            if not r["scores_of_this_cut"]:
+                self.assertNotEqual(r.get("overall"), "PASS", "old scores cannot pass a cut they did not see")
 
 
 if __name__ == "__main__":

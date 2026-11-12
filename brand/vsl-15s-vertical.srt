@@ -1,20 +1,12 @@
 1
-00:00:00,000 --> 00:00:02,500
-Your agent just deleted the tests.
+00:00:00,000 --> 00:00:03,450
+Can you get them back?
 
 2
-00:00:02,500 --> 00:00:04,500
-And overwrote the config.
+00:00:03,450 --> 00:00:08,200
+One command, and four files come back.
 
 3
-00:00:04,500 --> 00:00:06,500
-Rewind to step twelve.
-
-4
-00:00:06,500 --> 00:00:10,000
-Four files back, as they were after step
-twelve.
-
-5
-00:00:10,000 --> 00:00:13,500
-Your editor has undo. Now your agent does.
+00:00:08,200 --> 00:00:13,250
+Your editor has had undo for decades. Now
+your agent does.

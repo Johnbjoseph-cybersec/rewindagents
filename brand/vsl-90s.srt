@@ -1,108 +1,102 @@
 1
-00:00:00,000 --> 00:00:03,000
-Step thirteen. The agent deletes your
-tests.
+00:00:00,000 --> 00:00:03,300
+Your agent just ran fourteen steps.
 
 2
-00:00:03,000 --> 00:00:06,000
-Step fourteen. It overwrites the config.
+00:00:03,300 --> 00:00:07,650
+Then it deleted your tests and overwrote
+your config.
 
 3
-00:00:06,000 --> 00:00:09,500
-Git status agrees. Two test files, gone.
+00:00:07,650 --> 00:00:10,800
+Can you get them back?
 
 4
-00:00:09,500 --> 00:00:14,500
-There were three. The third was never
-committed. Git can't return it.
+00:00:10,800 --> 00:00:14,950
+Three parts: the problem, how it works,
+the fix.
 
 5
-00:00:14,500 --> 00:00:17,500
-But rewindagents recorded all fourteen
-steps.
+00:00:14,950 --> 00:00:19,850
+Why can't git help? The third test was
+never committed.
 
 6
-00:00:17,500 --> 00:00:20,500
-Step twelve was the last good one.
+00:00:19,850 --> 00:00:23,300
+Claude Code's docs: shell-only changes
+aren't tracked.
 
 7
-00:00:20,500 --> 00:00:22,500
-So rewind to it.
+00:00:23,300 --> 00:00:27,250
+So what would help? Think of a flight
+recorder.
 
 8
-00:00:22,500 --> 00:00:26,500
-Four files back: all three tests and the
-config.
+00:00:27,250 --> 00:00:31,500
+It keeps every move, so you can replay it.
 
 9
-00:00:26,500 --> 00:00:31,000
-And the rewind is step fifteen. You can
-undo the undo.
+00:00:31,500 --> 00:00:35,050
+So how does rewindagents record your
+agent?
 
 10
-00:00:31,000 --> 00:00:35,000
-The first twelve steps stay. So does the
-new test.
+00:00:35,050 --> 00:00:39,150
+Every tool call goes into one hash-chained
+log.
 
 11
-00:00:35,000 --> 00:00:41,000
-Every tool call goes into a hash-chained
-log. Edit one record and verify names it.
+00:00:39,150 --> 00:00:43,600
+Before each edit or shell command, files
+are saved.
 
 12
-00:00:41,000 --> 00:00:45,500
-Before every edit, the hook copies the
-file as it is.
+00:00:43,600 --> 00:00:47,750
+So which step would you rewind to?
 
 13
-00:00:45,500 --> 00:00:49,100
-Around every Bash command it saves first,
-scans after.
+00:00:47,750 --> 00:00:50,950
+Twelve, because thirteen is the delete.
 
 14
-00:00:49,100 --> 00:00:51,500
-So step thirteen kept three copies.
+00:00:50,950 --> 00:00:55,200
+One command, and four files come back.
 
 15
-00:00:51,500 --> 00:00:57,000
-rewindagents install adds the Claude Code
-hook. It has run in real sessions.
+00:00:55,200 --> 00:00:58,500
+Even the rewind can be undone.
 
 16
-00:00:57,000 --> 00:01:01,800
-Codex and Cursor: built from the vendors'
-hook documentation, tested with the
+00:00:58,500 --> 00:01:03,000
+Where does the analogy break? Recorders
+can't undo a crash.
 
 17
-00:01:01,800 --> 00:01:05,000
-documented payloads. Not yet in a live
-session.
+00:01:03,000 --> 00:01:06,950
+Unlike a recorder, this one puts your
+files back.
 
 18
-00:01:05,000 --> 00:01:07,438
-Files over twenty megabytes aren't copied.
+00:01:06,950 --> 00:01:11,200
+Preview with diff. Take back one file with
+--only.
 
 19
-00:01:07,438 --> 00:01:11,500
-Over twenty thousand files, no scan, and
-rewind says so.
+00:01:11,200 --> 00:01:16,350
+You can now see every step and undo any of
+it.
 
 20
-00:01:11,500 --> 00:01:16,000
-Export it as one HTML page. Find it later
-with sessions.
+00:01:16,350 --> 00:01:21,150
+Up next: rewindagents init finds the seven
+agents it supports.
 
 21
-00:01:16,000 --> 00:01:21,000
-Apache-2.0, standard library only. Not on
-PyPI yet: install from the repository.
+00:01:21,150 --> 00:01:24,950
+Apache-2.0. Standard library only. Not on
+PyPI yet.
 
 22
-00:01:21,000 --> 00:01:25,000
-A paid Cloud tier is planned. Not built,
-not priced.
-
-23
-00:01:25,000 --> 00:01:29,500
+00:01:24,950 --> 00:01:30,000
 Your editor has had undo for decades. Now
 your agent does.
