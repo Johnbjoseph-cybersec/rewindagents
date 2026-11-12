@@ -29,9 +29,10 @@ import json
 import os
 import shutil
 import sys
+import time
 from pathlib import Path
 
-from . import agents, hook
+from . import agents, hook, log as hlog
 
 BINARIES: dict[str, tuple[str, ...]] = {
     "claude": ("claude",), "codex": ("codex",), "cursor": ("cursor-agent", "cursor"), "gemini": ("gemini",),
@@ -95,14 +96,39 @@ def state(name: str, path: Path, command: str) -> tuple[str, str]:
     return "install", ""
 
 
-def status(global_: bool = False, root: Path | None = None, home: Path | None = None, out=None) -> int:
-    """`rewindagents status`: one line per agent config file that exists: hook ok, stale, another one, or none.
-    Writes nothing. Exit 1 when any file holds a stale hook (or cannot be read), else 0."""
+def recording(path: Path) -> tuple[str, str]:
+    """(state, detail) of the project's log: 'none' (no file, or no record), 'ok' or 'BROKEN' (does not verify).
+    Reads only."""
+    if not path.is_file():
+        return "none", "nothing recorded yet"
+    try:
+        ok, n, msg = hlog.verify(path)
+    except (OSError, UnicodeDecodeError) as e:
+        return "BROKEN", f"cannot be read: {e}"
+    if not ok:
+        return "BROKEN", msg
+    if not n:
+        return "none", "nothing recorded yet"
+    with path.open(encoding="utf-8") as fh:
+        last = None
+        for line in fh:
+            if line.strip():
+                last = line
+    ts = json.loads(last).get("ts")
+    when = f", last {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(ts))}" if isinstance(ts, (int, float)) else ""
+    return "ok", f"{n:,} record{'s' if n != 1 else ''}{when}, chain intact"
+
+
+def status(global_: bool = False, root: Path | None = None, home: Path | None = None, out=None,
+           log_path: str | Path | None = None) -> int:
+    """`rewindagents status`: one line per agent config file that exists: hook ok, stale, another one, or none;
+    then one line for this project's log: records, time of the last one, and whether the chain verifies.
+    Writes nothing. Exit 1 when any file holds a stale hook (or cannot be read) or the log does not verify."""
     root = Path(root or Path.cwd()).resolve()
     home = Path(home or Path.home())
     out = out or sys.stdout
     run = "rewindagents" if hook.installed() else "python3 -m rewindagents"
-    bad, shown = 0, 0
+    bad, shown, hooked = 0, 0, 0
     for name in agents.AGENTS:
         t = target(name, root, home, global_)
         if not t.is_file():
@@ -119,8 +145,10 @@ def status(global_: bool = False, root: Path | None = None, home: Path | None = 
             line, why = "error", detail
         elif st == "already":
             line, why = "ok", ""
+            hooked += 1
         elif st == "other":
             line, why = "ok", "another rewindagents hook, which can run"
+            hooked += 1
         elif any(hook.ours(c) for cmds in agents.commands_in(agents.AGENTS[name], t).values() for c in cmds):
             line, why = "partial", "not on every event"
         else:
@@ -131,7 +159,24 @@ def status(global_: bool = False, root: Path | None = None, home: Path | None = 
               f"To add the hook: {run} init", file=out)
     if bad:
         print(f"A stale hook records nothing. Fix: {run} init --yes" + (" --global" if global_ else ""), file=out)
-    return 1 if bad else 0
+    # The log is always this project's: a global hook records into the project the agent runs in too.
+    default = ".rewindagents/log.jsonl"
+    lp = Path(log_path or default)
+    lp = lp if lp.is_absolute() else root / lp
+    if str(log_path or default) != default:
+        run = f"{run} --log {log_path}"
+    try:
+        where = str(lp.relative_to(root))
+    except ValueError:
+        where = str(lp)
+    rec, detail = recording(lp)
+    print(f"  {'log':<8} {rec:<8} {where}  ({detail})", file=out)
+    if rec == "BROKEN":
+        print(f"The log does not verify: a record was edited, removed or damaged. Details: {run} verify", file=out)
+    elif rec == "none" and hooked:
+        print("A hook is in place but nothing is recorded yet. Run the agent once; if it made a tool call and "
+              "there is still no record, the hook is failing: run the hook command by hand to see why.", file=out)
+    return 1 if bad or rec == "BROKEN" else 0
 
 
 def main(yes: bool = False, global_: bool = False, root: Path | None = None, home: Path | None = None,

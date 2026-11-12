@@ -90,12 +90,17 @@ If that Python goes away later (the venv is deleted, Python is upgraded, the clo
 runs the hook, the hook fails, and nothing is recorded. `status` checks for that:
 
 ```sh
-rewindagents status             # per agent config file in this project: ok, STALE, partial or no hook
+rewindagents status             # per agent config file: ok, STALE, partial or no hook; then the log: records, last write, chain
 ```
 
 A hook is stale when its interpreter path or its `PYTHONPATH` directory no longer exists; `status` then exits
 1. `install` and `init --yes` replace a stale rewindagents hook with the current one and leave every other
 hook in the file as it is.
+
+The last line of `status` is this project's log: how many records it holds, when the last one was written,
+and whether the chain verifies. A hook that is in place while the log stays empty after the agent has made a
+tool call is failing for a reason the stale check cannot see (a broken install, for example); `status` says so.
+A log that does not verify makes `status` exit 1, as `verify` does. `status` writes nothing.
 
 Once the hook is in, in each project Claude Code works in:
 

@@ -312,6 +312,39 @@ class InstalledCommandTest(unittest.TestCase):
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             self.assertRegex(r.stdout, r"claude\s+ok\s+")
 
+    def test_status_reports_the_log_nothing_then_records_then_a_broken_chain(self):
+        """Hook in place with no record: status says so (exit 0). After one real hook call: the record count
+        and 'chain intact'. After a record is edited: BROKEN and exit 1. status writes nothing."""
+        with TemporaryDirectory() as proj:
+            self.assertEqual(self._run("install", cwd=proj).returncode, 0)
+            r = self._run("status", cwd=proj)
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            self.assertRegex(r.stdout, r"log\s+none\s+\.rewindagents/log\.jsonl  \(nothing recorded yet\)")
+            self.assertIn("A hook is in place but nothing is recorded yet", r.stdout)
+            self.assertFalse(Path(proj, ".rewindagents").exists())
+            cmd = json.loads(Path(proj, ".claude", "settings.json").read_text())["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
+            for event in ("PreToolUse", "PostToolUse"):
+                payload = {"session_id": "st", "cwd": proj, "hook_event_name": event, "tool_name": "Bash",
+                           "tool_input": {"command": "true"}, "tool_use_id": "toolu_1"}
+                p = subprocess.run(cmd, shell=True, cwd=proj, env=clean_env(), input=json.dumps(payload),
+                                   capture_output=True, text=True, timeout=120)
+                self.assertEqual(p.returncode, 0, p.stderr)
+            lp = Path(proj, ".rewindagents", "log.jsonl")
+            n = len([l for l in lp.read_text().splitlines() if l.strip()])
+            self.assertGreater(n, 0)
+            before = lp.read_bytes()
+            r = self._run("status", cwd=proj)
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            self.assertRegex(r.stdout, rf"log\s+ok\s+\.rewindagents/log\.jsonl  \({n} records?, last "
+                                       r"\d{4}-\d\d-\d\d \d\d:\d\d:\d\d, chain intact\)")
+            self.assertNotIn("nothing is recorded yet", r.stdout)
+            self.assertEqual(lp.read_bytes(), before)
+            lp.write_text(before.decode().replace('"session": "st"', '"session": "xx"', 1))
+            r = self._run("status", cwd=proj)
+            self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+            self.assertRegex(r.stdout, r"log\s+BROKEN\s+\.rewindagents/log\.jsonl  \(record 1: contents altered\)")
+            self.assertIn("Details: rewindagents verify", r.stdout)
+
 
 class ReadmeCommandsTest(unittest.TestCase):
     def test_every_rewindagents_command_in_the_readme_is_a_real_subcommand(self):

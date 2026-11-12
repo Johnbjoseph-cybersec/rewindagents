@@ -63,7 +63,9 @@ def main(argv: list[str] | None = None) -> int:
     ini.add_argument("--global", dest="global_", action="store_true",
                      help="write each agent's user config (every project) instead of this project's")
     st = sub.add_parser("status", help="say, per agent config file, whether the rewindagents hook is there and "
-                                       "can still run (exit 1 when one is stale)")
+                                       "can still run, then how many records this project's log holds, when the "
+                                       "last was written and whether it verifies (exit 1 when a hook is stale or "
+                                       "the log does not verify)")
     st.add_argument("--global", dest="global_", action="store_true", help="check each agent's user config instead")
     br = sub.add_parser("branch", help="keep the current files as a branch, then rewind to step N")
     br.add_argument("step", type=int)
@@ -119,7 +121,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  replaced a stale rewindagents hook: {why}")
         return 0
     if a.cmd == "status":
-        return setup.status(global_=a.global_)
+        return setup.status(global_=a.global_, log_path=a.log)
     if a.cmd == "uninstall":
         target = a.settings or agents.config_path(agents.AGENTS[a.agent])
         changed = hook.uninstall(target, agent=a.agent)
