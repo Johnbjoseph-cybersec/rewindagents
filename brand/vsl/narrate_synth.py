@@ -18,7 +18,10 @@ import os
 import sys
 
 STUDIO = os.path.expanduser("~/ai-creative-studio")
-os.environ.setdefault("HF_HOME", os.path.join(STUDIO, ".models", "hf"))
+# the Voice A engine lives in the studio cache; a global HF_HOME (e.g. the archive SSD cache) must not win, and the
+# model must never be fetched at render time
+os.environ["HF_HOME"] = os.path.join(STUDIO, ".models", "hf")
+os.environ["HF_HUB_OFFLINE"] = "1"
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
 
 HERE = os.path.dirname(os.path.abspath(__file__))
