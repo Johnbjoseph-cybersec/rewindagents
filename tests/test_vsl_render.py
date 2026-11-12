@@ -71,7 +71,9 @@ class TestVslRender(unittest.TestCase):
             self.assertTrue(os.path.isfile(os.path.join(BRAND, m["contact_sheet"])))
             loud = m["audio"]["measured"]
             self.assertIsNotNone(loud["integrated_lufs"], name)
-            self.assertLess(abs(loud["integrated_lufs"] - (-16)), 1.5, name)
+            narrated = self.manifest.get("narration", {}).get("videos", {}).get(name)
+            target = narrated["master"]["integrated_lufs_target"] if narrated else -16
+            self.assertLess(abs(loud["integrated_lufs"] - target), 1.5, name)
 
     def test_burnt_in_captions_are_the_srt_cues_and_the_srt_sits_beside_the_video(self):
         for name in VIDEOS:
@@ -101,8 +103,14 @@ class TestVslRender(unittest.TestCase):
         self.assertIsNone(re.search(r"#[0-9A-Fa-f]{6}\b", src), "colours come from contrast_check.PALETTE only")
 
     def test_voice_status_is_stated_not_implied(self):
+        # "none" until brand/vsl/narration.py mix has run (RB4d); then it must point at the narration block
+        narrated = self.manifest.get("narration", {}).get("videos", {})
         for name in VIDEOS:
-            self.assertTrue(self.manifest["videos"][name]["audio"]["voice"].startswith("none"), name)
+            voice = self.manifest["videos"][name]["audio"]["voice"]
+            if name in narrated:
+                self.assertEqual(voice, "narration: see narration.videos.%s" % name)
+            else:
+                self.assertTrue(voice.startswith("none"), name)
 
     def test_frame_review_is_independent_and_passed(self):
         path = os.path.join(VSL, "review.json")

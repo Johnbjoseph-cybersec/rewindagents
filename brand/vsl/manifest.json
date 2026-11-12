@@ -695,5 +695,18 @@
    "unique_frames": 365,
    "width": 1920
   }
+ },
+ "web": {
+  "bytes": 3358733,
+  "from": "stream copy of brand/vsl-90s.mp4 (picture and sound unchanged)",
+  "mp4": "vsl/vsl-90s-web.mp4",
+  "poster": "vsl/vsl-90s-poster.jpg",
+  "poster_beat": "b08",
+  "poster_mean_luma": 152.1,
+  "poster_ms": 26300,
+  "poster_sha256": "0189d61a281ce773bcb021cc8a2f0f4a4bbb7dbe73ca35b04a5d4f4558e48dbc",
+  "sha256": "c9553c6a48da3e01ee07ee742fb0b2fce481c4383892f964cc4f1fa221a387a3",
+  "source_sha256": "816821ec9628c39f3ada17f4ddcb1439316fddaf74f0f731724ec1ca4553ca35",
+  "voice": false
  }
 }
