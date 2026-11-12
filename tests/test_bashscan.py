@@ -148,7 +148,8 @@ class TestBashLimits(unittest.TestCase):
             a = Agent(d)
             a.bash("ls")
             pre = [json.loads(x) for x in a.log.read_text().splitlines()][0]
-            self.assertEqual(pre["args"]["bash_scan"], {"files": 1})
+            self.assertEqual(pre["args"]["bash_scan"]["files"], 1)
+            self.assertRegex(pre["args"]["bash_scan"]["pending"], r"^[0-9a-f]{32}$")   # its pending scan's name
 
 
 class TestReadmeMatchesCode(unittest.TestCase):

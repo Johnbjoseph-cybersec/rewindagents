@@ -119,7 +119,8 @@ def _key(payload: dict) -> str:
 
 
 def before(payload: dict, root: Path, store: Path) -> dict:
-    """PreToolUse: save every project file and remember the list. Returns what goes in the pre record."""
+    """PreToolUse: save every project file and remember the list. Returns what goes in the pre record:
+    the file count and the pending scan's name, so `gc` can say which command a stale scan belongs to."""
     snap = snapshot(root, store, save=True)
     if snap is None:
         return {"skipped": f"more than {MAX_SCAN_FILES} files"}
@@ -129,7 +130,7 @@ def before(payload: dict, root: Path, store: Path) -> dict:
     tmp = pending / f".{key}.{os.getpid()}.tmp"
     tmp.write_text(json.dumps(snap), encoding="utf-8")
     os.replace(tmp, pending / f"{key}.json")
-    return {"files": len(snap)}
+    return {"files": len(snap), "pending": key}
 
 
 def after(payload: dict, root: Path, store: Path) -> tuple[dict, list[dict]]:

@@ -10,6 +10,7 @@ import re
 import shlex
 import subprocess
 import sys
+import time
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -170,6 +171,31 @@ class InstalledCommandTest(unittest.TestCase):
             self.assertEqual(Path(proj, "app.py").read_text(), "x = 1\n")
             r = self._run("verify", cwd=proj)
             self.assertEqual((r.returncode, r.stdout.strip()), (0, "OK: 3 records, chain intact"), r.stderr)
+
+    def test_gc_through_the_binary_lists_and_drops_a_stale_pending_scan(self):
+        with TemporaryDirectory() as proj:
+            Path(proj, "app.py").write_text("x = 1\n")
+            self.assertEqual(self._run("install", cwd=proj).returncode, 0)
+            cmd = json.loads(Path(proj, ".claude", "settings.json").read_text())["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
+            payload = {"session_id": "killed", "cwd": proj, "hook_event_name": "PreToolUse", "tool_name": "Bash",
+                       "tool_input": {"command": "make build"}, "tool_use_id": "toolu_9"}
+            p = subprocess.run(cmd, shell=True, cwd=proj, env=clean_env(), input=json.dumps(payload),
+                               capture_output=True, text=True, timeout=120)
+            self.assertEqual((p.returncode, p.stderr), (0, ""))   # no PostToolUse: the agent was killed
+            (scan,) = Path(proj, ".rewindagent", "pending").glob("*.json")
+            old = time.time() - 3 * 86400
+            os.utime(scan, (old, old))
+            r = self._run("gc", "--dry-run", cwd=proj)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn("    3.0 days old  Bash: make build\n", r.stdout)
+            self.assertEqual(self._run("gc", "--drop-pending-older-than", "0.5", cwd=proj).returncode, 1)
+            r = self._run("gc", "--drop-pending-older-than", "2", cwd=proj)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn("dropped 1 pending scan(s) older than 2 days:", r.stdout)
+            self.assertFalse(scan.exists())
+            self.assertEqual(list(Path(proj, ".rewindagent", "objects").iterdir()), [])
+            r = self._run("verify", cwd=proj)
+            self.assertEqual((r.returncode, r.stdout.strip()), (0, "OK: 1 records, chain intact"), r.stderr)
 
     def test_install_for_codex_and_cursor_writes_commands_their_payloads_drive(self):
         """`install --agent codex|cursor` through the binary; then the command from the written file, run as the

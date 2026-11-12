@@ -65,6 +65,9 @@ def main(argv: list[str] | None = None) -> int:
     im.add_argument("file", help="a file written by `bundle`")
     g = sub.add_parser("gc", help="delete stored file copies that no log record and no pending scan names")
     g.add_argument("--dry-run", action="store_true", help="print what would be deleted, delete nothing")
+    g.add_argument("--drop-pending-older-than", type=float, metavar="DAYS",
+                   help="first remove pending scans older than DAYS (at least 1): a command whose after-scan "
+                        "never ran (agent killed, crash); its step then rewinds as unscanned")
 
     a = ap.parse_args(argv)
     if a.cmd == "hook":
@@ -80,7 +83,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     if a.cmd == "gc":
         try:
-            d = gc.gc(a.log, dry_run=a.dry_run)
+            d = gc.gc(a.log, dry_run=a.dry_run, drop_older_than=a.drop_pending_older_than)
         except gc.GcError as e:
             print(f"rewindagent: {e}", file=sys.stderr)
             return 1

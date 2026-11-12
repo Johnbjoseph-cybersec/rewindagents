@@ -87,7 +87,7 @@ class TestCursor(unittest.TestCase):
             inp = {"some_field": "app.py", "contents": "v2\n"}       # an invented shape, on purpose
             pre = hook.handle(cursor(d, "preToolUse", "Write", inp), "cursor")
             self.assertNotIn("checkpoint", pre["args"])
-            self.assertEqual(pre["args"]["bash_scan"], {"files": 1})
+            self.assertEqual(pre["args"]["bash_scan"]["files"], 1)
             Path(d, "app.py").write_text("v2\n")
             Path(d, "new.py").write_text("made by the agent\n")
             hook.handle(cursor(d, "postToolUse", "Write", inp, {"ok": True}), "cursor")
@@ -206,7 +206,7 @@ class TestCodex(unittest.TestCase):
             Path(d, "a.py").write_text("old\n")
             inp = {"input": "*** Begin Patch\n*** Update File: a.py\n-old\n+new\n*** End Patch"}   # opaque to the hook
             pre = hook.handle(codex(d, "PreToolUse", "apply_patch", inp), "codex")
-            self.assertEqual(pre["args"]["bash_scan"], {"files": 1})
+            self.assertEqual(pre["args"]["bash_scan"]["files"], 1)
             self.assertNotIn("checkpoint", pre["args"])
             Path(d, "a.py").write_text("new\n")
             hook.handle(codex(d, "PostToolUse", "apply_patch", inp, {"output": "Success."}), "codex")
@@ -221,7 +221,7 @@ class TestCodex(unittest.TestCase):
             pre = hook.handle(codex(d, "PreToolUse", "update_plan", {"plan": []}), "codex")
             self.assertNotIn("bash_scan", pre["args"])
             pre = hook.handle(codex(d, "PreToolUse", "mcp__fs__write_file", {"p": "f.txt"}, tid="call_2"), "codex")
-            self.assertEqual(pre["args"]["bash_scan"], {"files": 1})
+            self.assertEqual(pre["args"]["bash_scan"]["files"], 1)
             self.assertEqual(agents.AGENTS["codex"].read_only, {"update_plan"})
 
     def test_process_prints_nothing_and_exits_zero(self):

@@ -203,6 +203,7 @@ Then `replay`, `rewind` and `branch` work on that session in the other clone, wi
 ```sh
 rewindagent gc --dry-run   # what would be deleted, and how many bytes
 rewindagent gc             # delete it
+rewindagent gc --drop-pending-older-than 7   # first drop scans whose command never finished
 ```
 
 Before every Bash call the hook saves a copy of every project file, and afterwards the log names only the
@@ -215,6 +216,10 @@ many it deleted and the bytes those files took on disk.
 - It refuses to run when the log does not verify, and it never writes to the log.
 - While it runs it holds the store lock, so a hook call waits for it to finish, and it waits (up to 30 s) for
   a hook, rewind or import that has saved a copy but not yet written the record naming it.
+- It lists every pending scan with its age and the command it belongs to. A scan whose after-scan never ran
+  (the agent was killed, a crash) stays pending and keeps its copies; `--drop-pending-older-than DAYS` removes
+  the scans older than DAYS first, so their copies are collected too. That command's step then rewinds as
+  unscanned, as it already did while the scan was pending. Scans younger than 1 day are never dropped.
 
 ## Recorder
 
