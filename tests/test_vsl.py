@@ -350,6 +350,12 @@ class TestVsl(unittest.TestCase):
         self.assertEqual(r["blocked_in_scripts"], 0)
         self.assertEqual(r["beats_sha256"], hashlib.sha256(read(os.path.join(VSL, "beats.json")).encode("utf-8")).hexdigest(),
                          "beats.json changed after the claim review: run claim-verifier again")
+        # the independent verifier's own verdicts (claims-verified.json) carry the BLOCKs that depend on publishing
+        # (the public repo must have what the film shows; the site address must serve). Clearing them is a re-run of the
+        # verifier after publish, recorded there with overall CLEAR; this gate never goes green on claims.json alone.
+        v = json.loads(read(os.path.join(VSL, "claims-verified.json")))
+        self.assertEqual(v.get("overall"), "CLEAR",
+                         "the independent claim verifier still blocks: %s" % [b.get("issue") for b in v.get("blocks", [])])
 
 
 if __name__ == "__main__":
