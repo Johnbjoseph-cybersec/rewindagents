@@ -1,0 +1,281 @@
+{
+  "reviewer": "cs-quinn-mehta (Quinn Mehta, Quality Critic, Creative Studio; did not make the films or the bed)",
+  "date": "2026-11-12",
+  "round": 3,
+  "previous_sheet": "brand/vsl/review-textcut-r2.json (round 2, 2026-11-12: 8.43 / 8.50 / 8.43 FAIL, 6 fixes)",
+  "cut": "text-led remake, round 3 (no voice over, John 2026-11-12), re-rendered from source at commit 3c7fe9f with the round-3 studio bed (brand/vsl/audio make_bed.py, Sana Qureshi) and round-2 fixes 1, 2, 4, 5, 6 applied by the maker and fix 3 by the sound designer; b16/b17 copy changed; rendered 20:14-20:17",
+  "brief": "John: remove the voice over altogether, explain through text, make it clear, very clear, add motion graphics and good animations and the best transitions in the industry; quality is the king. No voice is correct; the music bed and two SFX are the only audio.",
+  "pass_rule": "weighted >= 9.0 and no row < 8",
+  "overall": "FAIL",
+  "summary": "vsl-90s 8.83, vsl-30s 8.83, vsl-15s-vertical 8.75 (round 2: 8.43 / 8.50 / 8.43). All six round-2 fixes landed on the frames and the metrics: no wipe frame shows two headlines (30 fps bursts on all 14 section/story/match wipes across the three films), the b19 push ends on a 1600 x 490 px window with chip text at 27-29 px cap and nothing sliced, panels open as a title-bar-and-prompt strip and grow with their lines, the roadmap returns at b07 and b12, b18 shows the diff output, the hook is 3.7-4.0 dB louder with content above 2.4 kHz, every detectable sweep lands 10-13 ms after its wipe's last frame (the round-2 'early' reading is withdrawn), and the bed generator is in the repo with pinned requirements. Every picture row is at 9.0 except story (8.5: still 21 s of features and status after the climax). The films stay under the line for one reason I can measure and one I cannot: the audio row is capped at 8.0 because no human has listened to the bed (the measurements alone would put it at 8.5-9.0), and the back third is unchanged in shape. New residuals: the b19 UI text is a thumbnail for 3.3 of its 5.15 s and legible only for the last ~1.2 s; the 450 ms light wipes show ~200 ms of bare paper with only the playhead; b18's two command chips type at the same time for ~300 ms; the b12 chapter's Record label overlaps the incoming headline's Record words for ~150 ms.",
+  "files": {
+    "vsl-90s.mp4": {
+      "path": "~/fire/rewindagent/brand/vsl-90s.mp4",
+      "sha256": "4abdb662cdb165a857e80c58388a592fc195efc891b569d85e47e1b5ddc397e9",
+      "probe": "h264 1920x1080 yuv420p 30 fps, 2700 frames, 90.000 s, 1.62 Mbps video, bt709/bt709/bt709 range tv; aac 48 kHz stereo 165 kbps; faststart"
+    },
+    "vsl-90s-web.mp4": {
+      "path": "~/fire/rewindagent/brand/vsl/vsl-90s-web.mp4",
+      "sha256": "80917b58c939f58833177ce4a4185b636decc9b8a8120f5900c5a279b3c77a0b",
+      "probe": "same geometry and tags, 0.87 Mbps video; audio stream md5 identical to the master (bf59b84b1911a4adae4025a2ad50e479); PSNR vs master avg 49.34 dB, min 43.63 dB (clean re-encode, same picture)"
+    },
+    "vsl-30s.mp4": {
+      "path": "~/fire/rewindagent/brand/vsl-30s.mp4",
+      "sha256": "03c146cd328824eb5dac84be79a00d25fbff9cf149032ca2e80a423ce21b6a39",
+      "probe": "1920x1080p30, 886 frames, video 29.533 s / audio 29.550 s, bt709 tv"
+    },
+    "vsl-15s-vertical.mp4": {
+      "path": "~/fire/rewindagent/brand/vsl-15s-vertical.mp4",
+      "sha256": "f14811c9d51b2ad8cfcd14ed747fe19dbc3698e224a7497a34b2af1773f66f97",
+      "probe": "1080x1920p30, 420 frames, 14.000 s, bt709 tv"
+    },
+    "hashes_rechecked_at_end_of_review": true,
+    "source": {
+      "beats_json_sha256": "de4a4abae6f4f712661c533b407f906f1ab75c8043fe7fec32c0dd235e61c6b9",
+      "manifest_beats_sha256": "de4a4abae6f4f712661c533b407f906f1ab75c8043fe7fec32c0dd235e61c6b9",
+      "beats_match_manifest": true,
+      "srt_copies_identical": "brand/vsl-90s.srt == brand/vsl/vsl-90s.srt (77116733...), 30s (3554c993...), vertical (9beaec93...)",
+      "audio_files_match_manifest_pins": "all nine manifest.videos.*.audio.files entries hash as pinned on disk (bed-vsl-90s.wav 82ef3991..., bed-vsl-30s.wav, bed-vsl-15s-vertical.wav 100f8257..., sfx-rewind.wav 930a2c56..., sfx-tick.wav e4fc1661...)",
+      "git": "3c7fe9f tracks brand/vsl/audio/{AUDIO.md, LICENSES.md, make_bed.py, sound_dsp.py, requirements.txt, sections.json}; the WAVs are git-ignored by design and tests/test_vsl_audio.py regenerates them and compares with the manifest pins (result in videos.vsl-90s.rows.technical)"
+    }
+  },
+  "method": {
+    "evidence_root": "/private/tmp/claude-501/-Users-johnbommeravenijoseph/bd68a568-4682-4d0d-8ef6-661a37e7def6/scratchpad/q3 (session scratch; every frame is reproducible with ffmpeg from the mp4 at the time named; frames.py, audio_checks.py and glyph.py are the exact scripts)",
+    "what_i_did": [
+      "python hashlib sha256 of the four mp4s, beats.json, all six .srt copies and the five audio files at the start and the mp4s again at the end (unchanged); ffprobe on all four; manifest.json read for the pinned shas, card table, sweeps_ms and ticks_ms; git show --stat 3c7fe9f and git diff 336bed5..3c7fe9f on render.py for the mechanics of each fix (ERASE_RAMP, draw_chapter, panel_rows, UI_CLOSE/UI_BOX_H, out_rows)",
+      "transitions: 10 fps sheets from start-0.1 s to start+1.1 s at every card start of all three films (90s 20 transitions in 4 images, 30s 6 in 2, vertical 2 in 1); 30 fps bursts from start-33 ms to start+wipe+300 ms on every section, story and match-cut wipe (90s b05 b07 b12 b14 b16 b18 b19 b20 b21; 30s b04 b06 b07; vertical b02 b03), full frame at 384x216 / 216x384 tiles; 5 fps strip of b03 (7.6-10.8 s) and 4 fps strip of b19 (74.0-79.25 s)",
+      "settled frames: one full-resolution frame at 60 percent of every card (31 cards) tiled 3x2 at half size; full-resolution singles at 14.80, 24.75, 25.30, 25.75, 26.40, 45.40, 46.00, 46.60, 50.80, 58.30, 62.80, 66.50, 69.60, 73.90, 77.00, 79.10, 84.00, 89.00 s of the 90s, 29.30 s of the 30s, 5.80 and 13.40 s of the vertical",
+      "type sizes: glyph.py (gray rawvideo row scan, ink = |pixel - modal background| > 60) on the b19 close window columns, the 90s end card and the vertical end card",
+      "reading load: per-card table from the renderer's constants (WIPE_HEAD_MS 170, SWAP_MS 320, CHAPTER_MS 950 + CHAPTER_OUT_MS/2, WORD_MS 420, WORD_GAP_MS 48) and the manifest card times: text-complete time, hold after completion, words per second after the line starts; checked against the b03 and b19 strips",
+      "audio: ffmpeg ebur128 peak=true + astats + silencedetect on each film's decoded stream (integrated, LRA, true peak, sample peak, DC, flat factor, designed tail); 5 ms block peaks over the first 60 ms and the first sample above -60 dBFS from the decoded float stream; 3 s short-term values parsed from the ebur128 log (window ending at t); showspectrumpic 0-12 s with -an; master-vs-web audio md5 (-c copy -f md5) and video PSNR",
+      "sweep landing, two detectors on the MIXED film audio (the method the sound designer asked for): A = 4th-order Butterworth high-pass at 4 kHz (scipy sosfiltfilt, zero phase), RMS over 5 ms blocks at 1 ms hop, arg-max within +-300 ms of each manifest sweeps_ms; B = normalised cross-correlation of that envelope against the same envelope of brand/vsl/audio/sfx-rewind.wav within +-400 ms of (sweeps_ms - 720), best lag + 720 ms = landing. Both have a +2.5 ms bias from the 5 ms window; reported offsets include it",
+      "brand: BRAND.md 'Words we never use' and the scope words swept over every on-screen line (manifest cards_on_screen) and all three .srt (0 hits), U+00A7 and non-ASCII sweep (0), accent elements counted on all 31 settled frames and on the wipe bursts, mark/credit/URL on the three end cards",
+      "repo: git ls-files brand/vsl/audio; tests/test_vsl_render.py, test_vsl_wipes.py and test_vsl_audio.py read for what this sheet must carry and what they prove; the audio test run under nice -n 10 (regenerates the beds and compares with the manifest pins)"
+    ],
+    "weights": {
+      "clarity": 20,
+      "story": 15,
+      "typography": 15,
+      "motion_and_transitions": 20,
+      "brand": 10,
+      "technical": 10,
+      "audio": 10
+    },
+    "weights_why": "same as rounds 1 and 2: the brief's 'very clear' and 'best transitions' carry the most weight; the studio rubric's voice and first-person rows do not apply to a text-led product film",
+    "limits": "I cannot listen; the audio row rests on measurements, the spectrogram and the generator's notes. AUDIO.md 'Round 3' and 'Render round 3' both say nobody has listened; John is listening as this sheet is written. By the rule set in round 2 the audio row is capped at 8.0 until a listen is logged; the measured value is given beside it. Reading-load numbers are arithmetic from the renderer's constants confirmed on the b03 and b19 strips, not a user test. Light-wipe sweeps (weight 0.35) at b08 and b11 sit 9 dB under the bed's hats in the >4 kHz band and neither detector can see them; that is not a fault, it is unverifiable."
+  },
+  "round2_fixes_landed": {
+    "1_fused_headline_in_wipes": {
+      "landed": true,
+      "evidence": "30 fps bursts on all 14 section/story/match wipes (vsl-90s/burst-A.png b05 b07 b12, burst-B.png b14 b16 b18, burst-C.png b19 b20 b21; vsl-30s/burst-A.png b04 b06 b07; vsl-15s-vertical/burst-b02.png, burst-b03.png): the outgoing line fades as one block and is gone by tile 6 (~170 ms) while the first incoming word appears right of the playhead at tile 8-11 (~270-370 ms), sliding home with the playhead; no frame carries two headlines on one baseline. The outgoing PANEL stays left of the playhead while the incoming headline is right of it (b14 at 54.5 s, vertical b02 at 3.8 s), which is the wipe itself, not a fusion. Mechanism in the diff: draw_headline(erase=...) with ERASE_RAMP 240 px and the incoming scene translated by slide*(1-k)."
+    },
+    "2_b19_push_end": {
+      "landed": true,
+      "evidence": "single/90-b19-79.10.png: window x 160-1760, y 451-941 (1600 x 490 px); chips 'app/config.py +2 -4', '1 checkpoint', 'rewound by step 15', '15 Rewind 15:48:17', '<< to step 12', 'tests/test_config.py +11 -0', 'tests/test_server.py +8 -0', 'tests/test_timeout.py +8 -0', 'app/config.py +4 -2', '4 checkpoints' all end inside the window (rightmost ink x 1637, window edge 1760); glyph runs in the x 440-640 column 37 / 35 / 64 (filled chip) / 28 / 35 px, timestamp digits 27-29 px, i.e. 27-29 px cap at 1920 (~18 px at 1280), up from 19. The 'rewindagents ui' chip and the 127.0.0.1 note sit under the window at y 960-1000. UI_CLOSE is now (241, 672, 524, 160) with UI_COLUMN_X1 773 so the diff pane is never sliced."
+    },
+    "3_bed_hook_and_sweeps": {
+      "landed": true,
+      "by": "cs-sana-qureshi, brand/vsl/audio/AUDIO.md 'Round 3'",
+      "evidence": "90s mixed stream, 3 s short-term (window ending at t): 3 s -18.9, 4 s -18.6, 5 s -18.0, 6 s -18.1, 7 s -17.5, 8 s -18.0 (round 2 at the same points -22 to -24); the spectrogram a/spec90-hook.png shows the wood tick, the air swell from ~2.6 s and plucks under the hook where round 2 had only the sub drone; first sample above -60 dBFS at 29.5 ms, sample 0 = 6e-7, 5 ms block peaks -96 -102 -97 -80 -68 -54 dBFS over the first 30 ms (no click; the heartbeat fades in); sweeps: detector A puts the >4 kHz peak at +10.5 to +12.5 ms after the wipe end on b03 b04 b05 b06 b07 b12 b14 b16 b18 b19 b20 b21 (90s), b03 b04 b06 b07 (30s), b02 b03 (vertical); detector B agrees at +10 ms with cc 0.49-0.91 on every one it locks (b06/b07/b12 and 30s b04 are bed-masked for B, A still reads +10.5-12.5). Net of the +2.5 ms window bias the landing is ~8-10 ms after the wipe's last frame, a third of a frame. The round-2 '0.10-0.14 s early' reading at b04 and b10 is withdrawn: b04 now reads +12.5 ms; b10 reads +68 ms on A (cc 0.24 on B), which is a hat on the beat, not the sweep, and b08/b11 read -172/-176 ms for the same reason (light sweeps are below the bed in that band). LRA 7.8 LU mixed (bed 8.1), integrated -16.1, TP -1.7 dBTP."
+    },
+    "4_audio_sources_in_repo": {
+      "landed": true,
+      "evidence": "git ls-files brand/vsl/audio: AUDIO.md, LICENSES.md, make_bed.py, requirements.txt (numpy/scipy/pyloudnorm/soundfile pinned ==), sections.json, sound_dsp.py; .gitignore carries brand/vsl/audio/*.wav; render.py ensure_beds() regenerates on a clean checkout; tests/test_vsl_audio.py regenerates into a temp dir and compares every file with the manifest pins. The five WAVs on disk hash exactly as the manifest pins them. This closes the round-2 hold on condition the regeneration test passes on this machine (see technical row)."
+    },
+    "5_panels_grow_with_content": {
+      "landed": true,
+      "evidence": "every panel now opens as a title bar plus one prompt row (~260 ms, '$' and cursor visible from the first frame: tr-sheet-1 rows 2, 4; tr-sheet-3 row 6; 30s tr-sheet-1 rows 4, 6; vertical tr-sheet-1 row 2 tiles 3-5) and grows one row ~120 ms before each line arrives; no frame shows an empty dark block. settled-sheet-3: the b14 panel ends 14 px under its last restore line (no 150 px void), b15's two undo lines extend it as they rise (tr-sheet-3 row 8 tile 6). b18 (settled-sheet-3 tile 6, single 73.90): '$ rewindagents diff 12' with '+++ b/tests/test_config.py' under it, then '$ rewindagents rewind 12 --only src/db.py'. The --only chip has no output row (the fix offered 'or'); see fix 4 below."
+    },
+    "6_roadmap_returns_and_tail_trimmed": {
+      "landed": true,
+      "evidence": "burst-A rows 6-8 (b07, 24.6 s): the b04 rule with tick 2 'how it works' in Record is on the paper as the wipe reveals the card, holds ~950 ms, rises out as 'So what would help?' builds; rows 10-12 (b12, 45.2 s): the same with tick 3 'the fix' lit. Card times: b16 3.80 s (was 4.50), b17 3.05 s (was 3.95), b06 +1.0 s (4.75), b07 +0.3, b12 +0.3 to 5.80 s. Copy: b16 'The analogy breaks: recorders can't undo a crash.' with the third map row 'flight recorder  can't undo the crash' in Ink; b17 'This one puts your files back.' with the fourth row 'the agent's log  rewind 12: files back' in Record (settled-sheet-3 tiles 4-5). The span from the end of the climax (62.95 s) to the end card (84.20 s) is 21.25 s, was 23.0."
+    }
+  },
+  "reading_load_vsl_90s": {
+    "note": "text-complete = line start + 48 ms x (words - 1) + 420 ms; line start = 170 ms after a wipe starts, 320 ms after a swap, 1100 ms after a chapter wipe (b07, b12); hold = card length minus text-complete",
+    "cards": [
+      "b01 3.30 s, 6 words, complete 0.66, hold 2.64",
+      "b02 4.35 s, 9 words, complete 1.12, hold 3.23; panel rows 12-14 typed by ~5.5 s",
+      "b03 3.15 s, 5 words, complete 0.78, hold 2.37; the git status panel (5 rows + 2 strikes) is complete at ~9.9 s and holds ~0.9 s before the wipe at 10.8 (strip-b03.png tiles 12-16)",
+      "b04 4.15 s, 9 words, complete 0.97, hold 3.18",
+      "b05 4.90 s, 10 words, complete 1.02, hold 3.88",
+      "b06 4.75 s, 7 words, complete 0.88, hold 3.87 (quote card; was 2.75 s in round 2)",
+      "b07 4.25 s, 9 words, chapter 950 ms then complete 1.90, hold 2.35 (2.9 words/s after the line starts: the fastest card)",
+      "b08 4.25 s, 9 words, complete 0.97, hold 3.28",
+      "b09 3.55 s, 7 words, complete 1.03, hold 2.52",
+      "b10 4.10 s, 8 words, complete 0.93, hold 3.17",
+      "b11 4.45 s, 9 words, complete 0.97, hold 3.48",
+      "b12 5.80 s, 7 words, chapter then complete 1.81, hold 3.99; replay rows printed by ~47.3 s, pause ~3.7 s with no answer leak (tr-sheet-3 row 3: row 12 turns Record at 51.3 s, 300 ms into b13)",
+      "b13 3.20 s, 6 words, complete 0.98, hold 2.22",
+      "b14 4.25 s, 7 words, complete 0.88, hold 3.37; four strikes pull back right to left by ~57.6 s",
+      "b15 4.50 s, 6 words, complete 0.98, hold 3.52; undo note on screen from ~59.9 s",
+      "b16 3.80 s, 8 words, complete 0.93, hold 2.87",
+      "b17 3.05 s, 6 words, complete 0.98, hold 2.07",
+      "b18 4.25 s, 9 words, complete 0.97, hold 3.28; both chips and the diff line on screen from ~72.9 s",
+      "b19 5.15 s, 11 words, complete 1.07, hold 4.08; the UI column is a 637 x 565 px thumbnail (text ~12 px) from 74.7 to ~77.5 s, the push reaches chip text >= 24 px cap at ~78.0 s, so the close is legible for ~1.2 s (strip-b19.png tiles 15-21)",
+      "b20 5.00 s, 8 words, complete 0.93, hold 4.07; four status rows typed by ~81.5 s",
+      "b21 5.80 s, 11 words, complete 1.07, hold 4.73; end card with mark, tagline, {site_url} and credit settled by ~86 s"
+    ]
+  },
+  "videos": {
+    "vsl-90s": {
+      "applies_to": [
+        "brand/vsl-90s.mp4",
+        "brand/vsl/vsl-90s-web.mp4 (same picture and audio, lower bitrate)"
+      ],
+      "weighted": 8.83,
+      "verdict": "FAIL (weighted under 9.0; no row under 8)",
+      "rows": {
+        "clarity": {
+          "score": 9.0,
+          "evidence": "The headline thread reads at 1.4-2.3 words/s on 20 of 21 cards (b07 2.9 after its chapter hold); every proof element lands and holds (table above); the fused line inside the wipes is gone, so each card is one idea from its first frame; the roadmap returning at b07 and b12 tells the viewer which part they are in; the pause card is 5.8 s with ~3.7 s of printed rows before the answer; b16/b17 now say in words where the analogy breaks and what this product does instead; b18 shows the diff's output line under its command; b20 says plainly what is and is not shipped. Still unclear in its time: the b19 payoff UI is an unreadable thumbnail for 3.3 of 5.15 s and legible for ~1.2 s (strip-b19.png); b03's git status proof holds only ~0.9 s after it finishes; the 450 ms light wipes (7.65, 10.8, 19.85, 28.85, 36.65, 40.75 s) show ~200 ms of bare paper with only the playhead before the first incoming word (tr-sheet-2 row 3 tiles 3-4)."
+        },
+        "story": {
+          "score": 8.5,
+          "evidence": "Problem (b01-b06) -> how it works (b07-b11) -> the fix (b12-b15) -> where the analogy breaks and the answer (b16-b17) -> features and status (b18-b20) -> close. 'Can you get them back?' is paid by 'One command, and four files come back.' and the flight-recorder analogy now has its break line and its payoff. The roadmap returns, so 'the fix' is marked when it arrives. What keeps it under 9: after the climax ends at 62.95 s there are still 21.25 s (24 percent of the film) of feature, UI and status cards before the end card at 84.2 s, and b20 is a requirements card one beat before the close; the 30s shows the same material lands harder without that tail."
+        },
+        "typography": {
+          "score": 9.0,
+          "evidence": "Bricolage Grotesque 800 at 84 px headlines and 124 px type cards, Hanken 40 px notes, Commit Mono 40 px on every panel (settled sheets 1-4); no orphan on any wrap; nothing crosses the 60 px safe margin; captions break by phrase (21 cues, 0 with a 1-2 word second line; srt == manifest card starts). b19 fixed: chip text 27-29 px cap, nothing sliced at the window edge (single 79.10). End card: headline 66 px run, 'Now your agent does.' 77, mark 122, tagline 43, {site_url} 35 px run, credit 30 (same as round 2). Left: the b19 close's top row is step 14's chips without their header (the window top cuts step 14 mid-card: single 79.10 y 451-540), and the b19 column text is ~12 px for 3 s before the push."
+        },
+        "motion_and_transitions": {
+          "score": 9.0,
+          "evidence": "Landed: the wipe now has one grammar across all three weights (outgoing line fades as a block ahead of the playhead, the incoming scene slides home behind it, the tape trail on story wipes), verified on all 14 big wipes at 30 fps and on all 20 card starts at 10 fps; the seven swaps are clean (old line up 1.6 em and fades, new line in at ~160 ms); panels open as a strip and grow with their lines; the strikes pull back right to left on b14; the chapter card rises out as the headline builds; the match cut at 74.05-74.7 s lands the playhead on the UI column's red stripe (burst-C row 2); the end card's mark enters with the wipe. Left: b18's two command chips type at the same time for ~300 ms (tr-sheet-4 row 4 tiles 5-6: '$ rewindagents di' over '$ rewin'); ~200 ms of bare paper on each light wipe; the b12 chapter's 'the fix' label in Record is still fading while 'which step' rises in Record (burst-A row 12 tiles 5-7, ~150 ms of two accents); the b19 push spends 3.4 s getting to a close it holds for ~1.2 s."
+        },
+        "brand": {
+          "score": 9.0,
+          "evidence": "Palette exact by construction, Leader paper / Spool panels / Reel end card, the mark on every title bar and the end card, 'made by John B Joseph' exact, planned things called planned (b20 'Six other agents: tested, not yet in a live session', 'Not on PyPI yet.', and a {repo_url} row), 0 never-use or scope words on screen or in the captions, 0 non-ASCII characters, no section sign, no emoji, no gradient or glow. One accent per view holds on all 21 settled frames (the proof takes it from the headline; b16's third row is Ink, b17's fourth row is Record under a black headline); the only two-accent moment is the ~150 ms chapter fade at 45.9 s."
+        },
+        "technical": {
+          "score": 9.0,
+          "evidence": "2700 frames at a constant 30 fps, 90.000 s, bt709 primaries/transfer/matrix and tv range tagged, faststart, one aac stream whose md5 (bf59b84b...) matches the manifest; the web copy carries the identical audio stream and a 49.34 dB average / 43.63 dB minimum PSNR picture at 0.87 Mbps; beats.json sha equals manifest.beats_sha256; the five audio files hash as the manifest pins them; -16.1 LUFS integrated, -1.7 dBTP, sample peak -1.78 dBFS, flat factor 0, DC -1e-5; designed tail: silence from 89.616 s. The round-2 hold is closed: the generator, DSP, sections and pinned requirements are in 3c7fe9f and tests/test_vsl_audio.py regenerates and compares every file with the manifest (run on this machine under nice -n 10: see test_runs). Held at 9.0 rather than higher because the WAVs are reproducible only with the pinned numpy/scipy and the test is the only guard."
+        },
+        "audio": {
+          "score": 8.0,
+          "measured_value_if_a_listen_confirms": 8.5,
+          "evidence": "Measured: -16.1 LUFS, LRA 7.8 LU (bed alone 8.1), TP -1.7 dBTP, no clipping, sample 0 = 0, first sample above -60 dBFS at 29.5 ms, raised fade to digital silence at 89.6 s; the hook (0-7.65 s) now sits at short-term -18 to -19 LUFS (was -22 to -24) with a heartbeat, wood tick, air swell and plucks visible on the spectrogram where round 2 had a bare sub drone; the arc follows the story (25 s -13.4 lift, 50 s -19.0 under the question, 55-58 s -11.1 at the restore, 68-80 s -18 to -19 through the break, 88 s -21.6 close); 17 sweeps and 20 ticks on the manifest's times; every detectable sweep lands 8-10 ms after its wipe's last frame. Capped at 8.0: nobody has listened (AUDIO.md 'Still weak', round 3). What John's listen must confirm before this row scores on its measurements: (1) the 5-12 kHz air swell under the hook reads as air, not hiss, on a laptop speaker and on earbuds; (2) the heartbeat (60-118 Hz) is audible on a phone, or the hook still works on tick + air + pluck alone when it is not; (3) the 14 ruler ticks in the first 1.6 s read as a ruler drawing, not a rattle; (4) the sweep landings feel on the wipe, not after it; (5) the section tempo changes (83-96 bpm, drums restarting on each downbeat at 24.6, 45.2, 54.2, 62.95, 79.2, 84.2 s) do not read as edits; (6) the A-minor to A-major resolve at 54.2 s reads as the lift the restore deserves; (7) nothing pumps through the limiter under the sweeps; (8) the 30 s and vertical beds carry the same character at their lengths. Any of these failing goes back to make_bed.py, not to the limiter."
+        }
+      }
+    },
+    "vsl-30s": {
+      "applies_to": [
+        "brand/vsl-30s.mp4"
+      ],
+      "weighted": 8.83,
+      "verdict": "FAIL (weighted under 9.0; no row under 8)",
+      "rows": {
+        "clarity": {
+          "score": 9.0,
+          "evidence": "hook, question, pause (b04 5.5 s, replay rows printed by ~12.6 s, answer accent lands 300 ms into b05: tr-sheet-1 row 9 tile 5), rewind, close; no fused line on the section wipe at 10.8 s or the story wipe at 19.5 s (burst-A rows 1-2 and 5-6); the b06 panel sized to its lines. Same residuals as the 90s where the cards are shared: ~200 ms bare paper on the light wipe at 7.65 s; the b03 git status proof holds ~0.9 s."
+        },
+        "story": {
+          "score": 8.5,
+          "evidence": "the tightest of the three: problem to fix in 23.75 s, end card settled ~5 s; 'Can you get them back?' paid by 'four files come back'; unchanged from round 2. Not higher because nothing in the 30 s says what records the steps (the product name appears only inside the command and on the end card), so the restore reads as magic rather than mechanism."
+        },
+        "typography": {
+          "score": 9.0,
+          "evidence": "panel mono 40 px runs on b04-b06 (settled sheets), headlines 84 px, captions 7 cues with second lines of 4-6 words; end card as the 90s ({site_url} 35 px run); no b19-class card in this cut."
+        },
+        "motion_and_transitions": {
+          "score": 9.0,
+          "evidence": "both swaps clean (tr-sheet-1 rows 1-2, 9-10), light / section / story wipes at 7.65 / 10.8 / 19.5 with the trail into the rewind and no fused line; panels open as a strip and grow (tr-sheet-1 rows 4, 6, 12); strikes pull back on b06; end card enters with the mark. Left: the same ~200 ms bare paper on the light wipe."
+        },
+        "brand": {
+          "score": 9.0,
+          "evidence": "one accent group per card on 7 of 7, no body text in Record, 0 never-use words, end card correct."
+        },
+        "technical": {
+          "score": 9.0,
+          "evidence": "886 frames, video 29.533 s against audio 29.550 s (one frame, harmless), bt709 tv, -16.1 LUFS, TP -2.0 dBTP, sample peak -2.24, flat factor 0, DC 6e-5, silence from 29.176 s; audio files hash as pinned; same generator-in-repo closure as the 90s."
+        },
+        "audio": {
+          "score": 8.0,
+          "measured_value_if_a_listen_confirms": 8.5,
+          "evidence": "same generator: hook short-term -19.4 to -18.5 LUFS over 3-8 s (was about -24 to -22), lift at 12 s (-15.2), payoff at 20 s (-12.4), close from 23.75, LRA 8.8, first sample above -60 dBFS at 29.6 ms, sample 0 = 7e-7; six sweeps, four of them wipe ends, all four landing +10.5 to +12.5 ms on detector A; not listened to; the same eight listen points apply."
+        }
+      }
+    },
+    "vsl-15s-vertical": {
+      "applies_to": [
+        "brand/vsl-15s-vertical.mp4"
+      ],
+      "weighted": 8.75,
+      "verdict": "FAIL (weighted under 9.0; no row under 8)",
+      "rows": {
+        "clarity": {
+          "score": 9.0,
+          "evidence": "three cards, one idea each; 'them' is explained by the two struck D rows under it (settled-sheet-1); the story wipe at 3.45 s no longer fuses the lines (burst-b02.png rows 1-2: outgoing gone by tile 6, incoming words from row 2 tile 1 at ~370 ms, right of the playhead); the end card's two-line Record payoff reads at phone size."
+        },
+        "story": {
+          "score": 8.0,
+          "evidence": "question, rewind, close; no setup of the agent, acceptable at 14 s; unchanged from round 2."
+        },
+        "typography": {
+          "score": 9.0,
+          "evidence": "headline 92 px (~33 px on a 390 px phone), panel mono 46 px, end card runs: headline 72/69 px, 'Now your / agent does.' 79/85, mark 107, tagline 57/56 over two lines, {site_url} 65 px run (~44 px cap, ~16 px on a phone), credit 48; content spans y 445-1548 so it clears the Reels bottom band (single 15-end-13.40)."
+        },
+        "motion_and_transitions": {
+          "score": 9.0,
+          "evidence": "two wipes (story 900 ms into the rewind with the long trail, section 650 ms into the end card), no swaps; the panel opens as a strip at 3.9 s and grows (burst-b02 row 3 tiles 4-6), no empty block; strikes pull back one by one; end card enters with the mark with no empty dark frame beyond ~100 ms (tr-sheet-1 row 4)."
+        },
+        "brand": {
+          "score": 9.0,
+          "evidence": "b02 proof in Record with a black headline, b01 and b03 headline accent only; end card correct with {site_url} large and the credit."
+        },
+        "technical": {
+          "score": 9.0,
+          "evidence": "420 frames, 14.000 s, bt709 tv, -16.1 LUFS (the bed is made at -14 and master() pulls it to -16; consistent across the three, a touch quiet for Reels, which normalise), TP -3.5 dBTP, flat factor 0, silence from 13.595 s; audio files hash as pinned."
+        },
+        "audio": {
+          "score": 8.0,
+          "measured_value_if_a_listen_confirms": 8.5,
+          "evidence": "cold open at short-term -18.4 at 3 s, hit into -14.5 / -13.2 / -12.8 at 4-6 s (the restore), -17.7 at 10 s, close from 12 s; LRA 10.2; first sample above -60 dBFS at 21.0 ms, sample 0 = -2e-7; both wipe-end sweeps land +12.5 ms on detector A, +10 on B; not listened to."
+        }
+      }
+    }
+  },
+  "hard_holds_outside_the_score": [],
+  "test_runs": {
+    "note": "repo tests run during this review on this machine (studio venv python, nice -n 10)",
+    "result_audio": "tests/test_vsl_audio.py 5/5 OK in 24.2 s: files on disk are the pinned bytes, REGENERATING from make_bed.py gives the pinned bytes, render rebuilds missing beds, sources tracked and WAVs ignored, manifest pins every bed and SFX - the round-2 reproducibility hold is closed by execution, not by reading",
+    "result_render": "tests/test_vsl_render.py 8/8 OK including test_frame_review_is_independent_and_passed with this sheet on disk; tests/test_vsl_wipes.py 1 skipped (its own precondition, not this sheet)"
+  },
+  "fixes_ordered": [
+    {
+      "n": 1,
+      "card": "the bed (brand/vsl/audio/AUDIO.md, make_bed.py) - the gate, not a maker change",
+      "what": "no human has listened; the audio row is capped at 8.0 and the films cannot reach 9.0 while it is",
+      "how": "John's listen of listen-excerpt.m4a AND the muxed vsl-90s.mp4 end to end (the excerpt was made on the old card times) goes into AUDIO.md under 'Listened' with a line per point in videos.vsl-90s.rows.audio.evidence (air swell vs hiss, heartbeat on a phone, the 14 opening ticks, sweep feel, tempo changes at the six section starts, the 54.2 s resolve, limiter pumping, 30 s and vertical character); any point that fails is a make_bed.py change, never a limiter or level change; then I re-score audio on measurement plus the log",
+      "evidence": "AUDIO.md 'Still weak' round 3; this sheet's audio rows"
+    },
+    {
+      "n": 2,
+      "card": "vsl-90s b19 (and b20's length)",
+      "what": "the push takes 3.4 s to reach a close it holds for ~1.2 s; the column is an unreadable thumbnail from 74.7 to ~77.5 s; the close's top row is step 14's chips without their header",
+      "how": "UI_HOLD_MS 1500 -> 700 and UI_PUSH_MS 3400 -> 2200 so the close lands at ~77.0 s and holds ~2.2 s; raise UI_CLOSE's y by one step-row so the window opens on '14 Write' and includes step 15 complete (keep UI_COLUMN_X1 773); if b19 needs the room, take 1.0 s from b20 (5.00 -> 4.00 s; its four rows are 13 words, typed by ~81.5 s today). Verify: single frame at 77.3 s shows the '14 Write' header, every step-15 chip, digit runs >= 27 px; strip at 4 fps 74.0-79.25 shows chip text >= 24 px cap on >= 9 tiles",
+      "evidence": "strip-b19.png tiles 3-14 vs 15-21; single/90-b19-77.00.png (window 637 x 565), single/90-b19-79.10.png y 451-540"
+    },
+    {
+      "n": 3,
+      "card": "every light wipe (90s b03 b04 b06 b08 b10 b11 at 7.65 10.8 19.85 28.85 36.65 40.75 s; 30s b03 at 7.65 s)",
+      "what": "the outgoing line is gone at ~170 ms and the incoming line's first word, pushed right by the slide, is not on screen until ~300-370 ms, so each 450 ms light wipe shows ~200 ms of bare paper with only the playhead",
+      "how": "scale the incoming slide to the wipe weight (WIPES['light'].slide at ~40 percent of the story value) or start the first word at WIPE_HEAD_MS 100 for light wipes, so a word is visible right of the playhead by 150 ms; keep the block fade so no baseline is shared. Verify with `ffmpeg -ss 28.80 -t 0.6 -vf fps=30` on the 90s: no frame after start+150 ms with zero headline ink, and no frame with two headlines",
+      "evidence": "vsl-90s/tr-sheet-2.png row 3 tiles 3-4 (28.95-29.15 s), tr-sheet-1 row 3 tiles 4-5"
+    },
+    {
+      "n": 4,
+      "card": "vsl-90s b18 (69.8-74.05 s)",
+      "what": "the second command chip starts typing while the first is still typing (72.2-72.5 s: '$ rewindagents di' over '$ rewin'), which no terminal does; the --only command shows no result where the diff command does",
+      "how": "start the second chip at the first chip's end plus LINE_MS (appear_on the headline word '--only' already, so clamp its start to >= first chip done), and give it its one output row 'restore src/db.py' via out_rows=[1, 3]; keep the card at 4.25 s (both chips and both outputs complete by ~73.3 s). Verify: 10 fps strip 70.5-74.0 shows one cursor at a time and an output line under each chip",
+      "evidence": "vsl-90s/tr-sheet-4.png row 4 tiles 4-6, settled-sheet-3 tile 6"
+    },
+    {
+      "n": 5,
+      "card": "vsl-90s b12 chapter out (45.85-46.1 s) and b07 (25.55-25.8 s)",
+      "what": "the chapter's lit label ('the fix' / 'how it works', Record) is still fading while the headline's Record words ('which step' / 'flight recorder') rise, so two accents share the frame for ~150 ms",
+      "how": "fade the chapter's Record label to Ink over the last 150 ms of CHAPTER_MS (before CHAPTER_OUT starts), or start the headline's first word at CHAPTER_MS + CHAPTER_OUT_MS rather than CHAPTER_MS + CHAPTER_OUT_MS / 2. Verify: 30 fps burst 45.8-46.3 s, no frame with Record ink in both the rule and the headline",
+      "evidence": "vsl-90s/burst-A.png row 12 tiles 5-7"
+    }
+  ],
+  "projection": "Fix 1 is the whole gap for the 30s and most of it for the 90s: with a logged listen that confirms the eight points the audio row scores 8.5-9.0 on these measurements, which puts the 30s at 8.88-8.93 and the 90s at 8.88-8.93 - still just under 9.0. Fixes 2, 3 and 4 move clarity and motion to 9.5 (b19 legible for 2+ s, no bare paper, one cursor at a time), which with a confirmed bed puts the 90s and 30s at 9.1-9.2. The vertical's ceiling is its story row (8.0, no agent setup in 14 s): with the bed confirmed it reaches ~8.8 and would need one more line of setup (a two-word strap over b01, e.g. the struck rows labelled 'your agent, step 13') to pass; nothing else in it is weak. If the listen finds the bed does not read as music, that is a make_bed.py round, and no picture polish changes the verdict."
+}
