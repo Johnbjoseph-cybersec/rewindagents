@@ -10,11 +10,11 @@ rewindagents
 
 ## Tagline
 
-Ctrl+Z for AI coding agents: record, replay, rewind
+Rewind the files your agent's shell commands changed
 
 ## Description
 
-An open-source recorder for coding agents. Every tool call goes into a hash-chained log, and a project file is copied before an edit or a Bash command changes it. Replay a session, rewind the files to any step, undo the rewind. Apache-2.0.
+Open-source recorder for coding agents. Every tool call goes into one hash-chained log, and files are copied before an edit or a shell command changes them, so a file only rm or sed -i touched comes back too. Rewind to any step, undo the rewind. Apache-2.0.
 
 ## Topics
 
@@ -27,7 +27,7 @@ Developer Tools, Open Source, Artificial Intelligence, GitHub
 
 ## Maker comment
 
-Hi Product Hunt. rewindagents exists because coding agents change files fast, often through shell commands, and every one of those steps should be undoable.
+Hi Product Hunt. Claude Code's own checkpointing docs ({claude_checkpointing_doc}) say: "A file that only Bash commands changed isn't tracked and stays as it is." Of subagents they say: "Claude Code usually doesn't capture those edits in your session's checkpoints." (Its rewind does undo Bash changes to a file Claude had already edited.) rewindagents exists for those steps: it copies the project's files before every shell command and records every tool call, step by step, in one verifiable log. Claude Code runs the same hooks for a subagent's tool calls, so those are recorded too; that path is tested with payloads shaped the way Claude Code's hooks docs describe, not yet in a live subagent session.
 
 What it does today:
 

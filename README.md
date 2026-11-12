@@ -5,8 +5,18 @@
   <img src="brand/logo-wordmark.svg" alt="rewindagents" height="40">
 </picture>
 
-Ctrl+Z for AI coding agents: record, replay and rewind. Every tool call your coding agent makes goes into a
-tamper-evident, hash-chained log you can verify later.
+rewindagents rewinds what your coding agent changed, step by step, from one verifiable log, including the files
+only a shell command touched.
+
+Claude Code's own [checkpointing docs](https://code.claude.com/docs/en/checkpointing) (read 2026-11-12) name
+that gap: "A file that only Bash commands changed isn't tracked and stays as it is." (its `/rewind` does undo Bash
+changes to a file Claude had already edited), and, of subagents, "Claude Code usually doesn't capture those edits
+in your session's checkpoints." rewindagents copies the project's files before every shell command and scans
+them after, so a `sed -i` or an `rm` is one more step you can rewind. Claude Code runs the same hooks for a
+subagent's tool calls ([hooks docs](https://code.claude.com/docs/en/hooks)), so those go into the same log;
+`tests/test_subagent.py` drives the hook with payloads shaped the way that page describes and rewinds them, but
+no live subagent session has been recorded yet. Every tool call goes into a tamper-evident, hash-chained log you
+can verify later.
 
 **Status: v0.0.7, pre-release.** Built and tested today: the recorder and its CLI, hooks for Claude Code,
 Codex and Cursor that record every call and checkpoint the files a step changes, `replay`, `rewind` and

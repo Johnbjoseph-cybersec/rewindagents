@@ -3,7 +3,8 @@
  "written_by": "fire",
  "date": "2026-11-12",
  "rounds": "round 1: 21 BLOCK (each-file overstatement, Cursor prints, 'full speed', editor undo history, rewind checks, exit code, branch outside git, export path, Codex trust) + 4 UNVERIFIED incl. first-person authorship; round 2: 8 BLOCK (incomplete exception lists, Cursor also prints {}, Codex folder trust, export size caps); round 3: 0 BLOCK, 3 UNVERIFIED, none a public claim; round 4 (RB5e, 2026-11-12, producthunt.md Gallery section only): 1 BLOCK (reviewed-by-a-critic read as approval while every review on file failed) -> reworded -> 0 BLOCK; round 5 (RB0 rename to rewindagents, 2026-11-12): diff confirmed name-only, every row re-read against current sources and re-anchored, 3 new rows (command and install line, not on PyPI via pypi.org JSON 404, no live-repo claim); 1 BLOCK outside the copy (exported page heading kept the old name, export.py:275) fixed, verifier confirmed CLEAR; README Pages wording made future",
- "kit_sha256": "84888d751e384124c3666e8c94f4111e794e3cc5324fad6a2eef2339dd8a2f50",
+ "kit_sha256": "915f3de1ecb96d1aa22eba612618936c9d802683be6493aadc26c615d189a0d7",
+ "rb6_rounds": "RB6 (2026-11-12): round 1 BLOCKed six headlines that said every agent's built-in rewind cannot undo shell or subagent changes (Claude Code's /rewind does undo Bash changes to a file Claude already edited; only Claude Code's limits are documented) and marked subagent claims UNVERIFIED (payload-shaped test only). Round 2, after rescoping to capability claims with the /rewind and subagent caveats: CLEAR. Open, not claimed anywhere: background Bash after-scan timing.",
  "blocked_in_kit": 0,
  "found_beyond_the_kit": "Round 5: export.py:275 heading kept the old name (fixed); README.md:310 said the site is published (fixed). Earlier R11 items fixed in 93c9358.",
  "claims": [
@@ -11,7 +12,37 @@
    "file": "producthunt.md",
    "claim": "Tagline within 60 characters",
    "verdict": "CLEAR",
-   "source": "help.producthunt.com/en/articles/17834537-4-build-your-product-page (2026-11-12): \"Tagline (up to 60 characters).\"; producthunt.md:13 \"Ctrl+Z for AI coding agents: record, replay, rewind\" = 51, untouched by the rename"
+   "source": "help.producthunt.com/en/articles/17834537-4-build-your-product-page (2026-11-12): \"Tagline (up to 60 characters).\"; producthunt.md:13 \"Rewind the files your agent's shell commands changed\" = 52 (RB6); tests/test_launch.py checks the length"
+  },
+  {
+   "file": "producthunt.md",
+   "claim": "RB6 tagline/description/maker comment: rewinds files only a shell command changed; checkpointing-doc quotes verbatim; /rewind does undo Bash changes to a file Claude already edited; subagent calls recorded, tested with payloads shaped as the hooks docs describe, not yet in a live subagent session",
+   "verdict": "CLEAR",
+   "source": "code.claude.com/docs/en/checkpointing (2026-11-12): \"A file that only Bash commands changed isn't tracked and stays as it is.\"; \"Claude Code usually doesn't capture those edits in your session's checkpoints.\"; \"Once Claude has edited a file with its file editing tools in your conversation, /rewind undoes changes that Bash commands make to that file afterward.\"; code.claude.com/docs/en/hooks 'Hook locations': \"When a subagent calls a tool, tool events such as PreToolUse and PostToolUse fire the same configured hooks as in the main conversation\"; bashscan.py:121-159; log.py:52-55,73-92; tests/test_subagent.py"
+  },
+  {
+   "file": "show-hn.md",
+   "claim": "RB6 title 'rewind what your agent's shell commands changed' and first Text paragraph (quotes, /rewind caveat, subagent caveat)",
+   "verdict": "CLEAR",
+   "source": "as the producthunt.md RB6 row; limits and live status at show-hn.md Text 'Status' paragraph"
+  },
+  {
+   "file": "x-thread.md",
+   "claim": "RB6 Post 1: Bash quote + 'takes those back, step by step, from one hash-chained log'; Post 2: demo session, last two steps delete tests and overwrite config, one command restores four files",
+   "verdict": "CLEAR",
+   "source": "checkpointing doc as above; bashscan.py:121-159; brand/demo/scenario.py:86-87; brand/demo/manifest.json:33 \"rewind to step 12 of 14 (did change 4 files)\""
+  },
+  {
+   "file": "reddit.md",
+   "claim": "RB6 title and first Body paragraph (quote, subagent paraphrase with 'usually', subagent caveat)",
+   "verdict": "CLEAR",
+   "source": "as the producthunt.md RB6 row"
+  },
+  {
+   "file": "linkedin-for-jj.md",
+   "claim": "RB6 fact bullet (gap in the vendor's words, /rewind caveat, 'do not claim subagent coverage as proven') and draft opening paragraph",
+   "verdict": "CLEAR",
+   "source": "as the producthunt.md RB6 row"
   },
   {
    "file": "producthunt.md",

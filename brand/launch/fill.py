@@ -1,7 +1,8 @@
 """Print a launch-kit file (task RB5) with its address placeholders filled in, ready to paste.
 
-  python3 brand/launch/fill.py show-hn.md        -> the file, with {site_url}, {repo_url} and {waitlist_url}
-                                                    replaced from brand/site/config.json
+  python3 brand/launch/fill.py show-hn.md        -> the file, with {site_url}, {repo_url}, {waitlist_url} and
+                                                    {claude_checkpointing_doc} (the third-party page the kit
+                                                    quotes, RB6) replaced from brand/site/config.json
 
 The launch copy keeps the placeholders: the product's address lives in brand/site/config.json only
 (tests/test_site.py), so a bought domain is a one-line change there, never a rewrite of the posts. Exit 1 if a
@@ -16,7 +17,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 BRAND = os.path.dirname(HERE)
 CONFIG = os.path.join(BRAND, "site", "config.json")
-KEYS = ("site_url", "repo_url", "waitlist_url")
+KEYS = ("site_url", "repo_url", "waitlist_url", "claude_checkpointing_doc")
 PLACEHOLDER = re.compile(r"\{([a-z_]+)\}")
 
 

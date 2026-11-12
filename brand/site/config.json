@@ -4,5 +4,6 @@
  "repo_url": "https://github.com/Johnbjoseph-cybersec/rewindagents",
  "branch": "main",
  "waitlist_url": "https://github.com/Johnbjoseph-cybersec/rewindagents/issues/new?title=Cloud+waitlist&labels=waitlist&body=I+would+use+a+paid+tier+for%3A",
- "checkout_url": null
+ "checkout_url": null,
+ "claude_checkpointing_doc": "https://code.claude.com/docs/en/checkpointing"
 }

@@ -14,9 +14,11 @@ before posting.
 
 ## Title
 
-An undo for coding agents: it records every tool call and rewinds the files to any step
+An undo for coding agents that also rewinds the files only a shell command changed
 
 ## Body
+
+Claude Code's checkpointing docs ({claude_checkpointing_doc}) say: "A file that only Bash commands changed isn't tracked and stays as it is." They say subagent edits are usually not captured either. rewindagents records every tool call, copies the project's files before each shell command, and rewinds the files to any step. Claude Code runs the same hooks for a subagent's tool calls, so those are recorded too; that path is tested with payloads shaped the way its hooks docs describe, not yet in a live subagent session.
 
 In the demo session (recorded by a script in the repo), fourteen agent steps run through the hook and the last two are the bad kind: `rm -rf tests`, then an overwritten config file. Two commands show what happened and put the four files back:
 

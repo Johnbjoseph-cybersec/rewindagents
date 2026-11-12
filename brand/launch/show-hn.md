@@ -7,13 +7,15 @@ title fits the submit form on the day.
 
 ## Title
 
-Show HN: rewindagents - record, replay and rewind what your coding agent did
+Show HN: rewindagents - rewind what your agent's shell commands changed
 
 ## URL
 
 {repo_url}
 
 ## Text
+
+Claude Code's checkpointing docs ({claude_checkpointing_doc}) are candid about the gap: "A file that only Bash commands changed isn't tracked and stays as it is." And for subagents: "Claude Code usually doesn't capture those edits in your session's checkpoints." (Its rewind does undo Bash changes to a file Claude had already edited.) Claude Code runs the same hooks for a subagent's tool calls as for the main conversation, so a hook can catch both. The subagent path here is tested with payloads shaped the way the hooks docs describe, not yet in a live subagent session.
 
 rewindagents records every tool call a coding agent makes into a hash-chained JSONL log, copies a project file before an edit tool or a Bash command changes it (limits below), and lets you rewind the working tree to any step.
 

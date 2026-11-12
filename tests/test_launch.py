@@ -82,7 +82,7 @@ def commands(text):
 
 
 def x_length(post):
-    return len(re.sub(r"\{(site_url|repo_url|waitlist_url)\}", "x" * X_URL, post))
+    return len(re.sub(r"\{(site_url|repo_url|waitlist_url|claude_checkpointing_doc)\}", "x" * X_URL, post))
 
 
 class TestLaunchKit(unittest.TestCase):
