@@ -697,7 +697,7 @@ def docs_html(cfg, f):
 <li>In a git repository the scan follows <code>git ls-files --cached --others --exclude-standard</code>, so git-ignored files are not saved. Outside git, every file under the project except under %(skip)s.</li>
 <li>Symlinks are not saved. Files over %(mb)d MB are not copied. A project with more than %(files)s files is not scanned around <code>Bash</code> commands; the call is still recorded and <code>rewind</code> reports the step as not scanned.</li>
 <li>Directories created by later steps stay, empty, after a rewind. If anything could not be restored, <code>rewind</code> lists it and exits 1.</li>
-<li>Appends to the log are locked with <code>fcntl</code>, so it needs a Unix. The Claude Code hook has run in real sessions; the Codex and Cursor hooks are tested with the documented payloads, not yet in a live session.</li>
+<li>Needs a Unix for now: the log lock has a Windows path (<code>msvcrt</code>), but the tests have not run on Windows yet. The Claude Code hook has run in real sessions; the Codex and Cursor hooks are tested with the documented payloads, not yet in a live session.</li>
 </ul>
 
 <h2 id="remove">Remove it</h2>

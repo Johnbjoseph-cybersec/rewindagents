@@ -377,7 +377,8 @@ many it deleted and the bytes those files took on disk.
   record makes `verify` fail and name the first bad record.
 - Several processes can write to the same log at once; appends are locked, so the chain stays single.
 - Plain JSONL. No server, no database, no dependencies beyond the Python standard library.
-  Needs a Unix (`fcntl`) for the write lock.
+  Needs a Unix for now. The write lock also has a Windows path (`msvcrt`), but the test suite has
+  not run on Windows yet, so Windows is not supported.
 
 ## Use it
 

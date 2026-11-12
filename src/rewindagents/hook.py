@@ -18,7 +18,6 @@ stderr only.
 from __future__ import annotations
 
 import contextlib
-import fcntl
 import hashlib
 import json
 import os
@@ -29,7 +28,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from . import agents
+from . import agents, filelock
 from .log import Recorder
 
 FILE_TOOLS = {"Write": "file_path", "Edit": "file_path", "MultiEdit": "file_path",
@@ -58,12 +57,14 @@ def store_lock(store: Path, exclusive: bool = False, timeout: float = 30.0):
             raise
         yield
         return
+    locked = False
     try:
         if exclusive:
             deadline = time.monotonic() + timeout
             while True:
                 try:
-                    fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    filelock.acquire(fh, exclusive=True, blocking=False)
+                    locked = True
                     break
                 except BlockingIOError:
                     if time.monotonic() > deadline:
@@ -71,12 +72,16 @@ def store_lock(store: Path, exclusive: bool = False, timeout: float = 30.0):
                     time.sleep(0.05)
         else:
             try:
-                fcntl.flock(fh, fcntl.LOCK_SH)
+                filelock.acquire(fh, exclusive=False)
+                locked = True
             except OSError:
                 pass
         yield
     finally:
-        fh.close()   # closing drops the lock
+        if locked:
+            with contextlib.suppress(OSError):
+                filelock.release(fh)   # Windows wants an explicit unlock before close
+        fh.close()
 
 
 def checkpoint(path: Path, objects: Path) -> dict:

@@ -1,0 +1,29 @@
+# Runs the test suite on Linux, macOS and Windows. Windows is in the matrix so the README can say
+# "supported" only once this job is green there; until then the README says Unix only.
+# Actions are pinned to commit SHAs (the version tag is the comment). Read-only token.
+name: tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            py: python3
+          - os: macos-latest
+            py: python3
+          - os: windows-latest
+            py: python
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - run: ${{ matrix.py }} -m unittest discover -s tests -v

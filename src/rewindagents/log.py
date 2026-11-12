@@ -12,13 +12,14 @@ keep the head hash somewhere else (`rewindagents head`) and pass it to `verify`.
 """
 from __future__ import annotations
 
-import fcntl
 import hashlib
 import json
 import os
 import time
 from pathlib import Path
 from typing import Any
+
+from . import filelock
 
 GENESIS = "0" * 64
 
@@ -46,7 +47,7 @@ class Recorder:
                actor: str = "agent", event: str = "tool_call", ts: float | None = None) -> dict:
         """Append one record. `ts` defaults to now; `import` passes the original time of a moved record."""
         with self.path.open("a+", encoding="utf-8") as fh:
-            fcntl.flock(fh, fcntl.LOCK_EX)
+            filelock.acquire(fh, exclusive=True)
             try:
                 prev, n = _last_hash(fh)
                 body = {"seq": n + 1, "ts": round(time.time() if ts is None else ts, 3), "session": session,
@@ -58,7 +59,7 @@ class Recorder:
                 fh.flush()
                 os.fsync(fh.fileno())
             finally:
-                fcntl.flock(fh, fcntl.LOCK_UN)
+                filelock.release(fh)
         return body
 
 
