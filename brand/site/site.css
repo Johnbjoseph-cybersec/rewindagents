@@ -392,3 +392,106 @@ pre.term + pre.term { margin-top: 12px; }
 .ag:hover { transform: translateY(-2px); }
 .ag-label { line-height: 22px; }
 .agents { align-items: center; }
+
+/* ==== review round 1 (cs-iris-kapoor): one grid, film, hero, strip, dead blocks, FAQ, red discipline ==== */
+:root { --split: minmax(0, 1fr) minmax(0, 1fr); --gap: 64px; }
+/* 1. one two-column system: every right-hand block starts on the same line */
+.head, .session, .plans, .cmdrow, .closegrid, .install-row, .pair { grid-template-columns: var(--split); column-gap: var(--gap); }
+.ledger li { grid-template-columns: var(--split); column-gap: var(--gap); }
+.install-row { display: grid; align-items: start; row-gap: 20px; margin-bottom: 40px; }
+.install-row p { color: var(--tape); font-size: 16px; }
+.pair { display: grid; row-gap: 32px; align-items: stretch; }
+.pair > div { display: flex; flex-direction: column; }
+.pair > div > pre.term { flex: 1; margin-top: 14px; }
+.pair-note { margin-top: 24px; display: grid; grid-template-columns: var(--split); column-gap: var(--gap); }
+.pair-note p { grid-column: 2; color: var(--tape); font-size: 15px; }
+/* 2-4. the film: control off the picture, bar on the frame edges, chapter line, clip-path reveal, theatre */
+.film-frame { max-width: min(100%, 1600px); transform-origin: initial; will-change: auto; }
+.film-play { inset: auto auto 40px 40px; margin: 0; flex-direction: row; align-items: center; gap: 16px; width: auto; height: auto; }
+.film-play-dot { width: 72px; height: 72px; }
+.film-play-dot::after { inset: -8px; }
+.film-len { margin-top: 0; }
+.film-bar { max-width: 1600px; margin: 26px auto 0; padding: 0 40px; gap: 20px; }
+.film-time { min-width: 10ch; }
+.film-fs { min-height: 44px; min-width: 44px; padding: 0 12px; background: transparent; color: var(--playhead); border: 1px solid var(--tape); border-radius: 3px; font-family: var(--mono); font-size: 12px; cursor: pointer; }
+.film-fs:hover { color: var(--leader); border-color: var(--leader); }
+.ft { height: 7px; }
+.ft.ch { height: 14px; width: 2px; background: var(--playhead); }
+.ft.ch.past { background: var(--rewind); }
+.ft.ch:hover::after { content: attr(data-title); position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--spool); color: var(--leader); font: 12px/1 var(--mono); padding: 6px 8px; white-space: nowrap; border-radius: 2px; }
+.film-now { font-family: var(--mono); font-size: 13px; color: var(--playhead); min-height: 1.5em; margin: 14px auto 0; max-width: 1600px; padding: 0 40px; white-space: pre; }
+.top { transition: transform .5s var(--ease), border-color .3s var(--ease); }
+.theatre .top { transform: translateY(-100%); }
+.theatre .film-frame { box-shadow: 0 0 0 100vmax var(--reel); position: relative; z-index: 30; }
+.theatre .film-bar, .theatre .film-now { position: relative; z-index: 31; }
+.theatre .tape { opacity: 0; }
+.film-frame:fullscreen { max-width: none; display: grid; place-items: center; background: var(--reel); }
+/* 5. hero: shared top line, balanced h1, 6/6 */
+.hero .wrap { grid-template-columns: var(--split); column-gap: var(--gap); align-items: start; }
+.hero h1 { font-size: clamp(44px, 4.4vw, 62px); letter-spacing: -0.025em; word-spacing: 0.04em; text-wrap: balance; max-width: 12ch; }
+.hero-panel { align-self: start; padding-top: 58px; }
+/* 6. agent strip: one baseline, full column rule, one icon style (each mark on a Reel tile) */
+.agents { max-width: none; width: 100%; align-items: center; margin-top: 40px; padding-top: 24px; }
+.ag-label { line-height: 1; }
+.agents li { line-height: 1; }
+.ag img { width: 22px; height: 22px; padding: 4px; background: var(--reel); border-radius: 4px; filter: invert(1); }
+.ag img { background: var(--leader); }
+.ag-glyph { border-radius: 4px; }
+/* 7. hero caption in body type; facts on two true columns; hanging indent */
+.hero-panel .caption { font: 400 14px/1.6 var(--body); color: var(--tape); letter-spacing: 0; max-width: none; }
+.hero-panel .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; margin-top: 24px; }
+.hero-panel pre.term .l { padding-left: 2ch; text-indent: -2ch; }
+/* 8. dead blocks */
+.session { align-items: start; }
+.session pre.term, .session > div pre.term.fill { flex: none; height: auto; }
+.plan { display: flex; flex-direction: column; }
+.plan .btn { margin-top: auto; }
+.plan h3 { line-height: 1.2; min-height: 1.2em; }
+/* 9. FAQ on the grid: head left, questions right */
+#faq .wrap { display: grid; grid-template-columns: var(--split); column-gap: var(--gap); align-items: start; }
+#faq .label { grid-column: 1; grid-row: 1; }
+#faq .head { grid-column: 1; grid-row: 2; display: block; margin: 0; }
+#faq .faq { grid-column: 2; grid-row: 1 / span 2; max-width: none; }
+summary:hover { color: var(--record); }
+/* 10. red discipline; inline code that does not read as a link */
+.ledger .k { color: var(--reel); font-weight: 700; }
+.plan li::before { background: var(--reel); }
+p code, li code, h3 code, summary code { border-bottom: 0; color: var(--reel); font-weight: 600; }
+#how code { color: var(--leader); }
+a > code { border-bottom: 1px solid currentColor; }
+/* 12. display tracking */
+h1, h2, .plan h3 { letter-spacing: -0.025em; word-spacing: 0.04em; }
+h2 { text-wrap: balance; }
+@media (max-width: 960px) {
+  .head, .session, .plans, .cmdrow, .closegrid, .install-row, .pair, .pair-note, .hero .wrap, .ledger li, #faq .wrap { grid-template-columns: minmax(0, 1fr); }
+  .pair-note p { grid-column: 1; }
+  #faq .faq { grid-column: 1; grid-row: auto; margin-top: 32px; }
+  #faq .head { grid-row: auto; }
+  .hero-panel { padding-top: 0; }
+}
+/* 11. mobile */
+@media (max-width: 600px) {
+  .top .nav a { min-height: 44px; display: inline-flex; align-items: center; padding: 0 9px; }
+  .top .nav a:last-child { border: 1px solid var(--reel); border-radius: 3px; min-height: 40px; padding: 0 10px; margin-left: 4px; }
+  .eyebrow { flex-wrap: wrap; gap: 8px 12px; white-space: normal; }
+  pre.term { font-size: 12px; overflow-x: auto; }
+  pre.term .l { white-space: pre; overflow-wrap: normal; padding-left: 0; text-indent: 0; }
+  .hero-panel pre.term .l { padding-left: 0; text-indent: 0; }
+  .film-frame { max-width: none; }
+  .film-play { inset: auto auto 14px 14px; gap: 10px; }
+  .film-play-dot { width: 56px; height: 56px; }
+  .film-play-label { font-size: 13px; padding: 6px 10px; }
+  .film-len { display: none; }
+  .film-bar, .film-now { padding: 0 16px; }
+  .ft:not(.ch) { display: none; }
+  .ag-label { flex-basis: 100%; }
+  .hero-panel .facts { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* hover lift on its own property, so it never fights the intro tween on transform */
+.ag { transition: translate .3s var(--ease); }
+.ag:hover { transform: none; translate: 0 -2px; }
+
+/* seven agents: two rows on desktop, tighter gaps */
+.agents ul { gap: 12px 20px; }
+.ag { font-size: 15px; }

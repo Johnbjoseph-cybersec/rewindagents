@@ -22,12 +22,54 @@
     ],
     "settings": ".codex/hooks.json"
    },
+   "copilot": {
+    "read_only": [
+     "glob",
+     "grep",
+     "view",
+     "web_fetch"
+    ],
+    "settings": ".github/hooks/rewindagents.json"
+   },
    "cursor": {
     "read_only": [
      "Grep",
      "Read"
     ],
     "settings": ".cursor/hooks.json"
+   },
+   "droid": {
+    "read_only": [
+     "FetchUrl",
+     "Glob",
+     "Grep",
+     "LS",
+     "Read",
+     "WebSearch"
+    ],
+    "settings": ".factory/settings.json"
+   },
+   "gemini": {
+    "read_only": [
+     "glob",
+     "google_web_search",
+     "grep_search",
+     "list_directory",
+     "read_file",
+     "read_many_files",
+     "search_file_content",
+     "web_fetch"
+    ],
+    "settings": ".gemini/settings.json"
+   },
+   "qwen": {
+    "read_only": [
+     "glob",
+     "grep_search",
+     "list_directory",
+     "read_file"
+    ],
+    "settings": ".qwen/settings.json"
    }
   },
   "blocks": {

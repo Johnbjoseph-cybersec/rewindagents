@@ -16,7 +16,7 @@
     var video = $(".film-video", film), play = $(".film-play", film), bar = $(".film-bar", film);
     var ruler = $(".film-ruler", film), fill = $(".film-fill", film), time = $(".film-time", film);
     var total = parseFloat(film.getAttribute("data-total")) || 90;
-    var ticks = $$(".ft", film);
+    var ticks = $$(".ft", film), chapters = $$(".ft.ch", film), now = $(".film-now", film), fs = $(".film-fs", film);
     video.controls = false; play.hidden = false; bar.hidden = false;
     ticks.forEach(function (t) { t.style.left = (parseFloat(t.getAttribute("data-t")) / total * 100) + "%"; });
     var track = video.textTracks && video.textTracks[0];
@@ -27,17 +27,23 @@
       time.textContent = fmt(t) + " / " + fmt(d);
       ruler.setAttribute("aria-valuenow", String(Math.round(t)));
       ticks.forEach(function (k) { k.classList.toggle("past", parseFloat(k.getAttribute("data-t")) <= t); });
+      var cur = null; chapters.forEach(function (k) { if (parseFloat(k.getAttribute("data-t")) <= t + 0.05) cur = k; });
+      var label = cur ? (chapters.indexOf(cur) + 1) + " / " + chapters.length + "  " + cur.getAttribute("data-title") : "";
+      if (now.textContent !== label) now.textContent = label;
     }
+    function theatre(on) { root.classList.toggle("theatre", on); }
     function start() {
-      film.classList.add("playing");
+      film.classList.add("playing"); theatre(true);
+      var r = film.querySelector(".film-frame").getBoundingClientRect();
+      if (r.top < 0 || r.bottom > window.innerHeight) film.querySelector(".film-frame").scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
       video.muted = false;
       var p = video.play(); if (p && p.catch) p.catch(function () { video.muted = true; video.play(); });
     }
     play.addEventListener("click", start);
     video.addEventListener("click", function () { if (video.paused) start(); else video.pause(); });
-    video.addEventListener("pause", function () { film.classList.remove("playing"); film.classList.add("paused"); });
+    video.addEventListener("pause", function () { film.classList.remove("playing"); film.classList.add("paused"); theatre(false); });
     video.addEventListener("play", function () { film.classList.add("playing"); film.classList.remove("paused", "ended"); });
-    video.addEventListener("ended", function () { film.classList.remove("playing"); film.classList.add("ended"); $(".film-play-label", film).textContent = "Watch again"; });
+    video.addEventListener("ended", function () { theatre(false); film.classList.remove("playing"); film.classList.add("ended"); $(".film-play-label", film).textContent = "Watch again"; });
     video.addEventListener("timeupdate", sync);
     function seekAt(x) {
       var r = ruler.getBoundingClientRect(), f = Math.min(1, Math.max(0, (x - r.left) / r.width));
@@ -45,6 +51,11 @@
       video.currentTime = f * (video.duration || total); sync();
     }
     ruler.addEventListener("click", function (ev) { seekAt(ev.clientX); if (video.paused) start(); });
+    if (fs) fs.addEventListener("click", function () {
+      var el = film.querySelector(".film-frame");
+      if (document.fullscreenElement) document.exitFullscreen(); else if (el.requestFullscreen) el.requestFullscreen();
+      if (video.paused) start();
+    });
     ruler.addEventListener("keydown", function (ev) {
       if (ev.key === "ArrowRight" || ev.key === "ArrowLeft") {
         ev.preventDefault();
@@ -101,7 +112,7 @@
       .from(lines, { yPercent: 110, duration: 1.1, stagger: 0.09 }, 0.1)
       .from($(".lede", hero), { y: 24, opacity: 0, duration: 0.9 }, 0.55)
       .from($$(".cta .btn", hero), { y: 18, opacity: 0, duration: 0.7, stagger: 0.08 }, 0.7)
-      .from($$(".agents .ag-label, .agents .ag", hero), { y: 14, opacity: 0, duration: 0.6, stagger: 0.07 }, 0.95);
+      .from($$(".agents .ag-label, .agents .ag", hero), { y: 14, opacity: 0, duration: 0.6, stagger: 0.07, clearProps: "transform" }, 0.95);
     var panel = $(".hero-panel .panel", hero);
     if (panel) {
       var rows = $$(".l", panel);
@@ -155,9 +166,9 @@
   /* ---- 4. the film: grows from an inset card to the full width as it comes up the page --------------- */
   safe("film-scroll", function () {
     var frame = $(".film-frame"); if (!frame) return;
-    gsap.fromTo(frame, { scale: 0.8, borderRadius: 28 }, {
-      scale: 1, borderRadius: 0, ease: "none",
-      scrollTrigger: { trigger: "#film", start: "top 95%", end: "top 12%", scrub: 0.6 }
+    gsap.fromTo(frame, { clipPath: "inset(0 8% round 24px)" }, {
+      clipPath: "inset(0 0% round 0px)", ease: "none",
+      scrollTrigger: { trigger: "#film", start: "top 95%", end: "top 20%", scrub: 0.6 }
     });
     if ($(".film-play")) gsap.from(".film-play", { scale: 0.6, opacity: 0, duration: 1, ease: "back.out(1.6)", clearProps: "transform,opacity",
       scrollTrigger: { trigger: "#film", start: "top 60%", once: true } });
@@ -168,7 +179,7 @@
     var c = $(".close"); if (!c) return;
     var h = $("h2", c), chars = window.SplitText ? new SplitText(h, { type: "chars,words" }).chars : [h];
     var tl = gsap.timeline({ paused: true });
-    tl.from(chars, { yPercent: 80, rotate: 8, opacity: 0, duration: 0.7, stagger: 0.018, ease: "back.out(1.7)" })
+    tl.from(chars, { yPercent: 100, opacity: 0, duration: 0.8, stagger: 0.014, ease: "expo.out" })
       .from($$(".btn, pre", c), { y: 20, opacity: 0, duration: 0.7, stagger: 0.1, ease: EASE }, 0.35);
     ScrollTrigger.create({ trigger: c, start: "top 75%", once: true, onEnter: function () { tl.play(); } });
   });

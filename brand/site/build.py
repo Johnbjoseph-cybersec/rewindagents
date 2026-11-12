@@ -116,7 +116,7 @@ EYEBROW_MAX = 46   # the eyebrow is one unwrapped mono line in the 5/12 hero col
 
 def eyebrow(f):
     """The one-line tag under which the promise sits: the version is prepended by the template."""
-    text = "hooks for Claude Code, Codex, Cursor"
+    text = "hooks for %d coding agents" % len(agents.AGENTS)
     full = "v%s . %s" % (f["version"], text)
     if len(full) > EYEBROW_MAX:
         raise SystemExit("eyebrow is %d characters, over %d: it would run under the hero panel" % (len(full), EYEBROW_MAX))
@@ -192,7 +192,24 @@ def beat_rows(b, lit=True):
     return rows
 
 
-AGENT_MARKS = {"claude": ("Claude Code", "claude-code.svg"), "codex": ("Codex", None), "cursor": ("Cursor", "cursor.svg")}
+AGENT_MARKS = {"claude": ("Claude Code", "claude-code.svg"), "codex": ("Codex", None), "cursor": ("Cursor", "cursor.svg"),
+               "gemini": ("Gemini CLI", "gemini.svg"), "copilot": ("GitHub Copilot", "github-copilot.svg"),
+               "droid": ("Factory Droid", None), "qwen": ("Qwen Code", "qwen.svg")}
+
+
+def more_agents_html():
+    """One docs paragraph for every agent beyond Claude Code, Codex and Cursor, generated from agents.AGENTS so a new
+    hook appears in the docs the day it ships."""
+    rows = []
+    for key, a in agents.AGENTS.items():
+        if key in ("claude", "codex", "cursor"):
+            continue
+        rows.append("<li><b>%s</b>: <code>rewindagents install --agent %s</code> writes the hook to <code>%s</code>.</li>"
+                    % (e(AGENT_MARKS[key][0]), e(key), e(a.settings)))
+    if not rows:
+        return ""
+    return ("<p>The other agents with a hook, each built from the vendor&#x27;s hook documentation and tested with the "
+            "documented payloads, not yet in a live session:</p><ul>%s</ul>" % "".join(rows))
 
 
 def agent_strip(rel=""):
@@ -210,7 +227,15 @@ def agent_strip(rel=""):
     return '<div class="agents"><span class="ag-label">Hooks for</span><ul>%s</ul></div>' % "".join(items)
 
 
-FILM = "vsl-90s"      # brand/<FILM>.mp4 is the film on the landing page; its captions are brand/vsl/<FILM>.srt
+FILM = "vsl-90s"
+# Chapters of the film, named by the caption that opens each one (matched by its first words, so a re-cut of the
+# film that drops a line fails the build instead of mislabelling the ruler).
+CHAPTERS = [("Step thirteen.", "The wreck"), ("There were three.", "What git can't return"),
+            ("But rewindagents recorded", "The record"), ("So rewind to it.", "Rewind"),
+            ("And the rewind is step fifteen.", "Undo the undo"), ("Every tool call goes", "The hash chain"),
+            ("Before every edit", "Checkpoints"), ("rewindagents install", "Install"),
+            ("Files over twenty", "Limits"), ("Export it as one HTML", "Export"),
+            ("Your editor has had undo", "Undo, for agents")]      # brand/<FILM>.mp4 is the film on the landing page; its captions are brand/vsl/<FILM>.srt
 
 
 def srt_cues(path):
@@ -240,9 +265,14 @@ def film(cues):
     one tick per caption line, so the progress bar is the film's own script."""
     total = cues[-1][1]
     length = "%d:%02d" % (round(total) // 60, round(total) % 60)
-    ticks = "".join('<span class="ft" style-pos="%.4f" data-t="%.2f" title="%s"></span>' % (a / total, a, e(txt))
-                    for a, _, txt in cues)
-    ticks = re.sub(r' style-pos="[^"]+"', "", ticks)   # positions are set by site.js from data-t; no inline style (CSP)
+    starts = {}
+    for words, title in CHAPTERS:
+        hit = [i for i, (_, _, txt) in enumerate(cues) if txt.startswith(words)]
+        if len(hit) != 1:
+            raise SystemExit("film chapter %r: %d captions start with %r" % (title, len(hit), words))
+        starts[hit[0]] = title
+    ticks = "".join('<span class="ft%s" data-t="%.2f"%s></span>' % (" ch" if i in starts else "", a,
+                    (' data-title="%s"' % e(starts[i])) if i in starts else "") for i, (a, _, _) in enumerate(cues))
     return """<div class="film" id="film" data-total="%(total).2f">
 <div class="film-frame">
 <video class="film-video" controls preload="none" playsinline poster="assets/film-poster.jpg" aria-label="The rewindagents film, %(len)s, with captions">
@@ -251,7 +281,8 @@ def film(cues):
 </video>
 <button class="film-play" type="button" hidden><span class="film-play-dot" aria-hidden="true"><svg width="22" height="24" viewBox="0 0 22 24"><path d="M3 2l17 10L3 22z" fill="currentColor"/></svg></span><span class="film-play-label">Play the film</span><span class="film-len">%(len)s, sound on</span></button>
 </div>
-<div class="wrap film-bar" hidden><div class="film-ruler" role="slider" tabindex="0" aria-label="Film position" aria-valuemin="0" aria-valuemax="%(totali)d" aria-valuenow="0"><span class="film-fill"></span>%(ticks)s</div><span class="film-time">0:00 / %(len)s</span></div>
+<div class="wrap film-bar" hidden><div class="film-ruler" role="slider" tabindex="0" aria-label="Film position" aria-valuemin="0" aria-valuemax="%(totali)d" aria-valuenow="0"><span class="film-fill"></span>%(ticks)s</div><span class="film-time">0:00 / %(len)s</span><button class="film-fs" type="button" aria-label="Full screen">Full</button></div>
+<p class="wrap film-now" aria-live="off"></p>
 </div>""" % {"total": total, "totali": round(total), "len": length, "name": FILM, "ticks": ticks}
 
 
@@ -425,10 +456,9 @@ def index_html(cfg, f, hero, open_all=False):
 %(label)s
 <div class="head"><h2 id="h-install">Install, then add the hook to a project.</h2>
 <p class="lede">Python %(py)s. No dependencies beyond the standard library. Tested on %(tested)s. Not on PyPI yet, so install from the repository. The <a href="docs/">docs</a> walk through a first session.</p></div>
-<div class="cols">
-<div><h3>Install</h3>%(install)s<p>Or from a clone, <code>pip install .</code>. Without installing, <code>PYTHONPATH=src python3 -m rewindagents</code> runs the same CLI from a clone.</p></div>
-<div><h3>Add the hook</h3>%(hook)s%(agents)s<p><code>install</code> keeps everything already in the file and does nothing if the hook is already there. For Codex the file is <code>%(codex)s</code> and for Cursor <code>%(cursor)s</code>; those two hooks are tested with the payloads in the vendors&#x27; documentation, not yet in a live session. <code>.rewindagents/</code> gets its own <code>.gitignore</code>, so the log and the copies stay out of your commits.</p></div>
-</div>
+<div class="install-row"><div><h3>Install</h3><p>Or from a clone, <code>pip install .</code>. Without installing, <code>PYTHONPATH=src python3 -m rewindagents</code> runs the same CLI from a clone.</p></div>%(install)s</div>
+<div class="pair"><div><h3>Add the Claude Code hook</h3>%(hook)s</div><div><h3>Codex and Cursor hooks</h3>%(agents)s</div></div>
+<div class="pair-note"><p><code>install</code> keeps everything already in the file and does nothing if the hook is already there. For Codex the file is <code>%(codex)s</code> and for Cursor <code>%(cursor)s</code>; those two hooks are tested with the payloads in the vendors&#x27; documentation, not yet in a live session. <code>.rewindagents/</code> gets its own <code>.gitignore</code>, so the log and the copies stay out of your commits.</p></div>
 </div></section>
 """ % {"label": label(2, "Install"), "py": e(f["py_req"]), "tested": e(f["tested_on"]), "install": code(b["install"]), "hook": code(b["hook"]),
        "agents": code(b["agents"]), "codex": e(f["agents"]["codex"]["settings"]), "cursor": e(f["agents"]["cursor"]["settings"])}
@@ -584,6 +614,7 @@ def docs_html(cfg, f):
 <p><code>install</code> adds a <code>PreToolUse</code> and a <code>PostToolUse</code> hook to the settings file, keeps everything already in it, and does nothing if the hook is already there. The command it writes names the Python that rewindagents was installed into by absolute path, so it runs whether or not a virtualenv is active. To remove the hook, delete those two entries from the settings file.</p>
 %(agents)s
 <p>For Codex the file is <code>%(codex)s</code>, in the same shape as Claude Code&#x27;s settings; Codex asks you to trust the hook once (<code>/hooks</code>) and remembers the trust by the hook&#x27;s hash. For Cursor the file is <code>%(cursor)s</code> with a <code>preToolUse</code> and a <code>postToolUse</code> entry; because Cursor&#x27;s <code>preToolUse</code> is a permission hook that treats an empty answer as a failure, the hook prints <code>{"permission": "allow"}</code> before a call and <code>{}</code> after one, which changes nothing (a deny from another hook still wins). The Codex and Cursor hooks are tested with the payloads in the vendors&#x27; documentation and through the installed command, not yet in a live session.</p>
+%(more_agents)s
 
 <h2 id="first">A first session</h2>
 <p>The session behind the clip on the front page, as it ran. Every line below is what the command printed; <code>tests/test_demo.py</code> runs the same session and fails if a line changes.</p>
@@ -652,6 +683,7 @@ def docs_html(cfg, f):
        "version": panel([("cmd", "rewindagents --version"), ("out", "rewindagents %s" % f["version"])]),
        "hook": code(b["hook"]), "agents": code(b["agents"]), "codex": e(f["agents"]["codex"]["settings"]),
        "cursor": e(f["agents"]["cursor"]["settings"]),
+       "more_agents": more_agents_html(),
        "cursor_ro": ", ".join("<code>%s</code>" % e(t) for t in f["agents"]["cursor"]["read_only"]),
        "codex_ro": ", ".join("<code>%s</code>" % e(t) for t in f["agents"]["codex"]["read_only"]),
        "first": first, "chars": "{:,}".format(f["result_chars"]),

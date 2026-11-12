@@ -262,7 +262,7 @@ class InstalledCommandTest(unittest.TestCase):
             ag = agents.AGENTS[agent]
             with self.subTest(agent=agent), TemporaryDirectory() as proj:
                 f = Path(proj, ag.settings)
-                f.parent.mkdir()
+                f.parent.mkdir(parents=True)
                 if ag.shape == "cursor":
                     mine = {"version": 1, "hooks": {ag.events[0]: [{"command": "my-own-hook"}]}}
                 else:
