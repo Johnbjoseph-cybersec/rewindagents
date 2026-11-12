@@ -1,0 +1,96 @@
+# rewindagents attach: verify the session log and put its replay page on the pull request.
+# Use: `uses: Johnbjoseph-cybersec/rewindagents/attach@<commit sha>` (README, "Attach a replay to a pull request").
+# It installs rewindagents from the same commit as this file, so pinning the action pins the tool.
+# The one action it calls is pinned to a commit SHA (the version tag is the comment).
+# Token: used only by the comment step. The calling workflow grants `contents: read` and
+# `pull-requests: write`; nothing else needs write access.
+name: rewindagents attach
+description: Verify an agent session log and attach its replay page (secrets redacted) to the pull request
+inputs:
+  bundle:
+    description: >
+      A file written by `rewindagents bundle`, committed in the repository, to import first. The
+      .rewindagents/ store is git-ignored, so a checkout holds no log unless one is imported.
+    default: ""
+  path:
+    description: Project directory in the checkout (default the workspace root)
+    default: "."
+  session:
+    description: Session to export (default the bundle's session, else the one that wrote the last record)
+    default: ""
+  head:
+    description: Pinned head hash for `verify --head` (catches records cut from the end or a re-hashed log)
+    default: ""
+  comment:
+    description: Post (or update) one comment on the pull request linking the page
+    default: "true"
+  retention-days:
+    description: Days GitHub keeps the uploaded page (0 = the repository's default)
+    default: "0"
+  token:
+    description: Token for the comment only
+    default: ${{ github.token }}
+outputs:
+  page-url:
+    description: Download URL of the uploaded page
+    value: ${{ steps.upload.outputs.artifact-url }}
+  chain-ok:
+    description: '"true" if the log verified'
+    value: ${{ steps.prepare.outputs.chain_ok }}
+  session:
+    description: The exported session id
+    value: ${{ steps.prepare.outputs.session }}
+runs:
+  using: composite
+  steps:
+    - name: Install rewindagents from this action's commit
+      shell: bash
+      run: |
+        python3 -m venv "$RUNNER_TEMP/rewindagents-venv"
+        "$RUNNER_TEMP/rewindagents-venv/bin/pip" install -q --disable-pip-version-check "$GITHUB_ACTION_PATH/.."
+    - name: Verify the log and write the replay page
+      id: prepare
+      shell: bash
+      working-directory: ${{ inputs.path }}
+      env:
+        RA_BUNDLE: ${{ inputs.bundle }}
+        RA_SESSION: ${{ inputs.session }}
+        RA_HEAD: ${{ inputs.head }}
+      run: >
+        "$RUNNER_TEMP/rewindagents-venv/bin/python" "$GITHUB_ACTION_PATH/attach.py" prepare
+        --project . --out-dir "$RUNNER_TEMP/rewindagents-page"
+        --bundle "$RA_BUNDLE" --session "$RA_SESSION" --head "$RA_HEAD"
+    - name: Upload the page
+      id: upload
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      with:
+        path: ${{ steps.prepare.outputs.page }}
+        archive: false
+        if-no-files-found: error
+        retention-days: ${{ inputs.retention-days }}
+    - name: Comment on the pull request
+      if: inputs.comment == 'true' && github.event.pull_request.number
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        RA_REPO: ${{ github.repository }}
+        RA_PR: ${{ github.event.pull_request.number }}
+        RA_URL: ${{ steps.upload.outputs.artifact-url }}
+        RA_SESSION: ${{ steps.prepare.outputs.session }}
+        RA_STEPS: ${{ steps.prepare.outputs.steps }}
+        RA_OK: ${{ steps.prepare.outputs.chain_ok }}
+        RA_MSG: ${{ steps.prepare.outputs.chain_msg }}
+        RA_PINNED: ${{ steps.prepare.outputs.head_pinned }}
+        RA_REDACTED: ${{ steps.prepare.outputs.redacted }}
+      run: >
+        "$RUNNER_TEMP/rewindagents-venv/bin/python" "$GITHUB_ACTION_PATH/attach.py" comment
+        --repo "$RA_REPO" --pr "$RA_PR" --url "$RA_URL" --session "$RA_SESSION" --steps "$RA_STEPS"
+        --chain-ok "$RA_OK" --chain-msg "$RA_MSG" --head-pinned "$RA_PINNED" --redacted "$RA_REDACTED"
+    - name: Fail if the log does not verify
+      if: steps.prepare.outputs.chain_ok != 'true'
+      shell: bash
+      env:
+        RA_MSG: ${{ steps.prepare.outputs.chain_msg }}
+      run: |
+        echo "::error::rewindagents: the log does not verify: $RA_MSG (the page was uploaded with a notice)"
+        exit 1

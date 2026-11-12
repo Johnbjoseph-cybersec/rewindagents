@@ -361,6 +361,47 @@ Then `replay`, `rewind` and `branch` work on that session in the other clone, wi
 - File paths under the old project move under this one, so a rewind puts the files back in this clone.
   Commands and results keep their text as recorded.
 
+## Attach a replay to a pull request
+
+```sh
+rewindagents bundle --out .rewindagents-pr.bundle   # the session behind this change, secrets replaced
+git add .rewindagents-pr.bundle
+```
+
+```yaml
+# .github/workflows/replay.yml
+on: pull_request
+permissions:
+  contents: read
+  pull-requests: write   # for the one comment; nothing else writes
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: Johnbjoseph-cybersec/rewindagents/attach@<commit sha>
+        with:
+          bundle: .rewindagents-pr.bundle
+```
+
+The action in `attach/` imports the bundle, checks the log's hash chain (against `head:` too, if you pin
+one), writes the session's export page and uploads it as a workflow artifact, then posts one comment on the
+pull request with the chain result, the number of secrets replaced and the download link. A later push
+updates that comment instead of adding another.
+
+- The `.rewindagents/` store is git-ignored, so the checkout holds no log of its own; commit a bundle.
+- Secrets are always replaced in the page; the action has no input to turn that off.
+- It installs `rewindagents` from the same commit as the action, so pinning the action's SHA pins the tool.
+  The one action it calls (`actions/upload-artifact`) is pinned to a commit SHA.
+- The token is handed to the comment step only. A pull request from a fork gets a read-only token: the page
+  is still uploaded and the comment step logs a warning instead of failing.
+- If the log does not verify, the page is uploaded with its notice, and then the job fails.
+- `attach/attach.py` is not part of the package; the CLI still makes no network connections. Tested in
+  `tests/test_attach.py` against a fake GitHub API on 127.0.0.1. It has not run on GitHub yet: this repository
+  is not public.
+
 ## Clean up stored copies
 
 ```sh
