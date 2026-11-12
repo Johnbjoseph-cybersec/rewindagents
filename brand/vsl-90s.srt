@@ -22,59 +22,58 @@ Why can't git help?
 The third test was never committed.
 
 6
-00:00:19,850 --> 00:00:23,600
+00:00:19,850 --> 00:00:24,600
 Claude Code's docs:
 shell-only changes aren't tracked.
 
 7
-00:00:23,600 --> 00:00:27,550
+00:00:24,600 --> 00:00:28,850
 So what would help?
 Think of a flight recorder.
 
 8
-00:00:27,550 --> 00:00:31,800
+00:00:28,850 --> 00:00:33,100
 It keeps every move, so you can replay it.
 
 9
-00:00:31,800 --> 00:00:35,350
+00:00:33,100 --> 00:00:36,650
 So how does rewindagents
 record your agent?
 
 10
-00:00:35,350 --> 00:00:39,450
+00:00:36,650 --> 00:00:40,750
 Every tool call goes into
 one hash-chained log.
 
 11
-00:00:39,450 --> 00:00:43,900
+00:00:40,750 --> 00:00:45,200
 Before each edit or shell command,
 files are saved.
 
 12
-00:00:43,900 --> 00:00:49,400
+00:00:45,200 --> 00:00:51,000
 So which step would you rewind to?
 
 13
-00:00:49,400 --> 00:00:52,600
+00:00:51,000 --> 00:00:54,200
 Twelve, because thirteen is the delete.
 
 14
-00:00:52,600 --> 00:00:56,850
+00:00:54,200 --> 00:00:58,450
 One command, and four files come back.
 
 15
-00:00:56,850 --> 00:01:01,350
+00:00:58,450 --> 00:01:02,950
 Even the rewind can be undone.
 
 16
-00:01:01,350 --> 00:01:05,850
-Where does the analogy break?
-Recorders can't undo a crash.
+00:01:02,950 --> 00:01:06,750
+The analogy breaks:
+recorders can't undo a crash.
 
 17
-00:01:05,850 --> 00:01:09,800
-Unlike a recorder,
-this one puts your files back.
+00:01:06,750 --> 00:01:09,800
+This one puts your files back.
 
 18
 00:01:09,800 --> 00:01:14,050

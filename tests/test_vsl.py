@@ -180,6 +180,29 @@ class TestVsl(unittest.TestCase):
                         self.assertIn(s.rstrip(), printed, "%s %s shows output the session did not print: %r"
                                       % (v["name"], b["id"], s))
 
+    def test_every_diff_line_on_screen_is_one_diff_12_prints_on_the_demo_session(self):
+        # review-textcut-r2.json fix 5: b18 shows one line of `rewindagents diff 12` under the command. The demo
+        # manifest records only the four commands the GIF shows, so play the same session and run diff 12 on it.
+        diff_line = re.compile(r"^(\+\+\+ |--- |@@ |diff --git )")
+        shown = [(v["name"], b["id"], s) for v in beats()["videos"] for b in v["beats"] for s in b["screen"]
+                 if diff_line.match(s)]
+        self.assertTrue(shown, "no film shows a line of diff output (b18 should)")
+        import tempfile
+        from pathlib import Path
+        sys.path.insert(0, os.path.join(ROOT, "brand", "demo"))
+        import scenario
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(os.path.realpath(d))
+            scenario.make_project(root)
+            agent = scenario.Agent(root)
+            for tool, spec in scenario.STEPS:
+                agent.step(tool, spec)
+            out, code = scenario.run_shown(root, "rewindagents diff 12")
+        self.assertEqual(code, 0, out)
+        printed = set(out.split("\n"))
+        for name, bid, s in shown:
+            self.assertIn(s, printed, "%s %s shows a diff line diff 12 does not print: %r" % (name, bid, s))
+
     def test_each_video_shows_the_real_wreck_and_the_real_rewind(self):
         printed = demo_output_lines()
         for v in beats()["videos"]:

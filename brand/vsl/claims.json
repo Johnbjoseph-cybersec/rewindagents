@@ -230,12 +230,13 @@
    "where": [
     "vsl-90s b18",
     "vsl-90s b18 screen",
+    "vsl-90s b18 screen",
     "vsl-90s b18 screen"
    ],
    "claim": "diff N previews a rewind; rewind N --only PATH takes back just that file; both commands verbatim from the README",
    "verdict": "CLEAR",
-   "source": "README.md:54 \"rewindagents diff 12 # what taking it back to step 12 would change\"; :55 \"rewindagents rewind 12 --only src/db.py # take back just that file\"; :245 \"rewind N --only PATH puts back only those files\"",
-   "note": ""
+   "source": "README.md:54 \"rewindagents diff 12 # what taking it back to step 12 would change\"; :55 \"rewindagents rewind 12 --only src/db.py # take back just that file\"; :245 \"rewind N --only PATH puts back only those files\"; screen line \"+++ b/tests/test_config.py\" is printed by `rewindagents diff 12` on the demo session (brand/demo/scenario.py; tests/test_vsl.py test_every_diff_line_on_screen_is_one_diff_12_prints_on_the_demo_session)",
+   "note": "Round 3 (FIRE, 2026-11-12): the diff output line was added after this review; claim-verifier has not judged it yet."
   },
   {
    "where": [

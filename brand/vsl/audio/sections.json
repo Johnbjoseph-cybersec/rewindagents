@@ -1,0 +1,481 @@
+{
+ "vsl-90s": {
+  "file": "bed-vsl-90s.wav",
+  "duration": 90.0,
+  "sections": [
+   {
+    "name": "1 tension (the problem)",
+    "t0": 0.0,
+    "t1": 24.6,
+    "bars": 9,
+    "bpm": 87.8,
+    "chords": [
+     "Am",
+     "Am",
+     "Fmaj7",
+     "Esus",
+     "Am",
+     "Am",
+     "Fmaj7",
+     "Esus",
+     "Esus"
+    ],
+    "layer_bars": {
+     "drone": [
+      0,
+      9
+     ],
+     "heart": [
+      0,
+      9
+     ],
+     "air": [
+      1,
+      9
+     ],
+     "tick": [
+      0,
+      9
+     ],
+     "pulse": [
+      1,
+      9
+     ],
+     "pluck4": [
+      1,
+      9
+     ],
+     "glint": [
+      2,
+      9
+     ]
+    }
+   },
+   {
+    "name": "2 lift (the idea)",
+    "t0": 24.6,
+    "t1": 45.2,
+    "bars": 8,
+    "bpm": 93.2,
+    "chords": [
+     "C",
+     "G",
+     "Am",
+     "Fmaj7",
+     "C",
+     "G",
+     "Am",
+     "Fmaj7"
+    ],
+    "layer_bars": {
+     "pad": [
+      0,
+      8
+     ],
+     "bass": [
+      2,
+      8
+     ],
+     "pluck8": [
+      0,
+      8
+     ],
+     "hat8": [
+      2,
+      8
+     ],
+     "kick": [
+      3,
+      8
+     ],
+     "shaker": [
+      5,
+      8
+     ],
+     "pluck16": [
+      6,
+      8
+     ]
+    }
+   },
+   {
+    "name": "3 question + build (which step?)",
+    "t0": 45.2,
+    "t1": 54.2,
+    "bars": 3,
+    "bpm": 80.0,
+    "chords": [
+     "Am",
+     "Fmaj7",
+     "Esus"
+    ],
+    "layer_bars": {
+     "pad": [
+      0,
+      3
+     ],
+     "pluck4": [
+      0,
+      3
+     ],
+     "pulse": [
+      2,
+      3
+     ]
+    }
+   },
+   {
+    "name": "4 payoff (rewind 12, four files back)",
+    "t0": 54.2,
+    "t1": 62.95,
+    "bars": 3,
+    "bpm": 82.29,
+    "chords": [
+     "Aadd9",
+     "Dmaj7",
+     "A"
+    ],
+    "layer_bars": {
+     "pad": [
+      0,
+      3
+     ],
+     "bass": [
+      0,
+      3
+     ],
+     "kick": [
+      0,
+      3
+     ],
+     "snap": [
+      0,
+      3
+     ],
+     "pluck16": [
+      0,
+      3
+     ],
+     "hat16": [
+      0,
+      3
+     ],
+     "shaker": [
+      0,
+      3
+     ]
+    }
+   },
+   {
+    "name": "5 break + recap (warm, explaining)",
+    "t0": 62.95,
+    "t1": 79.2,
+    "bars": 6,
+    "bpm": 88.62,
+    "chords": [
+     "Dmaj7",
+     "A",
+     "Bm7",
+     "E",
+     "Dmaj7",
+     "A"
+    ],
+    "layer_bars": {
+     "pad": [
+      0,
+      6
+     ],
+     "bass": [
+      0,
+      6
+     ],
+     "pluck8": [
+      0,
+      6
+     ],
+     "hat8": [
+      1,
+      6
+     ],
+     "kick": [
+      1,
+      6
+     ],
+     "shaker": [
+      3,
+      6
+     ]
+    }
+   },
+   {
+    "name": "6 bridge (what is next)",
+    "t0": 79.2,
+    "t1": 84.2,
+    "bars": 2,
+    "bpm": 96.0,
+    "chords": [
+     "Dmaj7",
+     "A"
+    ],
+    "layer_bars": {
+     "pad": [
+      0,
+      2
+     ],
+     "bass": [
+      0,
+      2
+     ],
+     "pluck8": [
+      0,
+      2
+     ],
+     "hat8": [
+      0,
+      2
+     ]
+    }
+   },
+   {
+    "name": "7 close (end card)",
+    "t0": 84.2,
+    "t1": 90.0,
+    "bars": 2,
+    "bpm": 82.76,
+    "chords": [
+     "Dmaj7",
+     "Aadd9"
+    ],
+    "layer_bars": {
+     "pad": [
+      0,
+      2
+     ],
+     "pluck4": [
+      0,
+      2
+     ]
+    }
+   }
+  ]
+ },
+ "vsl-30s": {
+  "file": "bed-vsl-30s.wav",
+  "duration": 29.549999999999997,
+  "sections": [
+   {
+    "name": "1 tension (the problem)",
+    "t0": 0.0,
+    "t1": 10.799999999999999,
+    "bars": 4,
+    "bpm": 88.89,
+    "chords": [
+     "Am",
+     "Fmaj7",
+     "Am",
+     "Esus"
+    ],
+    "layer_bars": {
+     "drone": [
+      0,
+      4
+     ],
+     "heart": [
+      0,
+      4
+     ],
+     "air": [
+      1,
+      4
+     ],
+     "tick": [
+      0,
+      4
+     ],
+     "pulse": [
+      1,
+      4
+     ],
+     "pluck4": [
+      1,
+      4
+     ],
+     "glint": [
+      2,
+      4
+     ]
+    }
+   },
+   {
+    "name": "2 question + build (which step?)",
+    "t0": 10.799999999999999,
+    "t1": 19.499999999999996,
+    "bars": 3,
+    "bpm": 82.76,
+    "chords": [
+     "C",
+     "G",
+     "Esus"
+    ],
+    "layer_bars": {
+     "pad": [
+      0,
+      3
+     ],
+     "bass": [
+      0,
+      3
+     ],
+     "pluck8": [
+      0,
+      3
+     ],
+     "hat8": [
+      1,
+      3
+     ],
+     "pulse": [
+      2,
+      3
+     ]
+    }
+   },
+   {
+    "name": "3 payoff + warm close",
+    "t0": 19.499999999999996,
+    "t1": 29.549999999999997,
+    "bars": 4,
+    "bpm": 95.52,
+    "chords": [
+     "Aadd9",
+     "Dmaj7",
+     "A",
+     "Aadd9"
+    ],
+    "layer_bars": {
+     "pad": [
+      0,
+      4
+     ],
+     "bass": [
+      0,
+      3
+     ],
+     "kick": [
+      0,
+      2
+     ],
+     "snap": [
+      0,
+      2
+     ],
+     "pluck16": [
+      0,
+      2
+     ],
+     "hat16": [
+      0,
+      2
+     ],
+     "shaker": [
+      0,
+      2
+     ],
+     "pluck4": [
+      2,
+      4
+     ]
+    }
+   }
+  ]
+ },
+ "vsl-15s-vertical": {
+  "file": "bed-vsl-15s-vertical.wav",
+  "duration": 14.0,
+  "sections": [
+   {
+    "name": "1 tension (cold open)",
+    "t0": 0.0,
+    "t1": 3.45,
+    "bars": 1,
+    "bpm": 69.57,
+    "chords": [
+     "Esus"
+    ],
+    "layer_bars": {
+     "drone": [
+      0,
+      1
+     ],
+     "heart": [
+      0,
+      1
+     ],
+     "air": [
+      0,
+      1
+     ],
+     "tick": [
+      0,
+      1
+     ],
+     "pulse": [
+      0,
+      1
+     ],
+     "pluck4": [
+      0,
+      1
+     ]
+    }
+   },
+   {
+    "name": "2 payoff + warm close",
+    "t0": 3.45,
+    "t1": 14.0,
+    "bars": 4,
+    "bpm": 91.0,
+    "chords": [
+     "Aadd9",
+     "Dmaj7",
+     "A",
+     "Aadd9"
+    ],
+    "layer_bars": {
+     "pad": [
+      0,
+      4
+     ],
+     "bass": [
+      0,
+      3
+     ],
+     "kick": [
+      0,
+      2
+     ],
+     "snap": [
+      0,
+      2
+     ],
+     "pluck16": [
+      0,
+      2
+     ],
+     "hat16": [
+      0,
+      2
+     ],
+     "shaker": [
+      0,
+      2
+     ],
+     "pluck4": [
+      2,
+      4
+     ]
+    }
+   }
+  ]
+ }
+}

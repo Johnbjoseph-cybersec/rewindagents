@@ -100,7 +100,7 @@
         },
         {
           "id": "b06",
-          "ms": 3750,
+          "ms": 4750,
           "section": "WHY IT MATTERS",
           "text": "Claude Code's docs: shell-only changes aren't tracked.",
           "accent": "aren't tracked",
@@ -116,7 +116,7 @@
         },
         {
           "id": "b07",
-          "ms": 3950,
+          "ms": 4250,
           "section": "ANALOGY",
           "text": "So what would help? Think of a flight recorder.",
           "accent": "flight recorder",
@@ -192,7 +192,7 @@
         },
         {
           "id": "b12",
-          "ms": 5500,
+          "ms": 5800,
           "section": "WORKED EXAMPLE",
           "text": "So which step would you rewind to?",
           "accent": "which step",
@@ -283,9 +283,9 @@
         },
         {
           "id": "b16",
-          "ms": 4500,
+          "ms": 3800,
           "section": "BREAK",
-          "text": "Where does the analogy break? Recorders can't undo a crash.",
+          "text": "The analogy breaks: recorders can't undo a crash.",
           "accent": "can't undo",
           "proof_ms": 200,
           "screen": [
@@ -298,9 +298,9 @@
         },
         {
           "id": "b17",
-          "ms": 3950,
+          "ms": 3050,
           "section": "BREAK",
-          "text": "Unlike a recorder, this one puts your files back.",
+          "text": "This one puts your files back.",
           "accent": "files back",
           "proof_ms": 0,
           "screen": [
@@ -324,12 +324,14 @@
           "proof_ms": 300,
           "screen": [
             "rewindagents diff 12",
+            "+++ b/tests/test_config.py",
             "rewindagents rewind 12 --only src/db.py"
           ],
           "visual": "Rewind wipe. Two commands from the README, each typing into its own Spool chip as its sentence lands.",
           "cites": [
             "what taking it back to step 12 would change",
-            "`rewind N --only PATH` puts back only those files"
+            "`rewind N --only PATH` puts back only those files",
+            "+++ b/tests/test_config.py: printed by `rewindagents diff 12` on the demo session (brand/demo/scenario.py, tests/test_vsl_render.py)"
           ]
         },
         {

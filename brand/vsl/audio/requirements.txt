@@ -1,0 +1,6 @@
+# brand/vsl/audio/make_bed.py: the versions the committed manifest's audio sha256 were made with (Python 3.11).
+# A different numpy or scipy can change the low bits of the beds; tests/test_vsl_audio.py compares sha256.
+numpy==1.26.4
+scipy==1.17.1
+pyloudnorm==0.2.0
+soundfile==0.14.0

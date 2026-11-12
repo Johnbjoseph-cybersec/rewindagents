@@ -1,27 +1,27 @@
 {
- "beats_sha256": "01088f2788feb522acc7e49669d2423c52f8e3bded1c67f77d09f6d0b2f8d564",
+ "beats_sha256": "de4a4abae6f4f712661c533b407f906f1ab75c8043fe7fec32c0dd235e61c6b9",
  "note": "Written by brand/vsl/render.py. The address in the videos comes from brand/site/config.json at render time; this file keeps no address.",
  "videos": {
   "vsl-15s-vertical": {
    "aspect": "9:16",
    "audio": {
-    "audio_stream_md5": "af01fdbc9e89fc8864523d3804c84ae7",
-    "bed_sha256": "73c7acad7cf50377b3337c49d1487934007f3cdcafc52ec3d192e25f76b53041",
+    "audio_stream_md5": "94ead37ca1f810ef9c14bd5d6f166d73",
+    "bed_sha256": "d727eb7b93d9320cdfb77ed5a81eb14629ae2d9007fe435764a291badfc99851",
     "files": {
-     "vsl/audio/bed-vsl-15s-vertical.wav": "8f59236315a54ece4074de429c6f46919767fbc585f8797a064116d41f72821b",
-     "vsl/audio/sfx-rewind.wav": "d101db53a52832e3801def4b438f6e734af45a14ea07a20cf8a8d1cfaaade884",
+     "vsl/audio/bed-vsl-15s-vertical.wav": "100f8257dc455130d97681ea000870628f6a4fe0c8bf82f769ccfcf70a3efe84",
+     "vsl/audio/sfx-rewind.wav": "930a2c56f29a0c4d3df3c9ce544d58b96553407d3ea590a6ef7568b8b38c3c08",
      "vsl/audio/sfx-tick.wav": "e4fc16617cd90919f3112c3a56fd622cc73c68dbb5723fd152d23529cf17138a"
     },
     "first_pass": {
      "gain_db": -2.0,
      "input_i": -14.0,
-     "input_lra": 9.9,
+     "input_lra": 10.3,
      "input_tp": -1.9
     },
     "master": "linear gain to -16 LUFS integrated + alimiter limit 0.76 (true peak <= -1.5 dBTP, measured after AAC)",
     "measured": {
      "integrated_lufs": -16.1,
-     "true_peak_dbfs": -3.4
+     "true_peak_dbfs": -3.5
     },
     "music": "studio: brand/vsl/audio/ (bed-vsl-15s-vertical.wav, sfx-rewind.wav, sfx-tick.wav; AUDIO.md)",
     "sweeps_ms": [
@@ -112,7 +112,7 @@
    "mp4_facts": {
     "audio_codec": "mp4a",
     "audio_seconds": 14.021,
-    "bytes": 3908796,
+    "bytes": 3922341,
     "channels": 2,
     "faststart": true,
     "fps": 30.0,
@@ -120,7 +120,7 @@
     "height": 1920,
     "sample_rate": 48000,
     "seconds": 14.0,
-    "sha256": "80b97870abdccaa131db9756357d7b6bf3bdbaff28f49e5c892d50021fd19272",
+    "sha256": "f14811c9d51b2ad8cfcd14ed747fe19dbc3698e224a7497a34b2af1773f66f97",
     "video_codec": "avc1",
     "video_seconds": 14.0,
     "width": 1080
@@ -133,22 +133,22 @@
   "vsl-30s": {
    "aspect": "16:9",
    "audio": {
-    "audio_stream_md5": "7a92e240bcf73e57d13e72cab5e8a75d",
-    "bed_sha256": "43f65d9879b9f68fbb19973c02751ab9590ed0486f58960fa044e48db9c5623f",
+    "audio_stream_md5": "88f2cbe43b8b94191c9b7113f4d990d7",
+    "bed_sha256": "5543a487acc716d07f356133f8ccf8fc3f2342589ba953131ce8e66ff0243b77",
     "files": {
-     "vsl/audio/bed-vsl-30s.wav": "bf9c31b2209f8ee88e4a132c72bdca5ceb6c74012fd27266de7d1ea9b974c9b5",
-     "vsl/audio/sfx-rewind.wav": "d101db53a52832e3801def4b438f6e734af45a14ea07a20cf8a8d1cfaaade884",
+     "vsl/audio/bed-vsl-30s.wav": "abd04e3dd5dcd6b1b1b4ecfeaf2d72cd2874db392ce59c11cfbf3e94049b5ba5",
+     "vsl/audio/sfx-rewind.wav": "930a2c56f29a0c4d3df3c9ce544d58b96553407d3ea590a6ef7568b8b38c3c08",
      "vsl/audio/sfx-tick.wav": "e4fc16617cd90919f3112c3a56fd622cc73c68dbb5723fd152d23529cf17138a"
     },
     "first_pass": {
      "gain_db": -0.1,
      "input_i": -15.9,
-     "input_lra": 12.4,
-     "input_tp": -1.9
+     "input_lra": 8.9,
+     "input_tp": -1.8
     },
     "master": "linear gain to -16 LUFS integrated + alimiter limit 0.76 (true peak <= -1.5 dBTP, measured after AAC)",
     "measured": {
-     "integrated_lufs": -16.2,
+     "integrated_lufs": -16.1,
      "true_peak_dbfs": -2.0
     },
     "music": "studio: brand/vsl/audio/ (bed-vsl-30s.wav, sfx-rewind.wav, sfx-tick.wav; AUDIO.md)",
@@ -350,7 +350,7 @@
    "mp4_facts": {
     "audio_codec": "mp4a",
     "audio_seconds": 29.571,
-    "bytes": 7354708,
+    "bytes": 7398351,
     "channels": 2,
     "faststart": true,
     "fps": 30.0,
@@ -358,7 +358,7 @@
     "height": 1080,
     "sample_rate": 48000,
     "seconds": 29.55,
-    "sha256": "1caa536f73197e3e766e4fd1afe7f5ef0877ec9484c246e957b614d01059e74b",
+    "sha256": "03c146cd328824eb5dac84be79a00d25fbff9cf149032ca2e80a423ce21b6a39",
     "video_codec": "avc1",
     "video_seconds": 29.533,
     "width": 1920
@@ -371,23 +371,23 @@
   "vsl-90s": {
    "aspect": "16:9",
    "audio": {
-    "audio_stream_md5": "588fbb191b8792565ca346e78636e976",
-    "bed_sha256": "af97d8ab161ec3351daf84da2886d658982d1761847712aea7a1a06cb08672d6",
+    "audio_stream_md5": "bf59b84b1911a4adae4025a2ad50e479",
+    "bed_sha256": "979d0b02344e64474b9cc31c9abed19a242a1f3224bd3a42fdf822e7a1bcea2b",
     "files": {
-     "vsl/audio/bed-vsl-90s.wav": "79e5a94b15fed30f5b810b28926138536ef63d203d5eb7890769b18f4ceb3b74",
-     "vsl/audio/sfx-rewind.wav": "d101db53a52832e3801def4b438f6e734af45a14ea07a20cf8a8d1cfaaade884",
+     "vsl/audio/bed-vsl-90s.wav": "82ef39914bec0d8e83cf9ca21ca7a0cc14cf1565518c007d40e65e8381d0a217",
+     "vsl/audio/sfx-rewind.wav": "930a2c56f29a0c4d3df3c9ce544d58b96553407d3ea590a6ef7568b8b38c3c08",
      "vsl/audio/sfx-tick.wav": "e4fc16617cd90919f3112c3a56fd622cc73c68dbb5723fd152d23529cf17138a"
     },
     "first_pass": {
-     "gain_db": -0.1,
-     "input_i": -15.9,
-     "input_lra": 10.0,
+     "gain_db": 0.0,
+     "input_i": -16.0,
+     "input_lra": 7.8,
      "input_tp": -1.9
     },
     "master": "linear gain to -16 LUFS integrated + alimiter limit 0.76 (true peak <= -1.5 dBTP, measured after AAC)",
     "measured": {
      "integrated_lufs": -16.1,
-     "true_peak_dbfs": -1.9
+     "true_peak_dbfs": -1.7
     },
     "music": "studio: brand/vsl/audio/ (bed-vsl-90s.wav, sfx-rewind.wav, sfx-tick.wav; AUDIO.md)",
     "sweeps_ms": [
@@ -395,15 +395,15 @@
      11250,
      15850,
      20300,
-     24250,
-     28000,
-     35800,
-     39900,
-     44550,
-     50150,
-     53500,
-     54434,
-     62000,
+     25250,
+     29300,
+     37100,
+     41200,
+     45850,
+     51750,
+     55100,
+     56034,
+     63600,
      70450,
      74700,
      79850,
@@ -425,11 +425,11 @@
      1495,
      1629,
      3300,
-     31800,
-     49400,
-     56850,
-     58039,
-     65850
+     33100,
+     51000,
+     58450,
+     59639,
+     66750
     ],
     "voice": "none: no voice over (John, 2026-11-12); the cards carry the words"
    },
@@ -470,87 +470,87 @@
      "transition": "rewind wipe (story, 900 ms)"
     },
     {
-     "end_ms": 23600,
+     "end_ms": 24600,
      "id": "b06",
      "kind": "quote",
      "start_ms": 19850,
      "transition": "rewind wipe (light, 450 ms)"
     },
     {
-     "end_ms": 27550,
+     "end_ms": 28850,
      "id": "b07",
      "kind": "type",
-     "start_ms": 23600,
+     "start_ms": 24600,
      "transition": "rewind wipe (section, 650 ms)"
     },
     {
-     "end_ms": 31800,
+     "end_ms": 33100,
      "id": "b08",
      "kind": "map",
-     "start_ms": 27550,
+     "start_ms": 28850,
      "transition": "rewind wipe (light, 450 ms)"
     },
     {
-     "end_ms": 35350,
+     "end_ms": 36650,
      "id": "b09",
      "kind": "map",
-     "start_ms": 31800,
+     "start_ms": 33100,
      "transition": "swap"
     },
     {
-     "end_ms": 39450,
+     "end_ms": 40750,
      "id": "b10",
      "kind": "chain",
-     "start_ms": 35350,
+     "start_ms": 36650,
      "transition": "rewind wipe (light, 450 ms)"
     },
     {
-     "end_ms": 43900,
+     "end_ms": 45200,
      "id": "b11",
      "kind": "term",
-     "start_ms": 39450,
+     "start_ms": 40750,
      "transition": "rewind wipe (light, 450 ms)"
     },
     {
-     "end_ms": 49400,
+     "end_ms": 51000,
      "id": "b12",
      "kind": "term",
-     "start_ms": 43900,
+     "start_ms": 45200,
      "transition": "rewind wipe (section, 650 ms)"
     },
     {
-     "end_ms": 52600,
+     "end_ms": 54200,
      "id": "b13",
      "kind": "term",
-     "start_ms": 49400,
+     "start_ms": 51000,
      "transition": "swap"
     },
     {
-     "end_ms": 56850,
+     "end_ms": 58450,
      "id": "b14",
      "kind": "term",
-     "start_ms": 52600,
+     "start_ms": 54200,
      "transition": "rewind wipe (story, 900 ms)"
     },
     {
-     "end_ms": 61350,
+     "end_ms": 62950,
      "id": "b15",
      "kind": "term",
-     "start_ms": 56850,
+     "start_ms": 58450,
      "transition": "swap"
     },
     {
-     "end_ms": 65850,
+     "end_ms": 66750,
      "id": "b16",
      "kind": "map",
-     "start_ms": 61350,
+     "start_ms": 62950,
      "transition": "rewind wipe (section, 650 ms)"
     },
     {
      "end_ms": 69800,
      "id": "b17",
      "kind": "map",
-     "start_ms": 65850,
+     "start_ms": 66750,
      "transition": "swap"
     },
     {
@@ -598,8 +598,8 @@
     "Twelve, because thirteen is the delete.",
     "One command, and four files come back.",
     "Even the rewind can be undone.",
-    "Where does the analogy break? Recorders can't undo a crash.",
-    "Unlike a recorder, this one puts your files back.",
+    "The analogy breaks: recorders can't undo a crash.",
+    "This one puts your files back.",
     "Preview with diff. Take back one file with --only.",
     "You can now see every step and the change it made.",
     "Apache-2.0. Standard library only. Not on PyPI yet.",
@@ -687,172 +687,172 @@
     },
     {
      "beat": "b06",
-     "ms": 21725,
+     "ms": 22225,
      "png": "vsl/keyframes/vsl-90s/b06b.png"
     },
     {
      "beat": "b06",
-     "ms": 23480,
+     "ms": 24480,
      "png": "vsl/keyframes/vsl-90s/b06c.png"
     },
     {
      "beat": "b07",
-     "ms": 23925,
+     "ms": 24925,
      "png": "vsl/keyframes/vsl-90s/b07a.png"
     },
     {
      "beat": "b07",
-     "ms": 25575,
+     "ms": 26725,
      "png": "vsl/keyframes/vsl-90s/b07b.png"
     },
     {
      "beat": "b07",
-     "ms": 27430,
+     "ms": 28730,
      "png": "vsl/keyframes/vsl-90s/b07c.png"
     },
     {
      "beat": "b08",
-     "ms": 27775,
+     "ms": 29075,
      "png": "vsl/keyframes/vsl-90s/b08a.png"
     },
     {
      "beat": "b08",
-     "ms": 29675,
+     "ms": 30975,
      "png": "vsl/keyframes/vsl-90s/b08b.png"
     },
     {
      "beat": "b08",
-     "ms": 31680,
+     "ms": 32980,
      "png": "vsl/keyframes/vsl-90s/b08c.png"
     },
     {
      "beat": "b09",
-     "ms": 31960,
+     "ms": 33260,
      "png": "vsl/keyframes/vsl-90s/b09a.png"
     },
     {
      "beat": "b09",
-     "ms": 33575,
+     "ms": 34875,
      "png": "vsl/keyframes/vsl-90s/b09b.png"
     },
     {
      "beat": "b09",
-     "ms": 35230,
+     "ms": 36530,
      "png": "vsl/keyframes/vsl-90s/b09c.png"
     },
     {
      "beat": "b10",
-     "ms": 35575,
+     "ms": 36875,
      "png": "vsl/keyframes/vsl-90s/b10a.png"
     },
     {
      "beat": "b10",
-     "ms": 37400,
+     "ms": 38700,
      "png": "vsl/keyframes/vsl-90s/b10b.png"
     },
     {
      "beat": "b10",
-     "ms": 39330,
+     "ms": 40630,
      "png": "vsl/keyframes/vsl-90s/b10c.png"
     },
     {
      "beat": "b11",
-     "ms": 39675,
+     "ms": 40975,
      "png": "vsl/keyframes/vsl-90s/b11a.png"
     },
     {
      "beat": "b11",
-     "ms": 41675,
+     "ms": 42975,
      "png": "vsl/keyframes/vsl-90s/b11b.png"
     },
     {
      "beat": "b11",
-     "ms": 43780,
+     "ms": 45080,
      "png": "vsl/keyframes/vsl-90s/b11c.png"
     },
     {
      "beat": "b12",
-     "ms": 44225,
+     "ms": 45525,
      "png": "vsl/keyframes/vsl-90s/b12a.png"
     },
     {
      "beat": "b12",
-     "ms": 46650,
+     "ms": 48100,
      "png": "vsl/keyframes/vsl-90s/b12b.png"
     },
     {
      "beat": "b12",
-     "ms": 49280,
+     "ms": 50880,
      "png": "vsl/keyframes/vsl-90s/b12c.png"
     },
     {
      "beat": "b13",
-     "ms": 49560,
+     "ms": 51160,
      "png": "vsl/keyframes/vsl-90s/b13a.png"
     },
     {
      "beat": "b13",
-     "ms": 51000,
+     "ms": 52600,
      "png": "vsl/keyframes/vsl-90s/b13b.png"
     },
     {
      "beat": "b13",
-     "ms": 52480,
+     "ms": 54080,
      "png": "vsl/keyframes/vsl-90s/b13c.png"
     },
     {
      "beat": "b14",
-     "ms": 53050,
+     "ms": 54650,
      "png": "vsl/keyframes/vsl-90s/b14a.png"
     },
     {
      "beat": "b14",
-     "ms": 54725,
+     "ms": 56325,
      "png": "vsl/keyframes/vsl-90s/b14b.png"
     },
     {
      "beat": "b14",
-     "ms": 56730,
+     "ms": 58330,
      "png": "vsl/keyframes/vsl-90s/b14c.png"
     },
     {
      "beat": "b15",
-     "ms": 57010,
+     "ms": 58610,
      "png": "vsl/keyframes/vsl-90s/b15a.png"
     },
     {
      "beat": "b15",
-     "ms": 59100,
+     "ms": 60700,
      "png": "vsl/keyframes/vsl-90s/b15b.png"
     },
     {
      "beat": "b15",
-     "ms": 61230,
+     "ms": 62830,
      "png": "vsl/keyframes/vsl-90s/b15c.png"
     },
     {
      "beat": "b16",
-     "ms": 61675,
+     "ms": 63275,
      "png": "vsl/keyframes/vsl-90s/b16a.png"
     },
     {
      "beat": "b16",
-     "ms": 63600,
+     "ms": 64850,
      "png": "vsl/keyframes/vsl-90s/b16b.png"
     },
     {
      "beat": "b16",
-     "ms": 65730,
+     "ms": 66630,
      "png": "vsl/keyframes/vsl-90s/b16c.png"
     },
     {
      "beat": "b17",
-     "ms": 66010,
+     "ms": 66910,
      "png": "vsl/keyframes/vsl-90s/b17a.png"
     },
     {
      "beat": "b17",
-     "ms": 67825,
+     "ms": 68275,
      "png": "vsl/keyframes/vsl-90s/b17b.png"
     },
     {
@@ -925,7 +925,7 @@
    "mp4_facts": {
     "audio_codec": "mp4a",
     "audio_seconds": 90.021,
-    "bytes": 21510384,
+    "bytes": 20218828,
     "channels": 2,
     "faststart": true,
     "fps": 30.0,
@@ -933,7 +933,7 @@
     "height": 1080,
     "sample_rate": 48000,
     "seconds": 90.0,
-    "sha256": "83bfc5a4f1dfa6cf950ae9cc624501fb5dc10630cc25d387e205966a3832898c",
+    "sha256": "4abdb662cdb165a857e80c58388a592fc195efc891b569d85e47e1b5ddc397e9",
     "video_codec": "avc1",
     "video_seconds": 90.0,
     "width": 1920
@@ -945,16 +945,16 @@
   }
  },
  "web": {
-  "bytes": 12238228,
+  "bytes": 11754148,
   "from": "re-encoded from brand/vsl-90s.mp4 at crf 23 to fit 12582912 bytes, sound copied",
   "mp4": "vsl/vsl-90s-web.mp4",
   "poster": "vsl/vsl-90s-poster.jpg",
   "poster_beat": "b14",
-  "poster_mean_luma": 148.1,
-  "poster_ms": 56650,
-  "poster_sha256": "e67a3d2ebad7e8a94db671fb35ea87c01de8993a4d320cb3556a36e11a887830",
-  "sha256": "3a1d892c8d0e0ad104c34bc9a6c5c661aea8bb95bf50af572994597407a01237",
-  "source_sha256": "83bfc5a4f1dfa6cf950ae9cc624501fb5dc10630cc25d387e205966a3832898c",
+  "poster_mean_luma": 167.2,
+  "poster_ms": 58250,
+  "poster_sha256": "4949cce73517dd29345b293172575754add7ee9c8a971fd3b0a2109cca0148ef",
+  "sha256": "80917b58c939f58833177ce4a4185b636decc9b8a8120f5900c5a279b3c77a0b",
+  "source_sha256": "4abdb662cdb165a857e80c58388a592fc195efc891b569d85e47e1b5ddc397e9",
   "voice": false
  }
 }
