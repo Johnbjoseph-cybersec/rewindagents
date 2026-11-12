@@ -132,7 +132,8 @@ class TestSite(unittest.TestCase):
     def test_site_url_lives_in_config_only(self):
         cfg = config()
         self.assertTrue(cfg["site_url"].startswith("https://"), cfg["site_url"])
-        self.assertTrue(cfg["site_url"].endswith("/rewindagents/"), cfg["site_url"])
+        # GitHub Pages project path until 2026-11-12, then John's domain https://rewindagents.com/
+        self.assertTrue(cfg["site_url"].endswith("/"), cfg["site_url"])
         self.assertIsNone(cfg["checkout_url"], "checkout_url must stay null until a Polar product exists")
         for rel, text in repo_text_files():
             if rel in HOST_ALLOWED:
