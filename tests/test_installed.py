@@ -254,6 +254,36 @@ class InstalledCommandTest(unittest.TestCase):
                 r = self._run("verify", cwd=proj)
                 self.assertEqual((r.returncode, r.stdout.strip()), (0, "OK: 3 records, chain intact"), r.stderr)
 
+    def test_uninstall_removes_what_install_wrote_for_every_agent(self):
+        """Install then uninstall through the binary for all three agents, next to a hook of the user's own:
+        the user's entry survives exactly, ours is gone, a second uninstall leaves the file byte-identical,
+        and .rewindagent/ is untouched."""
+        for agent in sorted(agents.AGENTS):
+            ag = agents.AGENTS[agent]
+            with self.subTest(agent=agent), TemporaryDirectory() as proj:
+                f = Path(proj, ag.settings)
+                f.parent.mkdir()
+                if ag.shape == "cursor":
+                    mine = {"version": 1, "hooks": {ag.events[0]: [{"command": "my-own-hook"}]}}
+                else:
+                    mine = {"hooks": {ag.events[0]: [{"matcher": "Bash", "hooks": [
+                        {"type": "command", "command": "my-own-hook"}]}]}}
+                f.write_text(json.dumps(mine))
+                Path(proj, ".rewindagent").mkdir()
+                Path(proj, ".rewindagent", "log.jsonl").write_text("kept\n")
+                r = self._run("install", "--agent", agent, cwd=proj)
+                self.assertEqual((r.returncode, r.stdout.strip()), (0, "installed in %s" % ag.settings), r.stderr)
+                self.assertNotEqual(json.loads(f.read_text()), mine)
+                r = self._run("uninstall", "--agent", agent, cwd=proj)
+                self.assertEqual((r.returncode, r.stdout.strip()), (0, "removed from %s" % ag.settings), r.stderr)
+                self.assertEqual(json.loads(f.read_text()), mine)
+                raw = f.read_bytes()
+                r = self._run("uninstall", "--agent", agent, cwd=proj)
+                self.assertEqual((r.returncode, r.stdout.strip()),
+                                 (0, "not installed in %s; left unchanged" % ag.settings), r.stderr)
+                self.assertEqual(f.read_bytes(), raw)
+                self.assertEqual(Path(proj, ".rewindagent", "log.jsonl").read_text(), "kept\n")
+
 
 class ReadmeCommandsTest(unittest.TestCase):
     def test_every_rewindagent_command_in_the_readme_is_a_real_subcommand(self):
@@ -267,7 +297,7 @@ class ReadmeCommandsTest(unittest.TestCase):
             if m and not m.group(1).startswith("-"):
                 self.assertIn(m.group(1), SUBCOMMANDS, line)
                 seen.add(m.group(1))
-        self.assertTrue({"install", "replay", "rewind", "branch", "verify", "export", "sessions", "bundle",
+        self.assertTrue({"install", "uninstall", "replay", "rewind", "branch", "verify", "export", "sessions", "bundle",
                          "import", "gc"} <= seen, seen)
 
     def test_readme_says_the_package_exists_and_is_not_on_pypi(self):

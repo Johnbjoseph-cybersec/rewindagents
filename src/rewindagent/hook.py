@@ -201,3 +201,13 @@ def install(settings_path: str | Path | None = None, command: str | None = None,
     """
     ag = agents.AGENTS[agent]
     return agents.install(ag, settings_path or ag.settings, command or hook_command(agent))
+
+
+def uninstall(settings_path: str | Path | None = None, command: str | None = None,
+              agent: str = agents.DEFAULT) -> bool:
+    """Remove the hook `install` would write from the agent's config file; every other entry stays.
+    Never touches .rewindagent/, so recorded sessions can still be replayed and rewound.
+    Returns True if the file changed, False if there was nothing of ours in it.
+    """
+    ag = agents.AGENTS[agent]
+    return agents.uninstall(ag, settings_path or ag.settings, command or hook_command(agent))

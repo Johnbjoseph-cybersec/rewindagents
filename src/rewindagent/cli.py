@@ -1,5 +1,5 @@
-"""rewindagent command line: record, verify, head, show, hook, install, replay, rewind, branch, export,
-sessions, bundle, import, gc."""
+"""rewindagent command line: record, verify, head, show, hook, install, uninstall, replay, rewind, branch,
+export, sessions, bundle, import, gc."""
 from __future__ import annotations
 
 import argparse
@@ -36,6 +36,11 @@ def main(argv: list[str] | None = None) -> int:
                    help="claude: .claude/settings.json, codex: .codex/hooks.json, cursor: .cursor/hooks.json "
                         "(default: %(default)s)")
     i.add_argument("--settings", help="config file to write (default: the agent's file in the current project)")
+    un = sub.add_parser("uninstall", help="remove the hook `install` wrote; other hooks and the recorded history stay")
+    un.add_argument("--agent", choices=sorted(agents.AGENTS), default=agents.DEFAULT,
+                    help="claude: .claude/settings.json, codex: .codex/hooks.json, cursor: .cursor/hooks.json "
+                         "(default: %(default)s)")
+    un.add_argument("--settings", help="config file to change (default: the agent's file in the current project)")
     rp = sub.add_parser("replay", help="list a session's steps, or show one step in full")
     rp.add_argument("--session", help="default: the session that wrote the last record")
     rp.add_argument("--step", type=int, help="show this step's full input, checkpoints and result")
@@ -76,6 +81,11 @@ def main(argv: list[str] | None = None) -> int:
         target = a.settings or agents.AGENTS[a.agent].settings
         changed = hook.install(target, agent=a.agent)
         print(f"{'installed in' if changed else 'already installed in'} {target}")
+        return 0
+    if a.cmd == "uninstall":
+        target = a.settings or agents.AGENTS[a.agent].settings
+        changed = hook.uninstall(target, agent=a.agent)
+        print(f"removed from {target}" if changed else f"not installed in {target}; left unchanged")
         return 0
     if a.cmd in ("verify", "show", "replay", "rewind", "branch", "export", "sessions", "bundle", "gc") \
             and not Path(a.log).exists():

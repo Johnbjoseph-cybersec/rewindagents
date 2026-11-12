@@ -140,6 +140,57 @@ def install(agent: Agent, settings_path: str | Path, command: str) -> bool:
     return changed
 
 
+def uninstall(agent: Agent, settings_path: str | Path, command: str) -> bool:
+    """Remove the hook entries whose command is exactly `command` (the one `install` writes). Keeps every other
+    hook and key; a group or event list is dropped only when removing our entry left it empty.
+
+    Returns True if the file changed. When nothing matches (or the file does not exist) the file is not
+    rewritten, so it stays byte-identical.
+    """
+    p = Path(settings_path)
+    if not p.exists():
+        return False
+    text = p.read_text(encoding="utf-8")
+    settings = json.loads(text) if text.strip() else {}
+    if not isinstance(settings, dict):
+        raise ValueError(f"{p} does not hold a JSON object")
+    hooks = settings.get("hooks")
+    if not isinstance(hooks, dict):
+        return False
+    changed = False
+    for event in agent.events:
+        entries = hooks.get(event)
+        if not isinstance(entries, list):
+            continue
+        kept = []
+        for e in entries:
+            if agent.shape == "cursor":
+                if isinstance(e, dict) and e.get("command") == command:
+                    changed = True
+                    continue
+            elif isinstance(e, dict) and isinstance(e.get("hooks"), list):
+                inner = [h for h in e["hooks"] if not (isinstance(h, dict) and h.get("command") == command)]
+                if len(inner) != len(e["hooks"]):
+                    changed = True
+                    if not inner:
+                        continue
+                    e = {**e, "hooks": inner}
+            kept.append(e)
+        if kept != entries:
+            if kept:
+                hooks[event] = kept
+            else:
+                del hooks[event]
+    if not changed:
+        return False
+    if not hooks:
+        del settings["hooks"]
+    tmp = p.with_name(p.name + ".rewindagent.tmp")
+    tmp.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+    os.replace(tmp, p)
+    return True
+
+
 def commands_in(agent: Agent, settings_path: str | Path) -> dict[str, list[str]]:
     """The hook commands a config file holds, per event. Used by the tests to read back what `install` wrote."""
     settings = json.loads(Path(settings_path).read_text(encoding="utf-8"))

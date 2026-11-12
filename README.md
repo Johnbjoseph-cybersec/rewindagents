@@ -67,6 +67,17 @@ files that were changed, deleted or created. Details and limits:
   (`.rewindagent/index.json`) means only files whose size or modification time changed are read again.
 - A project with more than 20,000 files is not scanned; the call is still recorded and `rewind` reports it.
 
+To take the hook out again:
+
+```sh
+rewindagent uninstall          # removes the hook from .claude/settings.json in this project
+rewindagent uninstall --agent cursor --settings ~/.cursor/hooks.json   # same flags as install
+```
+
+`uninstall` removes only the entries whose command is exactly the one `install` writes from the same Python,
+so every other hook and setting stays. If the file holds none, it is not rewritten and says so. It never
+touches `.rewindagent/`: sessions already recorded can still be replayed and rewound.
+
 ## Codex and Cursor hooks
 
 ```sh
