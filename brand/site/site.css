@@ -554,3 +554,39 @@ main > section, .foot, #demo > .wrap { transition: opacity .6s var(--ease); }
   .agents ul { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
   .hero .agents { margin-top: 32px; }
 }
+
+/* ==== review round 3 (cs-iris-kapoor, 8.71): film band rhythm, session wrapping, button contrast, install, cards ==== */
+/* 1 */
+.film-now:empty { display: none; min-height: 0; margin: 0; }
+.film { padding: 88px 0 88px; }
+@media (min-width: 601px) { .film-play { right: 8.333%; left: auto; } }
+/* 2: comments and the undo line wrap with a hanging indent; command and table rows stay on one line */
+.session pre.term .l:has(.c), .session pre.term .l:has(.hit) { white-space: pre-wrap; overflow-wrap: anywhere; padding-left: 2ch; text-indent: -2ch; }
+/* 3 */
+.plan .btn-primary, #pricing .plan .btn-primary { color: var(--leader); }
+/* 4 */
+.install-row h3 + p, .pair h3 + pre.term { margin-top: 10px; }
+.pair > div > h3 { margin-top: 0; }
+.pair-note { grid-column: 1 / -1; max-width: 760px; margin-top: 24px; }
+.pair { align-items: start; }
+.pair > div > pre.term { flex: none; }
+/* 5 */
+.plans { align-items: start; }
+.plan { height: auto; min-height: 0; }
+.plan .btn { margin-top: 32px; }
+.plan ul { flex: 0 0 auto; margin-bottom: 0; }
+.eyebrow b { margin-right: 12px; }
+/* 6: hover, solid tokens only */
+.plan { transition: border-color .25s var(--ease), transform .25s var(--ease); }
+.plan:hover { transform: translateY(-3px); }
+.plan:hover, #pricing .plan:hover { border-color: var(--leader); }
+.cmdrow { transition: border-color .25s var(--ease); }
+.cmdrow:hover { border-top-color: var(--reel); }
+@media (max-width: 600px) {
+  .film { padding: 56px 0 56px; }
+  .film-time { min-width: 0; font-size: 12px; }
+  .film-fs { min-width: 44px; padding: 0 8px; }
+  .film-bar { gap: 10px; }
+  .session .small::after { content: " Scroll sideways."; }
+}
+@media (prefers-reduced-motion: reduce) { .plan, .cmdrow { transition: none; } .plan:hover { transform: none; } }
