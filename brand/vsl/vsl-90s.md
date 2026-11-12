@@ -24,7 +24,7 @@ Aspect 16:9. 22 cards, 90 s of 90 s allowed, 182 words on the cards. No voice: t
 | b16 | 58.5-63 | Where does the analogy break? Recorders **can't undo** a crash. | flight recorder   every move, kept<br>the agent's log   every tool call, kept<br>flight recorder   can't undo the crash | Rewind wipe back to the analogy map: the two rows return in Tape and a third row draws under them, flight recorder, can't undo the crash. |
 | b17 | 63-67 | Unlike a recorder, this one puts your **files back**. | flight recorder   every move, kept<br>the agent's log   every tool call, kept<br>flight recorder   can't undo the crash<br>the agent's log   rewind 12: files back | Same map: the fourth row, the agent's log, rewind 12: files back, lands in Record; the one row that has no flight-recorder twin. Cites: `files back to how they were right after step 12` |
 | b18 | 67-71.2 | Preview with diff. Take back **one file** with --only. | rewindagents diff 12<br>rewindagents rewind 12 --only src/db.py | Rewind wipe. Two commands from the README, each typing into its own Spool chip as its sentence lands. Cites: `what taking it back to step 12 would change`, ``rewind N --only PATH` puts back only those files` |
-| b19 | 71.2-76.3 | You can now see **every step** and undo any of it. | rewindagents ui<br>the timeline runs on 127.0.0.1 only | Match cut: the ruler's playhead drops into the real rewindagents ui timeline (screenshot of the demo session), the camera pushes in on the rewound steps; the command in a small Spool chip, the 127.0.0.1 note in Tape. Cites: `opens the timeline in your browser`, `It listens on 127.0.0.1 only` |
+| b19 | 71.2-76.3 | You can now see **every step** and the change it made. | rewindagents ui<br>the timeline runs on 127.0.0.1 only | Match cut: the ruler's playhead drops into the real rewindagents ui timeline (screenshot of the demo session), the camera pushes in on the rewound steps; the command in a small Spool chip, the 127.0.0.1 note in Tape. Cites: `opens the timeline in your browser`, `It listens on 127.0.0.1 only` |
 | b20 | 76.3-81.2 | Up next: rewindagents init finds the **seven agents** it supports. | rewindagents init<br>Claude Code: has run in real sessions<br>Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen Code:<br>tested with documented payloads, not yet in a live session | Rewind wipe. rewindagents init types in a Spool panel only as wide as the command; under it two bullet notes: Claude Code has run in real sessions (Reel), then the other six by name with their status on the line under, tested with documented payloads, not yet in a live session (both lines in Record). Cites: `looks for the agents it supports (Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen Code)`, `The Claude Code hook has run in real sessions`, `tested with the documented payloads, not yet in a live session of any of them` |
 | b21 | 81.2-85 | Apache-2.0. Standard library only. **Not on PyPI yet.** | Python 3.10 or newer, standard library only<br>{repo_url} | Rewind wipe. The three short sentences build one a line; under them two ruled rows in Commit Mono rise in (the Python requirement, then the repository address, the one Record line), so the card never repeats its own words. Cites: `Apache-2.0`, `Python 3.10 or newer`, `No dependencies beyond the standard library`, `Not on PyPI yet.`, `From the repository` |
 | b22 | 85-90 | Your editor has had undo for decades. **Now your agent does.** | rewindagents<br>Ctrl+Z for AI coding agents: record, replay, rewind.<br>{site_url}<br>made by John B Joseph | The last rewind wipe turns the paper to Reel: the line builds at the top in Leader, then the wordmark with its playhead in Rewind, the promise in Playhead, the address in Commit Mono and the credit line. Cites: `Ctrl+Z for AI coding agents: record, replay and rewind.` |
@@ -130,7 +130,7 @@ NARRATOR: Unlike a recorder, this one puts your files back.
 NARRATOR: Preview with diff. Take back one file with --only.
 [OST: rewindagents ui]
 [OST: the timeline runs on 127.0.0.1 only]
-NARRATOR: You can now see every step and undo any of it.
+NARRATOR: You can now see every step and the change it made.
 
 ## BRIDGE
 [OST: rewindagents init]
@@ -185,7 +185,7 @@ Unlike a recorder, this one puts your files back.
 
 Preview with diff. Take back one file with --only.
 
-You can now see every step and undo any of it.
+You can now see every step and the change it made.
 
 Up next: rewindagents init finds the seven agents it supports.
 

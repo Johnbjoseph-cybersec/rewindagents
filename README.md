@@ -18,8 +18,8 @@ subagent's tool calls ([hooks docs](https://code.claude.com/docs/en/hooks)), so 
 no live subagent session has been recorded yet. Every tool call goes into a tamper-evident, hash-chained log you
 can verify later.
 
-**Status: v0.0.7, pre-release.** Built and tested today: the recorder and its CLI, hooks for Claude Code,
-Codex and Cursor that record every call and checkpoint the files a step changes, `replay`, `rewind` and
+**Status: v0.0.7, pre-release.** Built and tested today: the recorder and its CLI, hooks for seven coding
+agents (Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen Code) that record every call and checkpoint the files a step changes, `replay`, `rewind` and
 `branch`, `export` (a session as one HTML page), `sessions` (list and search the sessions in a log),
 `bundle` and `import` (carry a session to another machine or clone as one file), `gc` (delete stored file
 copies nothing names any more), and a pip-installable package with a `rewindagents` command. Not on PyPI yet. The Claude Code hook has run in real

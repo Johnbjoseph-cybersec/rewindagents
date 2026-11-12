@@ -83,8 +83,8 @@ Preview with diff. Take back one file with
 
 19
 00:01:11,200 --> 00:01:16,350
-You can now see every step and undo any of
-it.
+You can now see every step and the change
+it made.
 
 20
 00:01:16,350 --> 00:01:21,150

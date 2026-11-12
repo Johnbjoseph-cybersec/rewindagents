@@ -336,7 +336,7 @@
           "id": "b19",
           "ms": 5150,
           "section": "RECAP",
-          "text": "You can now see every step and undo any of it.",
+          "text": "You can now see every step and the change it made.",
           "accent": "every step",
           "proof_ms": 500,
           "screen": [
