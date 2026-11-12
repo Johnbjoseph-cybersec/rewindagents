@@ -1,7 +1,7 @@
 """Site (RB3): the pages are a build output of brand/site/build.py; every command on them is the README's, every
 number is the code's, every terminal line is one the real session printed (brand/demo/manifest.json, which
 tests/test_demo.py replays); the only hostname for the product lives in brand/site/config.json; the pages are
-well-formed, self-contained (no scripts, nothing loaded from outside) and every local link resolves. Stdlib
+well-formed, self-contained (local scripts only under a 'self' CSP, nothing loaded from outside) and every local link resolves. Stdlib
 only: no browser is needed here. The looking step is bin/render_html.sh in FIRE, run by hand."""
 import importlib.util
 import io
@@ -35,7 +35,7 @@ THIRD_PARTY = ("https://schema.org",)
 BANNED = re.compile(r"revolutionary|seamless|unleash|AI-powered|game-changer|secure|protect|defend|magic|"
                     r"never lose|instant|bulletproof|foolproof|guaranteed", re.I)
 NETWORK = re.compile(r"^\s*(?:import|from)\s+(socket|http|urllib|ssl|smtplib|ftplib|xmlrpc|requests|httpx)\b", re.M)
-VOID = {"meta", "link", "img", "br", "hr", "input", "source", "wbr"}
+VOID = {"meta", "link", "img", "br", "hr", "input", "source", "track", "wbr"}
 FONT_FAMILIES = {"Bricolage Grotesque", "Hanken Grotesk", "Commit Mono"}
 
 
@@ -169,7 +169,16 @@ class TestSite(unittest.TestCase):
                 self.assertEqual(doc.errors, [], p)
                 self.assertEqual(doc.stack, [], "%s: unclosed %s" % (p, doc.stack))
                 self.assertEqual(doc.h1, 1, "%s: one h1" % p)
-                self.assertEqual(doc.scripts, ["application/ld+json"], "%s: only the JSON-LD block may be a script" % p)
+                # scripts: the JSON-LD block, and local files only (vendor/ + site.js); nothing inline runs, the CSP says so
+                raw = read(p, d)
+                srcs = re.findall(r'<script src="([^"]+)"', raw)
+                self.assertEqual(doc.scripts.count("application/ld+json"), 1, p)
+                self.assertEqual(len(doc.scripts), len(srcs) + 1, "%s: every other script has a src" % p)
+                for src in srcs:
+                    self.assertRegex(src, r"^(\.\./)?(vendor/[\w.]+\.js|site\.js)$", "%s: script %s" % (p, src))
+                self.assertIn("content=\"default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self'; "
+                              "font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'\"", raw, p)
+                self.assertNotRegex(raw, r' style="| on[a-z]+="', "%s: inline style/handler would be blocked by the CSP" % p)
                 ld = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', read(p, d), re.S).group(1))
                 self.assertEqual(ld["url"], cfg["site_url"] + build.PAGES[p])
                 here = os.path.dirname(os.path.join(d, p))
@@ -196,6 +205,24 @@ class TestSite(unittest.TestCase):
                 ids = set(re.findall(r' id="([^"]+)"', html))
                 for href in re.findall(r' href="#([^"]+)"', html):
                     self.assertIn(href, ids, "%s: #%s" % (p, href))
+
+    def test_site_js_loads_and_injects_nothing(self):
+        js = read("site.js")
+        self.assertNotRegex(js, r"\bfetch\(|XMLHttpRequest|WebSocket|\beval\(|new Function|innerHTML|outerHTML|insertAdjacentHTML|document\.write|import\(",
+                            "site.js only animates what is on the page; it loads and parses nothing")
+        for name in ("gsap.min.js", "ScrollTrigger.min.js", "SplitText.min.js"):
+            head = read(os.path.join("vendor", name))[:200]
+            self.assertIn("3.13.0", head, name)
+            self.assertNotIn("sourceMappingURL", read(os.path.join("vendor", name)), name)
+
+    def test_film_captions_are_the_vsl_captions(self):
+        build = load_build()
+        cues = build.srt_cues("brand/vsl/%s.srt" % build.FILM)
+        index = read("index.html")
+        self.assertEqual(index.count('class="ft"'), len(cues), "one ruler tick per caption line")
+        self.assertIn('src="assets/%s.vtt"' % build.FILM, index)
+        self.assertIn('poster="assets/film-poster.jpg"', index)
+        self.assertTrue(os.path.isfile(os.path.join(BRAND, "vsl", "vsl-90s-poster.jpg")))
 
     def test_hero_panel_shows_lines_the_session_printed(self):
         # tests/test_demo.py proves brand/demo/manifest.json is what the CLI prints today; the hero must quote it.

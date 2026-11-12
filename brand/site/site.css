@@ -1,4 +1,4 @@
-/* rewindagents site. Palette and type from brand/BRAND.md and nothing else; no scripts anywhere on the site.
+/* rewindagents site. Palette and type from brand/BRAND.md and nothing else; one local script (site.js) adds motion; the page is complete without it.
    Light first, like a printed log: Leader paper, Reel ink, Spool terminals, Record once per view. */
 
 @font-face { font-family: "Bricolage Grotesque"; font-weight: 700; font-style: normal; font-display: swap; src: url("fonts/bricolage-grotesque-latin-700-normal.woff2") format("woff2"); }
@@ -14,149 +14,234 @@
   --display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
   --body: "Hanken Grotesk", "Helvetica Neue", Arial, sans-serif;
   --mono: "Commit Mono", "SFMono-Regular", Menlo, Consolas, monospace;
-  --gutter: 24px; --measure: 62ch; --col: 1120px;
+  --gutter: 32px; --measure: 64ch; --col: 1200px;
+  --ease: cubic-bezier(.22, 1, .36, 1); --snap: cubic-bezier(.5, 0, .1, 1);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; background: var(--leader); }
-body { margin: 0; background: var(--leader); color: var(--reel); font-family: var(--body); font-size: 17px; line-height: 1.6; font-feature-settings: "tnum" 1; overflow-x: hidden; }
+html { -webkit-text-size-adjust: 100%; background: var(--leader); scroll-behavior: smooth; scroll-padding-top: 84px; }
+body { margin: 0; background: var(--leader); color: var(--reel); font-family: var(--body); font-size: 17px; line-height: 1.6; font-feature-settings: "tnum" 1; overflow-x: clip; }
 a { color: var(--record); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
 a:hover { text-decoration-thickness: 2px; }
-:focus-visible { outline: 2px solid var(--reel); outline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--record); outline-offset: 3px; }
 img, svg { display: block; max-width: 100%; }
 code, pre, kbd, .mono { font-family: var(--mono); }
 code { font-size: 0.88em; }
 p code, li code, h3 code, summary code { background: transparent; padding: 0; color: var(--reel); border-bottom: 1px solid var(--rule); }
-h1, h2, h3 { font-family: var(--display); letter-spacing: -0.02em; line-height: 1.08; margin: 0; font-weight: 800; }
-h2 { font-size: clamp(28px, 3.2vw, 40px); max-width: 26ch; text-wrap: balance; }
+h1, h2, h3 { font-family: var(--display); letter-spacing: -0.02em; line-height: 1.06; margin: 0; font-weight: 800; }
+h2 { font-size: clamp(30px, 3.4vw, 46px); letter-spacing: -0.03em; max-width: 18ch; text-wrap: balance; }
 h3 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
 p { margin: 0 0 1em; max-width: var(--measure); }
 ul, ol { padding-left: 1.2em; max-width: var(--measure); }
 li { margin: 0.35em 0; }
+strong { font-weight: 600; }
 
 .wrap { max-width: var(--col); margin: 0 auto; padding: 0 var(--gutter); }
 .small { font-size: 15px; color: var(--tape); }
+.more { margin-top: 24px; }
 
-/* header: wordmark left, nav right, every link a 44 px row */
-.top { border-bottom: 1px solid var(--rule); }
-.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px 24px; min-height: 68px; flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; }
+/* header: sticky, wordmark left, nav right; a hairline appears once the page moves under it */
+.top { position: sticky; top: 0; z-index: 20; background: var(--leader); border-bottom: 1px solid transparent; transition: border-color .3s var(--ease); }
+.top.stuck { border-bottom-color: var(--rule); }
+.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px 24px; min-height: 72px; flex-wrap: wrap; padding-top: 8px; padding-bottom: 8px; }
 .brand img { height: 30px; width: auto; }
-.nav { display: flex; gap: 4px; flex-wrap: wrap; font-size: 16px; }
-.nav a, .foot nav a { color: var(--reel); text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; padding: 10px 10px; border-bottom: 2px solid transparent; }
-.nav a:hover, .nav a[aria-current] { border-bottom-color: var(--reel); }
-.nav a:last-child { padding-right: 0; }
+.nav { display: flex; gap: 2px; flex-wrap: wrap; font-size: 15.5px; }
+.nav a, .foot nav a { color: var(--reel); text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; padding: 10px 12px; border-bottom: 2px solid transparent; transition: border-color .2s var(--ease); }
+.nav a:hover, .nav a[aria-current] { border-bottom-color: var(--record); }
+.nav a:last-child { margin-left: 8px; border: 1px solid var(--reel); border-radius: 3px; min-height: 40px; padding: 0 14px; }
+.nav a:last-child:hover { background: var(--reel); color: var(--leader); }
 
-/* sections: a step list. each one opens with the ruler motif, its number and a name, on a hairline */
-.sec { padding: 72px 0; border-top: 1px solid var(--rule); }
-.sec.first { border-top: 0; }
-.label { font-family: var(--mono); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tape); margin: 0 0 22px; display: flex; gap: 14px; align-items: center; max-width: none; }
-.label .n { color: var(--reel); font-weight: 700; }
+/* section heads: an asymmetric split on one grid line, so every section starts at the same left edge */
+.sec { padding: 112px 0; border-top: 1px solid var(--rule); }
+.label { font-family: var(--mono); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tape); margin: 0 0 20px; display: flex; gap: 14px; align-items: center; max-width: none; }
+.label .n { color: var(--record); font-weight: 700; }
 .ruler { flex: none; }
-.head { margin-bottom: 36px; }
-.lede { font-size: 20px; color: var(--reel); max-width: 58ch; margin-top: 16px; margin-bottom: 0; }
-.eyebrow { font-family: var(--mono); font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tape); margin: 0 0 22px; max-width: none; white-space: nowrap; }
-.eyebrow b { color: var(--reel); font-weight: 700; }
+.head { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 6fr); gap: 20px 64px; align-items: end; margin-bottom: 56px; }
+.head .lede { margin: 0; font-size: 18px; color: var(--tape); justify-self: start; }
+.head:only-child, .head:has(> h2:only-child) { grid-template-columns: minmax(0, 1fr); }
+.lede { font-size: 20px; color: var(--reel); max-width: 56ch; margin-top: 16px; margin-bottom: 0; }
+.eyebrow { font-family: var(--mono); font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tape); margin: 0 0 26px; max-width: none; white-space: nowrap; display: inline-flex; align-items: center; gap: 10px; }
+.eyebrow b { color: var(--leader); background: var(--reel); font-weight: 700; padding: 3px 8px; border-radius: 2px; }
 
-/* hero: promise left, a real terminal right, both starting on the same line and ending together */
-.hero { padding: 64px 0 72px; }
-.hero .wrap { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: start; }
-.hero h1 { font-size: clamp(38px, 4.4vw, 58px); letter-spacing: -0.028em; line-height: 1.02; max-width: 14ch; text-wrap: balance; }
-.h1-small { font-size: clamp(34px, 4.2vw, 52px); }
-.hero .lede { margin-top: 26px; font-size: 19px; }
-.cta { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin-top: 30px; }
-.btn { display: inline-flex; align-items: center; min-height: 48px; font-family: var(--body); font-weight: 600; font-size: 16px; padding: 0 20px; border-radius: 3px; text-decoration: none; border: 1px solid var(--reel); }
-.btn-primary { background: var(--reel); color: var(--leader); }
-.btn-primary:hover { background: var(--spool); border-color: var(--spool); }
+/* hero: promise left, the live session right, on one top line */
+.hero { padding: 72px 0 104px; }
+.hero .wrap { display: grid; grid-template-columns: minmax(0, 11fr) minmax(0, 13fr); gap: 64px; align-items: start; }
+.hero h1 { font-size: clamp(44px, 5.6vw, 76px); letter-spacing: -0.04em; line-height: 0.98; max-width: 11ch; text-wrap: balance; }
+.hero .lede { margin-top: 28px; font-size: 19px; color: var(--tape); max-width: 46ch; }
+.hero .lede strong { color: var(--reel); display: block; margin-bottom: 6px; }
+.hero-install { margin-top: 22px; max-width: 520px; }
+.hero-install pre.term { font-size: 12.5px; }
+.cta { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 32px; }
+.btn { display: inline-flex; align-items: center; gap: 10px; min-height: 50px; font-family: var(--body); font-weight: 600; font-size: 16px; padding: 0 22px; border-radius: 3px; text-decoration: none; border: 1px solid var(--reel); transition: background-color .2s var(--ease), color .2s var(--ease), border-color .2s var(--ease), transform .2s var(--ease); }
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--record); border-color: var(--record); color: var(--leader); }
+.btn-primary:hover { background: var(--reel); border-color: var(--reel); }
 .btn-ghost { color: var(--reel); background: transparent; }
 .btn-ghost:hover { background: var(--reel); color: var(--leader); }
-.btn:focus-visible { outline: 2px solid var(--reel); outline-offset: 3px; }
-.facts { margin: 18px 0 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(2, max-content); gap: 8px 36px; font-family: var(--mono); font-size: 13.5px; color: var(--reel); max-width: none; }
+.facts { margin: 28px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px 22px; font-family: var(--mono); font-size: 13px; color: var(--tape); max-width: none; }
 .facts li { margin: 0; padding-left: 14px; position: relative; }
-.facts li::before { content: ""; position: absolute; left: 0; top: 0.35em; width: 1px; height: 0.9em; background: var(--reel); }
-.hero-panel .caption { font-size: 15px; color: var(--tape); margin: 14px 0 0; max-width: none; }
-.hero-panel pre.term { font-size: 12.5px; }
+.facts li::before { content: ""; position: absolute; left: 0; top: 0.5em; width: 6px; height: 6px; background: var(--record); }
+.hero-panel .caption { font-size: 14px; color: var(--tape); margin: 14px 0 0; max-width: none; font-family: var(--mono); }
 
-/* terminal panels: Spool ground, Leader text, Playhead prompt and comments, Rewind for the one block to look at.
+/* the player: the demo session as a ruler. Spool ground, Leader text, Rewind for the playhead and what came back,
+   Record for what was lost. Without site.js it is a still of step 14. */
+.player { background: var(--spool); color: var(--leader); border-radius: 6px; padding: 22px 24px 20px; font-family: var(--mono); position: relative; }
+.pl-head { display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; color: var(--playhead); padding-bottom: 14px; border-bottom: 1px solid var(--tape); }
+.pl-name::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--record); margin-right: 10px; vertical-align: 1px; }
+.player.playing .pl-name::before { animation: blink 1s steps(2, start) infinite; }
+.pl-count b { color: var(--leader); font-weight: 700; font-size: 14px; }
+.pl-now { margin: 18px 0 16px; font-size: 15px; min-height: 1.6em; max-width: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pl-tool { display: inline-block; min-width: 6ch; color: var(--rewind); font-weight: 700; }
+.pl-note { color: var(--playhead); }
+.pl-files { list-style: none; margin: 0 0 22px; padding: 0; max-width: none; display: grid; gap: 2px; }
+.pl-files .f { margin: 0; display: flex; justify-content: space-between; gap: 16px; padding: 7px 10px; font-size: 13.5px; border-left: 2px solid var(--tape); background: var(--reel); transition: background-color .35s var(--ease), border-color .35s var(--ease), color .35s var(--ease), opacity .35s var(--ease); }
+.pl-files .st { color: var(--playhead); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+.pl-files .is-changed { border-left-color: var(--playhead); }
+.pl-files .is-new { border-left-color: var(--rewind); }
+.pl-files .is-new .st { color: var(--rewind); }
+.pl-files .is-absent { opacity: .38; border-left-color: transparent; }
+.pl-files .is-gone { border-left-color: var(--record); background: var(--spool); }
+.pl-files .is-gone .path { text-decoration: line-through; text-decoration-color: var(--record); text-decoration-thickness: 2px; color: var(--rule); }
+.pl-files .is-gone .st { color: var(--rewind); }
+.pl-files .pulse { animation: pulse .5s var(--ease); }
+.pl-files .flash { border-left-color: var(--rewind); background: var(--leader); color: var(--reel); }
+.pl-files .flash .st { color: var(--record); font-weight: 700; }
+.pl-ruler { position: relative; height: 40px; }
+.ticks { position: absolute; inset: 0 9px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid var(--rule); pointer-events: none; }
+.tick { width: 2px; height: 12px; background: var(--rule); transition: background-color .25s var(--ease), height .25s var(--ease); pointer-events: auto; cursor: pointer; }
+.tick.past { background: var(--leader); }
+.tick.w { background: var(--record); height: 18px; }
+.tick.g { height: 18px; }
+.tick.cur { background: var(--rewind); height: 28px; }
+.pl-range { position: absolute; inset: 0; width: 100%; margin: 0; height: 40px; background: transparent; -webkit-appearance: none; appearance: none; cursor: grab; }
+.pl-range:disabled { cursor: default; }
+.pl-range:active { cursor: grabbing; }
+.pl-range::-webkit-slider-runnable-track { height: 40px; background: transparent; }
+.pl-range::-moz-range-track { height: 40px; background: transparent; }
+.pl-range::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 40px; background: transparent; border: 0; }
+.pl-range::-moz-range-thumb { width: 18px; height: 40px; background: transparent; border: 0; }
+.pl-range:focus-visible { outline: 2px solid var(--rewind); outline-offset: 4px; }
+.pl-ctl { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.pl-btn { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 16px; border-radius: 3px; font-family: var(--mono); font-size: 13px; cursor: pointer; border: 1px solid var(--tape); background: transparent; color: var(--leader); transition: background-color .2s var(--ease), border-color .2s var(--ease), color .2s var(--ease); }
+.pl-btn code { font-size: 13px; color: inherit; border: 0; }
+.pl-btn:hover:not(:disabled) { border-color: var(--leader); }
+.pl-rewind { background: var(--rewind); border-color: var(--rewind); color: var(--reel); font-weight: 700; }
+.pl-rewind:hover:not(:disabled) { background: var(--leader); border-color: var(--leader); }
+.player.wrecked .pl-rewind { animation: nudge 1.6s var(--ease) infinite; }
+.pl-btn:disabled { opacity: .5; cursor: default; }
+.player:not(.live) .pl-ctl, .player:not(.live) .pl-range { display: none; }
+.pl-msg { margin: 16px 0 0; font-size: 13px; color: var(--playhead); min-height: 4.8em; max-width: none; }
+.player.rewinding .tick.cur { background: var(--leader); }
+@keyframes blink { to { visibility: hidden; } }
+@keyframes pulse { from { background: var(--tape); } to { background: var(--reel); } }
+@keyframes nudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-3px); } }
+
+/* terminal panels: Spool ground, Leader text, Playhead prompt and comments, Rewind for the rows to look at.
    Each row is a block, so a row that has to wrap gets a hanging indent instead of falling back to the margin. */
-.panel { background: var(--spool); border-radius: 4px; overflow: hidden; }
-.panel-head { display: flex; justify-content: space-between; gap: 16px; padding: 12px 20px; border-bottom: 1px solid var(--rule); font-family: var(--mono); font-size: 12.5px; color: var(--playhead); }
+.panel { background: var(--spool); border-radius: 6px; overflow: hidden; }
 .panel .term { border-radius: 0; margin: 0; }
-pre.term { background: var(--spool); color: var(--leader); margin: 0; padding: 18px 20px; border-radius: 4px; font-family: var(--mono); font-size: 13.5px; line-height: 1.55; white-space: normal; max-width: 100%; }
-pre.term code { font-size: inherit; font-family: inherit; color: inherit; border: 0; padding: 0; } /* also inside a list item */
+pre.term { background: var(--spool); color: var(--leader); margin: 0; padding: 20px 22px; border-radius: 6px; font-family: var(--mono); font-size: 13.5px; line-height: 1.6; white-space: normal; max-width: 100%; position: relative; }
+pre.term code { font-size: inherit; font-family: inherit; color: inherit; border: 0; padding: 0; }
 pre.term .l { display: block; white-space: pre-wrap; overflow-wrap: anywhere; padding-left: 4ch; text-indent: -4ch; }
 pre.term .p { color: var(--playhead); user-select: none; }
 pre.term .c { color: var(--playhead); }
 pre.term .hit { color: var(--rewind); }
 pre.term.fill { height: 100%; }
+pre.term.has-copy { padding-right: 84px; }
+.copy { position: absolute; top: 12px; right: 12px; font-family: var(--mono); font-size: 12px; min-height: 30px; padding: 0 10px; border-radius: 3px; border: 1px solid var(--tape); background: var(--spool); color: var(--playhead); cursor: pointer; transition: border-color .2s var(--ease), color .2s var(--ease); }
+.copy:hover { border-color: var(--leader); color: var(--leader); }
 .nb { white-space: nowrap; }
 h3 + pre.term { margin-top: 14px; }
 pre.term + p { margin-top: 16px; }
 
-/* the clip: the GIF at full width, then the session as text once, in two equal columns */
+
+/* the original page's parts the redesign stylesheet did not carry */
+.panel-head { display: flex; justify-content: space-between; gap: 16px; padding: 14px 22px; border-bottom: 1px solid var(--tape); font-family: var(--mono); font-size: 12.5px; color: var(--playhead); }
+.panel-head span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--record); margin-right: 10px; vertical-align: 1px; }
+.hero-panel pre.term { font-size: 12.4px; }
 .clip { margin: 0 0 40px; }
-.clip img { width: 100%; height: auto; border-radius: 4px; background: var(--spool); }
-.clip figcaption { font-size: 15px; color: var(--tape); margin-top: 12px; max-width: var(--measure); }
+.clip img { width: 100%; height: auto; border-radius: 6px; background: var(--spool); }
+.clip figcaption { font-size: 14px; color: var(--tape); margin-top: 12px; max-width: var(--measure); font-family: var(--mono); }
+
+/* the session as text, in two equal columns */
 .session { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: stretch; }
 .session > div { display: flex; flex-direction: column; }
-.session .small { margin-bottom: 12px; }
+.session .small { margin-bottom: 12px; font-family: var(--mono); font-size: 13px; }
 .session pre.term { font-size: 12.5px; flex: 1; }
 
-/* how it works: three steps, each with its own ruler */
-.steps { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px; max-width: none; }
-.steps li { margin: 0; border-top: 2px solid var(--reel); padding-top: 16px; }
-.steps .ruler { margin-bottom: 14px; }
-.steps h3 { margin-bottom: 10px; }
-.steps p { font-size: 16px; margin: 0; }
+/* how it works: a dark band, three numbered steps on one rail */
+#how { background: var(--reel); color: var(--leader); border-top: 0; }
+#how h2, #how h3 { color: var(--leader); }
+#how .head .lede { color: var(--playhead); }
+#how .label, #how .label span { color: var(--playhead); }
+#how .label .n { color: var(--rewind); }
+#how code { color: var(--leader); border-bottom-color: var(--tape); }
+#how .ruler rect[fill="#121412"] { fill: var(--leader); }
+.steps { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; max-width: none; counter-reset: st; border-top: 1px solid var(--tape); }
+.steps li { margin: 0; padding: 32px 32px 8px 0; counter-increment: st; position: relative; }
+.steps li + li { padding-left: 32px; border-left: 1px solid var(--tape); }
+.steps li::before { content: counter(st, decimal-leading-zero); display: block; font-family: var(--display); font-weight: 800; font-size: 64px; line-height: 1; letter-spacing: -0.04em; color: var(--rewind); margin-bottom: 20px; }
+.steps .ruler { display: none; }
+.steps h3 { margin-bottom: 12px; font-size: 24px; }
+.steps p { font-size: 16px; margin: 0; color: var(--playhead); }
 
-/* limits: a ledger of the real numbers, as wide as its text */
-.ledger { list-style: none; padding: 0; margin: 0; max-width: 940px; border-top: 1px solid var(--rule); }
-.ledger li { margin: 0; display: grid; grid-template-columns: 14em minmax(0, 1fr); gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--rule); font-size: 16px; }
-.ledger .k { font-family: var(--mono); font-size: 14px; font-weight: 700; padding-top: 2px; }
+/* limits: a ledger of the real numbers */
+.ledger { list-style: none; padding: 0; margin: 0; max-width: none; border-top: 2px solid var(--reel); }
+.ledger li { margin: 0; display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 24px 64px; padding: 20px 0; border-bottom: 1px solid var(--rule); font-size: 16px; transition: background-color .2s var(--ease); }
+.ledger li:hover { background: var(--leader); }
+.ledger .k { font-family: var(--mono); font-size: 15px; font-weight: 700; padding-top: 1px; color: var(--record); }
 
-/* two columns of text + command (install) */
-.cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 48px; }
-.cols p { font-size: 16px; }
+/* install: two columns of text + command */
+.cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 64px; }
+.cols p { font-size: 16px; color: var(--tape); }
 .cols h3 { margin-bottom: 0; }
 
-/* commands: one row per command, text left, panel right, no column that ends short */
-.cmdlist { display: grid; gap: 0; border-top: 1px solid var(--rule); }
-.cmdrow { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px 48px; padding: 28px 0; border-bottom: 1px solid var(--rule); align-items: start; }
-.cmdrow p { font-size: 16px; margin: 10px 0 0; }
+/* commands: one row per command, text left, panel right */
+.cmdlist { display: grid; gap: 0; border-top: 2px solid var(--reel); }
+.cmdrow { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px 64px; padding: 36px 0; border-bottom: 1px solid var(--rule); align-items: start; }
+.cmdrow p { font-size: 16px; margin: 10px 0 0; color: var(--tape); }
 .cmdrow pre.term { margin: 0; }
 
 /* pricing */
 .plans { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
-.plan { border: 1px solid var(--rule); border-radius: 4px; padding: 28px 28px 26px; display: flex; flex-direction: column; }
+.plan { border: 1px solid var(--rule); border-radius: 6px; padding: 32px 32px 30px; display: flex; flex-direction: column; background: var(--leader); transition: border-color .2s var(--ease); }
+.plan:first-child { border: 2px solid var(--reel); }
 .plan h3 { font-size: 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-.plan .price { font-family: var(--display); font-size: 34px; letter-spacing: -0.02em; margin: 16px 0 4px; }
-.plan .pricenote { color: var(--reel); font-size: 15px; margin-bottom: 18px; }
-.plan ul { padding-left: 0; list-style: none; margin: 0 0 24px; flex: 1; }
-.plan li { padding: 10px 0; border-top: 1px solid var(--rule); font-size: 16px; display: grid; grid-template-columns: 1.1em minmax(0, 1fr); gap: 10px; margin: 0; }
-.plan li::before { content: ""; width: 9px; height: 9px; margin-top: 8px; background: var(--reel); }
+.plan .price { font-family: var(--display); font-size: 44px; font-weight: 800; letter-spacing: -0.03em; margin: 18px 0 4px; }
+.plan .pricenote { color: var(--tape); font-size: 15px; margin-bottom: 20px; }
+.plan ul { padding-left: 0; list-style: none; margin: 0 0 26px; flex: 1; }
+.plan li { padding: 11px 0; border-top: 1px solid var(--rule); font-size: 16px; display: grid; grid-template-columns: 1.1em minmax(0, 1fr); gap: 10px; margin: 0; }
+.plan li::before { content: ""; width: 9px; height: 9px; margin-top: 8px; background: var(--record); }
 .plan li.planned::before { background: transparent; border: 1.5px solid var(--tape); }
 .plan .btn { align-self: flex-start; }
 .pill { font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 2px; border: 1px solid var(--reel); color: var(--reel); }
 .pill-planned { color: var(--tape); border-color: var(--tape); }
 
 /* questions */
+.faq { max-width: 880px; }
 .faq details { border-top: 1px solid var(--rule); }
 .faq details:last-of-type { border-bottom: 1px solid var(--rule); }
-summary { cursor: pointer; padding: 16px 0; font-weight: 600; font-size: 18px; list-style: none; display: flex; justify-content: space-between; gap: 16px; min-height: 44px; align-items: center; }
+summary { cursor: pointer; padding: 20px 0; font-weight: 600; font-size: 19px; list-style: none; display: flex; justify-content: space-between; gap: 16px; min-height: 44px; align-items: center; transition: color .2s var(--ease); }
+summary:hover { color: var(--record); }
 summary::-webkit-details-marker { display: none; }
-summary::after { content: "+"; font-family: var(--mono); color: var(--tape); flex: none; }
-details[open] summary::after { content: "\2013"; }
-details > p { padding-bottom: 18px; margin: 0; }
+summary::after { content: "+"; font-family: var(--mono); font-size: 20px; color: var(--record); flex: none; transition: transform .3s var(--ease); }
+details[open] summary::after { transform: rotate(45deg); }
+details > p { padding-bottom: 22px; margin: 0; color: var(--tape); }
 
 /* closing strip */
-.close { background: var(--spool); color: var(--leader); border-top: 0; padding: 56px 0; }
-.closegrid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px 48px; align-items: center; }
-.close h2 { color: var(--leader); }
-.close .cta { margin-top: 24px; }
+.close { background: var(--record); color: var(--leader); border-top: 0; padding: 96px 0; }
+.closegrid { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 6fr); gap: 40px 64px; align-items: center; }
+.close h2 { color: var(--leader); font-size: clamp(34px, 4vw, 56px); }
+.close .cta { margin-top: 28px; }
 .close .btn-primary { background: var(--leader); color: var(--reel); border-color: var(--leader); }
-.close .btn-primary:hover { background: var(--playhead); border-color: var(--playhead); }
+.close .btn-primary:hover { background: var(--reel); color: var(--leader); border-color: var(--reel); }
 .close .btn-ghost { color: var(--leader); border-color: var(--leader); }
 .close .btn-ghost:hover { background: var(--leader); color: var(--reel); }
 .close pre.term { background: var(--reel); }
+
+/* entrances: only what site.js marked as below the fold starts low; everything else is visible with no script */
+.pre { opacity: 0; transform: translateY(24px); }
+.in { opacity: 1; transform: none; transition: opacity .8s var(--ease), transform .8s var(--ease); }
 
 /* docs */
 .docs { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 48px; align-items: start; }
@@ -183,17 +268,30 @@ details > p { padding-bottom: 18px; margin: 0; }
 .foot .note { justify-self: end; color: var(--playhead); }
 
 @media (max-width: 960px) {
-  .hero .wrap, .session, .steps, .cols, .plans, .docs, .cmdrow, .closegrid { grid-template-columns: minmax(0, 1fr); }
+  .hero .wrap, .session, .steps, .cols, .plans, .docs, .cmdrow, .closegrid, .head { grid-template-columns: minmax(0, 1fr); }
+  .steps li, .steps li + li { padding: 28px 0; border-left: 0; border-bottom: 1px solid var(--tape); }
+  .ledger li { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .head { margin-bottom: 40px; }
   .hero .wrap { gap: 40px; }
   .toc { position: static; flex-direction: row; flex-wrap: wrap; gap: 0 18px; border-top: 0; margin-bottom: 8px; }
   .toc a { min-height: 40px; padding: 0; border-bottom: 1px solid var(--rule); }
-  .sec { padding: 56px 0; }
+  .sec { padding: 80px 0; }
 }
 @media (max-width: 600px) {
   :root { --gutter: 16px; }
+  .hero h1 { font-size: 42px; }
+  .player { padding: 18px 14px 16px; }
+  .pl-files .f { font-size: 12.5px; padding: 7px 8px; }
+  .top { position: static; }
+  .top .wrap { gap: 4px 12px; }
+  .nav { font-size: 14.5px; }
+  .nav a { padding: 8px 7px; }
+  .nav a:last-child { margin-left: 0; border: 0; padding: 8px 7px; min-height: 44px; }
+  .nav a:last-child:hover { background: transparent; color: var(--reel); }
+  .sec { padding: 64px 0; }
+  .close { padding: 64px 0; }
   body { font-size: 16px; }
   .hero { padding: 40px 0 56px; }
-  .hero h1 { font-size: 36px; }
   .h1-small { font-size: 32px; }
   .lede, .hero .lede { font-size: 18px; }
   .eyebrow { white-space: normal; }
@@ -213,4 +311,73 @@ details > p { padding-bottom: 18px; margin: 0; }
   .foot .credit, .foot .note { justify-self: start; }
   .foot nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; margin-left: -10px; }
 }
-@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation: none !important; transition: none !important; } .pre { opacity: 1; transform: none; } }
+
+pre.term + pre.term { margin-top: 12px; }
+
+/* ---- alignment: hero promise sized so text and panel end together; heads share one baseline grid ---- */
+.hero h1 { font-size: clamp(44px, 5.2vw, 70px); max-width: 12.5ch; }
+.hero .wrap { align-items: center; }
+.hero-panel .facts { margin-top: 22px; }
+.head { align-items: end; }
+.head .lede { padding-bottom: 6px; }
+.session { margin-top: 8px; }
+
+/* ---- intro: hidden only while motion is pending; a failsafe shows it after 2.5 s regardless ---------- */
+.js-motion:not(.motion-ready) .hero h1, .js-motion:not(.motion-ready) .hero .eyebrow, .js-motion:not(.motion-ready) .hero .lede,
+.js-motion:not(.motion-ready) .hero .cta, .js-motion:not(.motion-ready) .hero-panel { opacity: 0; animation: failsafe 0s 2.5s forwards; }
+@keyframes failsafe { to { opacity: 1; } }
+.h1-line { padding-bottom: 0.06em; }
+.panel.lit pre.term .hit { animation: lit 1.4s var(--ease) both; }
+@keyframes lit { 0% { color: var(--leader); } 30% { color: var(--reel); background: var(--rewind); } 100% { color: var(--rewind); background: transparent; } }
+
+/* ---- the film: a full-bleed dark band; the picture grows into it as it scrolls up ----------------------- */
+.film { background: var(--reel); color: var(--leader); padding: 88px 0 64px; margin: 8px 0 72px; overflow: clip; }
+.film-frame { position: relative; max-width: 1280px; margin: 0 auto; overflow: hidden; background: var(--spool); transform-origin: 50% 0; will-change: transform; }
+.film-video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: var(--spool); cursor: pointer; }
+.film-play { position: absolute; inset: 0; margin: auto; width: max-content; height: max-content; display: flex; flex-direction: column; align-items: center; gap: 14px; background: transparent; border: 0; cursor: pointer; color: var(--leader); font-family: var(--mono); }
+.film-play-dot { width: 104px; height: 104px; border-radius: 50%; background: var(--record); display: grid; place-items: center; padding-left: 6px; position: relative; transition: transform .35s var(--ease), background-color .3s var(--ease); }
+.film-play-dot::after { content: ""; position: absolute; inset: -10px; border-radius: 50%; border: 2px solid var(--record); animation: ring 2.2s var(--ease) infinite; }
+.film-play:hover .film-play-dot { transform: scale(1.08); background: var(--reel); }
+.film-play-label { background: var(--reel); padding: 8px 14px; font-size: 15px; font-weight: 700; border-radius: 3px; }
+.film-len { background: var(--reel); color: var(--playhead); padding: 4px 10px; font-size: 12.5px; border-radius: 3px; margin-top: -8px; }
+.film.playing .film-play { opacity: 0; pointer-events: none; }
+.film.playing .film-play { transform: scale(.9); transition: opacity .4s var(--ease), transform .4s var(--ease); }
+@keyframes ring { 0% { transform: scale(.85); opacity: 1; } 100% { transform: scale(1.35); opacity: 0; } }
+.film-bar { display: flex; align-items: center; gap: 24px; margin-top: 26px; }
+.film-bar[hidden] { display: none; }
+.film-ruler { position: relative; flex: 1; height: 30px; border-bottom: 1px solid var(--tape); cursor: pointer; }
+.film-ruler:focus-visible { outline: 2px solid var(--rewind); outline-offset: 6px; }
+.film-fill { position: absolute; left: 0; bottom: -1px; height: 3px; width: 0; background: var(--rewind); }
+.ft { position: absolute; bottom: 0; width: 2px; height: 11px; margin-left: -1px; background: var(--tape); transition: height .2s var(--ease), background-color .2s var(--ease); }
+.ft.past { background: var(--leader); }
+.ft:hover { height: 22px; background: var(--rewind); }
+.film-time { font-family: var(--mono); font-size: 13px; color: var(--playhead); min-width: 9ch; text-align: right; }
+.film-cap { font-family: var(--display); font-weight: 700; font-size: clamp(22px, 2.6vw, 36px); letter-spacing: -0.02em; line-height: 1.2; color: var(--leader); min-height: 2.6em; margin: 28px auto 0; max-width: var(--col); }
+
+/* ---- the tape: scroll progress as a ruler across the top; red while the page rewinds ------------------- */
+.tape { position: fixed; left: 0; right: 0; top: 0; height: 3px; z-index: 50; pointer-events: none; }
+.tape-bar { position: absolute; inset: 0; background: var(--reel); transform-origin: 0 50%; transform: scaleX(0); transition: background-color .2s; }
+.tape.rew .tape-bar { background: var(--record); }
+.tape-tag { position: fixed; top: 14px; right: 18px; font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; background: var(--record); color: var(--leader); padding: 5px 10px; border-radius: 2px; opacity: 0; transform: translateY(-6px); transition: opacity .2s, transform .2s; }
+.tape.rew .tape-tag { opacity: 1; transform: none; }
+.rewinding .pl-files, .rewinding pre.term { filter: saturate(1.4); }
+
+/* ---- page to page: a wipe in the rewind direction (View Transitions; ignored where unsupported) -------- */
+@view-transition { navigation: auto; }
+::view-transition-old(root) { animation: vt-out .45s cubic-bezier(.7, 0, .84, 0) both; }
+::view-transition-new(root) { animation: vt-in .7s cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes vt-out { to { opacity: 0; transform: translateX(-4%); } }
+@keyframes vt-in { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+
+@media (max-width: 600px) {
+  .film { padding: 56px 0 40px; }
+  .film-play-dot { width: 72px; height: 72px; }
+  .film-cap { font-size: 20px; padding: 0 16px; }
+  .film-bar { gap: 12px; }
+  .hero h1 { font-size: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+  .film-play-dot::after { animation: none; }
+}

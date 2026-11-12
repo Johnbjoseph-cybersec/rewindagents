@@ -9,7 +9,7 @@ Nothing on the pages is typed from memory:
 - everything called planned on the pricing page is a phrase of brand/BRAND.md;
 - the only address the site knows is site_url in config.json. checkout_url is null until a Polar product exists.
 
-Static HTML, no scripts. Standard library only, so the fresh-clone gate and the Pages workflow need no toolchain.
+Static HTML that reads complete with scripts off; local scripts only animate it (CSP 'self'). Standard library only, so the fresh-clone gate and the Pages workflow need no toolchain.
 tests/test_site.py rebuilds the pages into a temp folder and fails if the committed files differ.
 
   python3 brand/site/build.py            -> writes the pages, manifest.json and assets/ (git-ignored) in brand/site/
@@ -192,6 +192,51 @@ def beat_rows(b, lit=True):
     return rows
 
 
+FILM = "vsl-90s"      # brand/<FILM>.mp4 is the film on the landing page; its captions are brand/vsl/<FILM>.srt
+
+
+def srt_cues(path):
+    """[(start_s, end_s, text)] from an .srt file (the film's captions, written by brand/vsl/build.py)."""
+    def secs(t):
+        h, m, rest = t.split(":")
+        s_, ms = rest.split(",")
+        return int(h) * 3600 + int(m) * 60 + int(s_) + int(ms) / 1000
+    cues = []
+    for block in re.split(r"\n\s*\n", read(*path.split("/")).strip()):
+        lines = block.strip().split("\n")
+        if len(lines) < 3:
+            continue
+        a, b = [x.strip() for x in lines[1].split("-->")]
+        cues.append((secs(a), secs(b), " ".join(x.strip() for x in lines[2:])))
+    return cues
+
+
+def vtt(cues):
+    def t(x):
+        return "%02d:%02d:%06.3f" % (x // 3600, x % 3600 // 60, x % 60)
+    return "WEBVTT\n\n" + "\n\n".join("%d\n%s --> %s\n%s" % (i, t(a), t(b), txt) for i, (a, b, txt) in enumerate(cues, 1)) + "\n"
+
+
+def film(cues):
+    """The 90-second film as a full-bleed band. Native controls without scripts; site.js swaps in the ruler:
+    one tick per caption line, so the progress bar is the film's own script."""
+    total = cues[-1][1]
+    length = "%d:%02d" % (round(total) // 60, round(total) % 60)
+    ticks = "".join('<span class="ft" style-pos="%.4f" data-t="%.2f" title="%s"></span>' % (a / total, a, e(txt))
+                    for a, _, txt in cues)
+    ticks = re.sub(r' style-pos="[^"]+"', "", ticks)   # positions are set by site.js from data-t; no inline style (CSP)
+    return """<div class="film" id="film" data-total="%(total).2f">
+<div class="film-frame">
+<video class="film-video" controls preload="none" playsinline poster="assets/film-poster.jpg" aria-label="The rewindagents film, %(len)s, with captions">
+<source src="assets/%(name)s.mp4" type="video/mp4">
+<track kind="captions" src="assets/%(name)s.vtt" srclang="en" label="English" default>
+</video>
+<button class="film-play" type="button" hidden><span class="film-play-dot" aria-hidden="true"><svg width="22" height="24" viewBox="0 0 22 24"><path d="M3 2l17 10L3 22z" fill="currentColor"/></svg></span><span class="film-play-label">Play the film</span><span class="film-len">%(len)s, sound on</span></button>
+</div>
+<div class="wrap film-bar" hidden><div class="film-ruler" role="slider" tabindex="0" aria-label="Film position" aria-valuemin="0" aria-valuemax="%(totali)d" aria-valuenow="0"><span class="film-fill"></span>%(ticks)s</div><span class="film-time">0:00 / %(len)s</span></div>
+</div>""" % {"total": total, "totali": round(total), "len": length, "name": FILM, "ticks": ticks}
+
+
 def ruler(at, n=7, w=84, h=18):
     """The brand motif as a small inline SVG: n short ticks on a rule, the playhead on tick `at` (1-based) in
     Record; ticks and rule after it in Rule grey (the rewound part). Decorative: aria-hidden."""
@@ -234,6 +279,8 @@ def page(cfg, path, title, description, body, current):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self'; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>%(title)s</title>
 <meta name="description" content="%(desc)s">
 <link rel="canonical" href="%(url)s">
@@ -249,6 +296,11 @@ def page(cfg, path, title, description, body, current):
 <link rel="icon" href="%(rel)sassets/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="%(rel)sassets/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="stylesheet" href="%(rel)ssite.css">
+<script src="%(rel)svendor/flag.js"></script>
+<script src="%(rel)svendor/gsap.min.js" defer></script>
+<script src="%(rel)svendor/ScrollTrigger.min.js" defer></script>
+<script src="%(rel)svendor/SplitText.min.js" defer></script>
+<script src="%(rel)ssite.js" defer></script>
 <script type="application/ld+json">%(ld)s</script>
 </head>
 <body>
@@ -263,7 +315,7 @@ def page(cfg, path, title, description, body, current):
 <a class="brand" href="%(rel)sindex.html" aria-label="%(name)s home"><img src="%(rel)sassets/logo-wordmark-reverse.svg" alt="%(name)s" width="%(wmr_w)d" height="26"></a>
 <span class="credit">%(credit)s</span>
 <nav aria-label="Footer"><a href="%(rel)sdocs/">Docs</a><a href="%(rel)spricing.html">Pricing</a><a href="%(repo)s">GitHub</a><a href="%(repo)s/blob/%(branch)s/LICENSE">%(licence)s licence</a></nav>
-<span class="note">This site is static: no scripts, no cookies, no analytics.</span>
+<span class="note">No cookies, no analytics, no trackers. Scripts are local and only animate; the page works without them.</span>
 </div></footer>
 </body>
 </html>
@@ -337,14 +389,15 @@ def index_html(cfg, f, hero, open_all=False):
 %(label)s
 <div class="head"><h2 id="h-demo">A wrecked repo, put back in one command.</h2>
 <p class="lede">An agent works in a small project for %(n)d steps. Steps %(s13)d and %(s14)d delete the tests and overwrite the config. <code>rewindagents rewind %(good)d</code> puts the files back the way they were right after step %(good)d. The first %(good)d steps stay.</p></div>
-<figure class="clip"><img src="assets/demo.gif" alt="A terminal: rewindagents replay lists %(n)d agent steps, the last two delete the tests and overwrite the config; git status shows the damage; rewindagents rewind %(good)d restores four files; git status shows the tests back" width="%(gw)d" height="%(gh)d" loading="lazy">
-<figcaption>%(secs)s seconds, %(frames)d frames, looping. Built from the real session, not drawn: <code>brand/demo/build.py</code> runs the steps through the hook in a temporary project and draws every frame from what the commands printed.</figcaption></figure>
+</div>
+%(film)s
+<div class="wrap">
 <div class="session">
 <div><p class="small">The session as text. First, every step the agent took.</p>%(left)s</div>
 <div><p class="small">Then the damage, the rewind, and the project after it.</p>%(right)s</div>
 </div>
 </div></section>
-""" % {"label": label(1, "The clip"), "n": n, "good": good, "s13": n - 1, "s14": n, "gw": f["gif"]["width"],
+""" % {"film": film(srt_cues("brand/vsl/%s.srt" % FILM)), "label": label(1, "The film"), "n": n, "good": good, "s13": n - 1, "s14": n, "gw": f["gif"]["width"],
        "gh": f["gif"]["height"], "secs": ("%.1f" % f["gif"]["seconds"]).rstrip("0").rstrip("."), "frames": f["gif"]["frames"],
        "left": panel(beat_rows(f["beats"][0], lit=False), "fill"), "right": panel(right, "fill")}
 
@@ -412,7 +465,7 @@ def index_html(cfg, f, hero, open_all=False):
 <div class="head"><h2 id="h-pricing">The tool is free. Cloud is planned.</h2>
 <p class="lede">Everything that exists is open source under %(licence)s. A paid tier may come later; nothing is sold before it exists.</p></div>
 %(plans)s
-<p class="small" style="margin-top:22px">Details on the <a href="pricing.html">pricing page</a>.</p>
+<p class="small more">Details on the <a href="pricing.html">pricing page</a>.</p>
 </div></section>
 """ % {"label": label(6, "Pricing"), "licence": LICENCE, "plans": plans(cfg, rel)}
 
@@ -611,7 +664,16 @@ def build(out=None, cfg=None, open_variant=False):
         shutil.copyfile(os.path.join(BRAND, name), os.path.join(assets, name))
     if os.path.abspath(out) != HERE:        # a build elsewhere needs the static files beside the pages too
         shutil.copyfile(os.path.join(HERE, "site.css"), os.path.join(out, "site.css"))
+        shutil.copyfile(os.path.join(HERE, "site.js"), os.path.join(out, "site.js"))
+        for d in ("vendor",):
+            shutil.copytree(os.path.join(HERE, d), os.path.join(out, d), dirs_exist_ok=True)
         shutil.copytree(os.path.join(HERE, "fonts"), os.path.join(out, "fonts"), dirs_exist_ok=True)
+    # the film: brand/vsl/<FILM>-web.mp4 and its poster are written by brand/vsl/narration.py (web export, voice
+    # included once the narration exists); the captions are the VSL's own .srt
+    shutil.copyfile(os.path.join(BRAND, "vsl", FILM + "-web.mp4"), os.path.join(assets, FILM + ".mp4"))
+    shutil.copyfile(os.path.join(BRAND, "vsl", FILM + "-poster.jpg"), os.path.join(assets, "film-poster.jpg"))
+    with open(os.path.join(assets, FILM + ".vtt"), "w", encoding="utf-8") as fh:
+        fh.write(vtt(srt_cues("brand/vsl/%s.srt" % FILM)))
     manifest = {"pages": sorted(p for p in pages if p in PAGES), "facts": {k: v for k, v in f.items() if k != "beats"},
                 "hero": [list(r) for r in hero], "assets": ASSETS, "credit": CREDIT, "promise": PROMISE,
                 "planned": [p for p, _ in PLANNED], "site_url_key": "site_url", "checkout": bool(cfg.get("checkout_url"))}

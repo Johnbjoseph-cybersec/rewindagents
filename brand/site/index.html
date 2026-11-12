@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self'; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>rewindagents: Ctrl+Z for AI coding agents: record, replay, rewind</title>
 <meta name="description" content="Open-source recorder for coding agents. Every tool call goes into a tamper-evident, hash-chained log and every file is saved before it changes. Replay a session step by step and rewind the working tree to any step. Hooks for Claude Code, Codex and Cursor.">
 <link rel="canonical" href="https://rewindagents.com/">
@@ -18,6 +20,11 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="stylesheet" href="site.css">
+<script src="vendor/flag.js"></script>
+<script src="vendor/gsap.min.js" defer></script>
+<script src="vendor/ScrollTrigger.min.js" defer></script>
+<script src="vendor/SplitText.min.js" defer></script>
+<script src="site.js" defer></script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "applicationCategory": "DeveloperApplication", "author": {"@type": "Person", "name": "John B Joseph"}, "codeRepository": "https://github.com/Johnbjoseph-cybersec/rewindagents", "description": "Open-source recorder for coding agents. Every tool call goes into a tamper-evident, hash-chained log and every file is saved before it changes. Replay a session step by step and rewind the working tree to any step. Hooks for Claude Code, Codex and Cursor.", "license": "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE", "name": "rewindagents", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "operatingSystem": "macOS, Linux", "softwareVersion": "0.0.7", "url": "https://rewindagents.com/"}</script>
 </head>
 <body>
@@ -54,11 +61,21 @@
 </div></section>
 
 <section class="sec" id="demo" aria-labelledby="h-demo"><div class="wrap">
-<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="2.0" height="1" fill="#121412"/><rect x="2.0" y="16" width="82.0" height="1" fill="#838C86"/><rect x="14.8" y="12" width="1" height="5" fill="#838C86"/><rect x="28.2" y="12" width="1" height="5" fill="#838C86"/><rect x="41.5" y="12" width="1" height="5" fill="#838C86"/><rect x="54.8" y="12" width="1" height="5" fill="#838C86"/><rect x="68.2" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M-1.0 1H5.0V4L3.0 6.5V17H1.0V6.5L-1.0 4Z" fill="#B82A16"/></svg><span class="n">01</span><span>The clip</span></p>
+<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="2.0" height="1" fill="#121412"/><rect x="2.0" y="16" width="82.0" height="1" fill="#838C86"/><rect x="14.8" y="12" width="1" height="5" fill="#838C86"/><rect x="28.2" y="12" width="1" height="5" fill="#838C86"/><rect x="41.5" y="12" width="1" height="5" fill="#838C86"/><rect x="54.8" y="12" width="1" height="5" fill="#838C86"/><rect x="68.2" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M-1.0 1H5.0V4L3.0 6.5V17H1.0V6.5L-1.0 4Z" fill="#B82A16"/></svg><span class="n">01</span><span>The film</span></p>
 <div class="head"><h2 id="h-demo">A wrecked repo, put back in one command.</h2>
 <p class="lede">An agent works in a small project for 14 steps. Steps 13 and 14 delete the tests and overwrite the config. <code>rewindagents rewind 12</code> puts the files back the way they were right after step 12. The first 12 steps stay.</p></div>
-<figure class="clip"><img src="assets/demo.gif" alt="A terminal: rewindagents replay lists 14 agent steps, the last two delete the tests and overwrite the config; git status shows the damage; rewindagents rewind 12 restores four files; git status shows the tests back" width="1200" height="675" loading="lazy">
-<figcaption>16.7 seconds, 66 frames, looping. Built from the real session, not drawn: <code>brand/demo/build.py</code> runs the steps through the hook in a temporary project and draws every frame from what the commands printed.</figcaption></figure>
+</div>
+<div class="film" id="film" data-total="89.50">
+<div class="film-frame">
+<video class="film-video" controls preload="none" playsinline poster="assets/film-poster.jpg" aria-label="The rewindagents film, 1:30, with captions">
+<source src="assets/vsl-90s.mp4" type="video/mp4">
+<track kind="captions" src="assets/vsl-90s.vtt" srclang="en" label="English" default>
+</video>
+<button class="film-play" type="button" hidden><span class="film-play-dot" aria-hidden="true"><svg width="22" height="24" viewBox="0 0 22 24"><path d="M3 2l17 10L3 22z" fill="currentColor"/></svg></span><span class="film-play-label">Play the film</span><span class="film-len">1:30, sound on</span></button>
+</div>
+<div class="wrap film-bar" hidden><div class="film-ruler" role="slider" tabindex="0" aria-label="Film position" aria-valuemin="0" aria-valuemax="90" aria-valuenow="0"><span class="film-fill"></span><span class="ft" data-t="0.00" title="Step thirteen. The agent deletes your tests."></span><span class="ft" data-t="3.00" title="Step fourteen. It overwrites the config."></span><span class="ft" data-t="6.00" title="Git status agrees. Two test files, gone."></span><span class="ft" data-t="9.50" title="There were three. The third was never committed. Git can&#x27;t return it."></span><span class="ft" data-t="14.50" title="But rewindagents recorded all fourteen steps."></span><span class="ft" data-t="17.50" title="Step twelve was the last good one."></span><span class="ft" data-t="20.50" title="So rewind to it."></span><span class="ft" data-t="22.50" title="Four files back: all three tests and the config."></span><span class="ft" data-t="26.50" title="And the rewind is step fifteen. You can undo the undo."></span><span class="ft" data-t="31.00" title="The first twelve steps stay. So does the new test."></span><span class="ft" data-t="35.00" title="Every tool call goes into a hash-chained log. Edit one record and verify names it."></span><span class="ft" data-t="41.00" title="Before every edit, the hook copies the file as it is."></span><span class="ft" data-t="45.50" title="Around every Bash command it saves first, scans after."></span><span class="ft" data-t="49.10" title="So step thirteen kept three copies."></span><span class="ft" data-t="51.50" title="rewindagents install adds the Claude Code hook. It has run in real sessions."></span><span class="ft" data-t="57.00" title="Codex and Cursor: built from the vendors&#x27; hook documentation, tested with the"></span><span class="ft" data-t="61.80" title="documented payloads. Not yet in a live session."></span><span class="ft" data-t="65.00" title="Files over twenty megabytes aren&#x27;t copied."></span><span class="ft" data-t="67.44" title="Over twenty thousand files, no scan, and rewind says so."></span><span class="ft" data-t="71.50" title="Export it as one HTML page. Find it later with sessions."></span><span class="ft" data-t="76.00" title="Apache-2.0, standard library only. Not on PyPI yet: install from the repository."></span><span class="ft" data-t="81.00" title="A paid Cloud tier is planned. Not built, not priced."></span><span class="ft" data-t="85.00" title="Your editor has had undo for decades. Now your agent does."></span></div><span class="film-time">0:00 / 1:30</span></div>
+</div>
+<div class="wrap">
 <div class="session">
 <div><p class="small">The session as text. First, every step the agent took.</p><pre class="term fill"><code><span class="l"><span class="c"># a coding agent has been working in this repo; rewindagents recorded every step</span></span>
 <span class="l"><span class="p">$ </span>rewindagents replay</span>
@@ -180,7 +197,7 @@
 <div class="head"><h2 id="h-pricing">The tool is free. Cloud is planned.</h2>
 <p class="lede">Everything that exists is open source under Apache-2.0. A paid tier may come later; nothing is sold before it exists.</p></div>
 <div class="plans"><section class="plan" aria-labelledby="plan-oss"><h3 id="plan-oss">Open source <span class="pill">Apache-2.0</span></h3><div class="price">Free</div><p class="pricenote">Everything the tool does today.</p><ul><li class="has"><span>The recorder and the Claude Code hook: every tool call in a hash-chained log, every file saved before it changes</span></li><li class="has"><span><code>replay</code>, <code>rewind</code> and <code>branch</code>, and <code>verify</code> against a pinned head</span></li><li class="has"><span><code>export</code>: one session as one HTML page, with the diff each step made</span></li><li class="has"><span><code>sessions</code>: every session in the log, and search by command or path</span></li><li class="has"><span>Runs on your machine. Standard library only. No account.</span></li></ul><a class="btn btn-primary" href="index.html#install">Install</a></section><section class="plan" aria-labelledby="plan-cloud"><h3 id="plan-cloud">Cloud <span class="pill pill-planned">planned</span></h3><div class="price">Not yet priced</div><p class="pricenote">Not for sale yet. No price has been set, so none is shown. If you want it, open the waitlist issue on GitHub and say what you would pay for.</p><ul><li class="planned"><span>Cloud sync of session history across your machines</span></li><li class="planned"><span>Shareable replay links: the export page, hosted, for a code review or a bug report</span></li><li class="planned"><span>Long retention of sessions</span></li><li class="planned"><span>Session search across all of them</span></li></ul><a class="btn btn-ghost" href="https://github.com/Johnbjoseph-cybersec/rewindagents/issues/new?title=Cloud+waitlist&amp;labels=waitlist&amp;body=I+would+use+a+paid+tier+for%3A">Join the waitlist</a></section></div>
-<p class="small" style="margin-top:22px">Details on the <a href="pricing.html">pricing page</a>.</p>
+<p class="small more">Details on the <a href="pricing.html">pricing page</a>.</p>
 </div></section>
 
 <section class="sec" id="faq" aria-labelledby="h-faq"><div class="wrap">
@@ -201,7 +218,7 @@
 <a class="brand" href="index.html" aria-label="rewindagents home"><img src="assets/logo-wordmark-reverse.svg" alt="rewindagents" width="186" height="26"></a>
 <span class="credit">made by John B Joseph</span>
 <nav aria-label="Footer"><a href="docs/">Docs</a><a href="pricing.html">Pricing</a><a href="https://github.com/Johnbjoseph-cybersec/rewindagents">GitHub</a><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE">Apache-2.0 licence</a></nav>
-<span class="note">This site is static: no scripts, no cookies, no analytics.</span>
+<span class="note">No cookies, no analytics, no trackers. Scripts are local and only animate; the page works without them.</span>
 </div></footer>
 </body>
 </html>
