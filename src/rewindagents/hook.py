@@ -186,7 +186,7 @@ def hook_command(agent: str = agents.DEFAULT) -> str:
     It names the interpreter by absolute path, so it works whether or not a virtualenv is active.
     From a clone (not installed) it carries the PYTHONPATH that makes the package importable.
     For every agent but Claude Code it carries `--agent`, so the hook reads their payload and answers their way.
-    For an agent where a non-zero exit blocks the call (agents.Agent.fail_closed: Copilot CLI's preToolUse) it
+    For an agent where a non-zero exit counts as a deny (agents.Agent.fail_closed: Copilot CLI's preToolUse) it
     ends in `|| true`, so not even a missing interpreter can turn into a block.
     """
     run = f"{shlex.quote(sys.executable)} -m rewindagents hook"

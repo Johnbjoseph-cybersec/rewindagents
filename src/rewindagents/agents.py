@@ -133,7 +133,7 @@ class Agent:
     file_tools: bool = False      # True when the pre payload names the file an edit tool will change
     entry: tuple = ()             # "cursor" shape: the documented keys of one entry before the command
     command_key: str = "command"  # "cursor" shape: the key that holds the command (Copilot: "bash")
-    fail_closed: bool = False     # a non-zero exit blocks the call: the command is written with `|| true`
+    fail_closed: bool = False     # a non-zero exit counts as a deny: the command is written with `|| true`
     prefer: str = ""              # a config file used in place of `settings` when it exists (Droid)
     flat: frozenset = frozenset()  # file names whose top level IS the hooks object (Droid's hooks.json)
     also_post: tuple = ()         # more events that end a call (a failed call): installed, and read as "post"
