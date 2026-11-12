@@ -44,12 +44,13 @@ If a real Codex or Cursor session sends a payload the hook does not expect, plea
 
 ## Gallery
 
-Five images, 1270 x 760 (Product Hunt's recommended size), in brand/launch/ph-1.png to ph-5.png. Not rendered
-yet: they are task RB5b, built from the recorded session and the logo set, and reviewed by an independent critic
-before launch.
+Five images, 1270 x 760 (Product Hunt's recommended size), in brand/launch/ph-1.png to ph-5.png, built by
+brand/launch/gallery.py from the recorded session, the README, the one-line promise in BRAND.md, this list and
+the logo set. An independent critic scores them in brand/launch/review.json; read the verdict there before
+uploading.
 
 1. The name, the tagline and the mark.
-2. `rewindagent replay`: the fourteen steps, the last two marked.
+2. `rewindagent replay`: the end of the fourteen steps, the last two marked; the first nine are folded into one tick each.
 3. `git status --short` after the wreck: the deleted tests.
 4. `rewindagent rewind 12`: four files restored, and the undo line.
 5. Install in two commands: pipx from the repository, then `rewindagent install` in the project.

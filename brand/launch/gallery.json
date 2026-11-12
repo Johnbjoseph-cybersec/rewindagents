@@ -1,5 +1,6 @@
 {
  "demo_beats_sha256": "b5808ab9335a0036bdce353850c5c7c1dd5fcb2569ec5d1b95da97250b7cca7b",
+ "ground": "Record",
  "height": 760,
  "note": "Written by brand/launch/gallery.py from brand/demo/manifest.json, README.md, BRAND.md's promise and producthunt.md's gallery list. Edit those, then rebuild; never edit this file or the PNGs.",
  "shots": [
@@ -10,31 +11,56 @@
    "promise": "Ctrl+Z for AI coding agents: record, replay, rewind.",
    "samples": [
     [
-     181,
-     199,
+     88,
+     232,
+     "Leader"
+    ],
+    [
+     196,
+     146,
+     "Leader"
+    ],
+    [
+     196,
+     318,
+     "Leader"
+    ],
+    [
+     304,
+     318,
+     "Leader"
+    ],
+    [
+     207,
+     232,
      "Record"
     ],
     [
      8,
      8,
-     "Leader"
+     "Record"
     ],
     [
      1262,
      752,
-     "Leader"
+     "Record"
     ]
    ],
-   "sha256": "881c7ae7a4691da22b4492c36330e8d3098bcddb31e895f920ca358a50ddeecf",
+   "sha256": "1741b00fba105f607a1e294cefb72d6b8002beb3b48094947ed2c886eaa06b15",
    "source": "BRAND.md promise"
   },
   {
    "beat": 0,
    "file": "ph-2.png",
    "headline": "A coding agent has been working in this repo",
-   "item": "`rewindagent replay`: the fourteen steps, the last two marked.",
+   "headline_lines": [
+    "A coding agent has been",
+    "working in this repo"
+   ],
+   "headline_px": 72,
+   "item": "`rewindagent replay`: the end of the fourteen steps, the last two marked; the first nine are folded into one tick each.",
    "kind": "term",
-   "mono_px": 23.5,
+   "mono_px": 37.0,
    "panels": [
     {
      "label": null,
@@ -46,60 +72,6 @@
        ],
        [
         "rewindagent replay",
-        "Leader"
-       ]
-      ],
-      [
-       [
-        "    1  Read          README.md",
-        "Leader"
-       ]
-      ],
-      [
-       [
-        "    2  Read          app/config.py",
-        "Leader"
-       ]
-      ],
-      [
-       [
-        "    3  Edit          app/config.py  [1 checkpointed]",
-        "Leader"
-       ]
-      ],
-      [
-       [
-        "    4  Read          app/server.py",
-        "Leader"
-       ]
-      ],
-      [
-       [
-        "    5  Edit          app/server.py  [1 checkpointed]",
-        "Leader"
-       ]
-      ],
-      [
-       [
-        "    6  Write         tests/test_timeout.py  [1 checkpointed]",
-        "Leader"
-       ]
-      ],
-      [
-       [
-        "    7  Bash          python3 -m unittest discover -s tests -t . -q",
-        "Leader"
-       ]
-      ],
-      [
-       [
-        "    8  Edit          app/server.py  [1 checkpointed]",
-        "Leader"
-       ]
-      ],
-      [
-       [
-        "    9  Bash          python3 -m unittest discover -s tests -t . -q",
         "Leader"
        ]
       ],
@@ -133,40 +105,51 @@
         "Rewind"
        ]
       ]
-     ]
+     ],
+     "skipped": 9
     }
    ],
    "samples": [
     [
-     54,
-     120,
+     4,
+     460,
      "Spool"
     ],
     [
-     1216,
-     662,
+     1266,
+     460,
      "Spool"
+    ],
+    [
+     102,
+     348,
+     "Rule"
     ],
     [
      8,
      8,
-     "Leader"
+     "Record"
     ],
     [
      1262,
      752,
-     "Leader"
+     "Record"
     ]
    ],
-   "sha256": "be8aa16ac213cfcd63cbb7c887ed528db822e3c71834d0ddaefc239039a56133"
+   "sha256": "52367d26db9b3ca810629a79921cb55c460189be48c6af0523147ed3a424adbe"
   },
   {
    "beat": 1,
    "file": "ph-3.png",
    "headline": "Its last two steps deleted the tests",
+   "headline_lines": [
+    "Its last two steps",
+    "deleted the tests"
+   ],
+   "headline_px": 72,
    "item": "`git status --short` after the wreck: the deleted tests.",
    "kind": "term",
-   "mono_px": 23.5,
+   "mono_px": 40,
    "panels": [
     {
      "label": null,
@@ -211,40 +194,46 @@
         "Rewind"
        ]
       ]
-     ]
+     ],
+     "skipped": 0
     }
    ],
    "samples": [
     [
-     54,
-     120,
+     4,
+     459,
      "Spool"
     ],
     [
-     1216,
-     662,
+     1266,
+     459,
      "Spool"
     ],
     [
      8,
      8,
-     "Leader"
+     "Record"
     ],
     [
      1262,
      752,
-     "Leader"
+     "Record"
     ]
    ],
-   "sha256": "e3247c88fad19df96a38911f17f3411da8028144992d00f1e77bf8662b1ee0a2"
+   "sha256": "78f740c61d348305ebd9ead13f60ff8c8fb6be1b7b300a13cb3ac9baedba84e3"
   },
   {
    "beat": 2,
    "file": "ph-4.png",
    "headline": "Put the files back the way they were right after step 12",
+   "headline_lines": [
+    "Put the files back the way",
+    "they were right after step 12"
+   ],
+   "headline_px": 72,
    "item": "`rewindagent rewind 12`: four files restored, and the undo line.",
    "kind": "term",
-   "mono_px": 23.5,
+   "mono_px": 25.0,
    "panels": [
     {
      "label": null,
@@ -268,66 +257,71 @@
       [
        [
         "  restore  tests/test_config.py",
-        "Rewind"
+        "Leader"
        ]
       ],
       [
        [
         "  restore  tests/test_server.py",
-        "Rewind"
+        "Leader"
        ]
       ],
       [
        [
         "  restore  tests/test_timeout.py",
-        "Rewind"
+        "Leader"
        ]
       ],
       [
        [
         "  restore  app/config.py",
-        "Rewind"
+        "Leader"
        ]
       ],
       [
        [
         "  this rewind is step 15; undo it with: rewindagent rewind 14 --session demo",
-        "Leader"
+        "Rewind"
        ]
       ]
-     ]
+     ],
+     "skipped": 0
     }
    ],
    "samples": [
     [
-     54,
-     120,
+     4,
+     458,
      "Spool"
     ],
     [
-     1216,
-     662,
+     1266,
+     458,
      "Spool"
     ],
     [
      8,
      8,
-     "Leader"
+     "Record"
     ],
     [
      1262,
      752,
-     "Leader"
+     "Record"
     ]
    ],
-   "sha256": "b33c54fa10873f16bd75802127834edc6fb62a0508f92db5e3779953d4db39e0"
+   "sha256": "62d666380e2d1f185ac6c985b989e9da99cb792dc280213350021b3446ca3749"
   },
   {
    "file": "ph-5.png",
    "headline": "Install in two commands",
+   "headline_lines": [
+    "Install in two commands"
+   ],
+   "headline_px": 72,
    "item": "Install in two commands: pipx from the repository, then `rewindagent install` in the project.",
    "kind": "term",
-   "mono_px": 23.5,
+   "mono_px": 27.5,
    "notes": [
     "Not on PyPI yet.",
     "No dependencies beyond the standard library."
@@ -346,7 +340,8 @@
         "Leader"
        ]
       ]
-     ]
+     ],
+     "skipped": 0
     },
     {
      "label": "In the project",
@@ -358,49 +353,46 @@
        ],
        [
         "rewindagent install",
-        "Leader"
-       ],
-       [
-        "  # adds the hook to .claude/settings.json in this project",
-        "Playhead"
+        "Rewind"
        ]
       ]
-     ]
+     ],
+     "skipped": 0
     }
    ],
    "samples": [
     [
-     54,
-     164,
+     4,
+     305,
      "Spool"
     ],
     [
-     1216,
-     223,
+     1266,
+     305,
      "Spool"
     ],
     [
-     54,
-     319,
+     4,
+     497,
      "Spool"
     ],
     [
-     1216,
-     379,
+     1266,
+     497,
      "Spool"
     ],
     [
      8,
      8,
-     "Leader"
+     "Record"
     ],
     [
      1262,
      752,
-     "Leader"
+     "Record"
     ]
    ],
-   "sha256": "0522455f9f4efd622e172665fdfa84bf928f6fa51b7030608e586cae1389b1b5"
+   "sha256": "9f0e06be1566b6c44e903649deb9c2e0c8800e64ad98bb58bf8a1489dadeb085"
   }
  ],
  "width": 1270

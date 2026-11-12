@@ -87,25 +87,50 @@ class TestGallery(unittest.TestCase):
                          hashlib.sha256(json.dumps(self.demo["beats"], sort_keys=True).encode("utf-8")).hexdigest(),
                          "brand/demo/manifest.json changed after the gallery was built: run brand/launch/gallery.py")
 
-    def test_terminal_shots_show_a_whole_beat_of_the_session(self):
+    def test_terminal_shots_show_the_end_of_a_beat_and_fold_the_rest_visibly(self):
         want = {"ph-2.png": "rewindagent replay", "ph-3.png": "git status --short", "ph-4.png": "rewindagent rewind 12"}
         for name, cmd in want.items():
             s = self.shots[name]
             beat = self.demo["beats"][s["beat"]]
             self.assertEqual(beat["command"], cmd, name)
-            rows = s["panels"][0]["rows"]
+            p = s["panels"][0]
+            rows = p["rows"]
             self.assertEqual(rows[0], [["$ ", "Playhead"], [cmd, "Leader"]], name)
-            self.assertEqual([text_of(r) for r in rows[1:]], beat["output"].rstrip("\n").split("\n"),
-                             "%s must show everything the command printed, nothing cut or added" % name)
+            out = beat["output"].rstrip("\n").split("\n")
+            self.assertEqual([text_of(r) for r in rows[1:]], out[p["skipped"]:],
+                             "%s must show the printed lines whole and in order, from the fold to the end" % name)
+            for i in beat.get("accent_rows", []):
+                self.assertGreaterEqual(i, p["skipped"], "%s folds away a marked line" % name)
             caption = beat["caption"][2:]
             caption = caption[0].upper() + caption[1:]
             self.assertTrue(caption.startswith(s["headline"]), "%s: the headline is the start of the beat's comment"
                             % name)
             self.assertGreaterEqual(len(s["headline"].split()), 5, name)
-        mono = {s["mono_px"] for s in self.g["shots"] if "mono_px" in s}
-        self.assertEqual(len(mono), 1, "one terminal size across the set (review round 1)")
+        # only the replay list is folded, and the fold is the steps before 10 (one tick each, drawn by gallery.py)
+        p2 = self.shots["ph-2.png"]["panels"][0]
+        self.assertEqual(p2["skipped"], 9)
+        self.assertTrue(text_of(p2["rows"][1]).strip().startswith("10 "))
+        self.assertIn("first nine are folded", self.shots["ph-2.png"]["item"])
+        self.assertEqual([self.shots[n]["panels"][0]["skipped"] for n in ("ph-3.png", "ph-4.png")], [0, 0])
+        self.assertEqual(sum(1 for x, y, c in self.shots["ph-2.png"]["samples"] if c == "Rule"), 1)
         # the wreck is the git status right after the session, not the one after the rewind
         self.assertLess(self.shots["ph-3.png"]["beat"], self.shots["ph-4.png"]["beat"])
+
+    def test_big_headline_and_enlarged_terminal(self):
+        """John's brief (2026-11-12): one big headline readable at thumbnail size, the terminal enlarged."""
+        for s in self.g["shots"]:
+            if s["kind"] != "term":
+                continue
+            self.assertGreaterEqual(s["headline_px"], 64, s["file"])
+            self.assertGreaterEqual(s["mono_px"], 24, s["file"])
+
+    def test_no_paper_white_ground(self):
+        """John's brief: strong brand colour, no paper-white slides. Every corner is Record red."""
+        self.assertEqual(self.g["ground"], "Record")
+        for s in self.g["shots"]:
+            path = os.path.join(LAUNCH, s["file"])
+            for x, y in ((2, 2), (1267, 2), (2, 757), (1267, 757)):
+                self.assertEqual(pixel(path, x, y), PALETTE["Record"].upper(), "%s at %d,%d" % (s["file"], x, y))
 
     def test_rewind_marks_the_block_the_gallery_list_names(self):
         def accented(name):
@@ -113,12 +138,17 @@ class TestGallery(unittest.TestCase):
 
         self.assertEqual([re.split(r"\s+", t.strip())[0] for t in accented("ph-2.png")], ["13", "14"])
         self.assertEqual(accented("ph-3.png"), [" D tests/test_config.py", " D tests/test_server.py"])
-        restored = accented("ph-4.png")
+        # ph-4 lights the undo line (gallery item 4 names it); the four restored files are the headline's
+        lit = accented("ph-4.png")
+        self.assertEqual(len(lit), 1)
+        self.assertIn("undo it with: rewindagent rewind 14", lit[0])
+        restored = [text_of(r) for r in self.shots["ph-4.png"]["panels"][0]["rows"] if text_of(r).startswith("  restore  ")]
         self.assertEqual(len(restored), 4)
-        self.assertTrue(all(t.startswith("  restore  ") for t in restored), restored)
-        for name in ("ph-1.png", "ph-5.png"):
-            for p in self.shots[name].get("panels", []):
-                self.assertFalse([r for r in p["rows"] if any(c == "Rewind" for _, c in r)], name)
+        self.assertIn("four files restored, and the undo line", self.shots["ph-4.png"]["item"])
+        # ph-5's one focal point is the project's own command; ph-1 has no terminal
+        lit5 = [t for p in self.shots["ph-5.png"]["panels"] for r in p["rows"] for t, c in r if c == "Rewind"]
+        self.assertEqual(lit5, ["rewindagent install"])
+        self.assertNotIn("panels", self.shots["ph-1.png"])
 
     def test_one_accent_block_per_image(self):
         for s in self.g["shots"]:
