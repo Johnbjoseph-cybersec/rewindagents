@@ -175,8 +175,14 @@
 <span class="l"><span class="p">$ </span>rewindagents replay --step 12</span>
 <span class="l"><span class="c"># what would change</span></span>
 <span class="l"><span class="p">$ </span>rewindagents rewind 12 --dry-run</span>
+<span class="l"><span class="c"># the same files, as a unified diff: now -&gt; step 12</span></span>
+<span class="l"><span class="p">$ </span>rewindagents diff 12</span>
+<span class="l"><span class="c"># only that file (a directory means every file under it)</span></span>
+<span class="l"><span class="p">$ </span>rewindagents diff 12 src/db.py</span>
 <span class="l"><span class="c"># files back to how they were right after step 12</span></span>
 <span class="l"><span class="p">$ </span>rewindagents rewind 12</span>
+<span class="l"><span class="c"># put back only these</span></span>
+<span class="l"><span class="p">$ </span>rewindagents rewind 12 --only src/db.py --only tests/</span>
 <span class="l"><span class="c"># keep the current files, then rewind to step 12</span></span>
 <span class="l"><span class="p">$ </span>rewindagents branch 12 --name try2</span></code></pre></div>
 <div class="cmdrow"><div><h3>Export a replay</h3><p>One HTML file with every step, its input and result, and for every file a step touched, the change that step made as a unified diff. Inline CSS only, no scripts, nothing fetched, the project&#x27;s path not in the page. A file over 256 KB is described, not diffed; a diff longer than 400 lines is cut, with the count left out.</p></div><pre class="term"><code><span class="l"><span class="c"># writes .rewindagents/replay-&lt;session&gt;.html</span></span>

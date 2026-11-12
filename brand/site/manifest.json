@@ -102,7 +102,10 @@
     "rewindagents replay              # one line per step: number, tool, file or command",
     "rewindagents replay --step 12    # step 12 in full: input, checkpoints, result",
     "rewindagents rewind 12 --dry-run # what would change",
+    "rewindagents diff 12             # the same files, as a unified diff: now -> step 12",
+    "rewindagents diff 12 src/db.py   # only that file (a directory means every file under it)",
     "rewindagents rewind 12           # files back to how they were right after step 12",
+    "rewindagents rewind 12 --only src/db.py --only tests/   # put back only these",
     "rewindagents branch 12 --name try2   # keep the current files, then rewind to step 12"
    ],
    "sessions": [

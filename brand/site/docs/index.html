@@ -123,8 +123,14 @@
 <span class="l"><span class="p">$ </span>rewindagents replay --step 12</span>
 <span class="l"><span class="c"># what would change</span></span>
 <span class="l"><span class="p">$ </span>rewindagents rewind 12 --dry-run</span>
+<span class="l"><span class="c"># the same files, as a unified diff: now -&gt; step 12</span></span>
+<span class="l"><span class="p">$ </span>rewindagents diff 12</span>
+<span class="l"><span class="c"># only that file (a directory means every file under it)</span></span>
+<span class="l"><span class="p">$ </span>rewindagents diff 12 src/db.py</span>
 <span class="l"><span class="c"># files back to how they were right after step 12</span></span>
 <span class="l"><span class="p">$ </span>rewindagents rewind 12</span>
+<span class="l"><span class="c"># put back only these</span></span>
+<span class="l"><span class="p">$ </span>rewindagents rewind 12 --only src/db.py --only tests/</span>
 <span class="l"><span class="c"># keep the current files, then rewind to step 12</span></span>
 <span class="l"><span class="p">$ </span>rewindagents branch 12 --name try2</span></code></pre>
 <p><code>replay</code> prints one line per step: number, tool, file or command, and how many files the step checkpointed. <code>replay --step N</code> shows one step in full. <code>rewind N</code> puts back every file that a step after N changed and deletes the files those steps created; <code>rewind 0</code> undoes the whole session. Before writing anything it checks the hash chain and the SHA-256 of every stored copy: if the chain is broken it changes nothing, and a copy that no longer matches is reported and left as it is.</p>
