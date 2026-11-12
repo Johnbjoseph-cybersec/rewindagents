@@ -602,3 +602,23 @@ main > section, .foot, #demo > .wrap { transition: opacity .6s var(--ease); }
 .trio pre.term { margin-top: auto; font-size: 12.5px; }
 kbd { font-family: var(--mono); font-size: 12px; border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 3px; padding: 1px 6px; color: var(--reel); }
 @media (max-width: 960px) { .trio { grid-template-columns: minmax(0, 1fr); } }
+
+/* ==== review round 4 (cs-iris-kapoor, 8.66) ==== */
+/* 1. the three timeline columns share a top line for each row (heading, text, panel) */
+.trio { grid-template-rows: auto auto 1fr; }
+.trio > div { display: grid; grid-template-rows: subgrid; grid-row: span 3; row-gap: 0; }
+.trio pre.term { margin-top: 0; align-self: stretch; }
+@media (max-width: 960px) { .trio > div { display: flex; flex-direction: column; grid-row: auto; } .trio pre.term { margin-top: 0; } }
+/* 2. tokens stay whole */
+.nb { white-space: nowrap; }
+.trio pre.term .l { overflow-wrap: break-word; }
+/* 4. even band under the film ruler */
+.film-bar { margin-top: 40px; }
+.film { padding-bottom: 48px; }
+/* 5. the long session line wraps on desktop instead of being cut */
+@media (min-width: 601px) { .session pre.term .l { white-space: pre-wrap; overflow-wrap: anywhere; padding-left: 2ch; text-indent: -2ch; } }
+/* 3. whole commands on a phone */
+@media (max-width: 600px) {
+  .trio pre.term .l { white-space: pre-wrap; overflow-wrap: anywhere; padding-left: 2ch; text-indent: -2ch; }
+  .film { padding-bottom: 40px; }
+}

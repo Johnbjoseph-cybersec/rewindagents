@@ -150,7 +150,13 @@ def nowrap_urls(text):
     def url(w):
         pieces = re.split(r"(?<=/)(?!/)", w)
         return "<wbr>".join('<span class="nb">%s</span>' % e(p) for p in pieces if p)
-    return " ".join(url(w) if "://" in w else e(w) for w in text.split(" "))
+    def word(w):
+        if "://" in w:
+            return url(w)
+        if "-" in w.strip("-") and len(w) > 2:         # your-project, --session-id: never split at the hyphen
+            return '<span class="nb">%s</span>' % e(w)
+        return e(w)
+    return " ".join(word(w) for w in text.split(" "))
 
 
 def term(rows):
