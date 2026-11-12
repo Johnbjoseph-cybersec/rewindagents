@@ -113,29 +113,41 @@ class TestLogo(unittest.TestCase):
             self.assertEqual(shapes(name), base, name)
 
     def test_rewound_steps_are_drawn_after_the_playhead(self):
-        # The concept: everything right of the playhead is the rewound part (grey rule, grey ticks); the ticks
-        # are short and equal at an even pitch, and the playhead is the only tall element.
+        # The concept (RB2d pick B): a headless playhead bar crossing a thin ruler. Everything right of the bar
+        # is the rewound part (grey rule, grey ticks). Ticks are thin, at an even pitch each side, with the same
+        # gap to the bar on both sides; the taller tick is only at the two outer ends; the bar is the only tall
+        # element.
         root = ET.parse(os.path.join(BRAND, "logo-mark.svg")).getroot()
         rects = [el.attrib for el in root.iter(NS + "rect")]
-        head = next(el for el in root.iter(NS + "path")).attrib["d"]
-        xs = [float(v) for v in re.findall(r"[MHL](-?[\d.]+)", head)]
-        ys = [float(v) for v in re.findall(r"(?:[ML]-?[\d.]+ |V)(-?[\d.]+)", head)]
-        bar_x = (min(xs) + max(xs)) / 2
+        bar = next(el for el in root.iter(NS + "path")).attrib["d"]
+        xs = [float(v) for v in re.findall(r"[MH](-?[\d.]+)", bar)]
+        ys = [float(v) for v in re.findall(r"(?:M-?[\d.]+ |V)(-?[\d.]+)", bar)]
+        lo, hi = min(xs), max(xs)
         ink, grey = PALETTE["Reel"].upper(), PALETTE["Rule"].upper()
         ticks = sorted((r for r in rects if float(r["height"]) > float(r["width"])), key=lambda r: float(r["x"]))
-        self.assertGreaterEqual(len(ticks), 5)
-        self.assertEqual(len({(r["height"], r["y"], r["width"]) for r in ticks}), 1, "ticks differ")
-        centres = [float(r["x"]) + float(r["width"]) / 2 for r in ticks]
-        pitches = {round(b - a, 3) for a, b in zip(centres, centres[1:]) if not a < bar_x < b}
-        self.assertEqual(len(pitches), 1, pitches)
-        for r in ticks:
-            self.assertEqual(r["fill"].upper(), ink if float(r["x"]) < bar_x else grey, r)
         rules = [r for r in rects if float(r["width"]) > float(r["height"])]
-        visible_tick = float(rules[0]["y"]) - float(ticks[0]["y"])   # ticks overlap the rule; count what shows
-        self.assertGreater(visible_tick, 0)
-        self.assertGreater(max(ys) - min(ys), 3 * visible_tick)
-        self.assertEqual({r["fill"].upper() for r in rules if float(r["x"]) < bar_x}, {ink})
-        self.assertEqual({r["fill"].upper() for r in rules if float(r["x"]) >= bar_x}, {grey})
+        left = [r for r in ticks if float(r["x"]) < lo]
+        right = [r for r in ticks if float(r["x"]) >= hi]
+        self.assertEqual(len(left) + len(right), len(ticks), "a tick under the bar")
+        self.assertEqual(len(left), len(right))
+        self.assertGreaterEqual(len(left), 3)
+        self.assertEqual({r["width"] for r in ticks}, {"0.5"}, "ticks are thin")
+        self.assertEqual(round(lo - (float(left[-1]["x"]) + 0.5), 3), round(float(right[0]["x"]) - hi, 3),
+                         "gaps to the bar differ")
+        for side in (left, right):
+            pitches = {round(float(b["x"]) - float(a["x"]), 3) for a, b in zip(side, side[1:])}
+            self.assertEqual(len(pitches), 1, pitches)
+        heights = [float(r["height"]) for r in ticks]
+        tall = max(heights)
+        self.assertEqual([i for i, h in enumerate(heights) if h == tall], [0, len(ticks) - 1], heights)
+        self.assertEqual(len(set(heights)), 2, heights)
+        rule_top = min(float(r["y"]) for r in rules)
+        for r in ticks:
+            self.assertEqual(float(r["y"]) + float(r["height"]), rule_top, "tick not standing on the rule")
+            self.assertEqual(r["fill"].upper(), ink if float(r["x"]) < lo else grey, r)
+        self.assertGreater(max(ys) - min(ys), 2.5 * tall)
+        self.assertEqual({r["fill"].upper() for r in rules if float(r["x"]) < lo}, {ink})
+        self.assertEqual({r["fill"].upper() for r in rules if float(r["x"]) >= hi}, {grey})
 
     def test_png_pixels_match_brand_md(self):
         # Palette fidelity is measured, not eyeballed: build.py records where each colour must appear.

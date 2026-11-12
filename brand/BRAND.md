@@ -123,19 +123,19 @@ mark at true 16, 32 and 64 px, and brand/logo/in-use.png (browser tab, README he
 page, avatar in circle crops): the reviewer reads the mark where it will be seen, not alone.
 
 - Mark: a timeline playhead on a step ruler, scrubbed back, on a 16-unit grid (half units allowed; sharp
-  from 32 px). Seven short, equal ticks (1 unit wide, 2.5 above the rule) at a 2-unit pitch on a half-unit
-  rule: x 1, 3, 5, 7 recorded in ink, then the playhead at x 9, then x 11, 13, 15 rewound in Rule grey, with
-  the rule grey after the playhead too, like the unplayed end of a scrubber. The playhead is the only tall
-  element: an editor's handle in Record (a flat-topped pentagon 4 wide, 2 flat and 1.5 taper) on a 1-unit
-  line that ends flush with the rule bottom, no neck between head and line. Ticks overlap the rule so no
-  seam renders where they meet. In the mono version the ruler and playhead alone carry the idea.
-- Changes from the brief below: the small left-pointing flag was dropped (bar plus flag read as the digit 1)
-  and the playhead is one tick behind the last recorded step rather than one tick before the end; three
-  rewound ticks read as "scrubbed back" where one grey tick needed explaining.
+  from 32 px). The playhead is a flat Record bar with no head, 2 units wide (x 7 to 9) and the mark's full
+  height (y 3.5 to 12.5), crossing a 1-unit rule at y 9.5. Thin ticks (half a unit wide) stand on the rule,
+  symmetric about the bar with a 1-unit gap each side: x 1.5, 3.5, 5.5 recorded in ink, x 10, 12, 14 rewound
+  in Rule grey, with the rule grey after the bar too, like the unplayed end of a scrubber. The outer tick of
+  each side is 3 units tall, the others 1.5, so the ruler has end marks and does not read as a bar chart. The
+  bar is the only tall element. In the mono version the ruler and bar alone carry the idea.
+- Concept history: six polish rounds on an editor-style head (a pentagon on a line) went 7.71 to 8.50 and
+  kept reading as a funnel or tee; RB2d built three concepts (brand/logo/candidates/) and the independent
+  reviewer picked this one, the headless bar, from the in-use sheet (brand/logo/candidates/pick.json).
 - favicon.svg / favicon-32.png are a separate drawing on whole pixels so nothing is anti-aliased at 16 px:
-  1 px ticks at a 2 px pitch (three each side) on a 1 px rule, a 2 px playhead line with a flat-topped
-  stepped head (two rows of 6 px, one of 4 px), and the rewound rule and ticks in Tape. The same drawing,
-  scaled by whole pixels, serves 64 px tiles and the 20 px avatar crop.
+  the same layout mirrored, a 2 px bar (x 7 to 9, y 3 to 14), a 1 px rule at y 10, 1 px ticks at x 1, 3, 5
+  and 10, 12, 14 (4 px at the two outer ends, 2 px otherwise), and the rewound rule and ticks in Tape. The
+  same drawing, scaled by whole pixels, serves 64 px tiles and the 20 px avatar crop.
 - Files: logo-mark.svg (light), logo-mark-reverse.svg (dark), logo-mark-mono.svg (currentColor),
   logo-wordmark.svg / -reverse / -mono (horizontal), favicon.svg + favicon-32.png, avatar-512.png,
   logo-light.png and logo-dark.png (1024, stacked: the mark 544 px over a 760 px name), social-preview-1280x640.png
@@ -143,7 +143,7 @@ page, avatar in circle crops): the reviewer reads the mark where it will be seen
   on the headline-to-command block).
 - Wordmark: Bricolage Grotesque 800, tracking -0.02 em, no kerning table applied. In the horizontal lockup
   one grid unit is the "d" ascender height over 8.5, so the playhead rises a little above the ascenders, and
-  the text baseline is the bottom of the rule and of the playhead.
+  the text baseline is the bottom of the playhead bar.
 - Palette fidelity is measured, not eyeballed: build.py records sample points (pixel, expected palette name)
   for every PNG in brand/logo/manifest.json; `python3 brand/logo/pngsample.py` prints the sampled hex next to
   the BRAND.md hex, and tests/test_logo.py fails on any mismatch.

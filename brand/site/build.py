@@ -253,14 +253,14 @@ def page(cfg, path, title, description, body, current):
 </head>
 <body>
 <header class="top"><div class="wrap">
-<a class="brand" href="%(rel)sindex.html" aria-label="%(name)s home"><img src="%(rel)sassets/logo-wordmark.svg" alt="%(name)s" width="206" height="30"></a>
+<a class="brand" href="%(rel)sindex.html" aria-label="%(name)s home"><img src="%(rel)sassets/logo-wordmark.svg" alt="%(name)s" width="%(wm_w)d" height="30"></a>
 <nav class="nav" aria-label="Site">%(nav)s</nav>
 </div></header>
 <main>
 %(body)s
 </main>
 <footer class="foot"><div class="wrap">
-<a class="brand" href="%(rel)sindex.html" aria-label="%(name)s home"><img src="%(rel)sassets/logo-wordmark-reverse.svg" alt="%(name)s" width="178" height="26"></a>
+<a class="brand" href="%(rel)sindex.html" aria-label="%(name)s home"><img src="%(rel)sassets/logo-wordmark-reverse.svg" alt="%(name)s" width="%(wmr_w)d" height="26"></a>
 <span class="credit">%(credit)s</span>
 <nav aria-label="Footer"><a href="%(rel)sdocs/">Docs</a><a href="%(rel)spricing.html">Pricing</a><a href="%(repo)s">GitHub</a><a href="%(repo)s/blob/%(branch)s/LICENSE">%(licence)s licence</a></nav>
 <span class="note">This site is static: no scripts, no cookies, no analytics.</span>
@@ -269,7 +269,15 @@ def page(cfg, path, title, description, body, current):
 </html>
 """ % {"title": e(title), "desc": e(description), "url": e(url), "site": e(cfg["site_url"]), "name": NAME, "rel": rel,
        "nav": nav, "body": body, "credit": CREDIT, "licence": LICENCE, "repo": e(cfg["repo_url"]),
-       "branch": e(cfg["branch"]), "ld": json.dumps(ld, sort_keys=True)}
+       "branch": e(cfg["branch"]), "ld": json.dumps(ld, sort_keys=True),
+       "wm_w": svg_width("logo-wordmark.svg", 30), "wmr_w": svg_width("logo-wordmark-reverse.svg", 26)}
+
+
+def svg_width(name, height):
+    """Display width of a brand/ SVG at `height` px, from its viewBox, so a logo change never stretches it."""
+    with open(os.path.join(BRAND, name), encoding="utf-8") as f:
+        _, _, w, h = (float(v) for v in re.search(r'viewBox="([^"]+)"', f.read()).group(1).split())
+    return round(w * height / h)
 
 
 # ---- pages ------------------------------------------------------------------------------------------------

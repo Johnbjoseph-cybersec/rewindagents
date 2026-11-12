@@ -1,10 +1,11 @@
-"""Build the rewindagent logo set as SVG (task RB2; round 4 is RB2c). render.mjs turns the SVGs into PNGs.
+"""Build the rewindagent logo set as SVG (task RB2; round 4 is RB2c; concept B picked in RB2d, see
+brand/logo/candidates/pick.json). render.mjs turns the SVGs into PNGs.
 
-The mark is a timeline playhead on a step ruler, scrubbed back, drawn on a 16-unit grid: seven short, equal
-ticks at an even pitch on a hairline rule, and a red playhead (a triangle head joined to a thin line, as audio
-and video editors draw it) standing on the ruler as its only tall element. Everything after the playhead is the
-rewound part: the rule and the ticks turn grey, like the unplayed part of a scrubber. The mark uses half units
-(sharp from 32 px up); favicon_shapes is a separate drawing on whole units for 16 px.
+The mark is a playhead on a step ruler, scrubbed back, drawn on a 16-unit grid: a heavy red bar with no head
+crossing a thin ruler, as editors draw the playhead through a timeline. Thin ticks stand on the rule, three
+each side, with a taller tick at each outer end. Everything after the bar is the rewound part: the rule and
+the ticks turn grey, like the unplayed part of a scrubber. The mark uses half units (sharp from 32 px up);
+favicon_shapes is a separate drawing on whole units for 16 px.
 
 Text is outlined from the OFL font files, so every SVG renders the same with no fonts installed.
 Usage: .venv/bin/python brand/logo/build.py <fonts-dir>
@@ -52,44 +53,50 @@ def rect(x, y, w, h, fill):
     return '<rect x="%s" y="%s" width="%s" height="%s" fill="%s"/>' % (g(x), g(y), g(w), g(h), fill)
 
 
-# The playhead: an editor-style handle (flat-topped pentagon, 4 wide, 2 flat + 1.5 taper) on a 1-wide line,
-# centre x 9, ending flush with the rule bottom. No neck between head and line.
-PLAYHEAD = "M7 3.5H11V5.5L9.5 7V12.5H8.5V7L7 5.5Z"
-TICK_H = 3.0            # short ticks from y 9.5, overlapping the half-unit rule (no seams)
+# The playhead (RB2d concept B): no head, a flat 1.5-unit bar x 7..8.5 crossing the ruler, the mark's full height.
+BAR_X0, BAR_X1 = 7, 8.5
+PLAYHEAD = "M7 3.5H8.5V12.5H7Z"
+RULE_Y, RULE_H = 9.5, 0.5         # the rule is as thick as a tick is wide; ticks stand on its top edge
+MINOR_H, MAJOR_H = 1.5, 3.0       # the taller tick marks each outer end of the ruler
+LEFT_TICKS, RIGHT_TICKS = (1.5, 3.5, 5.5), (9.5, 11.5, 13.5)   # half-unit ticks, a 1-unit gap to the bar each side
+LOCKUP_SCALE = 1.4                # the mark in the horizontal lockup, relative to one unit = ascender / 8.5
 
 
 def mark_shapes(t, mono=None):
-    """The mark on its 16x16 grid, for 32 px and up: a timeline playhead (an editor's handle on a thin line)
-    standing on a step ruler of seven short, equal ticks at a 2-unit pitch (x 1, 3, 5, 7 recorded; 11, 13, 15
-    rewound) on a half-unit rule. The playhead is the only tall element. Returns SVG elements (no wrapper)."""
+    """The mark on its 16x16 grid, for 32 px and up: a playhead bar crossing a thin step ruler, symmetric about
+    the bar. Three half-unit ticks each side, the outer one of each side taller; ink before the bar (recorded),
+    grey after it (rewound), rule and ticks alike. The bar is the only tall element. Returns SVG elements."""
     ink = mono or t["ink"]
     undone = mono or t["undone"]
     head = mono or t["head"]
-    parts = [rect(0, 12, 9, 0.5, ink), rect(9, 12, 7, 0.5, undone)]      # rule: recorded, then rewound
-    parts += [rect(x - 0.5, 9.5, 1, TICK_H, ink) for x in (1, 3, 5, 7)]
-    parts += [rect(x - 0.5, 9.5, 1, TICK_H, undone) for x in (11, 13, 15)]
+    parts = [rect(0, RULE_Y, BAR_X0, RULE_H, ink),                         # rule split at the bar
+             rect(BAR_X1, RULE_Y, 16 - BAR_X1, RULE_H, undone)]
+    for x in LEFT_TICKS + RIGHT_TICKS:
+        h = MAJOR_H if x in (LEFT_TICKS[0], RIGHT_TICKS[-1]) else MINOR_H
+        parts.append(rect(x, RULE_Y - h, 0.5, h, ink if x < BAR_X0 else undone))
     parts.append('<path d="%s" fill="%s"/>' % (PLAYHEAD, head))
     return "".join(parts)
 
 
 MARK_SAMPLES = [  # (grid x, grid y, theme key) of solid areas, for pixel sampling
-    (9, 9, "head"), (1, 11, "ink"), (15, 11, "undone"), (4, 12.25, "ink"), (12, 12.25, "undone")]
+    (7.75, 6, "head"), (1.75, 8, "ink"), (13.75, 8, "undone"), (4, 9.75, "ink"), (12, 9.75, "undone")]
 
 
 def favicon_shapes(t):
-    """A separate drawing for 16 px, whole units only so nothing is anti-aliased: the same ruler with 1 px
-    ticks at a 2 px pitch (three each side) on a 1 px rule, a 2 px playhead line with a flat-topped stepped
-    head (two rows of 6 px, one of 4 px), and the rewound rule and ticks in the secondary text colour (Tape
-    on Leader holds 5.9:1 at 1 px). Also used, scaled by whole pixels, at 64 px and in the 20 px avatar crop."""
-    head = "M5 3H11V5H10V6H9V13H7V6H6V5H5Z"
-    parts = [rect(0, 12, 8, 1, t["ink"]), rect(8, 12, 8, 1, t["sub"])]
-    parts += [rect(x, 9, 1, 4, t["ink"]) for x in (1, 3, 5)]
-    parts += [rect(x, 9, 1, 4, t["sub"]) for x in (11, 13, 15)]
-    parts.append('<path d="%s" fill="%s"/>' % (head, t["head"]))
+    """A separate drawing for 16 px, whole units only so nothing is anti-aliased: the same layout mirrored on
+    whole pixels, a 2 px bar x 7..9 from y 3 to 14, a 1 px rule at y 10, 1 px ticks at x 1, 3, 5 and 10, 12,
+    14 (4 px at the two outer ends, 2 px otherwise), and the rewound rule and ticks in the secondary text
+    colour (Tape on Leader holds 5.9:1 at 1 px). Also used, scaled by whole pixels, at 64 px and in the 20 px
+    avatar crop."""
+    parts = [rect(0, 10, 7, 1, t["ink"]), rect(9, 10, 7, 1, t["sub"])]
+    for x in (1, 3, 5, 10, 12, 14):
+        h = 4 if x in (1, 14) else 2
+        parts.append(rect(x, 10 - h, 1, h, t["ink"] if x < 7 else t["sub"]))
+    parts.append('<path d="M7 3H9V14H7Z" fill="%s"/>' % t["head"])
     return "".join(parts)
 
 
-FAVICON_SAMPLES = [(8, 9, "head"), (1.5, 10.5, "ink"), (15.5, 10.5, "sub"), (6, 12.5, "ink"), (12, 12.5, "sub")]
+FAVICON_SAMPLES = [(8, 5, "head"), (1.5, 7.5, "ink"), (14.5, 7.5, "sub"), (4.5, 10.5, "ink"), (11.5, 10.5, "sub")]
 
 
 def svg(w, h, body, bg=None, title="rewindagent"):
@@ -152,10 +159,10 @@ class Face:
 
 
 def wordmark(face, t, mono=None):
-    """Mark + 'rewindagent'. One grid unit is the 'd' ascender height over 8.5, so the playhead (9 units tall)
-    rises a little above the ascenders; the text baseline is the bottom of the rule and of the playhead."""
+    """Mark + 'rewindagent'. One grid unit is LOCKUP_SCALE times the 'd' ascender height over 8.5, so the mark
+    holds its weight beside the 800 letters; the text baseline is the bottom of the playhead bar."""
     size = 100.0
-    k = face.bounds("d", size)[3] / 8.5
+    k = LOCKUP_SCALE * face.bounds("d", size)[3] / 8.5
     pad = 8.0
     mark_w = 16 * k
     base_y = pad + (MARK_BOTTOM - MARK_TOP) * k
@@ -273,7 +280,9 @@ def build(fonts):
     tag1, _ = body.outline(head + ":", 46, 96, 268)
     tag2, _ = body.outline(tail, 46, 96, 326)
     cmd, cw = mono.outline("$ " + COMMAND, 30, 122, 420)
-    cred, _ = body.outline(CREDIT, 24, 96, 560)
+    # the credit sits as far below the command box (bottom edge 444) as the box sits below the tagline
+    gap = 375.5 - (326 + body.descent("p", 46))
+    cred, _ = body.outline(CREDIT, 24, 96, 444 + gap + body.bounds("d", 24)[3])
     k = 448 / 16
     name_top = 176 - disp.bounds("d", nsize)[3]
     x, top = 1184 - 448, (name_top + 443) / 2 - MARK_H * k / 2   # centred on the headline-to-command block

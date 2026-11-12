@@ -1,0 +1,34 @@
+{
+  "reviewer": "cs-iris-kapoor",
+  "date": "2026-11-12",
+  "task": "RB2d",
+  "first_glance": {
+    "A": {
+      "tab_16px": "A tiny red T-shaped pin over a comb of ticks; the red is a smudge with a stick, the ruler is lost.",
+      "readme_header": "A red funnel or golf tee standing on a short comb, small next to the heavy wordmark.",
+      "avatar_96": "A red wine glass or tee on a ruler; the grey ticks are faint and the whole mark is thin.",
+      "avatar_20": "A red blob on a grey dash; the stem has gone and nothing says playhead."
+    },
+    "B": {
+      "tab_16px": "A clear red vertical bar crossing a fine ruler; the biggest, firmest read of the three and still a ruler.",
+      "readme_header": "A red bar through a small ruler, like a text cursor on a scale; it holds its own beside the wordmark.",
+      "avatar_96": "A fat red bar with ticks either side; reads as a scrubber or a bar chart with one red bar, bold and calm.",
+      "avatar_20": "A red bar with specks either side; still a recognisable red bar through a line."
+    },
+    "C": {
+      "tab_16px": "A red square with a stick on top and ticks beside it, like a candle or a small flag on a base.",
+      "readme_header": "A red candle or lollipop sitting on a comb; the square is the heaviest thing and the ruler looks like feet.",
+      "avatar_96": "A candlestick or chess pawn on a ruler; the thumb idea is not obvious, and the ticks look like bar chart columns.",
+      "avatar_20": "A red block with a spike and some dots; reads as a plant or a chart blip."
+    }
+  },
+  "pick": "B",
+  "why": "B is the only one that survives the places the mark is actually seen. At 16 px and 20 px it is still a red bar through a line with ticks either side, while A loses its stem and head to a red smudge and C turns into a candle or pawn. A is the one the six rounds were stuck on: the tapered head reads as a funnel, wine glass or tee at every size above 20 px, and removing the neck did not change that. C fixes the funnel but adds a heavy square that outweighs the ruler and reads as a candlestick. B removes the object that kept being misread, and a playhead is a bar through a ruler in every editor, so the idea is carried by the geometry and not by a head. Its risk is that it reads as a text cursor or one red bar of a bar chart. The fixes below address that by making the ruler read as a ruler (equal gaps, mirrored major ticks, a heavier rule) rather than adding a head back.",
+  "polish_for_pick": [
+    "Make the mark symmetric about the bar: set the left ticks at x 1.5, 3.5, 5.5 and the right ticks at x 10, 12, 14 (half-unit ticks, 1 unit gap to the 2-unit bar x 7 to 9 on both sides); today the left gap is 2.5 and the right gap is 2, which looks like an accident.",
+    "Put the taller 3-unit tick at the outer end of each side (x 1.5 and x 14) and keep the other four at 1.5 units, so the ruler reads as a ruler with end marks and not as a bar chart of uneven columns.",
+    "Thicken the rule to 1 unit (y 9.5 to 10.5, ticks standing on its top edge at 9.5) so the mark carries weight beside the 800 wordmark in the lockup; the ink to Rule-grey split stays exactly at the bar edges, x 7 and x 9.",
+    "Mirror the same layout in the 16 px drawing: ticks at x 1, 3, 5 and 10, 12, 14, a 4 px tick at x 1 and x 14 and 2 px ticks at x 3, 5, 10 and 12, bar x 7 to 9 and y 3 to 14 unchanged, so the favicon and the large mark are one design.",
+    "Keep the bar a flat Record rectangle (Rewind on dark) with no cap, notch or chamfer, and keep it 2 units wide (2 px in the 16 px drawing) so the favicon bar stays two full pixels."
+  ]
+}
