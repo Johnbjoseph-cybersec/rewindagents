@@ -1,0 +1,18 @@
+{
+ "task": "RB2f",
+ "reviewer": "cs-iris-kapoor",
+ "date": "2026-11-12",
+ "sheet": "brand/logo/round2-concepts/sheet.png",
+ "sheet_sha256": "a8d10c9ba4a85332629594fe8002bede812bcdaab10834cb5590bfd9a0cb43c9",
+ "rounds": 1,
+ "decides": "John",
+ "concepts": [
+  {"key": "A", "name": "Counter-clock", "first_reading": "A thick undo or restore arrow curling anticlockwise round a red dot; reads as 'undo' or 'restore from backup' at once, with a record-button feel from the red dot.", "rows": {"concept": 7, "distinctiveness": 4, "small_size": 5, "lockup": 7, "versatility": 8}, "score": 6.2, "risks": ["Sits very close to the generic undo, history and restore icons used across many apps, so it is easy to mistake for a stock UI glyph.", "At 16 px the arrowhead and the red dot merge into a dark blob and the gap in the ring nearly closes, as the tab render shows.", "Says rewind but nothing about coding or agents; the label is doing the work."]},
+  {"key": "B", "name": "Skip-back r", "first_reading": "The media skip-back button: a bar and a red left-pointing triangle. The lowercase r is not seen at a glance.", "rows": {"concept": 5, "distinctiveness": 3, "small_size": 9, "lockup": 7, "versatility": 8}, "score": 6.4, "risks": ["Reads as the stock skip-to-start media control, not as an r, so the clever letter idea is lost and the mark is generic.", "Says rewind or playback but carries no hint of code, agents or file state.", "Hard-edged and static next to a rounded wordmark; sits like a player toolbar button rather than a brand."]},
+  {"key": "C", "name": "Loop track", "first_reading": "A black ring on a line with a red ball beside it; looks like a bubble level, a magnifier or a roller-coaster loop, with no clear meaning.", "rows": {"concept": 4, "distinctiveness": 6, "small_size": 3, "lockup": 5, "versatility": 6}, "score": 4.8, "risks": ["The track-looping-over-itself idea is not legible; a stranger reads a ring plus a stray dot, or a magnifier or search glyph.", "At 16 px and 20 px the red dot and the track thin to specks and the loop reads as a plain ring; it fails the small-size test.", "The red dot hangs off the lower left and makes the mark lopsided in the lockup, and its optical weight does not match the wordmark."]},
+  {"key": "D", "name": "Snapshot stack", "first_reading": "Three overlapping rounded cards, front one red: a copy, layers or windows icon.", "rows": {"concept": 4, "distinctiveness": 3, "small_size": 4, "lockup": 6, "versatility": 7}, "score": 4.8, "risks": ["Reads as the generic duplicate, copy or layers icon, which is everywhere in editors and design tools.", "Nothing in it says time, rewind or agents; checkpoints are only implied by the label.", "At 16 px the outlined back cards fuse into a smudge and only the red block survives."]},
+  {"key": "E", "name": "Reverse prompt", "first_reading": "A bold '<' with a red underscore: a back chevron plus a terminal cursor, so a command line going back.", "rows": {"concept": 7, "distinctiveness": 6, "small_size": 8, "lockup": 8, "versatility": 9}, "score": 7.6, "risks": ["The '<' alone can read as a plain back or previous chevron, or a code bracket; the red underscore is what carries the terminal meaning.", "Replay and record are not shown; it says rewind plus shell, not step-by-step history.", "Very simple geometry, so another tool using a chevron and a cursor could look similar."]}
+ ],
+ "strongest": "E",
+ "strongest_why": "It is the only mark that says terminal and going back in two shapes, it holds up at 16 px and 20 px, and it sits cleanly beside the wordmark on light, dark and red."
+}
