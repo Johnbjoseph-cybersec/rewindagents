@@ -187,6 +187,30 @@ are recorded but not scanned.
   after one. Cline, OpenCode and Amp hooks are JavaScript/TypeScript plugins, not commands. Roo Code, Zed,
   Warp and Replit document no tool hooks.
 
+## Timeline UI
+
+```sh
+rewindagents ui                      # opens the timeline in your browser; Ctrl+C stops it
+rewindagents ui --session abc --no-open --port 8765
+```
+
+A local page over the log. Sessions on the left. In the middle, the session as a timeline: each step's
+number, tool, agent, file or command, time, the files it changed with +/- line counts, its checkpoints,
+rewind steps, and the steps a later rewind undid. Click a step, or move with `j` / `k`, to see each file's
+diff and the step's input and result (`d` hides or shows the diffs).
+
+- **Preview rewind to here** shows the files `rewind N` would put back or delete, each as a diff from now,
+  using the same plan as `diff N`. It changes nothing.
+- **Rewind to here** (or `r`) asks first, then runs the same rewind as `rewindagents rewind N`: the hash
+  chain is checked, the rewind is recorded as a new step, and an Undo button rewinds it back.
+  **Rewind just this file** does the same as `rewind N --only PATH`.
+- It listens on 127.0.0.1 only, on a free port unless you pass `--port`. The link it prints carries a
+  random token made for this run; every request without it gets a 403, and so does any request whose
+  Host header is not 127.0.0.1 or localhost on that port. Rewinds are POST only and must come from the
+  page itself. No fonts, scripts or images are fetched from anywhere, so it works offline.
+- Diffs are cut as `export` cuts them (400 lines per file, files over 256 KB described). An input or
+  result longer than 20,000 characters is cut on the page, with the count left out.
+
 ## Replay, rewind, branch
 
 Run these from the project directory (the one holding `.rewindagents/`). They work on the latest session

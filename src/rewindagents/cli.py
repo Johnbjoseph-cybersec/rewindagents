@@ -87,8 +87,16 @@ def main(argv: list[str] | None = None) -> int:
     g.add_argument("--drop-pending-older-than", type=float, metavar="DAYS",
                    help="first remove pending scans older than DAYS (at least 1): a command whose after-scan "
                         "never ran (agent killed, crash); its step then rewinds as unscanned")
+    ui_p = sub.add_parser("ui", help="open the timeline in your browser: every step, its diffs, rewind from any step "
+                                     "(127.0.0.1 only, one-time link)")
+    ui_p.add_argument("--session", help="session to show first (default: the latest)")
+    ui_p.add_argument("--port", type=int, default=0, help="port on 127.0.0.1 (default: a free one)")
+    ui_p.add_argument("--no-open", action="store_true", help="print the link, do not open a browser")
 
     a = ap.parse_args(argv)
+    if a.cmd == "ui":
+        from . import ui
+        return ui.run(a.log, a.session, a.port, open_browser=not a.no_open)
     if a.cmd == "hook":
         return hook.run(agent=a.agent)
     if a.cmd == "install":
