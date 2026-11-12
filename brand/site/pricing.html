@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Pricing: rewindagents</title>
 <meta name="description" content="rewindagents is free under Apache-2.0. A Cloud tier is planned and not yet priced; the waitlist is a GitHub issue.">
 <link rel="canonical" href="https://rewindagents.com/pricing.html">
@@ -18,6 +20,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="stylesheet" href="site.css">
+<script src="site.js" defer></script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "applicationCategory": "DeveloperApplication", "author": {"@type": "Person", "name": "John B Joseph"}, "codeRepository": "https://github.com/Johnbjoseph-cybersec/rewindagents", "description": "rewindagents is free under Apache-2.0. A Cloud tier is planned and not yet priced; the waitlist is a GitHub issue.", "license": "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE", "name": "rewindagents", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "operatingSystem": "macOS, Linux", "softwareVersion": "0.0.7", "url": "https://rewindagents.com/pricing.html"}</script>
 </head>
 <body>
@@ -29,7 +32,7 @@
 
 <section class="sec first" aria-labelledby="h1"><div class="wrap">
 <p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="2.0" height="1" fill="#121412"/><rect x="2.0" y="16" width="82.0" height="1" fill="#838C86"/><rect x="14.8" y="12" width="1" height="5" fill="#838C86"/><rect x="28.2" y="12" width="1" height="5" fill="#838C86"/><rect x="41.5" y="12" width="1" height="5" fill="#838C86"/><rect x="54.8" y="12" width="1" height="5" fill="#838C86"/><rect x="68.2" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M-1.0 1H5.0V4L3.0 6.5V17H1.0V6.5L-1.0 4Z" fill="#B82A16"/></svg><span class="n">01</span><span>Pricing</span></p>
-<div class="head"><h1 id="h1" class="h1-small">The tool is free. Cloud is planned.</h1>
+<div class="head" data-reveal><h1 id="h1" class="h1-small">The tool is free. Cloud is planned.</h1>
 <p class="lede">What exists is open source. What is planned has no price and is not for sale.</p></div>
 <div class="plans"><section class="plan" aria-labelledby="plan-oss"><h3 id="plan-oss">Open source <span class="pill">Apache-2.0</span></h3><div class="price">Free</div><p class="pricenote">Everything the tool does today.</p><ul><li class="has"><span>The recorder and the Claude Code hook: every tool call in a hash-chained log, every file saved before it changes</span></li><li class="has"><span><code>replay</code>, <code>rewind</code> and <code>branch</code>, and <code>verify</code> against a pinned head</span></li><li class="has"><span><code>export</code>: one session as one HTML page, with the diff each step made</span></li><li class="has"><span><code>sessions</code>: every session in the log, and search by command or path</span></li><li class="has"><span>Runs on your machine. Standard library only. No account.</span></li></ul><a class="btn btn-primary" href="index.html#install">Install</a></section><section class="plan" aria-labelledby="plan-cloud"><h3 id="plan-cloud">Cloud <span class="pill pill-planned">planned</span></h3><div class="price">Not yet priced</div><p class="pricenote">Not for sale yet. No price has been set, so none is shown. If you want it, open the waitlist issue on GitHub and say what you would pay for.</p><ul><li class="planned"><span>Cloud sync of session history across your machines</span></li><li class="planned"><span>Shareable replay links: the export page, hosted, for a code review or a bug report</span></li><li class="planned"><span>Long retention of sessions</span></li><li class="planned"><span>Session search across all of them</span></li></ul><a class="btn btn-ghost" href="https://github.com/Johnbjoseph-cybersec/rewindagents/issues/new?title=Cloud+waitlist&amp;labels=waitlist&amp;body=I+would+use+a+paid+tier+for%3A">Join the waitlist</a></section></div>
 </div></section>
@@ -44,7 +47,7 @@
 <a class="brand" href="index.html" aria-label="rewindagents home"><img src="assets/logo-wordmark-reverse.svg" alt="rewindagents" width="186" height="26"></a>
 <span class="credit">made by John B Joseph</span>
 <nav aria-label="Footer"><a href="docs/">Docs</a><a href="pricing.html">Pricing</a><a href="https://github.com/Johnbjoseph-cybersec/rewindagents">GitHub</a><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE">Apache-2.0 licence</a></nav>
-<span class="note">This site is static: no scripts, no cookies, no analytics.</span>
+<span class="note">No cookies, no analytics, no trackers. One local script, and the page works without it.</span>
 </div></footer>
 </body>
 </html>
