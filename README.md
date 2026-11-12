@@ -1,5 +1,10 @@
 # rewindagent
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="brand/logo-wordmark-reverse.svg">
+  <img src="brand/logo-wordmark.svg" alt="rewindagent" height="40">
+</picture>
+
 Ctrl+Z for AI coding agents: record, replay and rewind. Every tool call your coding agent makes goes into a
 tamper-evident, hash-chained log you can verify later.
 

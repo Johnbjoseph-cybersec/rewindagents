@@ -115,26 +115,24 @@ All free, open-licensed, self-hostable.
 Use: sentence case headings, left aligned, tight tracking on display only. Hashes and step numbers always in
 mono, tabular. Not used: Poppins, Plus Jakarta Sans, Inter, Space Grotesk, any serif.
 
-## Logo (RB2, round 4 = RB2c)
+## Logo (concept E "Reverse prompt", John's pick 2026-11-12; polished in RB2g)
 
 Built by brand/logo/build.py (geometry + text outlined from the OFL font files) and rendered by
 brand/logo/render.mjs (resvg). Look at brand/logo/contact-sheet.png: every asset, the 16 px drawing and the
 mark at true 16, 32 and 64 px, and brand/logo/in-use.png (browser tab, README header on a light and a dark
 page, avatar in circle crops): the reviewer reads the mark where it will be seen, not alone.
 
-- Mark: a timeline playhead on a step ruler, scrubbed back, on a 16-unit grid (half units allowed; sharp
-  from 32 px). The playhead is a flat Record bar with no head, 2 units wide (x 7 to 9) and the mark's full
-  height (y 3.5 to 12.5), crossing a 1-unit rule at y 9.5. Thin ticks (half a unit wide) stand on the rule,
-  symmetric about the bar with a 1-unit gap each side: x 1.5, 3.5, 5.5 recorded in ink, x 10, 12, 14 rewound
-  in Rule grey, with the rule grey after the bar too, like the unplayed end of a scrubber. The outer tick of
-  each side is 3 units tall, the others 1.5, so the ruler has end marks and does not read as a bar chart. The
-  bar is the only tall element. In the mono version the ruler and bar alone carry the idea.
-- Concept history: six polish rounds on an editor-style head (a pentagon on a line) went 7.71 to 8.50 and
-  kept reading as a funnel or tee; RB2d built three concepts (brand/logo/candidates/) and the independent
-  reviewer picked this one, the headless bar, from the in-use sheet (brand/logo/candidates/pick.json).
-- favicon.svg / favicon-32.png are a separate drawing on whole pixels so nothing is anti-aliased at 16 px:
-  the same layout mirrored, a 2 px bar (x 7 to 9, y 3 to 14), a 1 px rule at y 10, 1 px ticks at x 1, 3, 5
-  and 10, 12, 14 (4 px at the two outer ends, 2 px otherwise), and the rewound rule and ticks in Tape. The
+- Mark: a terminal prompt turned round, on a 16-unit grid: a '<' in ink and a block cursor in the accent
+  (Record on light, Rewind on dark). The agent's shell, going back. The '<' is one polygon: 45-degree arms 3
+  units wide measured across (2.1 thick), the point at (1, 8), ends cut flat at y 3 and y 13 so it sits
+  between two lines like a glyph. The cursor is 5 x 2 units at x 10, on the same bottom line, 1 unit clear of
+  the lower arm. In the mono version (title bars) the '<' and the cursor share one colour.
+- Concept history: the tape-ruler marks (an editor-style head, then a headless bar on a ruler, RB2 to RB2d)
+  were rejected by John on 2026-11-12. RB2f drew five new directions (brand/logo/round2-concepts/); John
+  picked E. The step ruler stays a motif of the site and the videos, not of the logo.
+- favicon.svg / favicon-32.png are the mark point-sampled at pixel centres (a quarter pixel right, so a
+  45-degree edge through a centre falls on one side): whole pixels, no anti-aliasing, an even 3 px staircase
+  for the '<' and a 5 x 2 px cursor. tests/test_logo.py re-samples the mark and compares every pixel. The
   same drawing, scaled by whole pixels, serves 64 px tiles and the 20 px avatar crop.
 - Files: logo-mark.svg (light), logo-mark-reverse.svg (dark), logo-mark-mono.svg (currentColor),
   logo-wordmark.svg / -reverse / -mono (horizontal), favicon.svg + favicon-32.png, avatar-512.png,
@@ -142,8 +140,8 @@ page, avatar in circle crops): the reviewer reads the mark where it will be seen
   (name, tagline, one real command in an outlined block, the credit, the mark at 448 px on the right, centred
   on the headline-to-command block).
 - Wordmark: Bricolage Grotesque 800, tracking -0.02 em, no kerning table applied. In the horizontal lockup
-  one grid unit is the "d" ascender height over 8.5, so the playhead rises a little above the ascenders, and
-  the text baseline is the bottom of the playhead bar.
+  the '<' is 1.2 "d" ascender heights tall, and the text baseline is the bottom line the '<' and the cursor
+  share, so the mark reads as the first characters typed on the name's line.
 - Palette fidelity is measured, not eyeballed: build.py records sample points (pixel, expected palette name)
   for every PNG in brand/logo/manifest.json; `python3 brand/logo/pngsample.py` prints the sampled hex next to
   the BRAND.md hex, and tests/test_logo.py fails on any mismatch.
@@ -226,7 +224,7 @@ person at a time; there is no mailing list). None is posted while the launch is 
   brand/launch/gallery-sheet.png, then each image; the independent review is brand/launch/review.json and
   tests/test_gallery.py fails if an image changes after it.
 
-## Logo direction brief (from RB1)
+## Logo direction brief (from RB1; superseded for the logo on 2026-11-12, see Logo above)
 
 Concept: a **playhead on a step ruler**. A single vertical line (the playhead) crossing a row of evenly spaced
 tick marks, with the line sitting one tick behind the last one. It reads as both a tape counter and a

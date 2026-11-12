@@ -57,13 +57,13 @@
  ],
  "mp4": "launch-demo.mp4",
  "mp4_facts": {
-  "bytes": 564592,
+  "bytes": 564204,
   "faststart": true,
   "fps": 25.0,
   "frames": 490,
   "height": 1080,
   "seconds": 19.6,
-  "sha256": "ab46490fe6eb125950763b75457c7825739ee6d29e0e0604751b9d329ed4e0a6",
+  "sha256": "bcb906a5c88594f56073abc8dd1bfaf52dff1603634fbc143557c74b24c3d8b6",
   "video_codec": "avc1",
   "video_seconds": 19.6,
   "width": 1920

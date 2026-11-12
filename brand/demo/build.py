@@ -140,7 +140,7 @@ def chrome(logo, disp, small):
     tagline and the credit."""
     panel = '<rect x="%d" y="%d" width="%d" height="%d" fill="%s"/>' % (PX, PY, PW, PH, C["Spool"])
     rule = '<rect x="%d" y="%d" width="%d" height="1" fill="%s"/>' % (PX, PY + TITLE_H - 1, PW, C["Rule"])
-    k = 2.2                                                  # the mark: 9 grid rows tall = 19.8 px
+    k = 19.8 / logo.MARK_H                                   # the mark: 19.8 px tall
     mark = logo.place(logo.mark_shapes(logo.THEMES["dark"], mono=C["Leader"]), PX + 24, PY + 12, k)
     nsize = 19.0
     asc = disp.bounds("d", nsize)[3]

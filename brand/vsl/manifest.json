@@ -112,7 +112,7 @@
    "mp4_facts": {
     "audio_codec": "mp4a",
     "audio_seconds": 13.521,
-    "bytes": 588800,
+    "bytes": 589443,
     "channels": 2,
     "faststart": true,
     "fps": 30.0,
@@ -120,7 +120,7 @@
     "height": 1920,
     "sample_rate": 48000,
     "seconds": 13.5,
-    "sha256": "fa5c2a2d6bfd2934183a04fda75e36b8424e9a9f75c5892843392af9a8a2fe75",
+    "sha256": "96600acd1f5f0f5926a359a89065aa55d8d5b0cc89df292865e741c1146c0070",
     "video_codec": "avc1",
     "video_seconds": 13.5,
     "width": 1080
@@ -291,7 +291,7 @@
    "mp4_facts": {
     "audio_codec": "mp4a",
     "audio_seconds": 29.021,
-    "bytes": 1186111,
+    "bytes": 1186655,
     "channels": 2,
     "faststart": true,
     "fps": 30.0,
@@ -299,7 +299,7 @@
     "height": 1080,
     "sample_rate": 48000,
     "seconds": 29.0,
-    "sha256": "d4b4ddb5bc56dd55fe3525016777d9ab79ca6efa2f3b60741b1dbbcc04713dc3",
+    "sha256": "49c3a4b828fd255cfa5b3e89425c860e724e2737775285c15760e21400173cbe",
     "video_codec": "avc1",
     "video_seconds": 29.0,
     "width": 1920
@@ -677,7 +677,7 @@
    "mp4_facts": {
     "audio_codec": "mp4a",
     "audio_seconds": 89.521,
-    "bytes": 3353384,
+    "bytes": 3354239,
     "channels": 2,
     "faststart": true,
     "fps": 30.0,
@@ -685,7 +685,7 @@
     "height": 1080,
     "sample_rate": 48000,
     "seconds": 89.5,
-    "sha256": "1364fe4ed38adea87053d7cef1d364ee95b5e72ab0f5aef277f7e621251ae379",
+    "sha256": "afb0816a649347bac038b6e5c37010b6b0a08f128760c377b41fdfee3d17b465",
     "video_codec": "avc1",
     "video_seconds": 89.5,
     "width": 1920

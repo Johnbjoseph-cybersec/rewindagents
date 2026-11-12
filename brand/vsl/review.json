@@ -2,6 +2,7 @@
   "reviewer": "cs-quinn-mehta",
   "date": "2026-11-11",
   "round": 2,
+  "repinned": "2026-11-12 RB2g (FIRE, not the reviewer): mp4_sha256 values re-pinned after a re-render whose only change is the logo mark in the terminal title bars and on the end card (concept E, John's pick); scores are round 2's, for visuals John accepted as they are on 2026-11-12. Contact sheets brand/vsl/*-contact-sheet.png show the new mark.",
   "previous_rounds": [
     {
       "round": 1,
@@ -12,7 +13,7 @@
   "method": "Round 2 scored fresh on the commit f01a02e render. Bash still denied in this session: no ffprobe, no hashing, no extra frames, no listening. Evidence: the rebuilt key frames opened at full size with the Read tool (every a-frame and every b-frame that changed; vsl-90s b04b and b19b were refused by a read hook that believed them unchanged and were judged from their round-2 contact-sheet tiles, which match their a-frames), the three round-2 contact sheets, the three rebuilt SRTs (cue timing and line breaks), brand/vsl/manifest.json (fps, duration, loudness, sha256) and the scripts and BRAND.md. Text sizes measured in true frame pixels. Rows weighted equally; pass = mean >= 9.0 and no row < 8 per video. Sound row provisional, capped at 8.0 from manifest loudness until someone listens; with that cap the other seven rows must average 9.14 for a pass. sha256 values copied from manifest.json. No web address is written in this file; the end-card line is called the site address and the repository line the repo address.",
   "videos": {
     "vsl-90s": {
-      "mp4_sha256": "1364fe4ed38adea87053d7cef1d364ee95b5e72ab0f5aef277f7e621251ae379",
+      "mp4_sha256": "afb0816a649347bac038b6e5c37010b6b0a08f128760c377b41fdfee3d17b465",
       "rows": {
         "readability": {
           "score": 8.5,
@@ -61,7 +62,7 @@
       ]
     },
     "vsl-30s": {
-      "mp4_sha256": "d4b4ddb5bc56dd55fe3525016777d9ab79ca6efa2f3b60741b1dbbcc04713dc3",
+      "mp4_sha256": "49c3a4b828fd255cfa5b3e89425c860e724e2737775285c15760e21400173cbe",
       "rows": {
         "readability": {
           "score": 8.5,
@@ -107,7 +108,7 @@
       ]
     },
     "vsl-15s-vertical": {
-      "mp4_sha256": "fa5c2a2d6bfd2934183a04fda75e36b8424e9a9f75c5892843392af9a8a2fe75",
+      "mp4_sha256": "96600acd1f5f0f5926a359a89065aa55d8d5b0cc89df292865e741c1146c0070",
       "rows": {
         "readability": {
           "score": 9.0,

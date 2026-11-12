@@ -43,6 +43,25 @@ def all_svgs():
     return out
 
 
+def mark_geometry():
+    """The '<' polygon and the cursor (x, y, w, h) read from brand/logo-mark.svg."""
+    root = ET.parse(os.path.join(BRAND, "logo-mark.svg")).getroot()
+    d = next(root.iter(NS + "path")).attrib["d"]
+    nums = [float(n) for n in re.findall(r"-?\d+(?:\.\d+)?", d)]
+    pts = list(zip(nums[::2], nums[1::2]))
+    r = next(root.iter(NS + "rect")).attrib
+    return pts, tuple(float(r[k]) for k in ("x", "y", "width", "height"))
+
+
+def point_in(pts, x, y):
+    c = False
+    for i in range(len(pts)):
+        (x1, y1), (x2, y2) = pts[i], pts[i - 1]
+        if (y1 > y) != (y2 > y) and x < (x2 - x1) * (y - y1) / (y2 - y1) + x1:
+            c = not c
+    return c
+
+
 def manifest():
     with open(os.path.join(BRAND, "logo", "manifest.json"), encoding="utf-8") as f:
         return json.load(f)
@@ -112,42 +131,66 @@ class TestLogo(unittest.TestCase):
         for name in ("logo-mark-reverse.svg", "logo-mark-mono.svg"):
             self.assertEqual(shapes(name), base, name)
 
-    def test_rewound_steps_are_drawn_after_the_playhead(self):
-        # The concept (RB2d pick B): a headless playhead bar crossing a thin ruler. Everything right of the bar
-        # is the rewound part (grey rule, grey ticks). Ticks are thin, at an even pitch each side, with the same
-        # gap to the bar on both sides; the taller tick is only at the two outer ends; the bar is the only tall
-        # element.
+    def test_mark_is_a_reverse_prompt(self):
+        # The concept (RB2f pick E, John 2026-11-12): a '<' in ink and a block cursor in Record. The '<' has
+        # 45-degree arms of equal width, a point on the left, flat cuts at top and bottom; the cursor sits on
+        # the '<''s bottom line (one typed line), right of the '<' and clear of it.
+        pts, cur = mark_geometry()
+        self.assertEqual(len(pts), 6, pts)
+        xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+        top, bottom = min(ys), max(ys)
+        apex = min(pts)
+        self.assertEqual(apex[1], (top + bottom) / 2, "the point is not halfway down")
+        for (x1, y1), (x2, y2) in zip(pts, pts[1:] + pts[:1]):
+            dx, dy = abs(x2 - x1), abs(y2 - y1)
+            self.assertTrue(dy == 0 or dx == dy, "edge %s-%s is neither a flat cut nor 45 degrees"
+                            % ((x1, y1), (x2, y2)))
+        cuts = sorted(abs(x2 - x1) for (x1, y1), (x2, y2) in zip(pts, pts[1:] + pts[:1]) if y1 == y2)
+        self.assertEqual(len(cuts), 2)
+        self.assertEqual(cuts[0], cuts[1], "the two arms differ in width")
+        cx, cy, cw, ch = cur
+        self.assertEqual(cy + ch, bottom, "the cursor is not on the '<''s bottom line")
+        self.assertGreaterEqual(cx - max(xs), 1, "the cursor touches the '<'")
+        self.assertGreater(cw, ch, "the cursor is not a low block")
+        self.assertLessEqual(cx + cw, 16)
         root = ET.parse(os.path.join(BRAND, "logo-mark.svg")).getroot()
-        rects = [el.attrib for el in root.iter(NS + "rect")]
-        bar = next(el for el in root.iter(NS + "path")).attrib["d"]
-        xs = [float(v) for v in re.findall(r"[MH](-?[\d.]+)", bar)]
-        ys = [float(v) for v in re.findall(r"(?:M-?[\d.]+ |V)(-?[\d.]+)", bar)]
-        lo, hi = min(xs), max(xs)
-        ink, grey = PALETTE["Reel"].upper(), PALETTE["Rule"].upper()
-        ticks = sorted((r for r in rects if float(r["height"]) > float(r["width"])), key=lambda r: float(r["x"]))
-        rules = [r for r in rects if float(r["width"]) > float(r["height"])]
-        left = [r for r in ticks if float(r["x"]) < lo]
-        right = [r for r in ticks if float(r["x"]) >= hi]
-        self.assertEqual(len(left) + len(right), len(ticks), "a tick under the bar")
-        self.assertEqual(len(left), len(right))
-        self.assertGreaterEqual(len(left), 3)
-        self.assertEqual({r["width"] for r in ticks}, {"0.5"}, "ticks are thin")
-        self.assertEqual(round(lo - (float(left[-1]["x"]) + 0.5), 3), round(float(right[0]["x"]) - hi, 3),
-                         "gaps to the bar differ")
-        for side in (left, right):
-            pitches = {round(float(b["x"]) - float(a["x"]), 3) for a, b in zip(side, side[1:])}
-            self.assertEqual(len(pitches), 1, pitches)
-        heights = [float(r["height"]) for r in ticks]
-        tall = max(heights)
-        self.assertEqual([i for i, h in enumerate(heights) if h == tall], [0, len(ticks) - 1], heights)
-        self.assertEqual(len(set(heights)), 2, heights)
-        rule_top = min(float(r["y"]) for r in rules)
-        for r in ticks:
-            self.assertEqual(float(r["y"]) + float(r["height"]), rule_top, "tick not standing on the rule")
-            self.assertEqual(r["fill"].upper(), ink if float(r["x"]) < lo else grey, r)
-        self.assertGreater(max(ys) - min(ys), 2.5 * tall)
-        self.assertEqual({r["fill"].upper() for r in rules if float(r["x"]) < lo}, {ink})
-        self.assertEqual({r["fill"].upper() for r in rules if float(r["x"]) >= hi}, {grey})
+        fills = {el.tag.replace(NS, ""): el.attrib["fill"].upper() for el in root.iter()
+                 if el.tag in (NS + "rect", NS + "path")}
+        self.assertEqual(fills, {"path": PALETTE["Reel"].upper(), "rect": PALETTE["Record"].upper()})
+
+    def test_favicon_is_the_mark_sampled_on_whole_pixels(self):
+        # The 16 px drawing cannot drift from the mark: each pixel is the mark's role at the pixel centre
+        # (nudged a quarter pixel right, so a 45-degree edge through a centre falls on one side).
+        pts, (cx, cy, cw, ch) = mark_geometry()
+        want = {}
+        for j in range(16):
+            for i in range(16):
+                x, y = i + 0.75, j + 0.5
+                if cx <= x < cx + cw and cy <= y < cy + ch:
+                    want[(i, j)] = PALETTE["Record"].upper()
+                elif point_in(pts, x, y):
+                    want[(i, j)] = PALETTE["Reel"].upper()
+        got = {}
+        root = ET.parse(os.path.join(BRAND, "favicon.svg")).getroot()
+        for el in root.iter(NS + "rect"):
+            a = el.attrib
+            if "x" not in a:                      # the ground
+                self.assertEqual(a["fill"].upper(), PALETTE["Leader"].upper())
+                continue
+            self.assertEqual(a["height"], "1", a)
+            for i in range(int(a["x"]), int(a["x"]) + int(a["width"])):
+                got[(i, int(a["y"]))] = a["fill"].upper()
+        self.assertEqual(got, want)
+        rows = {}
+        for (i, j), fill in got.items():
+            if fill == PALETTE["Reel"].upper():
+                rows.setdefault(j, []).append(i)
+        self.assertEqual(len({len(v) for v in rows.values()}), 1, "the '<' is not an even staircase")
+        for j, xs in rows.items():
+            self.assertEqual(xs, list(range(min(xs), max(xs) + 1)), "row %d has a hole" % j)
+        cursor_x = min(i for (i, j), f in got.items() if f == PALETTE["Record"].upper())
+        foot = max(max(xs) for xs in rows.values())
+        self.assertGreaterEqual(cursor_x - foot - 1, 1, "no clear pixel between the '<' and the cursor")
 
     def test_png_pixels_match_brand_md(self):
         # Palette fidelity is measured, not eyeballed: build.py records where each colour must appear.
@@ -155,7 +198,7 @@ class TestLogo(unittest.TestCase):
         self.assertGreaterEqual(len(results), 20)
         for png, x, y, name, want, got, ok in results:
             self.assertTrue(ok, "%s (%d,%d): %s should be %s, sampled %s" % (png, x, y, name, want, got))
-        self.assertEqual({r[3] for r in results} >= {"Leader", "Reel", "Record", "Rewind", "Rule", "Tape"}, True)
+        self.assertEqual({r[3] for r in results} >= {"Leader", "Reel", "Record", "Rewind"}, True)
 
     def test_in_use_install_line_is_the_readme_install_line(self):
         # The in-use sheet shows an install command; it must be the one the README gives, not a variant.

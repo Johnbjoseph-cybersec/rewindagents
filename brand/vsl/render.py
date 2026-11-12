@@ -397,8 +397,8 @@ def draw_panel(cv, kit, L, p, shot, t, side):
     tb = L["TITLE"]
     cv.add(rect(x, y + tb - 1, w, 1, C["Rule"]))
     lg = kit.logo
-    k = tb * 0.45 / 9
-    cv.add(lg.place(lg.mark_shapes(lg.THEMES["dark"], mono=C["Leader"]), x + 24, y + (tb - 9 * k) / 2, k))
+    k = tb * 0.45 / lg.MARK_H
+    cv.add(lg.place(lg.mark_shapes(lg.THEMES["dark"], mono=C["Leader"]), x + 24, y + (tb - lg.MARK_H * k) / 2, k))
     nsize = tb * 0.42
     cv.text(kit.disp, "rewindagent", nsize, x + 24 + 16 * k + 12, y + (tb + kit.disp.cap(nsize)) / 2, "Leader",
             tracking=-0.02)

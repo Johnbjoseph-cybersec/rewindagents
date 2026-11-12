@@ -1,0 +1,58 @@
+{
+  "task": "RB2g",
+  "reviewer": "cs-iris-kapoor",
+  "date": "2026-11-12",
+  "round": 2,
+  "concept": "E Reverse prompt (John's pick)",
+  "rows": {
+    "concept_execution": {
+      "score": 9.0,
+      "evidence": "logo-light.png: the heavier '<' (arms about 2.5 thick) with a 4.5x2.5 cursor now reads as a block cursor, not an underscore, so 'prompt turned round' lands in half a second. Not higher because the '<' alone is still a generic back chevron; the cursor does all the terminal work."
+    },
+    "small_size": {
+      "score": 8.8,
+      "evidence": "contact-sheet.png 16 px tiles (light and dark): clean 7-row staircase plus a 5x3 px cursor with a clear pixel gap, reads as a block, not a full stop. favicon-32.png and the true-16 tabs in in-use.png hold. Still, at 16-20 px the '<' and cursor are close in mass so the pair can read as '<' plus a dot-block, and the 20 px circle case is not shown on the sheet to verify."
+    },
+    "lockup": {
+      "score": 9.0,
+      "evidence": "in-use.png README light and dark, and the contact-sheet horizontal rows: the mark now matches the 800 wordmark stem weight, the cursor sits on the text baseline, and the 0.46 em gap gives clear air between cursor and 'r' (about 4 px more than round 1). Stacked logo-light.png: mark x 275-750 and wordmark x 138-890 both centre on 512."
+    },
+    "versatility": {
+      "score": 9.0,
+      "evidence": "logo-light and logo-dark swap Reel/Leader with Record/Rewind correctly; tabs, README pages and the unchanged mono title bar (k4 frame) hold; avatar-512.png mark is 368 px wide (72 percent) and the farthest corner (cursor bottom-right, 440,380) is about 222 px from centre, inside the 256 px circle with about 34 px spare. Social card is heavy: the mark is about 416 px wide beside 56 px type."
+    },
+    "craft": {
+      "score": 8.9,
+      "evidence": "Geometry is clean: flat cuts on the same lines as the cursor foot, equal arms, avatar centred on x 256 with mark raised (y 116-380, bbox centre 248). Social card: mark y 125-423 centres on the headline-to-command block (centre about 274) and right edge is on the 1184 margin, 72 px clear of the headline. Small faults: in social and avatar the 134x75 / 118x66 cursor reads close to a plain red slab, and its gap to the '<' (about 30 px at social) is tighter than the mark's own proportions suggest."
+    },
+    "palette_fidelity": {
+      "score": 9.2,
+      "evidence": "Reel #121412 on Leader #F2F4F1 and the inverse; cursor Record #B82A16 on light, Rewind #FF7A59 on dark, as in BRAND.md Palette. One accent per view, no stray colours in any of the seven PNGs."
+    }
+  },
+  "mean": 8.98,
+  "lowest": "small_size (8.8)",
+  "verdict": "FAIL",
+  "fixes": [
+    "Social card: scale the mark down about 12 percent (about 365 px wide, from about 416), keep it centred on the headline-to-command block, so it supports the wordmark rather than outweighing it (mark outweighs the 56 px headline now).",
+    "Cursor-to-'<' gap in the full mark: widen from about 1.0 unit to about 1.2 units, so the cursor reads as a separate block and not a foot on the chevron; keep its bottom on the baseline.",
+    "Show and check the 20 px and 48 px avatar circles (they were not on the sheet this round); if the cursor merges with the '<' at 20 px, grow the 16/20 px gap by 1 px.",
+    "Cursor aspect at large sizes: 4.5x2.5 is close to a plain slab; trim to 4.5x2.3 at 512 px and above only, keeping the 5x3 px sampled drawing for 16 px."
+  ],
+  "first_reading": "A heavy black '<' with a red block cursor beside its foot: a terminal prompt facing backward, 'go back in the terminal'.",
+  "previous_rounds": [
+    {
+      "round": 1,
+      "rows": {
+        "concept_execution": 8.7,
+        "small_size": 8.5,
+        "lockup": 8.5,
+        "versatility": 9.0,
+        "craft": 8.8,
+        "palette_fidelity": 9.2
+      },
+      "mean": 8.78,
+      "verdict": "FAIL"
+    }
+  ]
+}

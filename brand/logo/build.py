@@ -1,11 +1,11 @@
-"""Build the rewindagent logo set as SVG (task RB2; round 4 is RB2c; concept B picked in RB2d, see
-brand/logo/candidates/pick.json). render.mjs turns the SVGs into PNGs.
+"""Build the rewindagent logo set as SVG (task RB2; the mark is concept E, "Reverse prompt", which John picked
+on 2026-11-12 from brand/logo/round2-concepts/; RB2g polished it). render.mjs turns the SVGs into PNGs.
 
-The mark is a playhead on a step ruler, scrubbed back, drawn on a 16-unit grid: a heavy red bar with no head
-crossing a thin ruler, as editors draw the playhead through a timeline. Thin ticks stand on the rule, three
-each side, with a taller tick at each outer end. Everything after the bar is the rewound part: the rule and
-the ticks turn grey, like the unplayed part of a scrubber. The mark uses half units (sharp from 32 px up);
-favicon_shapes is a separate drawing on whole units for 16 px.
+The mark is a terminal prompt turned round: a heavy '<' and a red block cursor, drawn on a 16-unit grid. The
+'<' is a polygon with 45-degree arms whose ends are cut flat, so its top sits on one line and its bottom on
+another, like a glyph; the cursor sits on the same bottom line, so the two read as one typed line. In the
+lockup that line is the text baseline. favicon_shapes is the same geometry point-sampled on whole pixels for
+16 px, so the favicon cannot drift from the mark.
 
 Text is outlined from the OFL font files, so every SVG renders the same with no fonts installed.
 Usage: .venv/bin/python brand/logo/build.py <fonts-dir>
@@ -40,8 +40,8 @@ COMMAND = "rewindagent rewind 12"
 CREDIT = "made by John B Joseph"
 INSTALL = "pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagent"
 
-# Visible rows of the mark on the 16 grid (the playhead's head top and its line bottom); x spans 0..16.
-MARK_TOP, MARK_BOTTOM = 3.5, 12.5
+# Visible rows of the mark on the 16 grid (the '<' top and bottom cuts); x spans 1..15.
+MARK_TOP, MARK_BOTTOM = 3, 13
 MARK_H = MARK_BOTTOM - MARK_TOP
 
 
@@ -53,50 +53,75 @@ def rect(x, y, w, h, fill):
     return '<rect x="%s" y="%s" width="%s" height="%s" fill="%s"/>' % (g(x), g(y), g(w), g(h), fill)
 
 
-# The playhead (RB2d concept B): no head, a flat 1.5-unit bar x 7..8.5 crossing the ruler, the mark's full height.
-BAR_X0, BAR_X1 = 7, 8.5
-PLAYHEAD = "M7 3.5H8.5V12.5H7Z"
-RULE_Y, RULE_H = 9.5, 0.5         # the rule is as thick as a tick is wide; ticks stand on its top edge
-MINOR_H, MAJOR_H = 1.5, 3.0       # the taller tick marks each outer end of the ruler
-LEFT_TICKS, RIGHT_TICKS = (1.5, 3.5, 5.5), (9.5, 11.5, 13.5)   # half-unit ticks, a 1-unit gap to the bar each side
-LOCKUP_SCALE = 1.4                # the mark in the horizontal lockup, relative to one unit = ascender / 8.5
+# The '<': 45-degree arms 3.5 units wide measured across (2.5 units thick), apex at (1, 8), ends cut flat at
+# y 3 and y 13. The cursor: a 4.5 x 2.5 block on the bottom line, 1 unit clear of the lower arm's end
+# (RB2g round 2: thicker arms and a taller cursor, so it reads as a block cursor, not an underscore; at
+# 16 px it samples to 5 x 3 px, a block, where 4 wide sampled to a square that read as a full stop).
+ARM = 3.5
+CHEVRON = [(6, 3), (6 + ARM, 3), (1 + ARM, 8), (6 + ARM, 13), (6, 13), (1, 8)]
+CURSOR = (10.5, 10.5, 4.5, 2.5)   # x, y, w, h
+LOCKUP_SCALE = 1.2                # the '<' in the horizontal lockup is this many ascender heights tall
+LOCKUP_GAP = 0.46                 # mark grid edge to the name, in em
+
+
+def inside(pts, x, y):
+    """Even-odd point test for a polygon."""
+    c = False
+    for i in range(len(pts)):
+        (x1, y1), (x2, y2) = pts[i], pts[i - 1]
+        if (y1 > y) != (y2 > y) and x < (x2 - x1) * (y - y1) / (y2 - y1) + x1:
+            c = not c
+    return c
+
+
+def role_at(x, y):
+    """Which part of the mark covers grid point (x, y): 'head' (the cursor), 'ink' (the '<') or None."""
+    cx, cy, cw, ch = CURSOR
+    if cx <= x < cx + cw and cy <= y < cy + ch:
+        return "head"
+    return "ink" if inside(CHEVRON, x, y) else None
 
 
 def mark_shapes(t, mono=None):
-    """The mark on its 16x16 grid, for 32 px and up: a playhead bar crossing a thin step ruler, symmetric about
-    the bar. Three half-unit ticks each side, the outer one of each side taller; ink before the bar (recorded),
-    grey after it (rewound), rule and ticks alike. The bar is the only tall element. Returns SVG elements."""
+    """The mark on its 16x16 grid, for 32 px and up: the '<' in ink and the cursor in the accent (Record on
+    light, Rewind on dark). Returns SVG elements."""
     ink = mono or t["ink"]
-    undone = mono or t["undone"]
     head = mono or t["head"]
-    parts = [rect(0, RULE_Y, BAR_X0, RULE_H, ink),                         # rule split at the bar
-             rect(BAR_X1, RULE_Y, 16 - BAR_X1, RULE_H, undone)]
-    for x in LEFT_TICKS + RIGHT_TICKS:
-        h = MAJOR_H if x in (LEFT_TICKS[0], RIGHT_TICKS[-1]) else MINOR_H
-        parts.append(rect(x, RULE_Y - h, 0.5, h, ink if x < BAR_X0 else undone))
-    parts.append('<path d="%s" fill="%s"/>' % (PLAYHEAD, head))
-    return "".join(parts)
+    d = "M" + "L".join("%s %s" % (g(x), g(y)) for x, y in CHEVRON) + "Z"
+    return '<path d="%s" fill="%s"/>' % (d, ink) + rect(*CURSOR, head)
 
 
-MARK_SAMPLES = [  # (grid x, grid y, theme key) of solid areas, for pixel sampling
-    (7.75, 6, "head"), (1.75, 8, "ink"), (13.75, 8, "undone"), (4, 9.75, "ink"), (12, 9.75, "undone")]
+MARK_SAMPLES = [  # (grid x, grid y, theme key) for pixel sampling: both arms, the apex, the cursor, the mouth
+    (2.5, 8, "ink"), (7.5, 4, "ink"), (7.5, 12, "ink"), (12.5, 12, "head"), (8, 8, "ground")]
+
+
+def favicon_grid():
+    """The 16 px drawing: the mark sampled at each pixel's centre, nudged a quarter pixel right so the 45-degree
+    edges (which pass through pixel centres) fall on one side. 16 rows of 16 roles (None = ground)."""
+    return [[role_at(i + 0.75, j + 0.5) for i in range(16)] for j in range(16)]
 
 
 def favicon_shapes(t):
-    """A separate drawing for 16 px, whole units only so nothing is anti-aliased: the same layout mirrored on
-    whole pixels, a 2 px bar x 7..9 from y 3 to 14, a 1 px rule at y 10, 1 px ticks at x 1, 3, 5 and 10, 12,
-    14 (4 px at the two outer ends, 2 px otherwise), and the rewound rule and ticks in the secondary text
-    colour (Tape on Leader holds 5.9:1 at 1 px). Also used, scaled by whole pixels, at 64 px and in the 20 px
+    """The 16 px drawing as whole-pixel rects (runs merged per row), so nothing is anti-aliased: the '<' as a
+    3 px staircase and the cursor 5 x 2 px. Also used, scaled by whole pixels, at 64 px and in the 20 px
     avatar crop."""
-    parts = [rect(0, 10, 7, 1, t["ink"]), rect(9, 10, 7, 1, t["sub"])]
-    for x in (1, 3, 5, 10, 12, 14):
-        h = 4 if x in (1, 14) else 2
-        parts.append(rect(x, 10 - h, 1, h, t["ink"] if x < 7 else t["sub"]))
-    parts.append('<path d="M7 3H9V14H7Z" fill="%s"/>' % t["head"])
-    return "".join(parts)
+    out = []
+    for j, row in enumerate(favicon_grid()):
+        i = 0
+        while i < 16:
+            if row[i] is None:
+                i += 1
+                continue
+            k = i
+            while k < 16 and row[k] == row[i]:
+                k += 1
+            out.append(rect(i, j, k - i, 1, t[row[i]]))
+            i = k
+    return "".join(out)
 
 
-FAVICON_SAMPLES = [(8, 5, "head"), (1.5, 7.5, "ink"), (14.5, 7.5, "sub"), (4.5, 10.5, "ink"), (11.5, 10.5, "sub")]
+FAVICON_SAMPLES = [(2.5, 7.5, "ink"), (6.5, 3.5, "ink"), (6.5, 12.5, "ink"), (12.5, 11.5, "head"),
+                   (8.5, 7.5, "ground")]
 
 
 def svg(w, h, body, bg=None, title="rewindagent"):
@@ -159,15 +184,15 @@ class Face:
 
 
 def wordmark(face, t, mono=None):
-    """Mark + 'rewindagent'. One grid unit is LOCKUP_SCALE times the 'd' ascender height over 8.5, so the mark
-    holds its weight beside the 800 letters; the text baseline is the bottom of the playhead bar."""
+    """Mark + 'rewindagent'. The '<' is LOCKUP_SCALE ascender heights tall, so the mark holds its weight beside
+    the 800 letters; the text baseline is the bottom line the '<' and the cursor share."""
     size = 100.0
-    k = LOCKUP_SCALE * face.bounds("d", size)[3] / 8.5
+    k = LOCKUP_SCALE * face.bounds("d", size)[3] / MARK_H
     pad = 8.0
     mark_w = 16 * k
     base_y = pad + (MARK_BOTTOM - MARK_TOP) * k
-    glyphs, adv = face.outline("rewindagent", size, pad + mark_w + 0.36 * size, base_y, tracking=-0.02)
-    w = pad + mark_w + 0.36 * size + adv + pad
+    glyphs, adv = face.outline("rewindagent", size, pad + mark_w + LOCKUP_GAP * size, base_y, tracking=-0.02)
+    w = pad + mark_w + LOCKUP_GAP * size + adv + pad
     h = base_y + face.descent("g", size) + pad
     body = (place(mark_shapes(t, mono), pad, pad, k)
             + '<g fill="%s">%s</g>' % (mono or t["ink"], glyphs))
@@ -263,9 +288,12 @@ def build(fonts):
         src["logo-%s.png" % theme] = (svg(1024, 1024, body_svg, bg=t["ground"]), 1024,
                                       [[24, 24, NAME[t["ground"]]]] + samples(MARK_SAMPLES, t, x, top, k))
     # avatar: the visible mark centred in the 512 square (so also in the circular crop), 72 percent wide
-    k = 23.0
-    x, top = (512 - 16 * k) / 2, (512 - MARK_H * k) / 2
-    assert ((x - 256) ** 2 + (top + 12 * k - 256) ** 2) ** 0.5 < 256, "rule corner outside the circle crop"
+    # the visible mark 72 percent of the square (14 units), raised 8 px so the low cursor does not pull it down
+    k = 0.72 * 512 / 14
+    x, top = (512 - 16 * k) / 2, (512 - MARK_H * k) / 2 - 8
+    for gx, gy in CHEVRON + [(CURSOR[0] + CURSOR[2], CURSOR[1] + CURSOR[3])]:
+        px, py = x + gx * k, top + (gy - MARK_TOP) * k
+        assert ((px - 256) ** 2 + (py - 256) ** 2) ** 0.5 < 256, "mark corner outside the circle crop"
     src["avatar-512.png"] = (svg(512, 512, place(mark_shapes(L), x, top, k), bg=C["Leader"]), 512,
                              [[10, 10, "Leader"]] + samples(MARK_SAMPLES, L, x, top, k))
     src["favicon-32.png"] = (svg(16, 16, favicon_shapes(L), bg=C["Leader"]), 32,
@@ -277,15 +305,19 @@ def build(fonts):
     nsize = 100 * 600 / adv100
     name, _ = disp.outline("rewindagent", nsize, 96, 176, tracking=-0.02)
     head, tail = TAGLINE.split(": ")
-    tag1, _ = body.outline(head + ":", 46, 96, 268)
-    tag2, _ = body.outline(tail, 46, 96, 326)
+    tag1, a1 = body.outline(head + ":", 46, 96, 268)
+    tag2, a2 = body.outline(tail, 46, 96, 326)
     cmd, cw = mono.outline("$ " + COMMAND, 30, 122, 420)
     # the credit sits as far below the command box (bottom edge 444) as the box sits below the tagline
     gap = 375.5 - (326 + body.descent("p", 46))
     cred, _ = body.outline(CREDIT, 24, 96, 444 + gap + body.bounds("d", 24)[3])
-    k = 448 / 16
+    # the mark spans the text block, from the name's ascender top to the command box's bottom edge, unless
+    # that would bring it within 72 px of the widest text line; its visible right edge sits on the 96 px margin
     name_top = 176 - disp.bounds("d", nsize)[3]
-    x, top = 1184 - 448, (name_top + 443) / 2 - MARK_H * k / 2   # centred on the headline-to-command block
+    text_right = 96 + max(600, a1, a2, cw + 49)
+    k = min((443 - name_top) / MARK_H, (1184 - text_right - 72) / 14)
+    x = 1184 - 15 * k
+    top = (name_top + 443) / 2 - MARK_H * k / 2                  # centred on the headline-to-command block
     social = ('<g fill="%s">%s</g>' % (L["ink"], name)
               + '<g fill="%s">%s%s</g>' % (L["ink"], tag1, tag2)
               + '<rect x="97.5" y="375.5" width="%.1f" height="67" fill="none" stroke="%s" stroke-width="3"/>'
