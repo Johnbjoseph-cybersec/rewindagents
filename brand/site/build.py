@@ -293,7 +293,7 @@ def film(cues):
 <source src="assets/%(name)s.mp4" type="video/mp4">
 <track kind="captions" src="assets/%(name)s.vtt" srclang="en" label="English" default>
 </video>
-<button class="film-play" type="button" hidden><span class="film-play-dot" aria-hidden="true"><svg width="22" height="24" viewBox="0 0 22 24"><path d="M3 2l17 10L3 22z" fill="currentColor"/></svg></span><span class="film-play-label">Play the film</span><span class="film-len">%(len)s, sound on</span></button>
+<button class="film-play" type="button" hidden><span class="film-play-dot" aria-hidden="true"><svg width="22" height="24" viewBox="0 0 22 24"><path d="M3 2l17 10L3 22z" fill="currentColor"/></svg></span><span class="film-play-label">Play the film</span><span class="film-len">%(len)s, with music</span></button>
 </div>
 <div class="wrap film-bar" hidden><div class="film-ruler" role="slider" tabindex="0" aria-label="Film position" aria-valuemin="0" aria-valuemax="%(totali)d" aria-valuenow="0"><span class="film-fill"></span>%(ticks)s</div><span class="film-time">0:00 / %(len)s</span><button class="film-fs" type="button" aria-label="Full screen">Full</button></div>
 <p class="wrap film-now" aria-live="off"></p>
@@ -750,7 +750,7 @@ def build(out=None, cfg=None, open_variant=False):
         for d in ("vendor",):
             shutil.copytree(os.path.join(HERE, d), os.path.join(out, d), dirs_exist_ok=True)
         shutil.copytree(os.path.join(HERE, "fonts"), os.path.join(out, "fonts"), dirs_exist_ok=True)
-    # the film: brand/vsl/<FILM>-web.mp4 and its poster are written by brand/vsl/narration.py (web export, voice
+    # the film: brand/vsl/<FILM>-web.mp4 and its poster are written by brand/vsl/narration.py (web export, picture + music bed, no voice;
     # included once the narration exists); the captions are the VSL's own .srt
     shutil.copyfile(os.path.join(BRAND, "vsl", FILM + "-web.mp4"), os.path.join(assets, FILM + ".mp4"))
     shutil.copyfile(os.path.join(BRAND, "vsl", FILM + "-poster.jpg"), os.path.join(assets, "film-poster.jpg"))
