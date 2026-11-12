@@ -104,6 +104,10 @@ def main(yes: bool = False, global_: bool = False, root: Path | None = None, hom
         line = f"  {name:<8} {status:<14} {where}"
         print((line + (f"  ({why})" if why else "")).rstrip(), file=out)
 
+    kind = hook.ephemeral()
+    if kind:
+        print(f"rewindagents init: nothing written: {hook.ephemeral_message(kind)}", file=out)
+        return 2
     run = "rewindagents" if hook.installed() else "python3 -m rewindagents"
     found = detect(root, home, global_, path)
     print(f"rewindagents init: {'your user config (every project)' if global_ else 'project ' + str(root)}",

@@ -68,6 +68,11 @@ rewindagents --version
 Or from a clone, `pip install .`. Without installing, `PYTHONPATH=src python3 -m rewindagents` runs the same
 CLI from a clone.
 
+After the first release to PyPI (not there yet), `uv tool install rewindagents` or `pipx install rewindagents`
+will also work. Do not add the hook with `uvx rewindagents install` or `pipx run rewindagents install`: those run
+from a cached environment the tool may delete, and the hook names that environment's Python. `install` and
+`init` detect such a Python, write nothing, and print the two lasting commands above.
+
 ## Claude Code hook
 
 ```sh

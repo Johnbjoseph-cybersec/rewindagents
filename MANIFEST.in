@@ -1,0 +1,8 @@
+# The sdist carries the package, README, LICENSE and pyproject only (tests/test_dist.py reads the archive).
+# setuptools adds tests/test*.py by default, without the fixtures they need; the rest never belongs in it.
+prune tests
+prune brand
+prune bench
+prune attach
+prune billing
+global-exclude *.py[cod] __pycache__

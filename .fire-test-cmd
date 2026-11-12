@@ -1,1 +1,1 @@
-python3 -m venv .venv && .venv/bin/pip install -q --disable-pip-version-check . && REWINDAGENTS_BIN="$PWD/.venv/bin/rewindagents" python3 -m unittest discover -s tests -v
+python3 -m venv .venv && .venv/bin/pip install -q --disable-pip-version-check . -r requirements-dev.txt && REWINDAGENTS_DIST="$(mktemp -d)" && .venv/bin/python -m build -q --outdir "$REWINDAGENTS_DIST" . && REWINDAGENTS_DIST="$REWINDAGENTS_DIST" REWINDAGENTS_BIN="$PWD/.venv/bin/rewindagents" python3 -m unittest discover -s tests -v

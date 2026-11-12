@@ -105,7 +105,11 @@ def main(argv: list[str] | None = None) -> int:
         return hook.run(agent=a.agent)
     if a.cmd == "install":
         target = a.settings or agents.config_path(agents.AGENTS[a.agent])
-        changed = hook.install(target, agent=a.agent)
+        try:
+            changed = hook.install(target, agent=a.agent)
+        except hook.EphemeralPython as e:
+            print(f"rewindagents: not installed: {e}", file=sys.stderr)
+            return 2
         print(f"{'installed in' if changed else 'already installed in'} {target}")
         return 0
     if a.cmd == "uninstall":

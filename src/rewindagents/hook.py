@@ -185,6 +185,49 @@ def installed() -> bool:
     return any(here.is_relative_to(Path(d).resolve()) for d in dirs if d)
 
 
+class EphemeralPython(ValueError):
+    """install was run from a throwaway environment (uvx, pipx run) that its tool may delete."""
+
+
+def ephemeral(prefix: str | Path | None = None, env: dict | None = None,
+              home: str | Path | None = None) -> str | None:
+    """'uvx' or 'pipx run' when this interpreter's environment lives in that tool's cache, else None.
+
+    A hook command names the interpreter by absolute path; from a cached environment that path can vanish.
+    uv keeps `uvx` (`uv tool run`) environments in its cache and treats them as disposable; `uv tool install`
+    puts them in the tools directory instead (docs.astral.sh/uv/concepts/tools, read 2026-11-13). Cache dir:
+    --cache-dir / UV_CACHE_DIR, else $XDG_CACHE_HOME/uv, $HOME/.cache/uv, %LOCALAPPDATA%\\uv\\cache
+    (docs.astral.sh/uv/concepts/cache and /reference/storage, read 2026-11-13). `pipx run` caches its
+    environments in PIPX_HOME/.cache when PIPX_HOME is set, else platformdirs' user cache dir for "pipx";
+    `pipx install` puts them under PIPX_HOME/venvs (github.com/pypa/pipx src/pipx/paths.py, read 2026-11-13).
+    A --cache-dir passed on uv's command line is not visible here.
+    """
+    env = os.environ if env is None else env
+    home = Path(home or Path.home())
+    here = Path(prefix or sys.prefix).resolve()
+    xdg = env.get("XDG_CACHE_HOME")
+    local = env.get("LOCALAPPDATA")
+    roots = {
+        "uvx": [env.get("UV_CACHE_DIR"), xdg and Path(xdg) / "uv", home / ".cache" / "uv",
+                local and Path(local) / "uv" / "cache"],
+        "pipx run": [env.get("PIPX_HOME") and Path(env["PIPX_HOME"]) / ".cache",
+                     home / ".local" / "pipx" / ".cache", home / "pipx" / ".cache",
+                     xdg and Path(xdg) / "pipx", home / ".cache" / "pipx", home / "Library" / "Caches" / "pipx",
+                     local and Path(local) / "pipx" / "Cache"],
+    }
+    for kind, dirs in roots.items():
+        for d in dirs:
+            if d and here.is_relative_to(Path(d).resolve()):
+                return kind
+    return None
+
+
+def ephemeral_message(kind: str) -> str:
+    return (f"this Python is a {kind} environment in a cache that may be deleted, which would leave a hook "
+            f"that cannot run ({sys.prefix}). Install it for good, then run install again: "
+            f"`uv tool install rewindagents` or `pipx install rewindagents`")
+
+
 def hook_command(agent: str = agents.DEFAULT) -> str:
     """The command the agent will run for every hook event.
 
@@ -207,8 +250,12 @@ def install(settings_path: str | Path | None = None, command: str | None = None,
             agent: str = agents.DEFAULT) -> bool:
     """Add the hook to the agent's config file (default: the agent's project file, agents.AGENTS[agent].settings).
     Keeps everything already there. Returns True if the file changed, False if the hook was already installed.
+    Raises EphemeralPython, writing nothing, when no command is given and this Python is a uvx / pipx run one.
     """
     ag = agents.AGENTS[agent]
+    kind = None if command else ephemeral()
+    if kind:
+        raise EphemeralPython(ephemeral_message(kind))
     return agents.install(ag, settings_path or agents.config_path(ag), command or hook_command(agent))
 
 
