@@ -117,6 +117,53 @@ built from:
   If a real session sends something else, open an issue with the payload (`replay --step N` prints what
   was recorded).
 
+## Gemini CLI, Copilot CLI, Droid and Qwen Code hooks
+
+```sh
+rewindagents install --agent gemini     # adds the hook to .gemini/settings.json in this project
+rewindagents install --agent copilot    # adds the hook to .github/hooks/rewindagents.json in this repository
+rewindagents install --agent droid      # adds the hook to .factory/settings.json (or .factory/hooks.json if it exists)
+rewindagents install --agent qwen       # adds the hook to .qwen/settings.json in this project
+rewindagents uninstall --agent qwen     # same flags as install, for every agent
+```
+
+These are built from the vendors' hook documentation (read 2026-11-12, quoted with URLs in
+`src/rewindagents/agents.py`) and tested with the documented payloads, not yet in a live session of any of
+them. As for Codex and Cursor, the hook never reads a file path out of these payloads: the project is saved
+before every call and scanned after it, except around the tools each agent's docs name as read-only, which
+are recorded but not scanned.
+
+- Gemini CLI (`.gemini/settings.json`) sends `BeforeTool` and `AfterTool` with `session_id`, `cwd`,
+  `tool_name`, `tool_input` and, after the call, `tool_response`. Shell commands arrive as
+  `run_shell_command`, edits as `write_file` and `replace`. Gemini reads the hook's stdout as JSON, so the hook
+  prints `{}` (no decision, which changes nothing). Not scanned: `read_file`, `read_many_files`,
+  `list_directory`, `glob`, `grep_search`, `search_file_content`, `google_web_search`, `web_fetch`.
+- GitHub Copilot CLI (`.github/hooks/rewindagents.json`): installed under the PascalCase events `PreToolUse`,
+  `PostToolUse` and `PostToolUseFailure`, which select the payload with `hook_event_name`, `session_id`, `cwd`,
+  `tool_name`, `tool_input` and `tool_result` (or `error` for a failed call). Tools: `bash`, `create`, `edit`.
+  The hook prints nothing. Copilot's `preToolUse` is fail-closed: a non-zero exit denies the call. So the
+  command it writes ends in `|| true`, and even a missing Python exits 0. In Copilot's cloud agent the hook
+  file is read from the default branch, and this machine's Python is not there, so nothing is recorded and
+  nothing is blocked. Not scanned: `view`, `grep`, `glob`, `web_fetch`.
+- Factory Droid sends `PreToolUse` and `PostToolUse` with `session_id`, `cwd`, `tool_name`, `tool_input` and
+  `tool_response`. Tools: `Execute`, `Create`, `Edit`, `ApplyPatch`. Droid reads the `hooks` key of
+  `.factory/settings.json` only when `.factory/hooks.json` is absent, so the hook goes into `.factory/hooks.json`
+  when that file exists and into `.factory/settings.json` otherwise. A new `hooks.json` would hide hooks you
+  keep in `settings.json`. The hook prints nothing. Not scanned: `Read`, `LS`, `Glob`, `Grep`, `FetchUrl`,
+  `WebSearch`.
+- Qwen Code (`.qwen/settings.json`) sends `PreToolUse`, `PostToolUse` (a call that succeeded) and
+  `PostToolUseFailure` (one that failed), with `session_id`, `cwd`, `tool_name`, `tool_use_id`, `tool_input`
+  and `tool_response` or `error`. A failed shell command can still have changed files, so the hook is installed
+  on `PostToolUseFailure` too and closes the scan there. The hook prints nothing. Not scanned: `read_file`,
+  `list_directory`, `glob`, `grep_search`.
+- Gemini CLI, Copilot CLI and Droid send no call id, so a call's before and after events are paired by
+  session and input. Two identical calls running at the same moment in one session would share a scan.
+- Not supported yet, and why: Windsurf's hooks page now leads to Devin's, and Devin's payload documents no
+  working directory. Devin also runs hooks from `.claude/settings.json` by default, so a Claude Code install
+  fires there as the Claude Code hook, and it never blocks. Kiro documents the payload before a call but not
+  after one. Cline, OpenCode and Amp hooks are JavaScript/TypeScript plugins, not commands. Roo Code, Zed,
+  Warp and Replit document no tool hooks.
+
 ## Replay, rewind, branch
 
 Run these from the project directory (the one holding `.rewindagents/`). They work on the latest session

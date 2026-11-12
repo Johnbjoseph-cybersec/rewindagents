@@ -272,7 +272,7 @@ class TestCli(unittest.TestCase):
             finally:
                 os.chdir(here)
             with self.assertRaises(SystemExit) as cm:
-                cli("install", "--agent", "copilot")
+                cli("install", "--agent", "no-such-agent")
             self.assertEqual(cm.exception.code, 2)
 
     def test_hook_command_carries_the_agent_and_claude_codes_is_unchanged(self):

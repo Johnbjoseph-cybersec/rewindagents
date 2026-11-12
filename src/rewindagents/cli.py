@@ -78,12 +78,12 @@ def main(argv: list[str] | None = None) -> int:
     if a.cmd == "hook":
         return hook.run(agent=a.agent)
     if a.cmd == "install":
-        target = a.settings or agents.AGENTS[a.agent].settings
+        target = a.settings or agents.config_path(agents.AGENTS[a.agent])
         changed = hook.install(target, agent=a.agent)
         print(f"{'installed in' if changed else 'already installed in'} {target}")
         return 0
     if a.cmd == "uninstall":
-        target = a.settings or agents.AGENTS[a.agent].settings
+        target = a.settings or agents.config_path(agents.AGENTS[a.agent])
         changed = hook.uninstall(target, agent=a.agent)
         print(f"removed from {target}" if changed else f"not installed in {target}; left unchanged")
         return 0

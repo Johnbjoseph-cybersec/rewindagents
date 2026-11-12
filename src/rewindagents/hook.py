@@ -1,17 +1,19 @@
-"""Pre / post tool-use hook for Claude Code, Codex and Cursor: record every call, checkpoint files first.
+"""Pre / post tool-use hook for Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid and Qwen Code: record
+every call, checkpoint files first.
 
 The agent runs the hook with one JSON object on stdin (field names per agent: agents.py). The hook:
 - appends a "pre" record (tool + input) before the call and a "post" record (tool + response) after it;
 - Claude Code: before Write, Edit, MultiEdit and NotebookEdit, copies the current bytes of the target file
   into a content-addressed store (.rewindagents/objects/<sha256>) and puts the hash in the "pre" record, so
   the file can be put back later. A file that does not exist yet is recorded as absent;
-- around Bash (Claude Code, Codex) and around every Codex or Cursor call that is not known to be read-only,
+- around Bash (Claude Code) and around every call of the other agents that is not known to be read-only,
   saves the project's files before the call and checkpoints, in the "post" record, the ones it changed,
   created or deleted (see bashscan.py).
 
 It never blocks, never decides and never changes the call: it always exits 0, even when its own input is
-broken or the disk is full, and prints nothing to stdout except the one answer Cursor requires from a
-permission hook (`{"permission": "allow"}`). Problems go to stderr only.
+broken or the disk is full, and prints nothing to stdout except the answer an agent's docs require (Cursor's
+permission hook: `{"permission": "allow"}`; Gemini CLI, which parses stdout as JSON: `{}`). Problems go to
+stderr only.
 """
 from __future__ import annotations
 
@@ -147,7 +149,7 @@ def _handle(payload: dict, ag, agent: str, n: dict, store: Path, rec: Recorder) 
 def run(stdin=None, agent: str = agents.DEFAULT) -> int:
     """Hook entry point. Always returns 0. Writes nothing to stdout, except the agent's required reply
     (Cursor: `{"permission": "allow"}` before a call, `{}` after one; the same allow if the input could not
-    be read, so a broken payload still never turns into a block)."""
+    be read, so a broken payload still never turns into a block. Gemini CLI: `{}` always)."""
     event = "unknown"
     try:
         payload = json.load(stdin or sys.stdin)
@@ -183,15 +185,17 @@ def hook_command(agent: str = agents.DEFAULT) -> str:
 
     It names the interpreter by absolute path, so it works whether or not a virtualenv is active.
     From a clone (not installed) it carries the PYTHONPATH that makes the package importable.
-    For Codex and Cursor it carries `--agent`, so the hook reads their payload and answers their way.
+    For every agent but Claude Code it carries `--agent`, so the hook reads their payload and answers their way.
+    For an agent where a non-zero exit blocks the call (agents.Agent.fail_closed: Copilot CLI's preToolUse) it
+    ends in `|| true`, so not even a missing interpreter can turn into a block.
     """
     run = f"{shlex.quote(sys.executable)} -m rewindagents hook"
     if agent != agents.DEFAULT:
         run += f" --agent {agent}"
-    if installed():
-        return run
-    src = Path(__file__).resolve().parent.parent
-    return f"PYTHONPATH={shlex.quote(str(src))} {run}"
+    if not installed():
+        src = Path(__file__).resolve().parent.parent
+        run = f"PYTHONPATH={shlex.quote(str(src))} {run}"
+    return run + " || true" if agents.AGENTS[agent].fail_closed else run
 
 
 def install(settings_path: str | Path | None = None, command: str | None = None,
@@ -200,7 +204,7 @@ def install(settings_path: str | Path | None = None, command: str | None = None,
     Keeps everything already there. Returns True if the file changed, False if the hook was already installed.
     """
     ag = agents.AGENTS[agent]
-    return agents.install(ag, settings_path or ag.settings, command or hook_command(agent))
+    return agents.install(ag, settings_path or agents.config_path(ag), command or hook_command(agent))
 
 
 def uninstall(settings_path: str | Path | None = None, command: str | None = None,
@@ -210,4 +214,4 @@ def uninstall(settings_path: str | Path | None = None, command: str | None = Non
     Returns True if the file changed, False if there was nothing of ours in it.
     """
     ag = agents.AGENTS[agent]
-    return agents.uninstall(ag, settings_path or ag.settings, command or hook_command(agent))
+    return agents.uninstall(ag, settings_path or agents.config_path(ag), command or hook_command(agent))
