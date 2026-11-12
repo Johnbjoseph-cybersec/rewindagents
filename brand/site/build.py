@@ -116,6 +116,7 @@ def facts():
             ("export", "Export a replay"), ("sessions", "Find a session"), ("verify", "What the chain does not catch"),
             ("record", "Use it"), ("tests", "Tests"), ("quick", "Quick start"), ("ui", "Timeline UI"))},
         "quick_use": readme_blocks(readme, "Quick start")[1],
+        "uninstall": next(blk for blk in readme_blocks(readme, "Claude Code hook") if blk[0].startswith("rewindagents uninstall")),
         "beats": demo["beats"],
         "gif": {k: demo["gif_facts"][k] for k in ("width", "height", "seconds", "frames")},
     }
@@ -643,7 +644,7 @@ def docs_html(cfg, f):
 
 <h2 id="hook">Add the hook</h2>
 %(hook)s
-<p><code>install</code> adds a <code>PreToolUse</code> and a <code>PostToolUse</code> hook to the settings file, keeps everything already in it, and does nothing if the hook is already there. The command it writes names the Python that rewindagents was installed into by absolute path, so it runs whether or not a virtualenv is active. To remove the hook, delete those two entries from the settings file.</p>
+<p><code>install</code> adds a <code>PreToolUse</code> and a <code>PostToolUse</code> hook to the settings file, keeps everything already in it, and does nothing if the hook is already there. The command it writes names the Python that rewindagents was installed into by absolute path, so it runs whether or not a virtualenv is active. To remove the hook, run <code>rewindagents uninstall</code> (see <a href="#remove">Remove it</a>).</p>
 %(agents)s
 <p>For Codex the file is <code>%(codex)s</code>, in the same shape as Claude Code&#x27;s settings; Codex asks you to trust the hook once (<code>/hooks</code>) and remembers the trust by the hook&#x27;s hash. For Cursor the file is <code>%(cursor)s</code> with a <code>preToolUse</code> and a <code>postToolUse</code> entry; because Cursor&#x27;s <code>preToolUse</code> is a permission hook that treats an empty answer as a failure, the hook prints <code>{"permission": "allow"}</code> before a call and <code>{}</code> after one, which changes nothing (a deny from another hook still wins). The Codex and Cursor hooks are tested with the payloads in the vendors&#x27; documentation and through the installed command, not yet in a live session.</p>
 %(more_agents)s
@@ -705,7 +706,8 @@ def docs_html(cfg, f):
 </ul>
 
 <h2 id="remove">Remove it</h2>
-<p>Delete the two hook entries from the file you installed into, delete <code>.rewindagents/</code> in the project, and uninstall the package (<code>pipx uninstall rewindagents</code> or <code>pip uninstall rewindagents</code>). Nothing else was created.</p>
+%(uninstall)s
+<p><code>uninstall</code> removes only the hook entries <code>install</code> wrote, so every other hook and setting stays, and it never touches <code>.rewindagents/</code>: recorded sessions can still be replayed and rewound. To remove everything, also delete <code>.rewindagents/</code> in the project and uninstall the package (<code>pipx uninstall rewindagents</code> or <code>pip uninstall rewindagents</code>). Nothing else was created.</p>
 
 <h2 id="tests">Tests</h2>
 %(tests)s
@@ -716,7 +718,8 @@ def docs_html(cfg, f):
 """ % {"label": label(1, "Docs"), "toc": "".join('<a href="#%s">%s</a>' % (a, t) for a, t in toc), "py": e(f["py_req"]),
        "tested": e(f["tested_on"]), "install": code(b["install"]),
        "version": panel([("cmd", "rewindagents --version"), ("out", "rewindagents %s" % f["version"])]),
-       "hook": code(b["hook"]), "agents": code(b["agents"]), "codex": e(f["agents"]["codex"]["settings"]),
+       "hook": code(b["hook"]), "agents": code(b["agents"]), "uninstall": code(f["uninstall"]),
+       "codex": e(f["agents"]["codex"]["settings"]),
        "cursor": e(f["agents"]["cursor"]["settings"]),
        "more_agents": more_agents_html(),
        "cursor_ro": ", ".join("<code>%s</code>" % e(t) for t in f["agents"]["cursor"]["read_only"]),

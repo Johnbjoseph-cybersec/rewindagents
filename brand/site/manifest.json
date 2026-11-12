@@ -163,6 +163,10 @@
   ],
   "steps": 14,
   "tested_on": "Python 3.15 on macOS",
+  "uninstall": [
+   "rewindagents uninstall          # removes the hook from .claude/settings.json in this project",
+   "rewindagents uninstall --agent cursor --settings ~/.cursor/hooks.json   # same flags as install"
+  ],
   "version": "0.0.7",
   "wreck_steps": 2
  },

@@ -57,7 +57,7 @@
 <span class="l"><span class="p">$ </span>rewindagents install</span>
 <span class="l"><span class="p">$ </span>rewindagents install --settings ~/.claude/settings.json</span>
 <span class="l"><span class="c"># or for every project</span></span></code></pre>
-<p><code>install</code> adds a <code>PreToolUse</code> and a <code>PostToolUse</code> hook to the settings file, keeps everything already in it, and does nothing if the hook is already there. The command it writes names the Python that rewindagents was installed into by absolute path, so it runs whether or not a virtualenv is active. To remove the hook, delete those two entries from the settings file.</p>
+<p><code>install</code> adds a <code>PreToolUse</code> and a <code>PostToolUse</code> hook to the settings file, keeps everything already in it, and does nothing if the hook is already there. The command it writes names the Python that rewindagents was installed into by absolute path, so it runs whether or not a virtualenv is active. To remove the hook, run <code>rewindagents uninstall</code> (see <a href="#remove">Remove it</a>).</p>
 <pre class="term"><code><span class="l"><span class="c"># adds the hook to .codex/hooks.json in this project</span></span>
 <span class="l"><span class="p">$ </span>rewindagents install --agent codex</span>
 <span class="l"><span class="c"># adds the hook to .cursor/hooks.json in this project</span></span>
@@ -190,7 +190,11 @@
 </ul>
 
 <h2 id="remove">Remove it</h2>
-<p>Delete the two hook entries from the file you installed into, delete <code>.rewindagents/</code> in the project, and uninstall the package (<code>pipx uninstall rewindagents</code> or <code>pip uninstall rewindagents</code>). Nothing else was created.</p>
+<pre class="term"><code><span class="l"><span class="c"># removes the hook from .claude/settings.json in this project</span></span>
+<span class="l"><span class="p">$ </span>rewindagents uninstall</span>
+<span class="l"><span class="c"># same flags as install</span></span>
+<span class="l"><span class="p">$ </span>rewindagents uninstall --agent cursor --settings ~/.cursor/hooks.json</span></code></pre>
+<p><code>uninstall</code> removes only the hook entries <code>install</code> wrote, so every other hook and setting stays, and it never touches <code>.rewindagents/</code>: recorded sessions can still be replayed and rewound. To remove everything, also delete <code>.rewindagents/</code> in the project and uninstall the package (<code>pipx uninstall rewindagents</code> or <code>pip uninstall rewindagents</code>). Nothing else was created.</p>
 
 <h2 id="tests">Tests</h2>
 <pre class="term"><code><span class="l"><span class="p">$ </span>python3 -m unittest discover -s tests -v</span></code></pre>
