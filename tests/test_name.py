@@ -11,7 +11,8 @@ import subprocess
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-HISTORY = ["brand/logo/candidates/*", "brand/logo/round2-concepts/*", "*review*.json", "*/pick.json", "*/claims.json"]
+HISTORY = ["brand/logo/candidates/*", "brand/logo/round2-concepts/*", "*review*.json", "*/pick.json", "*/claims.json",
+           "tests/test_name.py"]   # this file has to spell the old name to look for it
 OLD = re.compile(r"(?<!fire/)(?<!board-)rewindagent(?!s)", re.I)
 TAG = re.compile(r"</?[a-zA-Z][^<>]*>")   # markup can split the name: rewind<span>agent</span>
 
