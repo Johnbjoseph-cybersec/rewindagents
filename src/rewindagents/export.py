@@ -115,7 +115,7 @@ def build(log_path: str | Path, session: str | None = None, contents: bool = Tru
     # The project's location is scrubbed from everything the page prints: the resolved root and the root
     # as the log was addressed (macOS gives /var/... and /private/var/... for the same directory).
     roots = sorted({str(root), str(Path(log_path).absolute().parent.parent)}, key=len, reverse=True)
-    objects = root / ".rewindagent" / "objects"
+    objects = root / ".rewindagents" / "objects"
     ok, n, msg = log.verify(log_path)
     session = session or rewind.latest_session(log_path)
     all_steps = rewind.steps(log_path, session)
@@ -239,7 +239,7 @@ def render(data: dict) -> str:
             body.append(f"<h3>Input</h3><pre>{_json(s['input'], root)}</pre>")
             if s["result"] is not None:
                 body.append(f"<h3>Result</h3><pre>{_json(s['result'], root)}</pre>")
-            elif s["tool"] != "rewindagent":
+            elif s["tool"] != "rewindagents":
                 body.append('<p class="note">No result was recorded for this call.</p>')
         if s.get("bash_scan") and "skipped" in s["bash_scan"]:
             body.append(f'<p class="note">Files changed by this command were not checkpointed: {_esc(s["bash_scan"]["skipped"])}.</p>')
@@ -267,12 +267,12 @@ def render(data: dict) -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>rewindagent replay: {_esc(data["project"])} session {_esc(data["session"])}</title>
+<title>rewindagents replay: {_esc(data["project"])} session {_esc(data["session"])}</title>
 <style>{_CSS}</style>
 </head>
 <body>
 <main>
-<h1>rewind<span>agent</span> replay</h1>
+<h1>rewind<span>agents</span> replay</h1>
 <p class="meta">{_esc(data["project"])}, session <code>{_esc(data["session"])}</code>: {n} step{"s" if n != 1 else ""}.
 Log: {data["records"]} records, {chain}, head <code>{_esc(_short(data["head"]))}</code>. Exported {_esc(data["exported"])}.
 {"File changes are shown as diffs." if data["contents"] else "Exported without contents: no inputs, results or diffs."}</p>
@@ -280,7 +280,7 @@ Log: {data["records"]} records, {chain}, head <code>{_esc(_short(data["head"]))}
 <ol class="steps">
 {chr(10).join(items)}
 </ol>
-<footer><span>{CREDIT}</span><span>rewindagent {_esc(data["version"])}</span></footer>
+<footer><span>{CREDIT}</span><span>rewindagents {_esc(data["version"])}</span></footer>
 </main>
 </body>
 </html>
@@ -292,9 +292,9 @@ def export(log_path: str | Path, session: str | None = None, out: str | Path | N
     """Write the page. Returns the build data plus 'out' (the path written) and 'bytes'."""
     data = build(log_path, session, contents)
     page = render(data)
-    path = Path(out) if out else rewind.project_root(log_path) / ".rewindagent" / f"replay-{data['session']}.html"
+    path = Path(out) if out else rewind.project_root(log_path) / ".rewindagents" / f"replay-{data['session']}.html"
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(f".{path.name}.rewindagent.tmp")
+    tmp = path.with_name(f".{path.name}.rewindagents.tmp")
     tmp.write_text(page, encoding="utf-8")
     os.replace(tmp, path)
     data["out"], data["bytes"] = str(path), len(page.encode("utf-8"))

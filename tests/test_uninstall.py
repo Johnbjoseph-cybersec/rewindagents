@@ -1,5 +1,5 @@
 """`uninstall` (R13): removes only the hook entries `install` wrote, for every agent; every other hook and key
-survives; a file holding none of ours is left byte-identical and says so; .rewindagent/ is never touched."""
+survives; a file holding none of ours is left byte-identical and says so; .rewindagents/ is never touched."""
 import io
 import json
 import os
@@ -12,8 +12,8 @@ from tempfile import TemporaryDirectory
 SRC = Path(__file__).resolve().parent.parent / "src"
 sys.path.insert(0, str(SRC))
 
-from rewindagent import agents, hook  # noqa: E402
-from rewindagent.cli import main  # noqa: E402
+from rewindagents import agents, hook  # noqa: E402
+from rewindagents.cli import main  # noqa: E402
 
 ROOT = SRC.parent
 OTHER_GROUPS = {"description": "mine", "hooks": {
@@ -102,7 +102,7 @@ class TestCli(unittest.TestCase):
             here = os.getcwd()
             os.chdir(d)
             try:
-                store = Path(d, ".rewindagent")
+                store = Path(d, ".rewindagents")
                 store.mkdir()
                 Path(store, "log.jsonl").write_text("{}\n")
                 for agent, path in (("cursor", ".cursor/hooks.json"), ("codex", ".codex/hooks.json"),
@@ -116,14 +116,14 @@ class TestCli(unittest.TestCase):
                                      (0, "not installed in %s; left unchanged\n" % path))
                 self.assertEqual(cli("install", "--settings", "u/s.json")[0], 0)
                 self.assertEqual(cli("uninstall", "--settings", "u/s.json"), (0, "removed from u/s.json\n"))
-                self.assertEqual(Path(store, "log.jsonl").read_text(), "{}\n", ".rewindagent/ untouched")
+                self.assertEqual(Path(store, "log.jsonl").read_text(), "{}\n", ".rewindagents/ untouched")
             finally:
                 os.chdir(here)
 
     def test_readme_gives_the_undo_line(self):
         readme = " ".join((ROOT / "README.md").read_text(encoding="utf-8").split())
-        self.assertIn("rewindagent uninstall", readme)
-        self.assertIn("never touches `.rewindagent/`", readme)
+        self.assertIn("rewindagents uninstall", readme)
+        self.assertIn("never touches `.rewindagents/`", readme)
 
 
 if __name__ == "__main__":

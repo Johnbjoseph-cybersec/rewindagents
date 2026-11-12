@@ -1,4 +1,4 @@
-"""Build brand/demo.gif (task RB2b): a wrecked project put back by `rewindagent rewind`, in under 20 seconds,
+"""Build brand/demo.gif (task RB2b): a wrecked project put back by `rewindagents rewind`, in under 20 seconds,
 every line of it real.
 
 brand/demo/scenario.py makes a small project in a temp folder, runs fourteen agent steps through the real
@@ -14,7 +14,7 @@ outlined from the OFL font files (Commit Mono for the terminal, Bricolage Grotes
 Grotesk for the small print), so the frames render the same with no fonts installed.
 
 Usage: .venv/bin/python brand/demo/build.py [<.brandcache dir>]
-Run it with the venv Python that has rewindagent installed, so the undo hint the clip shows is the one the
+Run it with the venv Python that has rewindagents installed, so the undo hint the clip shows is the one the
 installed command prints. Needs fontTools in .venv and the @fontsource packages plus @resvg/resvg-js in
 .brandcache (brand/logo/requirements.txt), node and ffmpeg on PATH. Writes brand/demo.gif,
 brand/demo/manifest.json (storyboard, timing, GIF facts), brand/demo/keyframes/*.png (full size, for looking
@@ -35,8 +35,8 @@ ROOT = os.path.dirname(BRAND)
 sys.path.insert(0, BRAND)
 sys.path.insert(0, HERE)
 
-import rewindagent  # noqa: E402
-from rewindagent import cli  # noqa: E402
+import rewindagents  # noqa: E402
+from rewindagents import cli  # noqa: E402
 from contrast_check import PALETTE as C  # noqa: E402
 from gifinfo import info as gif_info  # noqa: E402
 import scenario  # noqa: E402
@@ -63,7 +63,7 @@ FONT, LH = 17.0, 26                         # terminal text size and line pitch
 TX = PX + 28                                # text left edge
 BASE0 = PY + TITLE_H + 20 + 14              # first baseline
 ROWS = (PH - TITLE_H - 40) // LH            # lines that fit; older lines leave at the top, as in a terminal
-NAME = "rewindagent"
+NAME = "rewindagents"
 TAGLINE = "Ctrl+Z for AI coding agents"
 CREDIT = "made by John B Joseph"
 COLOURS = {"caption": "Playhead", "prompt": "Playhead", "command": "Leader", "output": "Leader",
@@ -154,7 +154,7 @@ def chrome(logo, disp, small):
 
 
 def frame_svg(logo, mono, static, lines):
-    return logo.svg(W, H, frame_body(mono, static, lines), bg=C["Leader"], title="rewindagent demo")
+    return logo.svg(W, H, frame_body(mono, static, lines), bg=C["Leader"], title="rewindagents demo")
 
 
 def frame_body(mono, static, lines):
@@ -194,7 +194,7 @@ def check(beats, frames, cols, root):
     for b in beats:
         if b["exit"] != 0:
             raise SystemExit("%r exited %d:\n%s" % (b["command"], b["exit"], b["output"]))
-        if b["command"].startswith("rewindagent") and "rewindagent:" in b["output"]:
+        if b["command"].startswith("rewindagents") and "rewindagents:" in b["output"]:
             raise SystemExit("%r printed an error: %s" % (b["command"], b["output"]))
     texts = {t for lines, _ in frames for line in lines for t, _ in line}
     for t in texts:
@@ -212,9 +212,9 @@ def check(beats, frames, cols, root):
 
 
 def build(cache):
-    if cli.invocation() != "rewindagent":
-        raise SystemExit("run build.py with the Python that has rewindagent installed (the clip types "
-                         "`rewindagent ...`, so the undo hint it shows must say the same)")
+    if cli.invocation() != "rewindagents":
+        raise SystemExit("run build.py with the Python that has rewindagents installed (the clip types "
+                         "`rewindagents ...`, so the undo hint it shows must say the same)")
     logo = load_logo_build()
     fs = os.path.join(cache, "node_modules", "@fontsource")
     mono = Mono(logo.Face(os.path.join(fs, "commit-mono", "files", "commit-mono-latin-400-normal.woff")))
@@ -274,7 +274,7 @@ def build(cache):
         raise SystemExit("the GIF's colour table lost these brand colours: %s" % missing)
     facts["bytes"] = os.path.getsize(gif)
     manifest = {
-        "gif": "demo.gif", "version": rewindagent.__version__, "invocation": cli.invocation(),
+        "gif": "demo.gif", "version": rewindagents.__version__, "invocation": cli.invocation(),
         "session": scenario.SESSION, "steps": len(scenario.STEPS), "good_step": scenario.GOOD_STEP,
         "limit_seconds": MAX_SECONDS, "storyboard_seconds": total, "grid_seconds": GRID,
         "beats": [{k: b[k] for k in ("caption", "command", "output", "exit", "hold", "accent_rows")} for b in beats],

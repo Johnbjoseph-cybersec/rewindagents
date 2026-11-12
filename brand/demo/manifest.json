@@ -5,8 +5,8 @@
     12,
     13
    ],
-   "caption": "# a coding agent has been working in this repo; rewindagent recorded every step",
-   "command": "rewindagent replay",
+   "caption": "# a coding agent has been working in this repo; rewindagents recorded every step",
+   "command": "rewindagents replay",
    "exit": 0,
    "hold": 2.4,
    "output": "    1  Read          README.md\n    2  Read          app/config.py\n    3  Edit          app/config.py  [1 checkpointed]\n    4  Read          app/server.py\n    5  Edit          app/server.py  [1 checkpointed]\n    6  Write         tests/test_timeout.py  [1 checkpointed]\n    7  Bash          python3 -m unittest discover -s tests -t . -q\n    8  Edit          app/server.py  [1 checkpointed]\n    9  Bash          python3 -m unittest discover -s tests -t . -q\n   10  Edit          README.md  [1 checkpointed]\n   11  Bash          git status --short\n   12  Read          tests/test_server.py\n   13  Bash          rm -rf tests  [3 checkpointed]\n   14  Write         app/config.py  [1 checkpointed]\n"
@@ -27,10 +27,10 @@
     4
    ],
    "caption": "# put the files back the way they were right after step 12",
-   "command": "rewindagent rewind 12",
+   "command": "rewindagents rewind 12",
    "exit": 0,
    "hold": 2.8,
-   "output": "session demo: rewind to step 12 of 14 (did change 4 files)\n  restore  tests/test_config.py\n  restore  tests/test_server.py\n  restore  tests/test_timeout.py\n  restore  app/config.py\n  this rewind is step 15; undo it with: rewindagent rewind 14 --session demo\n"
+   "output": "session demo: rewind to step 12 of 14 (did change 4 files)\n  restore  tests/test_config.py\n  restore  tests/test_server.py\n  restore  tests/test_timeout.py\n  restore  app/config.py\n  this rewind is step 15; undo it with: rewindagents rewind 14 --session demo\n"
   },
   {
    "accent_rows": [],
@@ -58,7 +58,7 @@
  ],
  "gif": "demo.gif",
  "gif_facts": {
-  "bytes": 208838,
+  "bytes": 210136,
   "delays_cs": [
    4,
    8,
@@ -69,20 +69,20 @@
    280,
    320
   ],
-  "frames": 65,
+  "frames": 66,
   "height": 675,
   "loops": 0,
-  "seconds": 16.64,
+  "seconds": 16.72,
   "width": 1200
  },
  "good_step": 12,
  "grid_seconds": 0.04,
- "invocation": "rewindagent",
+ "invocation": "rewindagents",
  "limit_seconds": 20.0,
  "rows": 19,
  "session": "demo",
  "steps": 14,
- "storyboard_seconds": 16.6,
+ "storyboard_seconds": 16.68,
  "title_right": "Ctrl+Z for AI coding agents",
  "version": "0.0.7"
 }

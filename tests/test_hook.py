@@ -11,7 +11,7 @@ from tempfile import TemporaryDirectory
 SRC = Path(__file__).resolve().parent.parent / "src"
 sys.path.insert(0, str(SRC))
 
-from rewindagent import hook, read, verify  # noqa: E402
+from rewindagents import hook, read, verify  # noqa: E402
 
 
 def payload(cwd, event, tool, tool_input, response=None, session="s1"):
@@ -24,7 +24,7 @@ def payload(cwd, event, tool, tool_input, response=None, session="s1"):
 
 def run_hook_process(stdin_text, cwd):
     env = dict(os.environ, PYTHONPATH=str(SRC))
-    return subprocess.run([sys.executable, "-m", "rewindagent", "hook"], input=stdin_text,
+    return subprocess.run([sys.executable, "-m", "rewindagents", "hook"], input=stdin_text,
                           capture_output=True, text=True, cwd=cwd, env=env)
 
 
@@ -37,7 +37,7 @@ class TestCheckpoint(unittest.TestCase):
             cp = rec["args"]["checkpoint"]
             self.assertEqual(cp["sha256"], hashlib.sha256(b"print('v1')\n").hexdigest())
             f.write_text("print('broken')\n")   # the agent's change happens after the hook
-            saved = Path(d, ".rewindagent", "objects", cp["sha256"]).read_bytes()
+            saved = Path(d, ".rewindagents", "objects", cp["sha256"]).read_bytes()
             self.assertEqual(saved, b"print('v1')\n")
 
     def test_relative_path_resolved_against_cwd(self):
@@ -65,7 +65,7 @@ class TestCheckpoint(unittest.TestCase):
             for name in ("a.txt", "b.txt"):
                 Path(d, name).write_text("same")
                 hook.handle(payload(d, "PreToolUse", "Edit", {"file_path": name}))
-            objs = [p for p in Path(d, ".rewindagent", "objects").iterdir()]
+            objs = [p for p in Path(d, ".rewindagents", "objects").iterdir()]
             self.assertEqual(len(objs), 1)
 
     def test_oversized_file_skipped_not_stored(self):
@@ -79,7 +79,7 @@ class TestCheckpoint(unittest.TestCase):
                 hook.MAX_CHECKPOINT_BYTES = old
             self.assertIsNone(rec["args"]["checkpoint"]["sha256"])
             self.assertIn("skipped", rec["args"]["checkpoint"])
-            self.assertFalse(Path(d, ".rewindagent", "objects").exists())
+            self.assertFalse(Path(d, ".rewindagents", "objects").exists())
 
     def test_non_file_tool_has_no_checkpoint(self):
         with TemporaryDirectory() as d:
@@ -93,7 +93,7 @@ class TestRecording(unittest.TestCase):
         with TemporaryDirectory() as d:
             hook.handle(payload(d, "PreToolUse", "Bash", {"command": "ls"}))
             hook.handle(payload(d, "PostToolUse", "Bash", {"command": "ls"}, {"stdout": "a.txt"}))
-            lg = Path(d, ".rewindagent", "log.jsonl")
+            lg = Path(d, ".rewindagents", "log.jsonl")
             recs = read(lg)
             self.assertEqual([r["event"] for r in recs], ["pre", "post"])
             self.assertEqual(recs[1]["result"], {"stdout": "a.txt"})
@@ -102,7 +102,7 @@ class TestRecording(unittest.TestCase):
     def test_store_ignores_itself_in_git(self):
         with TemporaryDirectory() as d:
             hook.handle(payload(d, "PreToolUse", "Bash", {"command": "ls"}))
-            self.assertEqual(Path(d, ".rewindagent", ".gitignore").read_text(), "*\n")
+            self.assertEqual(Path(d, ".rewindagents", ".gitignore").read_text(), "*\n")
 
     def test_long_response_is_clipped(self):
         with TemporaryDirectory() as d:
@@ -120,7 +120,7 @@ class TestNeverBlocks(unittest.TestCase):
             Path(d, "f.txt").write_text("v1")
             p = run_hook_process(json.dumps(payload(d, "PreToolUse", "Edit", {"file_path": "f.txt"})), d)
             self.assertEqual((p.returncode, p.stdout), (0, ""))
-            self.assertEqual(len(read(Path(d, ".rewindagent", "log.jsonl"))), 1)
+            self.assertEqual(len(read(Path(d, ".rewindagents", "log.jsonl"))), 1)
 
     def test_garbage_input_exits_zero_silently(self):
         with TemporaryDirectory() as d:
@@ -131,7 +131,7 @@ class TestNeverBlocks(unittest.TestCase):
 
     def test_unwritable_store_exits_zero(self):
         with TemporaryDirectory() as d:
-            Path(d, ".rewindagent").write_text("a file where the store directory should be")
+            Path(d, ".rewindagents").write_text("a file where the store directory should be")
             p = run_hook_process(json.dumps(payload(d, "PreToolUse", "Bash", {"command": "ls"})), d)
             self.assertEqual((p.returncode, p.stdout), (0, ""))
             self.assertIn("not recorded", p.stderr)
@@ -166,7 +166,7 @@ class TestInstall(unittest.TestCase):
 
     def test_install_cli(self):
         from contextlib import redirect_stdout
-        from rewindagent.cli import main
+        from rewindagents.cli import main
         with TemporaryDirectory() as d:
             s = str(Path(d, "settings.json"))
             for expect in ("installed in", "already installed in"):
@@ -180,21 +180,21 @@ class TestInstall(unittest.TestCase):
         from unittest.mock import patch
         with patch.object(hook, "installed", return_value=False):
             cmd = hook.hook_command()
-        self.assertEqual(cmd, f"PYTHONPATH={shlex.quote(str(SRC))} {shlex.quote(sys.executable)} -m rewindagent hook")
+        self.assertEqual(cmd, f"PYTHONPATH={shlex.quote(str(SRC))} {shlex.quote(sys.executable)} -m rewindagents hook")
 
     def test_hook_command_when_installed_needs_no_pythonpath(self):
         import shlex
         from unittest.mock import patch
         with patch.object(hook, "installed", return_value=True):
             cmd = hook.hook_command()
-        self.assertEqual(cmd, f"{shlex.quote(sys.executable)} -m rewindagent hook")
+        self.assertEqual(cmd, f"{shlex.quote(sys.executable)} -m rewindagents hook")
 
     def test_installed_means_this_file_lives_in_site_packages(self):
         import site
         from unittest.mock import patch
         # These tests import the package from src/, so from here it is never "installed"...
         self.assertFalse(hook.installed())
-        # ...even though `pip install .` leaves src/rewindagent.egg-info behind, which a metadata lookup would trust.
+        # ...even though `pip install .` leaves src/rewindagents.egg-info behind, which a metadata lookup would trust.
         with patch.object(site, "getsitepackages", return_value=[str(SRC)]):
             self.assertTrue(hook.installed())
         with patch.object(site, "getsitepackages", return_value=[]), \
@@ -209,7 +209,7 @@ class TestInstall(unittest.TestCase):
             p = subprocess.run(cmd, shell=True, cwd=d, capture_output=True, text=True,
                                input=json.dumps(payload(d, "PreToolUse", "Bash", {"command": "ls"})))
             self.assertEqual((p.returncode, p.stdout), (0, ""), p.stderr)
-            self.assertEqual(len(read(Path(d, ".rewindagent", "log.jsonl"))), 1)
+            self.assertEqual(len(read(Path(d, ".rewindagents", "log.jsonl"))), 1)
 
 
 if __name__ == "__main__":

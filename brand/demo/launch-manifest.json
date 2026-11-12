@@ -1,52 +1,52 @@
 {
  "audio": "none: a screen recording; the captions carry the words",
  "captions_burnt_in": [
-  "a coding agent has been working in this repo; rewindagent recorded every step",
+  "a coding agent has been working in this repo; rewindagents recorded every step",
   "its last two steps deleted the tests and overwrote the config",
   "put the files back the way they were right after step 12",
   "the tests are back; the first 12 steps stay"
  ],
  "commands": [
-  "rewindagent replay",
+  "rewindagents replay",
   "git status --short",
-  "rewindagent rewind 12",
+  "rewindagents rewind 12",
   "git status --short"
  ],
  "contact_sheet": "demo/launch-contact-sheet.png",
  "cues": [
   {
-   "end_ms": 4600,
+   "end_ms": 4680,
    "lines": [
-    "a coding agent has been working in this repo; rewindagent recorded every step"
+    "a coding agent has been working in this repo; rewindagents recorded every step"
    ],
    "start_ms": 400
   },
   {
-   "end_ms": 7880,
+   "end_ms": 7960,
    "lines": [
     "its last two steps deleted the tests and overwrote the config"
    ],
-   "start_ms": 4600
+   "start_ms": 4680
   },
   {
-   "end_ms": 12120,
+   "end_ms": 12200,
    "lines": [
     "put the files back the way they were right after step 12"
    ],
-   "start_ms": 7880
+   "start_ms": 7960
   },
   {
-   "end_ms": 16600,
+   "end_ms": 16680,
    "lines": [
     "the tests are back; the first 12 steps stay"
    ],
-   "start_ms": 12120
+   "start_ms": 12200
   }
  ],
- "demo_beats_sha256": "b5808ab9335a0036bdce353850c5c7c1dd5fcb2569ec5d1b95da97250b7cca7b",
+ "demo_beats_sha256": "0f9b2dec1cebd80657f445936400ac29da9594cc9818dce4331d55d1ca49ca74",
  "end_card_seconds": 3.0,
  "fps": 25,
- "frames": 490,
+ "frames": 492,
  "height": 1080,
  "keyframes": [
   "demo/launch-keyframes/k0.png",
@@ -57,22 +57,22 @@
  ],
  "mp4": "launch-demo.mp4",
  "mp4_facts": {
-  "bytes": 564204,
+  "bytes": 567010,
   "faststart": true,
   "fps": 25.0,
-  "frames": 490,
+  "frames": 492,
   "height": 1080,
-  "seconds": 19.6,
-  "sha256": "bcb906a5c88594f56073abc8dd1bfaf52dff1603634fbc143557c74b24c3d8b6",
+  "seconds": 19.68,
+  "sha256": "2b6be14a5b9235c99344035873114454aa5efafb920f0e43b654d2ca6e955754",
   "video_codec": "avc1",
-  "video_seconds": 19.6,
+  "video_seconds": 19.68,
   "width": 1920
  },
  "note": "Written by brand/demo/launch_mp4.py. The address on the end card comes from brand/site/config.json at render time; this file keeps no address.",
  "session": "demo",
  "srt": "launch-demo.srt",
- "terminal_seconds": 16.6,
- "unique_frames": 65,
+ "terminal_seconds": 16.68,
+ "unique_frames": 66,
  "version": "0.0.7",
  "width": 1920
 }

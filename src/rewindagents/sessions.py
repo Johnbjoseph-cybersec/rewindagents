@@ -1,4 +1,4 @@
-"""`rewindagent sessions`: every session in a log, and the ones whose steps mention a text.
+"""`rewindagents sessions`: every session in a log, and the ones whose steps mention a text.
 
 A session is whatever wrote records under one session id: Claude Code's session_id through the hook,
 or the --session given to `record`. One pass over the log; the records of each session are paired into
@@ -68,7 +68,7 @@ def when(ts: float) -> str:
 
 
 def lines(entries: list[dict], root: Path | None = None, width: int = 80) -> list[str]:
-    """The text `rewindagent sessions` prints for these entries."""
+    """The text `rewindagents sessions` prints for these entries."""
     out: list[str] = []
     for e in entries:
         tail = "  (latest)" if e["latest"] else ""

@@ -122,12 +122,12 @@ def shots():
     items = gallery_items()
     out = [{"file": "ph-1.png", "kind": "title", "item": items[1], "promise": PROMISE, "source": "BRAND.md promise"}]
 
-    replay = m["beats"][by_cmd["rewindagent replay"]]
+    replay = m["beats"][by_cmd["rewindagents replay"]]
     lines = replay["output"].rstrip("\n").split("\n")
     skip = next(i for i, t in enumerate(lines) if re.match(r"^\s*%d\s" % REPLAY_FROM, t))
     if not all(i >= skip for i in replay["accent_rows"]):
         raise SystemExit("ph-2 would fold away a marked step")
-    out.append({"file": "ph-2.png", "kind": "term", "item": items[2], "beat": by_cmd["rewindagent replay"],
+    out.append({"file": "ph-2.png", "kind": "term", "item": items[2], "beat": by_cmd["rewindagents replay"],
                 "headline": headline_of(replay["caption"], ";"),
                 "panels": [{"label": None, "skipped": skip,
                             "rows": [command_row(replay["command"])]
@@ -140,11 +140,11 @@ def shots():
                 "panels": [{"label": None, "skipped": 0,
                             "rows": [command_row(wreck["command"])] + output_rows(wreck, deleted)}]})
 
-    rw = next(i for i, b in enumerate(m["beats"]) if b["command"].startswith("rewindagent rewind "))
+    rw = next(i for i, b in enumerate(m["beats"]) if b["command"].startswith("rewindagents rewind "))
     rewind = m["beats"][rw]
     # the one lit line is the undo line, the product's own claim (review RB5b round 1, RB5e round 1); the four
     # restored files are what the headline says
-    undo = {i for i, t in enumerate(rewind["output"].split("\n")) if "undo it with: rewindagent rewind " in t}
+    undo = {i for i, t in enumerate(rewind["output"].split("\n")) if "undo it with: rewindagents rewind " in t}
     if len(undo) != 1:
         raise SystemExit("the rewind beat no longer prints one undo line")
     out.append({"file": "ph-4.png", "kind": "term", "item": items[4], "beat": rw,
@@ -154,7 +154,7 @@ def shots():
 
     sh = readme_sh_lines()
     pipx = next(c for c, _ in sh if c.startswith("pipx install "))
-    install = next(c for c, _ in sh if c == "rewindagent install")
+    install = next(c for c, _ in sh if c == "rewindagents install")
     readme = " ".join(read("README.md").split())        # sentences wrap across lines in the file
     for note in README_NOTES:
         if note not in readme:
@@ -276,7 +276,7 @@ def draw_title(cv, kit, shot):
     x = M - 1 * k                               # the '<' apex (grid x 1) on the margin
     cv.add(lg.place(lg.mark_shapes(mono, C["Leader"]), x, top, k))
     base = top + lg.MARK_H * k + 56 + name_cap
-    cv.text(kit.disp, "rewindagent", nsize, M - 6, base, "Leader", tracking=-0.02)
+    cv.text(kit.disp, "rewindagents", nsize, M - 6, base, "Leader", tracking=-0.02)
     base += 64 + kit.body.cap(psize)
     for line in plines:
         cv.text(kit.body, line, psize, M, base, "Leader")

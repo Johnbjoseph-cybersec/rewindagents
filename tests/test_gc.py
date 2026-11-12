@@ -1,4 +1,4 @@
-"""`rewindagent gc`: delete the stored copies no record and no pending scan names; keep every rewind working."""
+"""`rewindagents gc`: delete the stored copies no record and no pending scan names; keep every rewind working."""
 import hashlib
 import json
 import os
@@ -10,12 +10,12 @@ from tempfile import TemporaryDirectory
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from rewindagent import gc, hook, rewind, verify  # noqa: E402
+from rewindagents import gc, hook, rewind, verify  # noqa: E402
 from test_rewind import Agent, cli  # noqa: E402
 
 
 def objects(d):
-    o = Path(d, ".rewindagent", "objects")
+    o = Path(d, ".rewindagents", "objects")
     return sorted(p.name for p in o.iterdir()) if o.is_dir() else []
 
 
@@ -104,7 +104,7 @@ class TestGc(unittest.TestCase):
     def test_refuses_when_a_pending_scan_cannot_be_read(self):
         with TemporaryDirectory() as d:
             a = project(d)
-            pend = Path(d, ".rewindagent", "pending")
+            pend = Path(d, ".rewindagents", "pending")
             pend.mkdir(exist_ok=True)
             (pend / "broken.json").write_text("{not json")
             before = objects(d)
@@ -115,7 +115,7 @@ class TestGc(unittest.TestCase):
     def test_leaves_files_that_are_not_stored_copies(self):
         with TemporaryDirectory() as d:
             a = project(d)
-            odd = Path(d, ".rewindagent", "objects", ".abc.123.tmp")
+            odd = Path(d, ".rewindagents", "objects", ".abc.123.tmp")
             odd.write_text("half-written")
             gc.gc(a.log)
             self.assertTrue(odd.exists())
@@ -124,7 +124,7 @@ class TestGc(unittest.TestCase):
         with TemporaryDirectory() as d:
             a = project(d)
             before = objects(d)
-            with hook.store_lock(Path(d, ".rewindagent")):         # a hook between its copy and its record
+            with hook.store_lock(Path(d, ".rewindagents")):         # a hook between its copy and its record
                 with self.assertRaisesRegex(gc.GcError, "still in use"):
                     gc.gc(a.log, timeout=0.2)
             self.assertEqual(objects(d), before)
@@ -135,7 +135,7 @@ class TestGc(unittest.TestCase):
             a = Agent(d)
             Path(d, "app.py").write_text("x = 1\n")
             a.bash("sed -i s/1/2/ app.py", post=False)          # the agent was killed before the after-scan
-            (scan,) = Path(d, ".rewindagent", "pending").glob("*.json")
+            (scan,) = Path(d, ".rewindagents", "pending").glob("*.json")
             got = gc.gc(a.log, dry_run=True, now=scan.stat().st_mtime + 3 * 86400)
             self.assertEqual(len(got["scans"]), 1)
             s = got["scans"][0]
@@ -151,7 +151,7 @@ class TestGc(unittest.TestCase):
             a = Agent(d)
             Path(d, "app.py").write_text("x = 1\n")
             a.bash("sed -i s/1/2/ app.py", post=False)          # killed half way: app.py changed, no after-scan
-            pend = Path(d, ".rewindagent", "pending")
+            pend = Path(d, ".rewindagents", "pending")
             (old,) = pend.glob("*.json")
             Path(d, "app.py").write_text("x = 2\n")
             a.bash("cat app.py", post=False)                    # still running
@@ -174,7 +174,7 @@ class TestGc(unittest.TestCase):
             a = Agent(d)
             Path(d, "app.py").write_text("x = 1\n")
             a.bash("sed -i s/1/2/ app.py", post=False)
-            (scan,) = Path(d, ".rewindagent", "pending").glob("*.json")
+            (scan,) = Path(d, ".rewindagents", "pending").glob("*.json")
             before = objects(d)
             got = gc.gc(a.log, dry_run=True, drop_older_than=1, now=scan.stat().st_mtime + 2 * 86400)
             self.assertEqual(([s["name"] for s in got["dropped"]], got["deleted"], got["pending"]),
@@ -188,7 +188,7 @@ class TestGc(unittest.TestCase):
             a = Agent(d)
             Path(d, "app.py").write_text("x = 1\n")
             a.bash("sed -i s/1/2/ app.py", post=False)
-            (scan,) = Path(d, ".rewindagent", "pending").glob("*.json")
+            (scan,) = Path(d, ".rewindagents", "pending").glob("*.json")
             for days in (0.5, 0, -1, float("nan")):
                 with self.assertRaisesRegex(gc.GcError, "never dropped"):
                     gc.gc(a.log, drop_older_than=days, now=scan.stat().st_mtime + 10 * 86400)
@@ -200,7 +200,7 @@ class TestGc(unittest.TestCase):
     def test_a_scan_no_record_names_is_listed_and_an_unreadable_old_one_can_be_dropped(self):
         with TemporaryDirectory() as d:
             a = project(d)
-            pend = Path(d, ".rewindagent", "pending")
+            pend = Path(d, ".rewindagents", "pending")
             pend.mkdir(exist_ok=True)
             orphan = pend / ("0" * 32 + ".json")              # e.g. written before the pre record named it
             orphan.write_text(json.dumps({"keep.txt": sha("v2\n")}))
@@ -213,12 +213,12 @@ class TestGc(unittest.TestCase):
             self.assertFalse(broken.exists())
             self.assertIn(sha("v2\n"), objects(d))             # the orphan scan still keeps its copy
             self.assertEqual(gc.lines(got)[-1], "    0.0 days old  command not recorded "
-                                                "(scan made before rewindagent named it in the log)")
+                                                "(scan made before rewindagents named it in the log)")
 
     def test_hooks_share_the_lock_with_each_other(self):
         with TemporaryDirectory() as d:
             a = Agent(d)
-            with hook.store_lock(Path(d, ".rewindagent")):
+            with hook.store_lock(Path(d, ".rewindagents")):
                 a.write("f.txt", "1")                            # does not wait on the other shared holder
             self.assertEqual([s["tool"] for s in rewind.steps(a.log)], ["Write"])
 
@@ -245,7 +245,7 @@ class TestGcCli(unittest.TestCase):
             a = Agent(d)
             Path(d, "app.py").write_text("x = 1\n")
             a.bash("sed -i s/1/2/ app.py", post=False)
-            (scan,) = Path(d, ".rewindagent", "pending").glob("*.json")
+            (scan,) = Path(d, ".rewindagents", "pending").glob("*.json")
             code, _, err = cli("--log", str(a.log), "gc", "--drop-pending-older-than", "0.5")
             self.assertEqual(code, 1)
             self.assertIn("never dropped", err)
@@ -260,9 +260,9 @@ class TestGcCli(unittest.TestCase):
 
     def test_readme_documents_gc(self):
         readme = (Path(__file__).resolve().parent.parent / "README.md").read_text(encoding="utf-8")
-        self.assertIn("rewindagent gc --dry-run", readme)
+        self.assertIn("rewindagents gc --dry-run", readme)
         self.assertIn("pending scan", readme)
-        self.assertIn("rewindagent gc --drop-pending-older-than 7", readme)
+        self.assertIn("rewindagents gc --drop-pending-older-than 7", readme)
         self.assertIn(f"younger than {gc.MIN_DROP_DAYS:g} day", readme)
 
 

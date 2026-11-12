@@ -1,4 +1,4 @@
-"""`rewindagent bundle` and `rewindagent import`: move one session to another machine or clone.
+"""`rewindagents bundle` and `rewindagents import`: move one session to another machine or clone.
 
 A bundle is one JSON file holding a session's log records, exactly as the log has them (each still carries
 the SHA-256 the chain gave it), and every stored file copy those records name, so the session can be
@@ -17,7 +17,7 @@ Then it writes the stored copies and appends the records to the destination log,
 original times. They join the destination's own chain, so they get new sequence numbers and new hashes.
 
 Paths: a record names files by absolute path on the machine that recorded it. On import, every path under
-the source project is moved under the destination project (the directory holding .rewindagent/), so
+the source project is moved under the destination project (the directory holding .rewindagents/), so
 `rewind` there puts the files back in the clone, not at the old address. Commands and results keep their
 text as recorded. The source project can appear under more than one spelling (on macOS a temporary
 directory is /var/... in the hook's input and /private/var/... once resolved); `bundle` lists each
@@ -36,7 +36,7 @@ from typing import Any
 from . import __version__, log, rewind
 from .hook import store_lock
 
-FORMAT = "rewindagent-bundle"
+FORMAT = "rewindagents-bundle"
 VERSION = 1
 _SHA = re.compile(r"[0-9a-f]{64}")
 
@@ -124,7 +124,7 @@ def bundle(log_path: str | Path, out: str | Path, session: str | None = None) ->
     if not records:
         raise BundleError(f"no session {session!r} in the log")
     root = rewind.project_root(log_path)
-    store = root / ".rewindagent" / "objects"
+    store = root / ".rewindagents" / "objects"
     objects: dict[str, str] = {}
     for sha in sorted(set().union(*(named_objects(r.get("args")) for r in records))):
         obj = store / sha
@@ -133,13 +133,13 @@ def bundle(log_path: str | Path, out: str | Path, session: str | None = None) ->
             raise BundleError(f"stored copy {sha[:12]} is missing or altered; refusing to bundle a session "
                               f"that could not be rewound")
         objects[sha] = base64.b64encode(data).decode("ascii")
-    b = {"format": FORMAT, "version": VERSION, "made_with": f"rewindagent {__version__}",
+    b = {"format": FORMAT, "version": VERSION, "made_with": f"rewindagents {__version__}",
          "session": session, "root": str(root), "root_spellings": root_spellings(records, root),
          "records": records, "objects": objects}
     b["digest"] = digest(b)
     out = Path(out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    tmp = out.with_name(f".{out.name}.rewindagent.tmp")
+    tmp = out.with_name(f".{out.name}.rewindagents.tmp")
     tmp.write_bytes(_canon(b) + b"\n")
     os.replace(tmp, out)
     return {"out": out, "session": session, "records": len(records),
@@ -149,9 +149,9 @@ def bundle(log_path: str | Path, out: str | Path, session: str | None = None) ->
 def check(b: Any) -> dict[str, bytes]:
     """Raise BundleError unless the bundle is whole and unaltered; return its stored copies, decoded."""
     if not isinstance(b, dict) or b.get("format") != FORMAT:
-        raise BundleError("not a rewindagent bundle")
+        raise BundleError("not a rewindagents bundle")
     if b.get("version") != VERSION:
-        raise BundleError(f"bundle version {b.get('version')!r} is not one this rewindagent reads ({VERSION})")
+        raise BundleError(f"bundle version {b.get('version')!r} is not one this rewindagents reads ({VERSION})")
     if b.get("digest") != digest(b):
         raise BundleError("bundle altered: its SHA-256 does not match")
     session, records, objects = b.get("session"), b.get("records"), b.get("objects")
@@ -204,7 +204,7 @@ def import_bundle(path: str | Path, log_path: str | Path) -> dict:
     session = b["session"]
     log_path = Path(log_path)
     root = rewind.project_root(log_path)
-    store = root / ".rewindagent"
+    store = root / ".rewindagents"
     if log_path.exists():
         ok, _, msg = log.verify(log_path)
         if not ok:

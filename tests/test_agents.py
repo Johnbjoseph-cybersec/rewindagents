@@ -2,7 +2,7 @@
 checkpoint store as Claude Code's, the project scan covers edits whose input shape is not documented, the
 hook answers each agent the way its docs require and never blocks, and `install` writes each agent's file.
 
-The payloads here are the ones the vendors' docs describe (src/rewindagent/agents.py quotes the sources).
+The payloads here are the ones the vendors' docs describe (src/rewindagents/agents.py quotes the sources).
 They are not recordings of a live Codex or Cursor session; the README says so.
 """
 import io
@@ -20,8 +20,8 @@ from unittest.mock import patch
 SRC = Path(__file__).resolve().parent.parent / "src"
 sys.path.insert(0, str(SRC))
 
-from rewindagent import agents, hook, read, rewind  # noqa: E402
-from rewindagent.cli import main  # noqa: E402
+from rewindagents import agents, hook, read, rewind  # noqa: E402
+from rewindagents.cli import main  # noqa: E402
 
 ROOT = SRC.parent
 
@@ -47,7 +47,7 @@ def codex(cwd, event, tool, tool_input, tool_response=None, session="codex-1", t
 
 def run_hook(stdin_text, cwd, agent):
     env = dict(os.environ, PYTHONPATH=str(SRC))
-    return subprocess.run([sys.executable, "-m", "rewindagent", "hook", "--agent", agent], input=stdin_text,
+    return subprocess.run([sys.executable, "-m", "rewindagents", "hook", "--agent", agent], input=stdin_text,
                           capture_output=True, text=True, cwd=cwd, env=env)
 
 
@@ -66,7 +66,7 @@ class TestCursor(unittest.TestCase):
             hook.handle(cursor(d, "preToolUse", "Shell", inp), "cursor")
             Path(d, "f.txt").write_text("2\n")
             hook.handle(cursor(d, "postToolUse", "Shell", inp, {"output": "", "exit_code": 0}), "cursor")
-            lg = Path(d, ".rewindagent", "log.jsonl")
+            lg = Path(d, ".rewindagents", "log.jsonl")
             recs = read(lg)
             self.assertEqual([r["session"] for r in recs], ["conv-1", "conv-1"], "session is conversation_id")
             self.assertEqual([r["args"]["agent"] for r in recs], ["cursor", "cursor"])
@@ -91,9 +91,9 @@ class TestCursor(unittest.TestCase):
             Path(d, "app.py").write_text("v2\n")
             Path(d, "new.py").write_text("made by the agent\n")
             hook.handle(cursor(d, "postToolUse", "Write", inp, {"ok": True}), "cursor")
-            s = rewind.steps(Path(d, ".rewindagent", "log.jsonl"))[0]
+            s = rewind.steps(Path(d, ".rewindagents", "log.jsonl"))[0]
             self.assertEqual(sorted(Path(c["path"]).name for c in s["checkpoints"]), ["app.py", "new.py"])
-            rewind.rewind(Path(d, ".rewindagent", "log.jsonl"), 0)
+            rewind.rewind(Path(d, ".rewindagents", "log.jsonl"), 0)
             self.assertEqual(Path(d, "app.py").read_text(), "v1\n")
             self.assertFalse(Path(d, "new.py").exists())
 
@@ -104,7 +104,7 @@ class TestCursor(unittest.TestCase):
                 hook.handle(cursor(d, "preToolUse", tool, {"x": 1}, tid=tid), "cursor")
                 Path(d, "keep.txt").unlink() if tool == "Delete" else Path(d, "keep.txt").write_text("mcp\n")
                 hook.handle(cursor(d, "postToolUse", tool, {"x": 1}, {"ok": True}, tid=tid), "cursor")
-            lg = Path(d, ".rewindagent", "log.jsonl")
+            lg = Path(d, ".rewindagents", "log.jsonl")
             self.assertEqual([s["bash_scan"] for s in rewind.steps(lg)], [{"changed": 1}, {"changed": 1}])
             rewind.rewind(lg, 0)
             self.assertEqual(Path(d, "keep.txt").read_text(), "k\n")
@@ -118,16 +118,16 @@ class TestCursor(unittest.TestCase):
                 self.assertNotIn("checkpoint", pre["args"])
                 post = hook.handle(cursor(d, "postToolUse", tool, {"query": "x"}, {"lines": []}), "cursor")
                 self.assertNotIn("checkpoints", post["args"])
-            self.assertFalse(Path(d, ".rewindagent", "objects").exists(), "nothing was saved")
-            self.assertFalse(Path(d, ".rewindagent", "pending").exists(), "no scan was started")
-            self.assertEqual(len(rewind.steps(Path(d, ".rewindagent", "log.jsonl"))), 2, "both calls are steps")
+            self.assertFalse(Path(d, ".rewindagents", "objects").exists(), "nothing was saved")
+            self.assertFalse(Path(d, ".rewindagents", "pending").exists(), "no scan was started")
+            self.assertEqual(len(rewind.steps(Path(d, ".rewindagents", "log.jsonl"))), 2, "both calls are steps")
             self.assertEqual(agents.AGENTS["cursor"].read_only, {"Read", "Grep"})
 
     def test_a_shell_call_without_its_post_event_is_reported_as_not_scanned(self):
         with TemporaryDirectory() as d:
             Path(d, "f.txt").write_text("1\n")
             hook.handle(cursor(d, "preToolUse", "Shell", {"command": "rm -rf build", "working_directory": d}), "cursor")
-            lg = Path(d, ".rewindagent", "log.jsonl")
+            lg = Path(d, ".rewindagents", "log.jsonl")
             self.assertEqual(rewind.rewind(lg, 0, dry_run=True)["bash_uncovered"], 1)
             code, out = cli("--log", str(lg), "rewind", "0", "--dry-run")
             self.assertEqual(code, 1)        # README: anything not restored -> exit 1
@@ -143,7 +143,7 @@ class TestCursor(unittest.TestCase):
             self.assertEqual((p.returncode, p.stdout, p.stderr), (0, '{"permission": "allow"}\n', ""))
             p = run_hook(json.dumps(cursor(d, "postToolUse", "Shell", inp, {"output": "f.txt"})), d, "cursor")
             self.assertEqual((p.returncode, p.stdout, p.stderr), (0, "{}\n", ""))
-            self.assertEqual(len(read(Path(d, ".rewindagent", "log.jsonl"))), 2)
+            self.assertEqual(len(read(Path(d, ".rewindagents", "log.jsonl"))), 2)
             for bad in ("not json", "[1, 2]", ""):
                 p = run_hook(bad, d, "cursor")
                 self.assertEqual((p.returncode, p.stdout), (0, '{"permission": "allow"}\n'), bad)
@@ -175,12 +175,12 @@ class TestCursor(unittest.TestCase):
             cmds = agents.commands_in(agents.AGENTS["cursor"], f)
             self.assertEqual(cmds["preToolUse"], cmds["postToolUse"])
             cmd = cmds["preToolUse"][0]
-            self.assertTrue(cmd.endswith(" -m rewindagent hook --agent cursor"), cmd)
+            self.assertTrue(cmd.endswith(" -m rewindagents hook --agent cursor"), cmd)
             Path(d, "f.txt").write_text("1\n")
             payload = cursor(d, "preToolUse", "Shell", {"command": "ls", "working_directory": d})
             p = subprocess.run(cmd, shell=True, cwd=d, capture_output=True, text=True, input=json.dumps(payload))
             self.assertEqual((p.returncode, p.stdout), (0, '{"permission": "allow"}\n'), p.stderr)
-            recs = read(Path(d, ".rewindagent", "log.jsonl"))
+            recs = read(Path(d, ".rewindagents", "log.jsonl"))
             self.assertEqual((len(recs), recs[0]["args"]["agent"], recs[0]["tool"]), (1, "cursor", "Shell"))
 
 
@@ -192,7 +192,7 @@ class TestCodex(unittest.TestCase):
             hook.handle(codex(d, "PreToolUse", "Bash", inp), "codex")
             Path(d, "f.txt").write_text("2\n")
             hook.handle(codex(d, "PostToolUse", "Bash", inp, {"output": "", "metadata": {"exit_code": 0}}), "codex")
-            lg = Path(d, ".rewindagent", "log.jsonl")
+            lg = Path(d, ".rewindagents", "log.jsonl")
             s = rewind.steps(lg)
             self.assertEqual((len(s), s[0]["tool"], s[0]["agent"], s[0]["bash_scan"]), (1, "Bash", "codex", {"changed": 1}))
             self.assertEqual(s[0]["result"], {"output": "", "metadata": {"exit_code": 0}})
@@ -210,7 +210,7 @@ class TestCodex(unittest.TestCase):
             self.assertNotIn("checkpoint", pre["args"])
             Path(d, "a.py").write_text("new\n")
             hook.handle(codex(d, "PostToolUse", "apply_patch", inp, {"output": "Success."}), "codex")
-            lg = Path(d, ".rewindagent", "log.jsonl")
+            lg = Path(d, ".rewindagents", "log.jsonl")
             self.assertEqual([Path(c["path"]).name for c in rewind.steps(lg)[0]["checkpoints"]], ["a.py"])
             rewind.rewind(lg, 0)
             self.assertEqual(Path(d, "a.py").read_text(), "old\n")
@@ -246,13 +246,13 @@ class TestCodex(unittest.TestCase):
             self.assertEqual(len(cmds["PreToolUse"]), 2)
             self.assertEqual(cmds["PostToolUse"], [cmds["PreToolUse"][1]])
             cmd = cmds["PostToolUse"][0]
-            self.assertTrue(cmd.endswith(" -m rewindagent hook --agent codex"), cmd)
+            self.assertTrue(cmd.endswith(" -m rewindagents hook --agent codex"), cmd)
             self.assertEqual(got["hooks"]["PostToolUse"][0]["matcher"], "*")
             self.assertFalse(hook.install(f, agent="codex"))
             p = subprocess.run(cmd, shell=True, cwd=d, capture_output=True, text=True,
                                input=json.dumps(codex(d, "PreToolUse", "Bash", {"command": "ls"})))
             self.assertEqual((p.returncode, p.stdout), (0, ""), p.stderr)
-            self.assertEqual(read(Path(d, ".rewindagent", "log.jsonl"))[0]["args"]["agent"], "codex")
+            self.assertEqual(read(Path(d, ".rewindagents", "log.jsonl"))[0]["args"]["agent"], "codex")
 
 
 class TestCli(unittest.TestCase):
@@ -279,13 +279,13 @@ class TestCli(unittest.TestCase):
         import shlex
         py = shlex.quote(sys.executable)
         with patch.object(hook, "installed", return_value=True):
-            self.assertEqual(hook.hook_command(), f"{py} -m rewindagent hook")
-            self.assertEqual(hook.hook_command("claude"), f"{py} -m rewindagent hook")
-            self.assertEqual(hook.hook_command("cursor"), f"{py} -m rewindagent hook --agent cursor")
-            self.assertEqual(hook.hook_command("codex"), f"{py} -m rewindagent hook --agent codex")
+            self.assertEqual(hook.hook_command(), f"{py} -m rewindagents hook")
+            self.assertEqual(hook.hook_command("claude"), f"{py} -m rewindagents hook")
+            self.assertEqual(hook.hook_command("cursor"), f"{py} -m rewindagents hook --agent cursor")
+            self.assertEqual(hook.hook_command("codex"), f"{py} -m rewindagents hook --agent codex")
         with patch.object(hook, "installed", return_value=False):
             self.assertEqual(hook.hook_command("codex"),
-                             f"PYTHONPATH={shlex.quote(str(SRC))} {py} -m rewindagent hook --agent codex")
+                             f"PYTHONPATH={shlex.quote(str(SRC))} {py} -m rewindagents hook --agent codex")
 
     def test_claude_code_records_carry_their_agent_and_still_print_nothing(self):
         with TemporaryDirectory() as d:
@@ -306,7 +306,7 @@ class TestDocs(unittest.TestCase):
     def test_readme_describes_the_hooks_as_the_code_has_them(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         for agent in ("codex", "cursor"):
-            self.assertIn("rewindagent install --agent %s" % agent, readme)
+            self.assertIn("rewindagents install --agent %s" % agent, readme)
             self.assertIn(agents.AGENTS[agent].settings, readme)
         self.assertIn('{"permission": "allow"}', readme)
         for tool in sorted(agents.AGENTS["cursor"].read_only | agents.AGENTS["codex"].read_only):

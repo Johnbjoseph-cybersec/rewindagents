@@ -1,4 +1,5 @@
 {
+  "repinned": "2026-11-12 RB0 (FIRE, not the reviewer): hashes re-pinned after a rebuild whose only change is the product name rewindagent -> rewindagents (John, 2026-11-12) in the wordmark, terminal commands and URLs; layout, colours and copy otherwise unchanged. Scores are the reviewer's last round, of the frames before the rename; they are not a review of the renamed frames.",
   "reviewer": "cs-iris-kapoor",
   "task": "RB5e",
   "round": 2,
@@ -7,7 +8,7 @@
   "brief": "No paper-white slides or half-empty terminals; one big headline readable at thumbnail; terminal cropped tight and enlarged to fill the frame; strong brand colour; logo concept E (< and cursor), one-colour Leader version on the red title card.",
   "images": {
     "ph-1.png": {
-      "png_sha256": "1741b00fba105f607a1e294cefb72d6b8002beb3b48094947ed2c886eaa06b15",
+      "png_sha256": "d56bd0cd9a5c586850c921ff8ae084b233579f14e1ec33c1b4a6c42f87f70775",
       "scores": {
         "first_read": {"score": 9, "evidence": "Mark now x56-358, y125-340 (302 px wide) over 'rewindagent' (x56-1076, y380-510); at 320 px the name is about 270 px wide and the '<' plus cursor reads as a clear second object. Red ground edge to edge."},
         "legibility": {"score": 9, "evidence": "Wordmark very large, tagline about 44 px (x56-1100, y568-608), roughly 11 px at 320 wide; only the 15 px credit (y715) is small and it is a footer."},
@@ -17,7 +18,7 @@
       }
     },
     "ph-2.png": {
-      "png_sha256": "52367d26db9b3ca810629a79921cb55c460189be48c6af0523147ed3a424adbe",
+      "png_sha256": "8f3fc163f842b1362bfcd7108e5d075ca943ac3b06a912be0efa183bebf3b413",
       "scores": {
         "first_read": {"score": 9, "evidence": "72 px two-line headline (x58-890, y50-190), dark band y250-670 edge to edge, six lines at 37 px; rows 13 and 14 in Rewind orange (y562, y614) are the only lit lines. Thumbnail reads headline, terminal, two hot rows."},
         "legibility": {"score": 9, "evidence": "37 px mono (about 9 px at 320, 18 at 635), 53 px pitch; longest line ends x1208, 62 px from the edge, no wrap. Tick marks (x100-370, y338-360) are grey decoration."},
@@ -37,7 +38,7 @@
       }
     },
     "ph-4.png": {
-      "png_sha256": "62d666380e2d1f185ac6c985b989e9da99cb792dc280213350021b3446ca3749",
+      "png_sha256": "90d0de4aefa14d4bfc457ae956f89731a387086978362af5bfbe0b025940f15e",
       "scores": {
         "first_read": {"score": 8, "evidence": "Balanced headline (x58-1010, y50-190) lands and the single orange undo line (y598, x87-1195) is now the one lit thing, which is right. But mono is 25 px, about 6 px at 320 wide, so at thumbnail the band is a dark bar with one orange line you cannot read."},
         "legibility": {"score": 8, "evidence": "25 px mono, 48 px pitch; undo line ends x1195, 75 px from the edge. Still the smallest terminal text in the set, about 12 px at 635 wide, width-limited by the verbatim 76-character line."},
@@ -47,7 +48,7 @@
       }
     },
     "ph-5.png": {
-      "png_sha256": "9f0e06be1566b6c44e903649deb9c2e0c8800e64ad98bb58bf8a1489dadeb085",
+      "png_sha256": "87ed1fd68c829fcf17a873a1acd900919fe9e296a81c91b351976bb87950004c",
       "scores": {
         "first_read": {"score": 8.5, "evidence": "'Install in two commands' (x58-893, y50-110); two dark strips y250-360 and y441-552 are the only dark shapes, and the orange 'rewindagent install' (x90-401, y493) is now the single lit item. Labels at 30 px read at 320; command text is still about 7 px there."},
         "legibility": {"score": 8.5, "evidence": "Mono 27.5 px, width-limited by the 73-char pipx line which ends x1210; labels and notes at 30 px white on red read well. The commands are the smallest text, about 14 px at 635 wide."},

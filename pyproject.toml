@@ -3,7 +3,7 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "rewindagent"
+name = "rewindagents"
 dynamic = ["version"]
 description = "Ctrl+Z for AI coding agents: record, replay and rewind every tool call."
 readme = "README.md"
@@ -23,13 +23,13 @@ classifiers = [
 ]
 
 [project.urls]
-Source = "https://github.com/Johnbjoseph-cybersec/rewindagent"
+Source = "https://github.com/Johnbjoseph-cybersec/rewindagents"
 
 [project.scripts]
-rewindagent = "rewindagent.cli:main"
+rewindagents = "rewindagents.cli:main"
 
 [tool.setuptools.dynamic]
-version = {attr = "rewindagent.__version__"}
+version = {attr = "rewindagents.__version__"}
 
 [tool.setuptools.packages.find]
 where = ["src"]

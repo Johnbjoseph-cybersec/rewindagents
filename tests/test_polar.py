@@ -270,7 +270,7 @@ class TestPlacement(unittest.TestCase):
             src = f.read()
         mods = {m.split(".")[0] for m in re.findall(r"^(?:import|from)\s+([\w.]+)", src, re.M)}
         self.assertTrue(mods <= set(sys.stdlib_module_names) | {"__future__"}, mods - set(sys.stdlib_module_names))
-        self.assertFalse(os.path.exists(os.path.join(ROOT, "src", "rewindagent", "polar.py")))
+        self.assertFalse(os.path.exists(os.path.join(ROOT, "src", "rewindagents", "polar.py")))
         with open(os.path.join(ROOT, "pyproject.toml"), encoding="utf-8") as f:
             self.assertIn('where = ["src"]', f.read())
 

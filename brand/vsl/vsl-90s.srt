@@ -18,7 +18,7 @@ committed. Git can't return it.
 
 5
 00:00:14,500 --> 00:00:17,500
-But rewindagent recorded all fourteen
+But rewindagents recorded all fourteen
 steps.
 
 6
@@ -65,7 +65,7 @@ So step thirteen kept three copies.
 
 15
 00:00:51,500 --> 00:00:57,000
-rewindagent install adds the Claude Code
+rewindagents install adds the Claude Code
 hook. It has run in real sessions.
 
 16

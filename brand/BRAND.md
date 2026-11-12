@@ -1,4 +1,4 @@
-# rewindagent - brand identity
+# rewindagents - brand identity
 
 Status: identity (RB1, written by Iris Kapoor, Creative Studio), logo set (RB2, see "Logo" below), the
 demo GIF (RB2b, see "Demo GIF") and the site (RB3, see "Site").
@@ -11,7 +11,7 @@ Ctrl+Z for AI coding agents: record, replay, rewind.
 
 ## Positioning
 
-rewindagent is an open-source recorder for coding agents. It writes every tool call an agent makes
+rewindagents is an open-source recorder for coding agents. It writes every tool call an agent makes
 (Claude Code, Codex and Cursor) into a tamper-evident, hash-chained JSONL log and saves a
 copy of each file before the agent changes it. You can replay a session step by step, rewind the working
 tree to any step, or keep the current files as a branch and then rewind. It never blocks, judges or stops an
@@ -40,7 +40,7 @@ Plain, exact, a little dry. We say what exists and what does not.
 4. **Dry.** One small joke at most, never at the reader's expense.
    Example: "Undo is a feature your editor has had for decades."
 5. **Hands-on.** Commands and file paths over adjectives.
-   Example: "Run rewindagent verify and it names the first bad record."
+   Example: "Run rewindagents verify and it names the first bad record."
 
 Credit line, used exactly in footers: made by John B Joseph
 
@@ -73,8 +73,8 @@ one thing that matters on a page, not a theme.
 | Playhead | #B9C2BB | Secondary text on dark. |
 | Rule | #838C86 | Hairlines, tick marks, step ruler. Graphics only, never body text. |
 
-Room for siblings: red-on-paper belongs to rewindagent. The SOC 2 evidence CLI and the security eval suite
-choose their own hues and type; they should not reuse Record, Rewind or the tape-ruler motif, and rewindagent
+Room for siblings: red-on-paper belongs to rewindagents. The SOC 2 evidence CLI and the security eval suite
+choose their own hues and type; they should not reuse Record, Rewind or the tape-ruler motif, and rewindagents
 must not use shield, padlock or generic security blue or green.
 
 ### Contrast table
@@ -150,8 +150,8 @@ page, avatar in circle crops): the reviewer reads the mark where it will be seen
 
 brand/demo.gif, 1200 x 675, under 20 seconds, looping. Built by brand/demo/build.py from brand/demo/scenario.py:
 a small project in a temporary folder, fourteen agent steps through the real Claude Code hook (the last two
-run `rm -rf tests` and overwrite app/config.py), then the four commands the clip shows: `rewindagent replay`,
-`git status --short`, `rewindagent rewind 12`, `git status --short`. Every line on screen is what those
+run `rm -rf tests` and overwrite app/config.py), then the four commands the clip shows: `rewindagents replay`,
+`git status --short`, `rewindagents rewind 12`, `git status --short`. Every line on screen is what those
 commands printed; tests/test_demo.py plays the session again and fails on any difference, and reads the
 GIF's size, play time, delays and colour table from the file.
 
@@ -238,7 +238,7 @@ stepped back to.
 - Geometry only: straight lines and one small left-pointing step, no arrows curling in a circle, no clock faces,
   no hourglass, no shield, no padlock, no chain-link icon.
 - Colour: Reel on Leader, Leader on Reel, with Record or Rewind for the playhead only.
-- Wordmark: "rewindagent" lowercase, Bricolage Grotesque 800, one word.
+- Wordmark: "rewindagents" lowercase, Bricolage Grotesque 800, one word.
 - Avoid: gradients, glow, sparkles, glass, 3D, mascot.
 - Deliver later: SVG mark, wordmark, mono and reverse versions, and a 16 px check.
 

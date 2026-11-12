@@ -1,8 +1,8 @@
-# rewindagent
+# rewindagents
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="brand/logo-wordmark-reverse.svg">
-  <img src="brand/logo-wordmark.svg" alt="rewindagent" height="40">
+  <img src="brand/logo-wordmark.svg" alt="rewindagents" height="40">
 </picture>
 
 Ctrl+Z for AI coding agents: record, replay and rewind. Every tool call your coding agent makes goes into a
@@ -12,11 +12,11 @@ tamper-evident, hash-chained log you can verify later.
 Codex and Cursor that record every call and checkpoint the files a step changes, `replay`, `rewind` and
 `branch`, `export` (a session as one HTML page), `sessions` (list and search the sessions in a log),
 `bundle` and `import` (carry a session to another machine or clone as one file), `gc` (delete stored file
-copies nothing names any more), and a pip-installable package with a `rewindagent` command. Not on PyPI yet. The Claude Code hook has run in real
+copies nothing names any more), and a pip-installable package with a `rewindagents` command. Not on PyPI yet. The Claude Code hook has run in real
 sessions; the Codex and Cursor hooks are built from the vendors' hook documentation and tested with the
 documented payloads, not yet in a live session.
 
-![rewindagent demo: an agent's last two steps delete the tests and overwrite the config; rewindagent replay lists the fourteen steps, rewindagent rewind 12 puts the files back](brand/demo.gif)
+![rewindagents demo: an agent's last two steps delete the tests and overwrite the config; rewindagents replay lists the fourteen steps, rewindagents rewind 12 puts the files back](brand/demo.gif)
 
 The clip is a real session, not a mock-up: `brand/demo/build.py` runs fourteen agent steps through the
 hook in a temporary project, then the four commands shown, and draws the frames from what they printed.
@@ -28,33 +28,33 @@ Python 3.10 or newer (declared in `pyproject.toml`; tested on 3.15, macOS). No d
 standard library. From the repository:
 
 ```sh
-pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagent     # or: pip install git+https://...
-rewindagent --version
+pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagents     # or: pip install git+https://...
+rewindagents --version
 ```
 
-Or from a clone, `pip install .`. Without installing, `PYTHONPATH=src python3 -m rewindagent` runs the same
+Or from a clone, `pip install .`. Without installing, `PYTHONPATH=src python3 -m rewindagents` runs the same
 CLI from a clone.
 
 ## Claude Code hook
 
 ```sh
 cd /path/to/your/project
-rewindagent install            # adds the hook to .claude/settings.json in this project
-rewindagent install --settings ~/.claude/settings.json   # or for every project
+rewindagents install            # adds the hook to .claude/settings.json in this project
+rewindagents install --settings ~/.claude/settings.json   # or for every project
 ```
 
 `install` keeps everything already in the settings file and does nothing if the hook is already there. The
-hook command it writes names the Python that rewindagent was installed into by absolute path, so it runs
+hook command it writes names the Python that rewindagents was installed into by absolute path, so it runs
 whether or not a virtualenv is active; from an uninstalled clone it carries the `PYTHONPATH` instead.
 After that, in each project Claude Code works in:
 
 - every tool call gets a `pre` record (tool and input) and a `post` record (tool and response) in
-  `.rewindagent/log.jsonl`, in one hash chain. Responses longer than 4,000 characters are cut, with the
+  `.rewindagents/log.jsonl`, in one hash chain. Responses longer than 4,000 characters are cut, with the
   full length noted.
 - before `Write`, `Edit`, `MultiEdit` and `NotebookEdit`, the current bytes of the target file are copied
-  to `.rewindagent/objects/<sha256>` and the hash goes into the `pre` record. A file that does not exist
+  to `.rewindagents/objects/<sha256>` and the hash goes into the `pre` record. A file that does not exist
   yet is recorded as absent. Files over 20 MB are noted and not copied.
-- `.rewindagent/` gets its own `.gitignore`, so the log and the copies stay out of your commits.
+- `.rewindagents/` gets its own `.gitignore`, so the log and the copies stay out of your commits.
 
 The hook never blocks or changes a call. It prints nothing and always exits 0, even if its input is
 broken or it cannot write; any problem goes to stderr only.
@@ -65,34 +65,34 @@ files that were changed, deleted or created. Details and limits:
 
 - "The project's files" means, in a git repo, what `git ls-files --cached --others --exclude-standard`
   lists: tracked and untracked files, but not git-ignored ones. Outside git, every file under the project
-  directory except `.git`, `.rewindagent`, `node_modules`, `.venv`, `venv` and `__pycache__`.
+  directory except `.git`, `.rewindagents`, `node_modules`, `.venv`, `venv` and `__pycache__`.
 - Only the project directory is scanned. A command that changes files elsewhere is recorded, not saved.
 - Symlinks are not saved. Files over 20 MB are noted and not copied.
 - Copies are stored by SHA-256, so an unchanged file is stored once. A stat cache
-  (`.rewindagent/index.json`) means only files whose size or modification time changed are read again.
+  (`.rewindagents/index.json`) means only files whose size or modification time changed are read again.
 - A project with more than 20,000 files is not scanned; the call is still recorded and `rewind` reports it.
 
 To take the hook out again:
 
 ```sh
-rewindagent uninstall          # removes the hook from .claude/settings.json in this project
-rewindagent uninstall --agent cursor --settings ~/.cursor/hooks.json   # same flags as install
+rewindagents uninstall          # removes the hook from .claude/settings.json in this project
+rewindagents uninstall --agent cursor --settings ~/.cursor/hooks.json   # same flags as install
 ```
 
 `uninstall` removes only the entries whose command is exactly the one `install` writes from the same Python,
 so every other hook and setting stays. If the file holds none, it is not rewritten and says so. It never
-touches `.rewindagent/`: sessions already recorded can still be replayed and rewound.
+touches `.rewindagents/`: sessions already recorded can still be replayed and rewound.
 
 ## Codex and Cursor hooks
 
 ```sh
-rewindagent install --agent codex      # adds the hook to .codex/hooks.json in this project
-rewindagent install --agent cursor     # adds the hook to .cursor/hooks.json in this project
-rewindagent install --agent cursor --settings ~/.cursor/hooks.json   # or for every project
+rewindagents install --agent codex      # adds the hook to .codex/hooks.json in this project
+rewindagents install --agent cursor     # adds the hook to .cursor/hooks.json in this project
+rewindagents install --agent cursor --settings ~/.cursor/hooks.json   # or for every project
 ```
 
 Same recorder, same log, same `replay`, `rewind`, `branch`, `export` and `sessions`. What differs is how each
-agent calls the hook, and `src/rewindagent/agents.py` quotes the vendor documentation (read 2026-11-11) it was
+agent calls the hook, and `src/rewindagents/agents.py` quotes the vendor documentation (read 2026-11-11) it was
 built from:
 
 - Codex (`.codex/hooks.json`, the same file shape as Claude Code's settings) sends `PreToolUse` and
@@ -119,25 +119,25 @@ built from:
 
 ## Replay, rewind, branch
 
-Run these from the project directory (the one holding `.rewindagent/`). They work on the latest session
+Run these from the project directory (the one holding `.rewindagents/`). They work on the latest session
 unless you pass `--session ID`.
 
 ```sh
-rewindagent replay              # one line per step: number, tool, file or command
-rewindagent replay --step 12    # step 12 in full: input, checkpoints, result
-rewindagent rewind 12 --dry-run # what would change
-rewindagent rewind 12           # files back to how they were right after step 12
-rewindagent branch 12 --name try2   # keep the current files, then rewind to step 12
+rewindagents replay              # one line per step: number, tool, file or command
+rewindagents replay --step 12    # step 12 in full: input, checkpoints, result
+rewindagents rewind 12 --dry-run # what would change
+rewindagents rewind 12           # files back to how they were right after step 12
+rewindagents branch 12 --name try2   # keep the current files, then rewind to step 12
 ```
 
 - `rewind N` puts back every file that a step after N changed with `Write`, `Edit`, `MultiEdit`,
   `NotebookEdit` or a `Bash` command, and deletes the files those steps created. `rewind 0` undoes the
   whole session.
 - A rewind is undoable. It first saves the current bytes of every file it will change and records itself
-  as a new step; the command prints `undo it with: rewindagent rewind <step> --session <id>` (from an
-  uninstalled clone it says `python3 -m rewindagent` instead).
+  as a new step; the command prints `undo it with: rewindagents rewind <step> --session <id>` (from an
+  uninstalled clone it says `python3 -m rewindagents` instead).
 - `branch N --name X` does the same and, in a git repo, also commits the whole current working tree to the
-  branch `rewindagent/X`. It does this through a temporary index, so your `HEAD`, index and current
+  branch `rewindagents/X`. It does this through a temporary index, so your `HEAD`, index and current
   branch stay as they were. Outside git, the current files are kept in the log only.
 - Before writing anything, rewind checks the log's hash chain and the SHA-256 of every stored copy. If the
   chain is broken it changes nothing. If a stored copy no longer matches, that file is reported and left
@@ -152,9 +152,9 @@ rewindagent branch 12 --name try2   # keep the current files, then rewind to ste
 ## Export a replay
 
 ```sh
-rewindagent export                                  # writes .rewindagent/replay-<session>.html
-rewindagent export --session abc --out replay.html  # a given session, to a given file
-rewindagent export --no-contents                    # steps, tools and paths only: no inputs, results or diffs
+rewindagents export                                  # writes .rewindagents/replay-<session>.html
+rewindagents export --session abc --out replay.html  # a given session, to a given file
+rewindagents export --no-contents                    # steps, tools and paths only: no inputs, results or diffs
 ```
 
 One HTML file with the whole session: every step with its tool, input and result, and for every file a
@@ -175,8 +175,8 @@ bug report or a code review, or keep it with the session.
 ## Find a session
 
 ```sh
-rewindagent sessions                     # every session in the log: id, first and last time, steps, files touched
-rewindagent sessions --grep config.py    # only sessions with a step that mentions it, and those steps
+rewindagents sessions                     # every session in the log: id, first and last time, steps, files touched
+rewindagents sessions --grep config.py    # only sessions with a step that mentions it, and those steps
 ```
 
 One line per session, in the order the sessions first wrote to the log, with the session id, the local
@@ -189,16 +189,16 @@ last record, the one `replay` and `rewind` use by default, is marked `(latest)`.
   `MultiEdit`, `NotebookEdit`, a `Bash` command or a rewind. A file that was only read is not touched.
 - `--grep TEXT` keeps the sessions with a step whose `replay` line (the command, the file, or the
   input) or checkpointed path contains TEXT, in any case, and lists those steps under the session with
-  their step numbers, so `rewindagent rewind <step> --session <id>` can follow. Exit code 1 if no session
+  their step numbers, so `rewindagents rewind <step> --session <id>` can follow. Exit code 1 if no session
   matches.
 - Paths are shown relative to the project.
 
 ## Move a session to another machine
 
 ```sh
-rewindagent bundle --out s1.bundle                 # the latest session, and the file copies it names, in one file
-rewindagent bundle --session abc --out abc.bundle  # a given session
-rewindagent import s1.bundle                       # in another clone: check the file, then add the session to its log
+rewindagents bundle --out s1.bundle                 # the latest session, and the file copies it names, in one file
+rewindagents bundle --session abc --out abc.bundle  # a given session
+rewindagents import s1.bundle                       # in another clone: check the file, then add the session to its log
 ```
 
 Then `replay`, `rewind` and `branch` work on that session in the other clone, with `--session <id>`.
@@ -217,13 +217,13 @@ Then `replay`, `rewind` and `branch` work on that session in the other clone, wi
 ## Clean up stored copies
 
 ```sh
-rewindagent gc --dry-run   # what would be deleted, and how many bytes
-rewindagent gc             # delete it
-rewindagent gc --drop-pending-older-than 7   # first drop scans whose command never finished
+rewindagents gc --dry-run   # what would be deleted, and how many bytes
+rewindagents gc             # delete it
+rewindagents gc --drop-pending-older-than 7   # first drop scans whose command never finished
 ```
 
 Before every Bash call the hook saves a copy of every project file, and afterwards the log names only the
-copies of files the command changed, so `.rewindagent/objects/` grows. `gc` deletes every stored copy that no
+copies of files the command changed, so `.rewindagents/objects/` grows. `gc` deletes every stored copy that no
 log record (in any session) and no pending scan (a command whose after-scan has not run) names, and prints how
 many it deleted and the bytes those files took on disk.
 
@@ -249,18 +249,18 @@ many it deleted and the bytes those files took on disk.
 ## Use it
 
 ```sh
-echo '{"tool": "Bash", "args": {"command": "ls"}}' | rewindagent record --session s1
-rewindagent verify     # OK: 1 records, chain intact
-rewindagent show       # list recorded calls
-rewindagent head       # current head hash
+echo '{"tool": "Bash", "args": {"command": "ls"}}' | rewindagents record --session s1
+rewindagents verify     # OK: 1 records, chain intact
+rewindagents show       # list recorded calls
+rewindagents head       # current head hash
 ```
 
-The log defaults to `.rewindagent/log.jsonl`; change it with `--log PATH`.
+The log defaults to `.rewindagents/log.jsonl`; change it with `--log PATH`.
 
 From Python:
 
 ```python
-from rewindagent import Recorder, verify
+from rewindagents import Recorder, verify
 Recorder("log.jsonl").record("s1", "Bash", {"command": "ls"}, {"exit": 0})
 print(verify("log.jsonl"))   # (True, 1, 'chain intact')
 ```
@@ -269,11 +269,11 @@ print(verify("log.jsonl"))   # (True, 1, 'chain intact')
 
 A hash chain proves the records are unchanged *relative to each other*. It cannot, on its own, tell
 that records were cut off the end, or that someone rewrote the whole file and re-hashed every line.
-To catch both, copy the head hash somewhere the agent cannot write (`rewindagent head`) and check
+To catch both, copy the head hash somewhere the agent cannot write (`rewindagents head`) and check
 against it:
 
 ```sh
-rewindagent verify --head <pinned-hash>
+rewindagents verify --head <pinned-hash>
 ```
 
 ## Roadmap
@@ -286,7 +286,7 @@ rewindagent verify --head <pinned-hash>
 ## Payments code (not live)
 
 `billing/polar.py` is the checkout and webhook code for that Cloud tier, written against Polar's API documentation
-(the pages and the date are cited at the top of the file). It is not part of the `rewindagent` package and is never
+(the pages and the date are cited at the top of the file). It is not part of the `rewindagents` package and is never
 installed with it; the CLI itself makes no network connections. No product exists yet, so nothing can be bought.
 
 ```sh
@@ -307,8 +307,8 @@ python3 billing/polar.py verify --headers h.json --body b.json   # check a saved
 
 ## Site
 
-`brand/site/` holds the landing page, the pricing page and the getting-started docs, published with GitHub Pages
-by `.github/workflows/pages.yml`. The pages are built by `brand/site/build.py` from this README, the package and
+`brand/site/` holds the landing page, the pricing page and the getting-started docs, to be published with GitHub Pages
+by `.github/workflows/pages.yml` once the repository is public. The pages are built by `brand/site/build.py` from this README, the package and
 the clip's session, and `tests/test_site.py` fails if a committed page differs from a fresh build. The site's
 address lives in one place, `brand/site/config.json`.
 
@@ -324,7 +324,7 @@ python3 -m unittest discover -s tests -v
 
 That runs against the source tree and skips the tests of the installed command. `.fire-test-cmd` holds the
 full command: it builds `.venv`, installs the package into it and runs every test, including the ones that
-drive the installed `rewindagent` binary and the hook command it writes into a settings file.
+drive the installed `rewindagents` binary and the hook command it writes into a settings file.
 
 ## Licence
 

@@ -2,13 +2,13 @@
 
 A Bash command does not say which files it will touch, so the hook looks at the whole project instead:
 - before the command (PreToolUse), every project file's bytes go into the object store and the list of
-  {path: sha256} is kept in .rewindagent/pending/<call>.json;
+  {path: sha256} is kept in .rewindagents/pending/<call>.json;
 - after it (PostToolUse), the project is scanned again and only the files that differ are checkpointed in
   the "post" record: changed or deleted files with their bytes from before, new files as absent.
 
 Project files: in a git work tree, `git ls-files --cached --others --exclude-standard` (tracked plus
 untracked, minus ignored); elsewhere, a walk that skips SKIP_DIRS. Symlinks are not followed or saved.
-A stat cache (.rewindagent/index.json) means only files whose size or mtime changed are read again.
+A stat cache (.rewindagents/index.json) means only files whose size or mtime changed are read again.
 """
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ from typing import Any
 
 from .hook import MAX_CHECKPOINT_BYTES, checkpoint
 
-SKIP_DIRS = {".git", ".rewindagent", "node_modules", ".venv", "venv", "__pycache__"}
+SKIP_DIRS = {".git", ".rewindagents", "node_modules", ".venv", "venv", "__pycache__"}
 MAX_SCAN_FILES = 20000
 
 
@@ -45,7 +45,7 @@ def project_files(root: Path) -> list[str] | None:
                     return None
     out = []
     for r in rels:
-        if Path(r).parts[0] in (".git", ".rewindagent"):
+        if Path(r).parts[0] in (".git", ".rewindagents"):
             continue
         full = root / r
         if full.is_symlink() or not full.is_file():

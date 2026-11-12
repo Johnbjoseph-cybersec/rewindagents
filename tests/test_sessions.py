@@ -1,4 +1,4 @@
-"""`rewindagent sessions [--grep TEXT]`: list the sessions in a log and find the ones that mention a text."""
+"""`rewindagents sessions [--grep TEXT]`: list the sessions in a log and find the ones that mention a text."""
 import os
 import re
 import sys
@@ -8,7 +8,7 @@ from tempfile import TemporaryDirectory
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from rewindagent import hook, read, rewind, sessions  # noqa: E402
+from rewindagents import hook, read, rewind, sessions  # noqa: E402
 from test_rewind import Agent, cli  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -136,7 +136,7 @@ class TestCli(unittest.TestCase):
             self.assertNotIn("two  ", out)
             code, out, err = cli("--log", str(one.log), "sessions", "--grep", "zebra")
             self.assertEqual((code, out), (1, ""))
-            self.assertEqual(err.strip(), "rewindagent: no session mentions 'zebra'")
+            self.assertEqual(err.strip(), "rewindagents: no session mentions 'zebra'")
 
     def test_more_than_show_files_are_counted_not_listed(self):
         with TemporaryDirectory() as d:
@@ -158,7 +158,7 @@ class TestCli(unittest.TestCase):
 class TestReadme(unittest.TestCase):
     def test_readme_describes_sessions_as_the_code_does(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("rewindagent sessions --grep", readme)
+        self.assertIn("rewindagents sessions --grep", readme)
         self.assertIn(f"first {sessions.SHOW_FILES} files", readme)
         # the status line lists the command among what is built
         status = re.search(r"\*\*Status:.*?\n\n", readme, re.S).group(0)

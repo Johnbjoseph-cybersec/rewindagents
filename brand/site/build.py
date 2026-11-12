@@ -1,4 +1,4 @@
-"""Build the rewindagent site (task RB3): brand/site/index.html, pricing.html and docs/index.html.
+"""Build the rewindagents site (task RB3): brand/site/index.html, pricing.html and docs/index.html.
 
 Nothing on the pages is typed from memory:
 - every command block is a ```sh block of README.md, found by its section heading;
@@ -30,11 +30,11 @@ ROOT = os.path.dirname(BRAND)
 sys.path.insert(0, os.path.join(ROOT, "src"))
 sys.path.insert(0, os.path.join(BRAND, "demo"))
 
-import rewindagent  # noqa: E402
-from rewindagent import agents, bashscan, export, hook, sessions  # noqa: E402
+import rewindagents  # noqa: E402
+from rewindagents import agents, bashscan, export, hook, sessions  # noqa: E402
 import scenario  # noqa: E402
 
-NAME = "rewindagent"
+NAME = "rewindagents"
 PROMISE = "Ctrl+Z for AI coding agents: record, replay, rewind."
 CREDIT = "made by John B Joseph"
 LICENCE = "Apache-2.0"
@@ -82,11 +82,11 @@ def readme_block(readme, heading):
 def facts():
     readme = read("README.md")
     demo = json.loads(read("brand", "demo", "manifest.json"))
-    if demo["version"] != rewindagent.__version__:
-        raise SystemExit("brand/demo/manifest.json is for %s, the package is %s" % (demo["version"], rewindagent.__version__))
+    if demo["version"] != rewindagents.__version__:
+        raise SystemExit("brand/demo/manifest.json is for %s, the package is %s" % (demo["version"], rewindagents.__version__))
     tested = re.search(r"tested on ([\d.]+), (\w+)", readme)
     return {
-        "version": rewindagent.__version__,
+        "version": rewindagents.__version__,
         "py_req": re.search(r'requires-python = "([^"]+)"', read("pyproject.toml")).group(1),
         "tested_on": "Python %s on %s" % (tested.group(1), tested.group(2)),
         "result_chars": hook.MAX_RESULT_CHARS,
@@ -225,7 +225,7 @@ def page(cfg, path, title, description, body, current):
                   for n, h, k in links) + '<a href="%s">GitHub</a>' % e(cfg["repo_url"])
     ld = {"@context": "https://schema.org", "@type": "SoftwareApplication", "name": NAME,
           "description": description, "applicationCategory": "DeveloperApplication", "operatingSystem": "macOS, Linux",
-          "softwareVersion": rewindagent.__version__, "url": url, "codeRepository": cfg["repo_url"],
+          "softwareVersion": rewindagents.__version__, "url": url, "codeRepository": cfg["repo_url"],
           "license": cfg["repo_url"] + "/blob/%s/LICENSE" % cfg["branch"],
           "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
           "author": {"@type": "Person", "name": "John B Joseph"}}
@@ -320,7 +320,7 @@ def index_html(cfg, f, hero, open_all=False):
 <div class="hero-text">
 <p class="eyebrow"><b>v%(v)s</b> &middot; %(eyebrow)s</p>
 <h1 id="h1">%(promise)s</h1>
-<p class="lede">rewindagent records every tool call your coding agent makes and saves a copy of each file before the agent changes it. Replay the session step by step. Rewind the working tree to any step, or keep the current files as a branch and then rewind. The agent works at full speed, and every step it takes can be taken back, within the <a href="#limits">limits</a> below.</p>
+<p class="lede">rewindagents records every tool call your coding agent makes and saves a copy of each file before the agent changes it. Replay the session step by step. Rewind the working tree to any step, or keep the current files as a branch and then rewind. The agent works at full speed, and every step it takes can be taken back, within the <a href="#limits">limits</a> below.</p>
 <div class="cta"><a class="btn btn-primary" href="#install">Install</a><a class="btn btn-ghost" href="docs/">Read the docs</a></div>
 </div>
 <div class="hero-panel">
@@ -336,8 +336,8 @@ def index_html(cfg, f, hero, open_all=False):
 <section class="sec" id="demo" aria-labelledby="h-demo"><div class="wrap">
 %(label)s
 <div class="head"><h2 id="h-demo">A wrecked repo, put back in one command.</h2>
-<p class="lede">An agent works in a small project for %(n)d steps. Steps %(s13)d and %(s14)d delete the tests and overwrite the config. <code>rewindagent rewind %(good)d</code> puts the files back the way they were right after step %(good)d. The first %(good)d steps stay.</p></div>
-<figure class="clip"><img src="assets/demo.gif" alt="A terminal: rewindagent replay lists %(n)d agent steps, the last two delete the tests and overwrite the config; git status shows the damage; rewindagent rewind %(good)d restores four files; git status shows the tests back" width="%(gw)d" height="%(gh)d" loading="lazy">
+<p class="lede">An agent works in a small project for %(n)d steps. Steps %(s13)d and %(s14)d delete the tests and overwrite the config. <code>rewindagents rewind %(good)d</code> puts the files back the way they were right after step %(good)d. The first %(good)d steps stay.</p></div>
+<figure class="clip"><img src="assets/demo.gif" alt="A terminal: rewindagents replay lists %(n)d agent steps, the last two delete the tests and overwrite the config; git status shows the damage; rewindagents rewind %(good)d restores four files; git status shows the tests back" width="%(gw)d" height="%(gh)d" loading="lazy">
 <figcaption>%(secs)s seconds, %(frames)d frames, looping. Built from the real session, not drawn: <code>brand/demo/build.py</code> runs the steps through the hook in a temporary project and draws every frame from what the commands printed.</figcaption></figure>
 <div class="session">
 <div><p class="small">The session as text. First, every step the agent took.</p>%(left)s</div>
@@ -354,8 +354,8 @@ def index_html(cfg, f, hero, open_all=False):
 <div class="head"><h2 id="h-install">Install, then add the hook to a project.</h2>
 <p class="lede">Python %(py)s. No dependencies beyond the standard library. Tested on %(tested)s. Not on PyPI yet, so install from the repository. The <a href="docs/">docs</a> walk through a first session.</p></div>
 <div class="cols">
-<div><h3>Install</h3>%(install)s<p>Or from a clone, <code>pip install .</code>. Without installing, <code>PYTHONPATH=src python3 -m rewindagent</code> runs the same CLI from a clone.</p></div>
-<div><h3>Add the hook</h3>%(hook)s%(agents)s<p><code>install</code> keeps everything already in the file and does nothing if the hook is already there. For Codex the file is <code>%(codex)s</code> and for Cursor <code>%(cursor)s</code>; those two hooks are tested with the payloads in the vendors&#x27; documentation, not yet in a live session. <code>.rewindagent/</code> gets its own <code>.gitignore</code>, so the log and the copies stay out of your commits.</p></div>
+<div><h3>Install</h3>%(install)s<p>Or from a clone, <code>pip install .</code>. Without installing, <code>PYTHONPATH=src python3 -m rewindagents</code> runs the same CLI from a clone.</p></div>
+<div><h3>Add the hook</h3>%(hook)s%(agents)s<p><code>install</code> keeps everything already in the file and does nothing if the hook is already there. For Codex the file is <code>%(codex)s</code> and for Cursor <code>%(cursor)s</code>; those two hooks are tested with the payloads in the vendors&#x27; documentation, not yet in a live session. <code>.rewindagents/</code> gets its own <code>.gitignore</code>, so the log and the copies stay out of your commits.</p></div>
 </div>
 </div></section>
 """ % {"label": label(2, "Install"), "py": e(f["py_req"]), "tested": e(f["tested_on"]), "install": code(b["install"]), "hook": code(b["hook"]),
@@ -367,8 +367,8 @@ def index_html(cfg, f, hero, open_all=False):
 <div class="head"><h2 id="h-how">Record. Checkpoint. Rewind.</h2>
 <p class="lede">A hook runs before and after every tool call the agent makes. It never stops a call and never changes one: it always exits 0, even when its own input is broken or the disk is full, and prints nothing but the one answer Cursor requires from a permission hook.</p></div>
 <ol class="steps">
-<li>%(r1)s<h3>Record</h3><p>Every call gets a <code>pre</code> record (tool and input) and a <code>post</code> record (tool and response) in <code>.rewindagent/log.jsonl</code>. Each record carries the SHA-256 of the one before it, so editing, deleting or reordering any record makes <code>verify</code> fail and name the first bad record. Appends are locked, so several processes can write to one log.</p></li>
-<li>%(r2)s<h3>Checkpoint</h3><p>Before <code>Write</code>, <code>Edit</code>, <code>MultiEdit</code> and <code>NotebookEdit</code>, the current bytes of the target file go to <code>.rewindagent/objects/&lt;sha256&gt;</code>. Around a <code>Bash</code> command, the project&#x27;s files are saved first and scanned after, and only the files the command changed, created or deleted are checkpointed. Copies are stored by hash, so an unchanged file is stored once.</p></li>
+<li>%(r1)s<h3>Record</h3><p>Every call gets a <code>pre</code> record (tool and input) and a <code>post</code> record (tool and response) in <code>.rewindagents/log.jsonl</code>. Each record carries the SHA-256 of the one before it, so editing, deleting or reordering any record makes <code>verify</code> fail and name the first bad record. Appends are locked, so several processes can write to one log.</p></li>
+<li>%(r2)s<h3>Checkpoint</h3><p>Before <code>Write</code>, <code>Edit</code>, <code>MultiEdit</code> and <code>NotebookEdit</code>, the current bytes of the target file go to <code>.rewindagents/objects/&lt;sha256&gt;</code>. Around a <code>Bash</code> command, the project&#x27;s files are saved first and scanned after, and only the files the command changed, created or deleted are checkpointed. Copies are stored by hash, so an unchanged file is stored once.</p></li>
 <li>%(r3)s<h3>Rewind</h3><p><code>rewind N</code> puts back every file a later step changed and deletes the files later steps created. It first checks the hash chain and the hash of every stored copy; if the chain is broken it changes nothing. A rewind saves the current files and records itself as a new step, so a rewind is undone with another rewind.</p></li>
 </ol>
 </div></section>
@@ -395,9 +395,9 @@ def index_html(cfg, f, hero, open_all=False):
 <section class="sec" id="commands" aria-labelledby="h-cmd"><div class="wrap">
 %(label)s
 <div class="head"><h2 id="h-cmd">Six commands. All of them local.</h2>
-<p class="lede">Run them from the project directory, the one holding <code>.rewindagent/</code>. They work on the latest session unless you pass <code>--session ID</code>.</p></div>
+<p class="lede">Run them from the project directory, the one holding <code>.rewindagents/</code>. They work on the latest session unless you pass <code>--session ID</code>.</p></div>
 <div class="cmdlist">
-<div class="cmdrow"><div><h3>Replay, rewind, branch</h3><p><code>branch N --name X</code> keeps the current files and, in a git repository, commits the whole working tree to <code>rewindagent/X</code> through a temporary index, so your <code>HEAD</code>, index and current branch stay as they were.</p></div>%(replay)s</div>
+<div class="cmdrow"><div><h3>Replay, rewind, branch</h3><p><code>branch N --name X</code> keeps the current files and, in a git repository, commits the whole working tree to <code>rewindagents/X</code> through a temporary index, so your <code>HEAD</code>, index and current branch stay as they were.</p></div>%(replay)s</div>
 <div class="cmdrow"><div><h3>Export a replay</h3><p>One HTML file with every step, its input and result, and for every file a step touched, the change that step made as a unified diff. Inline CSS only, no scripts, nothing fetched, the project&#x27;s path not in the page. A file over %(kb)d KB is described, not diffed; a diff longer than %(lines)d lines is cut, with the count left out.</p></div>%(export)s</div>
 <div class="cmdrow"><div><h3>Find a session</h3><p>One line per session: id, first and last time, steps (with how many are rewinds), files touched. The latest session is marked. <code>--grep</code> keeps the sessions with a step whose command, file or input mentions the text, and lists those steps with their numbers.</p></div>%(sessions)s</div>
 <div class="cmdrow"><div><h3>Verify the chain</h3><p>Checks every record against the one before it and names the first bad one. With <code>--head</code>, also catches records cut from the end.</p></div>%(verify)s</div>
@@ -420,7 +420,7 @@ def index_html(cfg, f, hero, open_all=False):
         ("Does it stop or change what the agent does?",
          "No. The hook records and checkpoints, then exits 0. It has no opinion about any call. The agent runs exactly as it would without the hook; the difference is that afterwards every step is on record and every file change can be put back."),
         ("Does anything leave my machine?",
-         "No. rewindagent makes no network connections: a test checks that no module under <code>src/</code> imports <code>socket</code>, <code>http</code> or <code>urllib</code>. The log and the file copies live in <code>.rewindagent/</code> inside your project, and nothing reads them but you."),
+         "No. rewindagents makes no network connections: a test checks that no module under <code>src/</code> imports <code>socket</code>, <code>http</code> or <code>urllib</code>. The log and the file copies live in <code>.rewindagents/</code> inside your project, and nothing reads them but you."),
         ("Which agents does it work with?",
          "Claude Code, through its <code>PreToolUse</code> and <code>PostToolUse</code> hooks; Codex, through the same hook file shape in <code>%s</code>; Cursor, through <code>%s</code>. The Claude Code hook has run in real sessions. The Codex and Cursor hooks are built from the vendors&#x27; hook documentation and tested with the documented payloads, not yet in a live session; the README says the same." % (f["agents"]["codex"]["settings"], f["agents"]["cursor"]["settings"])),
         ("Does it need git?",
@@ -452,7 +452,7 @@ def index_html(cfg, f, hero, open_all=False):
 
 def pricing_html(cfg, f):
     rel = ""
-    desc = "rewindagent is free under %s. A Cloud tier is planned and not yet priced; the waitlist is a GitHub issue." % LICENCE
+    desc = "rewindagents is free under %s. A Cloud tier is planned and not yet priced; the waitlist is a GitHub issue." % LICENCE
     items = [
         ("Will the open-source tool stay free?",
          "The code you have is %s, and that licence cannot be withdrawn from it. Nothing that exists today is behind a paywall: the recorder, the hook, replay, rewind, branch, export and sessions are all in the open-source tier." % LICENCE),
@@ -483,7 +483,7 @@ def pricing_html(cfg, f):
 def docs_html(cfg, f):
     rel = "../"
     b = f["blocks"]
-    desc = "Getting started with rewindagent: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, export, find a session, verify the log."
+    desc = "Getting started with rewindagents: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, export, find a session, verify the log."
     toc = [("install", "Install"), ("hook", "Add the hook"), ("first", "A first session"), ("recorded", "What gets recorded"),
            ("replay", "Replay and rewind"), ("branch", "Branch"), ("export", "Export"), ("sessions", "Find a session"),
            ("verify", "Verify"), ("limits", "Limits"), ("remove", "Remove it")]
@@ -505,11 +505,11 @@ def docs_html(cfg, f):
 %(install)s
 <p>The last command prints the version it installed:</p>
 %(version)s
-<p>Or from a clone, <code>pip install .</code>. Without installing, <code>PYTHONPATH=src python3 -m rewindagent</code> runs the same CLI from a clone; then the undo hint says <code>python3 -m rewindagent</code> instead of <code>rewindagent</code>.</p>
+<p>Or from a clone, <code>pip install .</code>. Without installing, <code>PYTHONPATH=src python3 -m rewindagents</code> runs the same CLI from a clone; then the undo hint says <code>python3 -m rewindagents</code> instead of <code>rewindagents</code>.</p>
 
 <h2 id="hook">Add the hook</h2>
 %(hook)s
-<p><code>install</code> adds a <code>PreToolUse</code> and a <code>PostToolUse</code> hook to the settings file, keeps everything already in it, and does nothing if the hook is already there. The command it writes names the Python that rewindagent was installed into by absolute path, so it runs whether or not a virtualenv is active. To remove the hook, delete those two entries from the settings file.</p>
+<p><code>install</code> adds a <code>PreToolUse</code> and a <code>PostToolUse</code> hook to the settings file, keeps everything already in it, and does nothing if the hook is already there. The command it writes names the Python that rewindagents was installed into by absolute path, so it runs whether or not a virtualenv is active. To remove the hook, delete those two entries from the settings file.</p>
 %(agents)s
 <p>For Codex the file is <code>%(codex)s</code>, in the same shape as Claude Code&#x27;s settings; Codex asks you to trust the hook once (<code>/hooks</code>) and remembers the trust by the hook&#x27;s hash. For Cursor the file is <code>%(cursor)s</code> with a <code>preToolUse</code> and a <code>postToolUse</code> entry; because Cursor&#x27;s <code>preToolUse</code> is a permission hook that treats an empty answer as a failure, the hook prints <code>{"permission": "allow"}</code> before a call and <code>{}</code> after one, which changes nothing (a deny from another hook still wins). The Codex and Cursor hooks are tested with the payloads in the vendors&#x27; documentation and through the installed command, not yet in a live session.</p>
 
@@ -520,11 +520,11 @@ def docs_html(cfg, f):
 <h2 id="recorded">What gets recorded</h2>
 <p>In each project the agent works in, with the hook installed:</p>
 <ul>
-<li>every tool call gets a <code>pre</code> record (tool and input) and a <code>post</code> record (tool and response) in <code>.rewindagent/log.jsonl</code>, in one hash chain. A response longer than %(chars)s characters is cut, with the full length noted.</li>
-<li>in Claude Code, before %(tools)s, the current bytes of the target file are copied to <code>.rewindagent/objects/&lt;sha256&gt;</code> and the hash goes into the <code>pre</code> record. A file that does not exist yet is recorded as absent. Files over %(mb)d MB are noted and not copied.</li>
-<li>around every <code>Bash</code> call, the project&#x27;s files are saved before the command and scanned again after it; the <code>post</code> record checkpoints only the files that were changed, deleted or created. Copies are stored by SHA-256, and a stat cache in <code>.rewindagent/index.json</code> means only files whose size or modification time changed are read again.</li>
+<li>every tool call gets a <code>pre</code> record (tool and input) and a <code>post</code> record (tool and response) in <code>.rewindagents/log.jsonl</code>, in one hash chain. A response longer than %(chars)s characters is cut, with the full length noted.</li>
+<li>in Claude Code, before %(tools)s, the current bytes of the target file are copied to <code>.rewindagents/objects/&lt;sha256&gt;</code> and the hash goes into the <code>pre</code> record. A file that does not exist yet is recorded as absent. Files over %(mb)d MB are noted and not copied.</li>
+<li>around every <code>Bash</code> call, the project&#x27;s files are saved before the command and scanned again after it; the <code>post</code> record checkpoints only the files that were changed, deleted or created. Copies are stored by SHA-256, and a stat cache in <code>.rewindagents/index.json</code> means only files whose size or modification time changed are read again.</li>
 <li>in Codex and Cursor, that same scan runs around every call except the tools their documentation names that cannot change files (Cursor: %(cursor_ro)s; Codex: %(codex_ro)s), because the input of their edit tools is not documented and the hook never reads a file path out of those payloads.</li>
-<li><code>.rewindagent/</code> gets its own <code>.gitignore</code>, so the log and the copies stay out of your commits.</li>
+<li><code>.rewindagents/</code> gets its own <code>.gitignore</code>, so the log and the copies stay out of your commits.</li>
 </ul>
 <p>The hook never stops a call and never changes one. It prints nothing and always exits 0; any problem goes to stderr only.</p>
 
@@ -532,10 +532,10 @@ def docs_html(cfg, f):
 <p>Run these from the project directory. They work on the latest session unless you pass <code>--session ID</code>.</p>
 %(replay)s
 <p><code>replay</code> prints one line per step: number, tool, file or command, and how many files the step checkpointed. <code>replay --step N</code> shows one step in full. <code>rewind N</code> puts back every file that a step after N changed and deletes the files those steps created; <code>rewind 0</code> undoes the whole session. Before writing anything it checks the hash chain and the SHA-256 of every stored copy: if the chain is broken it changes nothing, and a copy that no longer matches is reported and left as it is.</p>
-<p>A rewind is undoable. It first saves the current bytes of every file it will change and records itself as a new step, then prints <code>undo it with: rewindagent rewind &lt;step&gt; --session &lt;id&gt;</code>. In the session above, the rewind to step %(good)d of %(n)d became step %(n1)d, and undoing it is <code>rewind %(n)d</code>.</p>
+<p>A rewind is undoable. It first saves the current bytes of every file it will change and records itself as a new step, then prints <code>undo it with: rewindagents rewind &lt;step&gt; --session &lt;id&gt;</code>. In the session above, the rewind to step %(good)d of %(n)d became step %(n1)d, and undoing it is <code>rewind %(n)d</code>.</p>
 
 <h2 id="branch">Branch</h2>
-<p><code>branch N --name X</code> does what <code>rewind N</code> does and, in a git repository, first commits the whole current working tree to the branch <code>rewindagent/X</code>. It does this through a temporary index, so your <code>HEAD</code>, index and current branch stay as they were. Outside git, the current files are kept in the log only.</p>
+<p><code>branch N --name X</code> does what <code>rewind N</code> does and, in a git repository, first commits the whole current working tree to the branch <code>rewindagents/X</code>. It does this through a temporary index, so your <code>HEAD</code>, index and current branch stay as they were. Outside git, the current files are kept in the log only.</p>
 
 <h2 id="export">Export</h2>
 %(export)s
@@ -553,7 +553,7 @@ def docs_html(cfg, f):
 
 <h2 id="verify">Verify</h2>
 %(verify)s
-<p><code>verify</code> checks every record against the one before it and names the first bad record. A hash chain cannot tell on its own that records were cut off the end or that the whole file was rewritten and re-hashed; <code>rewindagent head</code> prints the current head hash, and <code>verify --head</code> checks against a copy you pinned somewhere the agent cannot write.</p>
+<p><code>verify</code> checks every record against the one before it and names the first bad record. A hash chain cannot tell on its own that records were cut off the end or that the whole file was rewritten and re-hashed; <code>rewindagents head</code> prints the current head hash, and <code>verify --head</code> checks against a copy you pinned somewhere the agent cannot write.</p>
 <p>The recorder also works on its own, without the hook:</p>
 %(record)s
 
@@ -567,17 +567,17 @@ def docs_html(cfg, f):
 </ul>
 
 <h2 id="remove">Remove it</h2>
-<p>Delete the two hook entries from the file you installed into, delete <code>.rewindagent/</code> in the project, and uninstall the package (<code>pipx uninstall rewindagent</code> or <code>pip uninstall rewindagent</code>). Nothing else was created.</p>
+<p>Delete the two hook entries from the file you installed into, delete <code>.rewindagents/</code> in the project, and uninstall the package (<code>pipx uninstall rewindagents</code> or <code>pip uninstall rewindagents</code>). Nothing else was created.</p>
 
 <h2 id="tests">Tests</h2>
 %(tests)s
-<p>That runs against the source tree and skips the tests of the installed command. <code>.fire-test-cmd</code> in the repository holds the full command: it builds a venv, installs the package into it and runs every test, including the ones that drive the installed <code>rewindagent</code> binary, replay the session above, and rebuild this site byte for byte.</p>
+<p>That runs against the source tree and skips the tests of the installed command. <code>.fire-test-cmd</code> in the repository holds the full command: it builds a venv, installs the package into it and runs every test, including the ones that drive the installed <code>rewindagents</code> binary, replay the session above, and rebuild this site byte for byte.</p>
 </article>
 </div>
 </div></section>
 """ % {"label": label(1, "Docs"), "toc": "".join('<a href="#%s">%s</a>' % (a, t) for a, t in toc), "py": e(f["py_req"]),
        "tested": e(f["tested_on"]), "install": code(b["install"]),
-       "version": panel([("cmd", "rewindagent --version"), ("out", "rewindagent %s" % f["version"])]),
+       "version": panel([("cmd", "rewindagents --version"), ("out", "rewindagents %s" % f["version"])]),
        "hook": code(b["hook"]), "agents": code(b["agents"]), "codex": e(f["agents"]["codex"]["settings"]),
        "cursor": e(f["agents"]["cursor"]["settings"]),
        "cursor_ro": ", ".join("<code>%s</code>" % e(t) for t in f["agents"]["cursor"]["read_only"]),

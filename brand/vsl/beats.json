@@ -7,7 +7,7 @@
       "name": "vsl-90s",
       "aspect": "16:9",
       "max_ms": 90000,
-      "title": "Step back to twelve: rewindagent on a real session",
+      "title": "Step back to twelve: rewindagents on a real session",
       "beats": [
         {
           "id": "b01",
@@ -44,8 +44,8 @@
         {
           "id": "b05",
           "ms": 3000,
-          "voice": "But rewindagent recorded all fourteen steps.",
-          "screen": ["rewindagent replay", "   10  Edit          README.md  [1 checkpointed]", "   11  Bash          git status --short", "   12  Read          tests/test_server.py", "   13  Bash          rm -rf tests  [3 checkpointed]", "   14  Write         app/config.py  [1 checkpointed]"],
+          "voice": "But rewindagents recorded all fourteen steps.",
+          "screen": ["rewindagents replay", "   10  Edit          README.md  [1 checkpointed]", "   11  Bash          git status --short", "   12  Read          tests/test_server.py", "   13  Bash          rm -rf tests  [3 checkpointed]", "   14  Write         app/config.py  [1 checkpointed]"],
           "visual": "The command types in Leader at the Playhead prompt, then the replay list prints one row per tick while the ruler fills to fourteen ticks in Rule; the panel settles on the last five rows. Rows thirteen and fourteen in Rewind, the rest in Leader.",
           "cites": ["one line per step: number, tool, file or command", "   13  Bash          rm -rf tests  [3 checkpointed]", "   14  Write         app/config.py  [1 checkpointed]"]
         },
@@ -61,7 +61,7 @@
           "id": "b07",
           "ms": 2000,
           "voice": "So rewind to it.",
-          "screen": ["rewindagent rewind 12"],
+          "screen": ["rewindagents rewind 12"],
           "visual": "The Playhead prompt comes back and the command types in Leader in Commit Mono. The ruler holds still, playhead on twelve.",
           "cites": ["files back to how they were right after step 12"]
         },
@@ -77,9 +77,9 @@
           "id": "b09",
           "ms": 4500,
           "voice": "And the rewind is step fifteen. You can undo the undo.",
-          "screen": ["  this rewind is step 15; undo it with: rewindagent rewind 14 --session demo", "A rewind is undoable."],
+          "screen": ["  this rewind is step 15; undo it with: rewindagents rewind 14 --session demo", "A rewind is undoable."],
           "visual": "The restore lines return to Leader and the last line of the report, the one that gives the undo command, takes the Rewind. On the ruler a fifteenth tick draws itself after fourteen in Rule. The caption sits under the panel in Hanken Grotesk, Reel on Leader.",
-          "cites": ["  this rewind is step 15; undo it with: rewindagent rewind 14 --session demo", "A rewind is undoable."]
+          "cites": ["  this rewind is step 15; undo it with: rewindagents rewind 14 --session demo", "A rewind is undoable."]
         },
         {
           "id": "b10",
@@ -93,7 +93,7 @@
           "id": "b11",
           "ms": 6000,
           "voice": "Every tool call goes into a hash-chained log. Edit one record and verify names it.",
-          "screen": ["rewindagent verify", ".rewindagent/log.jsonl", "each record holds the SHA-256 of the one before"],
+          "screen": ["rewindagents verify", ".rewindagents/log.jsonl", "each record holds the SHA-256 of the one before"],
           "visual": "Cut to Leader. The step ruler fills the width, and each tick becomes a short line of JSONL in Commit Mono, Reel, joined to the next by a Rule hairline. One record in the middle shifts a character; its hairline breaks and that record alone is marked in Record. Then the verify command in a small Spool panel.",
           "cites": ["tamper-evident, hash-chained log", "Each record holds the SHA-256 of the record before it", "makes `verify` fail and name the first bad record"]
         },
@@ -101,9 +101,9 @@
           "id": "b12",
           "ms": 4500,
           "voice": "Before every edit, the hook copies the file as it is.",
-          "screen": ["Write  Edit  MultiEdit  NotebookEdit", ".rewindagent/objects/<sha256>"],
+          "screen": ["Write  Edit  MultiEdit  NotebookEdit", ".rewindagents/objects/<sha256>"],
           "visual": "Leader ground. Four tool names in Commit Mono, Tape, on one row. Under one tick of the ruler a small file card in Spool drops a copy into a row labelled with the objects path; the copy is outlined in Record.",
-          "cites": ["the current bytes of the target file are copied", "to `.rewindagent/objects/<sha256>`"]
+          "cites": ["the current bytes of the target file are copied", "to `.rewindagents/objects/<sha256>`"]
         },
         {
           "id": "b13",
@@ -116,8 +116,8 @@
         {
           "id": "b14",
           "ms": 5500,
-          "voice": "rewindagent install adds the Claude Code hook. It has run in real sessions.",
-          "screen": ["cd /path/to/your/project", "rewindagent install", "Claude Code: has run in real sessions"],
+          "voice": "rewindagents install adds the Claude Code hook. It has run in real sessions.",
+          "screen": ["cd /path/to/your/project", "rewindagents install", "Claude Code: has run in real sessions"],
           "visual": "Spool panel on Leader, both commands type in Leader at the Playhead prompt. Beside the panel a status row in Hanken Grotesk, Reel, with one Record tick in front of it.",
           "cites": ["adds the hook to .claude/settings.json in this project", "The Claude Code hook has run in real"]
         },
@@ -125,7 +125,7 @@
           "id": "b15",
           "ms": 8000,
           "voice": "Codex and Cursor: built from the vendors' hook documentation, tested with the documented payloads. Not yet in a live session.",
-          "screen": ["rewindagent install --agent codex", "rewindagent install --agent cursor", "built from the vendors' hook documentation", "tested with the documented payloads", "not yet in a live session"],
+          "screen": ["rewindagents install --agent codex", "rewindagents install --agent cursor", "built from the vendors' hook documentation", "tested with the documented payloads", "not yet in a live session"],
           "visual": "The same panel, two more install lines in Leader. Beside it the status rows continue in Reel, each set as spoken; the last row, not yet in a live session, is the one Record line, and its tick on the ruler is drawn open, an outline in Rule.",
           "cites": ["built from the vendors' hook documentation", "documented payloads, not yet in a live session"]
         },
@@ -141,9 +141,9 @@
           "id": "b17",
           "ms": 4500,
           "voice": "Export it as one HTML page. Find it later with sessions.",
-          "screen": ["rewindagent export", ".rewindagent/replay-<session>.html", "rewindagent sessions"],
+          "screen": ["rewindagents export", ".rewindagents/replay-<session>.html", "rewindagents sessions"],
           "visual": "Spool panel: the export command and the path it writes in Leader. A plain page in Leader slides in beside it, the step ruler across its top, one step row with its diff in Commit Mono. Then the sessions command, its line marked latest in Rewind.",
-          "cites": ["writes .rewindagent/replay-<session>.html", "One HTML file with the whole session", "every session in the log"]
+          "cites": ["writes .rewindagents/replay-<session>.html", "One HTML file with the whole session", "every session in the log"]
         },
         {
           "id": "b18",
@@ -165,7 +165,7 @@
           "id": "b20",
           "ms": 4500,
           "voice": "Your editor has had undo for decades. Now your agent does.",
-          "screen": ["rewindagent", "Ctrl+Z for AI coding agents: record, replay, rewind.", "{site_url}", "made by John B Joseph"],
+          "screen": ["rewindagents", "Ctrl+Z for AI coding agents: record, replay, rewind.", "{site_url}", "made by John B Joseph"],
           "visual": "End card on Reel, like the end of a tape: the wordmark in Bricolage Grotesque 800, Leader, with the mark beside it, the playhead in Rewind one tick behind the last. The promise in Hanken Grotesk, Playhead; the address in Commit Mono, Leader; a Rule hairline; the credit line in Playhead.",
           "cites": ["Ctrl+Z for AI coding agents: record, replay and rewind."]
         }
@@ -196,8 +196,8 @@
         {
           "id": "b03",
           "ms": 4500,
-          "voice": "rewindagent replay lists every step. Twelve was the last good one.",
-          "screen": ["rewindagent replay", "   12  Read          tests/test_server.py", "   13  Bash          rm -rf tests  [3 checkpointed]", "   14  Write         app/config.py  [1 checkpointed]"],
+          "voice": "rewindagents replay lists every step. Twelve was the last good one.",
+          "screen": ["rewindagents replay", "   12  Read          tests/test_server.py", "   13  Bash          rm -rf tests  [3 checkpointed]", "   14  Write         app/config.py  [1 checkpointed]"],
           "visual": "The command types in Leader at the Playhead prompt and the list prints. On the second sentence row twelve takes the Rewind, rows thirteen and fourteen go back to Leader, and the Record playhead steps back to tick twelve.",
           "cites": ["one line per step: number, tool, file or command", "   12  Read          tests/test_server.py"]
         },
@@ -205,7 +205,7 @@
           "id": "b04",
           "ms": 2500,
           "voice": "So rewind to twelve.",
-          "screen": ["rewindagent rewind 12"],
+          "screen": ["rewindagents rewind 12"],
           "visual": "Prompt back in Playhead, the command types in Leader in Commit Mono. The ruler holds, playhead on twelve.",
           "cites": ["files back to how they were right after step 12"]
         },
@@ -223,13 +223,13 @@
           "voice": "And the rewind itself can be undone.",
           "screen": ["A rewind is undoable."],
           "visual": "The last report line, the undo command, takes the Rewind; a fifteenth tick draws itself on the ruler in Rule. Caption under the panel in Hanken Grotesk, Reel on Leader.",
-          "cites": ["  this rewind is step 15; undo it with: rewindagent rewind 14 --session demo", "A rewind is undoable."]
+          "cites": ["  this rewind is step 15; undo it with: rewindagents rewind 14 --session demo", "A rewind is undoable."]
         },
         {
           "id": "b07",
           "ms": 5000,
-          "voice": "Install it from the repository, then run rewindagent install in your project.",
-          "screen": ["{repo_url}", "not on PyPI yet", "rewindagent install"],
+          "voice": "Install it from the repository, then run rewindagents install in your project.",
+          "screen": ["{repo_url}", "not on PyPI yet", "rewindagents install"],
           "visual": "Leader page, the repository placeholder in Commit Mono as the one Record line, the not-on-PyPI note under a Rule hairline in Tape. Then a small Spool panel with the install command in Leader.",
           "cites": ["From the repository", "Not on PyPI yet.", "adds the hook to .claude/settings.json in this project"]
         },
@@ -237,7 +237,7 @@
           "id": "b08",
           "ms": 4500,
           "voice": "Your editor has had undo for decades. Now your agent does.",
-          "screen": ["rewindagent", "Ctrl+Z for AI coding agents: record, replay, rewind.", "{site_url}", "made by John B Joseph"],
+          "screen": ["rewindagents", "Ctrl+Z for AI coding agents: record, replay, rewind.", "{site_url}", "made by John B Joseph"],
           "visual": "End card on Reel: wordmark in Bricolage Grotesque 800, Leader, the mark with its Rewind playhead one tick behind the last; promise in Hanken Grotesk, Playhead; address in Commit Mono, Leader; a Rule hairline; the credit line in Playhead.",
           "cites": ["Ctrl+Z for AI coding agents: record, replay and rewind."]
         }
@@ -269,7 +269,7 @@
           "id": "b03",
           "ms": 2000,
           "voice": "Rewind to step twelve.",
-          "screen": ["rewindagent rewind 12"],
+          "screen": ["rewindagents rewind 12"],
           "visual": "The panel clears to the Playhead prompt; the command types in Leader. On the ruler the Record playhead steps back two ticks.",
           "cites": ["files back to how they were right after step 12"]
         },
@@ -285,7 +285,7 @@
           "id": "b05",
           "ms": 3500,
           "voice": "Your editor has undo. Now your agent does.",
-          "screen": ["rewindagent", "Ctrl+Z for AI coding agents: record, replay, rewind.", "{site_url}", "made by John B Joseph"],
+          "screen": ["rewindagents", "Ctrl+Z for AI coding agents: record, replay, rewind.", "{site_url}", "made by John B Joseph"],
           "visual": "Vertical end card on Reel: wordmark in Bricolage Grotesque 800, Leader, stacked over the promise in Hanken Grotesk, Playhead, wrapped to two lines; the address in Commit Mono, Leader; a Rule hairline; the credit in Playhead. The mark's playhead in Rewind.",
           "cites": ["Ctrl+Z for AI coding agents: record, replay and rewind."]
         }

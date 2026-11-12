@@ -9,7 +9,7 @@ exist then is deleted. Before changing anything, rewind checkpoints the current 
 will touch and records itself as a step, so a rewind can be rewound too.
 
 Safety: nothing is written unless the log's hash chain verifies and every stored copy still matches its
-SHA-256. Files outside the project (the directory holding .rewindagent/) are never touched. A step whose
+SHA-256. Files outside the project (the directory holding .rewindagents/) are never touched. A step whose
 before/after scan did not finish (a Bash, Shell or apply_patch call in a project too big to scan, or one
 whose post event never arrived) is counted and reported; the files it changed are not undone.
 """
@@ -34,7 +34,7 @@ class RewindError(Exception):
 
 
 def project_root(log_path: str | Path) -> Path:
-    """The directory whose .rewindagent/ holds this log."""
+    """The directory whose .rewindagents/ holds this log."""
     return Path(log_path).resolve().parent.parent
 
 
@@ -135,7 +135,7 @@ def plan(log_path: str | Path, n: int, session: str | None = None) -> dict:
     if not 0 <= n <= len(all_steps):
         raise RewindError(f"step {n} is out of range: session {session} has {len(all_steps)} steps")
     root = project_root(log_path)
-    objects = root / ".rewindagent" / "objects"
+    objects = root / ".rewindagents" / "objects"
     first: dict[str, dict] = {}
     for s in all_steps[n:]:
         for cp in s["checkpoints"]:
@@ -166,18 +166,18 @@ def plan(log_path: str | Path, n: int, session: str | None = None) -> dict:
 
 def _apply(log_path: str | Path, p: dict, event: str, extra: dict | None = None) -> dict:
     root = project_root(log_path)
-    objects = root / ".rewindagent" / "objects"
+    objects = root / ".rewindagents" / "objects"
     touched = [path for path, _ in p["restore"]] + p["delete"]
-    with store_lock(root / ".rewindagent"):  # `gc` must not delete these copies before the record names them
+    with store_lock(root / ".rewindagents"):  # `gc` must not delete these copies before the record names them
         saved = [checkpoint(Path(path), objects) for path in touched]
         args = {"input": {"to_step": p["to_step"]}, "to_step": p["to_step"], "checkpoints": saved}
         args.update(extra or {})
-        rec = log.Recorder(log_path).record(p["session"], "rewindagent", args, None,
+        rec = log.Recorder(log_path).record(p["session"], "rewindagents", args, None,
                                             actor="user", event=event)
     for path_s, sha in p["restore"]:
         path = Path(path_s)
         path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = path.with_name(f".{path.name}.rewindagent.tmp")
+        tmp = path.with_name(f".{path.name}.rewindagents.tmp")
         tmp.write_bytes((objects / sha).read_bytes())
         os.replace(tmp, path)
     for path_s in p["delete"]:
@@ -198,7 +198,7 @@ def _git(root: Path, *args: str, env: dict | None = None) -> str:
 
 
 def git_snapshot(root: Path, name: str) -> str | None:
-    """Commit the whole working tree (tracked + untracked, minus ignored) to refs/heads/rewindagent/<name>.
+    """Commit the whole working tree (tracked + untracked, minus ignored) to refs/heads/rewindagents/<name>.
 
     Uses a throwaway index, so the user's index, HEAD and current branch are left alone.
     Returns the commit id, or None if root is not a git work tree.
@@ -208,20 +208,20 @@ def git_snapshot(root: Path, name: str) -> str | None:
             return None
     except (subprocess.CalledProcessError, FileNotFoundError):
         return None
-    ref = f"refs/heads/rewindagent/{name}"
+    ref = f"refs/heads/rewindagents/{name}"
     try:
         _git(root, "check-ref-format", ref)
     except subprocess.CalledProcessError:
         raise RewindError(f"{name!r} is not a valid branch name")
     try:
         _git(root, "rev-parse", "--verify", "--quiet", ref)
-        raise RewindError(f"branch rewindagent/{name} already exists")
+        raise RewindError(f"branch rewindagents/{name} already exists")
     except subprocess.CalledProcessError:
         pass
     with tempfile.TemporaryDirectory() as d:
         env = dict(os.environ, GIT_INDEX_FILE=str(Path(d, "index")),
-                   GIT_AUTHOR_NAME="rewindagent", GIT_AUTHOR_EMAIL="rewindagent@localhost",
-                   GIT_COMMITTER_NAME="rewindagent", GIT_COMMITTER_EMAIL="rewindagent@localhost")
+                   GIT_AUTHOR_NAME="rewindagents", GIT_AUTHOR_EMAIL="rewindagents@localhost",
+                   GIT_COMMITTER_NAME="rewindagents", GIT_COMMITTER_EMAIL="rewindagents@localhost")
         _git(root, "add", "-A", ".", env=env)
         tree = _git(root, "write-tree", env=env)
         parent: list[str] = []
@@ -230,7 +230,7 @@ def git_snapshot(root: Path, name: str) -> str | None:
         except subprocess.CalledProcessError:
             pass
         commit = _git(root, "commit-tree", tree, *parent, "-m",
-                      f"rewindagent: working tree before branching ({name})", env=env)
+                      f"rewindagents: working tree before branching ({name})", env=env)
     _git(root, "update-ref", ref, commit)
     return commit
 
@@ -239,11 +239,11 @@ def branch(log_path: str | Path, n: int, name: str, session: str | None = None) 
     """Keep the current timeline, then rewind to step n so the agent can try again from there.
 
     The current files are always checkpointed in the log (as for rewind). In a git work tree the whole
-    working tree is also committed to the branch rewindagent/<name>, without touching HEAD or the index.
+    working tree is also committed to the branch rewindagents/<name>, without touching HEAD or the index.
     """
     p = plan(log_path, n, session)
     commit = git_snapshot(project_root(log_path), name)
-    info = {"name": name, "git_ref": f"rewindagent/{name}" if commit else None, "commit": commit}
+    info = {"name": name, "git_ref": f"rewindagents/{name}" if commit else None, "commit": commit}
     p["branch"] = info
     p["record"] = _apply(log_path, p, "branch", {"branch": info})["seq"]
     return p

@@ -1,7 +1,7 @@
 """Runs the console script that `pip install .` put in .venv, not the source tree.
 
-.fire-test-cmd builds .venv, installs the package into it and sets REWINDAGENT_BIN, so in the launch gate's
-fresh clone these tests always run. Without REWINDAGENT_BIN they are skipped (a plain `unittest discover`).
+.fire-test-cmd builds .venv, installs the package into it and sets REWINDAGENTS_BIN, so in the launch gate's
+fresh clone these tests always run. Without REWINDAGENTS_BIN they are skipped (a plain `unittest discover`).
 The README check at the bottom runs either way.
 """
 import json
@@ -19,17 +19,17 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 SRC = ROOT / "src"
 sys.path.insert(0, str(SRC))
-from rewindagent import agents  # noqa: E402  (only for the agents' event names; the binary under test runs without src)
-BIN = os.environ.get("REWINDAGENT_BIN")
-VERSION = re.search(r'^__version__ = "([^"]+)"', (SRC / "rewindagent" / "__init__.py").read_text(), re.M).group(1)
-SUBCOMMANDS = set(re.findall(r'sub\.add_parser\("(\w+)"', (SRC / "rewindagent" / "cli.py").read_text()))
+from rewindagents import agents  # noqa: E402  (only for the agents' event names; the binary under test runs without src)
+BIN = os.environ.get("REWINDAGENTS_BIN")
+VERSION = re.search(r'^__version__ = "([^"]+)"', (SRC / "rewindagents" / "__init__.py").read_text(), re.M).group(1)
+SUBCOMMANDS = set(re.findall(r'sub\.add_parser\("(\w+)"', (SRC / "rewindagents" / "cli.py").read_text()))
 
 
 def clean_env():
     return {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
 
 
-@unittest.skipUnless(BIN, "REWINDAGENT_BIN not set; .fire-test-cmd sets it after pip install")
+@unittest.skipUnless(BIN, "REWINDAGENTS_BIN not set; .fire-test-cmd sets it after pip install")
 class InstalledCommandTest(unittest.TestCase):
     def _run(self, *argv, cwd, stdin=None):
         return subprocess.run([BIN, *argv], cwd=cwd, env=clean_env(), input=stdin,
@@ -39,12 +39,12 @@ class InstalledCommandTest(unittest.TestCase):
         self.assertTrue(Path(BIN).is_file(), BIN)
         with TemporaryDirectory() as d:
             r = self._run("--version", cwd=d)
-        self.assertEqual((r.returncode, r.stdout.strip()), (0, f"rewindagent {VERSION}"), r.stderr)
+        self.assertEqual((r.returncode, r.stdout.strip()), (0, f"rewindagents {VERSION}"), r.stderr)
 
     def test_package_is_imported_from_the_install_not_src(self):
         py = Path(BIN).parent / "python"
         with TemporaryDirectory() as d:
-            r = subprocess.run([str(py), "-I", "-c", "import rewindagent; print(rewindagent.__file__)"],
+            r = subprocess.run([str(py), "-I", "-c", "import rewindagents; print(rewindagents.__file__)"],
                                cwd=d, capture_output=True, text=True, timeout=60)
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn("site-packages", r.stdout)
@@ -61,11 +61,11 @@ class InstalledCommandTest(unittest.TestCase):
         cmd = cmds.pop()
         self.assertNotIn("PYTHONPATH", cmd)
         words = shlex.split(cmd)
-        self.assertEqual(words[1:], ["-m", "rewindagent", "hook"], cmd)
+        self.assertEqual(words[1:], ["-m", "rewindagents", "hook"], cmd)
         self.assertTrue(Path(words[0]).is_absolute(), cmd)
         # The named interpreter must import the package on its own, with nothing inherited from this process.
         with TemporaryDirectory() as d:
-            r = subprocess.run([words[0], "-I", "-c", "import rewindagent; print(rewindagent.__file__)"],
+            r = subprocess.run([words[0], "-I", "-c", "import rewindagents; print(rewindagents.__file__)"],
                                cwd=d, capture_output=True, text=True, timeout=60)
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn("site-packages", r.stdout)
@@ -95,7 +95,7 @@ class InstalledCommandTest(unittest.TestCase):
             r = self._run("rewind", "0", cwd=proj)
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertEqual(Path(proj, "app.py").read_text(), "x = 1\n")
-            self.assertIn("undo it with: rewindagent rewind 1 --session inst", r.stdout)
+            self.assertIn("undo it with: rewindagents rewind 1 --session inst", r.stdout)
             r = self._run("verify", cwd=proj)
             self.assertEqual((r.returncode, r.stdout.strip()), (0, "OK: 3 records, chain intact"), r.stderr)
             r = self._run("sessions", cwd=proj)                    # the Bash step and the rewind: 2 steps, app.py
@@ -129,7 +129,7 @@ class InstalledCommandTest(unittest.TestCase):
             r = self._run("import", out, cwd=dst)
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertIn("imported session moved: 1 steps, 2 records", r.stdout)
-            self.assertIn("replay it with: rewindagent replay --session moved", r.stdout)
+            self.assertIn("replay it with: rewindagents replay --session moved", r.stdout)
             r = self._run("verify", cwd=dst)
             self.assertEqual((r.returncode, r.stdout.strip()), (0, "OK: 2 records, chain intact"), r.stderr)
             r = self._run("replay", "--session", "moved", cwd=dst)
@@ -165,7 +165,7 @@ class InstalledCommandTest(unittest.TestCase):
             r = self._run("gc", cwd=proj)
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertIn("deleted 2 stored copies", r.stdout)
-            self.assertEqual(len(list(Path(proj, ".rewindagent", "objects").iterdir())), 1)
+            self.assertEqual(len(list(Path(proj, ".rewindagents", "objects").iterdir())), 1)
             r = self._run("rewind", "0", cwd=proj)
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertEqual(Path(proj, "app.py").read_text(), "x = 1\n")
@@ -182,7 +182,7 @@ class InstalledCommandTest(unittest.TestCase):
             p = subprocess.run(cmd, shell=True, cwd=proj, env=clean_env(), input=json.dumps(payload),
                                capture_output=True, text=True, timeout=120)
             self.assertEqual((p.returncode, p.stderr), (0, ""))   # no PostToolUse: the agent was killed
-            (scan,) = Path(proj, ".rewindagent", "pending").glob("*.json")
+            (scan,) = Path(proj, ".rewindagents", "pending").glob("*.json")
             old = time.time() - 3 * 86400
             os.utime(scan, (old, old))
             r = self._run("gc", "--dry-run", cwd=proj)
@@ -193,7 +193,7 @@ class InstalledCommandTest(unittest.TestCase):
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertIn("dropped 1 pending scan(s) older than 2 days:", r.stdout)
             self.assertFalse(scan.exists())
-            self.assertEqual(list(Path(proj, ".rewindagent", "objects").iterdir()), [])
+            self.assertEqual(list(Path(proj, ".rewindagents", "objects").iterdir()), [])
             r = self._run("verify", cwd=proj)
             self.assertEqual((r.returncode, r.stdout.strip()), (0, "OK: 1 records, chain intact"), r.stderr)
 
@@ -230,7 +230,7 @@ class InstalledCommandTest(unittest.TestCase):
                 cmd = cmds[pre_event][0]
                 self.assertNotIn("PYTHONPATH", cmd)
                 words = shlex.split(cmd)
-                self.assertEqual(words[1:], ["-m", "rewindagent", "hook", "--agent", agent], cmd)
+                self.assertEqual(words[1:], ["-m", "rewindagents", "hook", "--agent", agent], cmd)
                 self.assertTrue(Path(words[0]).is_absolute(), cmd)
 
                 def hook_call(ev, extra, want):
@@ -249,7 +249,7 @@ class InstalledCommandTest(unittest.TestCase):
                 r = self._run("rewind", "0", cwd=proj)
                 self.assertEqual(r.returncode, 0, r.stderr)
                 self.assertEqual(Path(proj, "app.py").read_text(), "x = 1\n")
-                self.assertIn("undo it with: rewindagent rewind 1 --session c9", r.stdout)
+                self.assertIn("undo it with: rewindagents rewind 1 --session c9", r.stdout)
                 self.assertNotIn("not scanned", r.stdout)
                 r = self._run("verify", cwd=proj)
                 self.assertEqual((r.returncode, r.stdout.strip()), (0, "OK: 3 records, chain intact"), r.stderr)
@@ -257,7 +257,7 @@ class InstalledCommandTest(unittest.TestCase):
     def test_uninstall_removes_what_install_wrote_for_every_agent(self):
         """Install then uninstall through the binary for all three agents, next to a hook of the user's own:
         the user's entry survives exactly, ours is gone, a second uninstall leaves the file byte-identical,
-        and .rewindagent/ is untouched."""
+        and .rewindagents/ is untouched."""
         for agent in sorted(agents.AGENTS):
             ag = agents.AGENTS[agent]
             with self.subTest(agent=agent), TemporaryDirectory() as proj:
@@ -269,8 +269,8 @@ class InstalledCommandTest(unittest.TestCase):
                     mine = {"hooks": {ag.events[0]: [{"matcher": "Bash", "hooks": [
                         {"type": "command", "command": "my-own-hook"}]}]}}
                 f.write_text(json.dumps(mine))
-                Path(proj, ".rewindagent").mkdir()
-                Path(proj, ".rewindagent", "log.jsonl").write_text("kept\n")
+                Path(proj, ".rewindagents").mkdir()
+                Path(proj, ".rewindagents", "log.jsonl").write_text("kept\n")
                 r = self._run("install", "--agent", agent, cwd=proj)
                 self.assertEqual((r.returncode, r.stdout.strip()), (0, "installed in %s" % ag.settings), r.stderr)
                 self.assertNotEqual(json.loads(f.read_text()), mine)
@@ -282,18 +282,18 @@ class InstalledCommandTest(unittest.TestCase):
                 self.assertEqual((r.returncode, r.stdout.strip()),
                                  (0, "not installed in %s; left unchanged" % ag.settings), r.stderr)
                 self.assertEqual(f.read_bytes(), raw)
-                self.assertEqual(Path(proj, ".rewindagent", "log.jsonl").read_text(), "kept\n")
+                self.assertEqual(Path(proj, ".rewindagents", "log.jsonl").read_text(), "kept\n")
 
 
 class ReadmeCommandsTest(unittest.TestCase):
-    def test_every_rewindagent_command_in_the_readme_is_a_real_subcommand(self):
+    def test_every_rewindagents_command_in_the_readme_is_a_real_subcommand(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         blocks = re.findall(r"```sh\n(.*?)```", readme, re.S)
         self.assertTrue(blocks)
         seen = set()
         for line in "\n".join(blocks).splitlines():
             line = line.strip().lstrip("$ ")
-            m = re.match(r"(?:python3 -m )?rewindagent (\S+)", line.split("|")[-1].strip())
+            m = re.match(r"(?:python3 -m )?rewindagents (\S+)", line.split("|")[-1].strip())
             if m and not m.group(1).startswith("-"):
                 self.assertIn(m.group(1), SUBCOMMANDS, line)
                 seen.add(m.group(1))

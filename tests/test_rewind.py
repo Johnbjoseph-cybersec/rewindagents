@@ -12,8 +12,8 @@ from tempfile import TemporaryDirectory
 SRC = Path(__file__).resolve().parent.parent / "src"
 sys.path.insert(0, str(SRC))
 
-from rewindagent import hook, read, rewind, verify  # noqa: E402
-from rewindagent.cli import main  # noqa: E402
+from rewindagents import hook, read, rewind, verify  # noqa: E402
+from rewindagents.cli import main  # noqa: E402
 
 
 class Agent:
@@ -47,7 +47,7 @@ class Agent:
 
     @property
     def log(self):
-        return self.cwd / ".rewindagent" / "log.jsonl"
+        return self.cwd / ".rewindagents" / "log.jsonl"
 
 
 def cli(*args):
@@ -135,7 +135,7 @@ class TestRewind(unittest.TestCase):
 
     def test_altered_stored_copy_is_not_written_back(self):
         sha = hashlib.sha256(b"v1").hexdigest()
-        (self.d / ".rewindagent" / "objects" / sha).write_bytes(b"evil")
+        (self.d / ".rewindagents" / "objects" / sha).write_bytes(b"evil")
         p = rewind.rewind(self.a.log, 1)
         self.assertEqual(p["cannot"], [(str(self.d / "app.py"), "stored copy missing or altered")])
         self.assertEqual((self.d / "app.py").read_text(), "wrecked")
@@ -189,13 +189,13 @@ class TestBranch(unittest.TestCase):
             p = rewind.branch(a.log, 0, "try1")
             self.assertEqual(Path(d, "app.py").read_text(), "committed")
             self.assertFalse(Path(d, "extra.py").exists())
-            self.assertEqual(git(d, "show", "rewindagent/try1:app.py"), "attempt-1")
-            self.assertEqual(git(d, "show", "rewindagent/try1:extra.py"), "attempt-1 extra")
+            self.assertEqual(git(d, "show", "rewindagents/try1:app.py"), "attempt-1")
+            self.assertEqual(git(d, "show", "rewindagents/try1:extra.py"), "attempt-1 extra")
             self.assertEqual(git(d, "rev-parse", "HEAD"), head)
             self.assertEqual(git(d, "status", "--porcelain"), status)
-            self.assertEqual(git(d, "rev-parse", "rewindagent/try1^"), head)
-            self.assertNotIn(".rewindagent/log.jsonl", git(d, "ls-tree", "-r", "--name-only", "rewindagent/try1"))
-            self.assertEqual(p["branch"]["git_ref"], "rewindagent/try1")
+            self.assertEqual(git(d, "rev-parse", "rewindagents/try1^"), head)
+            self.assertNotIn(".rewindagents/log.jsonl", git(d, "ls-tree", "-r", "--name-only", "rewindagents/try1"))
+            self.assertEqual(p["branch"]["git_ref"], "rewindagents/try1")
             with self.assertRaises(rewind.RewindError):     # same name twice is refused
                 rewind.branch(a.log, 0, "try1")
 
@@ -237,17 +237,17 @@ class TestCli(unittest.TestCase):
             a.write("app.py", "broken")
             a.write("junk.py", "x")
             env = dict(os.environ, PYTHONPATH=str(SRC))
-            p = subprocess.run([sys.executable, "-m", "rewindagent", "rewind", "1"], cwd=d, env=env,
+            p = subprocess.run([sys.executable, "-m", "rewindagents", "rewind", "1"], cwd=d, env=env,
                                capture_output=True, text=True)
             self.assertEqual(p.returncode, 0, p.stderr)
             self.assertEqual(Path(d, "app.py").read_text(), "good")
             self.assertFalse(Path(d, "junk.py").exists())
-            # "rewindagent" once pip-installed into this interpreter, "python3 -m rewindagent" from a clone
-            self.assertRegex(p.stdout, r"undo it with: (rewindagent|python3 -m rewindagent) rewind 3 --session s1")
+            # "rewindagents" once pip-installed into this interpreter, "python3 -m rewindagents" from a clone
+            self.assertRegex(p.stdout, r"undo it with: (rewindagents|python3 -m rewindagents) rewind 3 --session s1")
 
     def test_undo_hint_names_the_command_that_exists(self):
         from unittest.mock import patch
-        for installed, expect in ((False, "python3 -m rewindagent rewind 2"), (True, "rewindagent rewind 2")):
+        for installed, expect in ((False, "python3 -m rewindagents rewind 2"), (True, "rewindagents rewind 2")):
             with TemporaryDirectory() as d:
                 a = Agent(d)
                 a.write("app.py", "v1")
@@ -274,7 +274,7 @@ class TestCli(unittest.TestCase):
             a = Agent(d)
             a.write("app.py", "v1")
             a.write("app.py", "v2")
-            (Path(d, ".rewindagent", "objects") / hashlib.sha256(b"v1").hexdigest()).write_bytes(b"x")
+            (Path(d, ".rewindagents", "objects") / hashlib.sha256(b"v1").hexdigest()).write_bytes(b"x")
             code, out, _ = cli("--log", str(a.log), "rewind", "1")
             self.assertEqual(code, 1)
             self.assertIn("CANNOT", out)

@@ -9,7 +9,7 @@ Step fourteen. It overwrites the config.
 
 3
 00:00:06,000 --> 00:00:10,500
-rewindagent replay lists every step.
+rewindagents replay lists every step.
 Twelve was the last good one.
 
 4
@@ -28,7 +28,7 @@ And the rewind itself can be undone.
 7
 00:00:19,500 --> 00:00:24,500
 Install it from the repository, then run
-rewindagent install in your project.
+rewindagents install in your project.
 
 8
 00:00:24,500 --> 00:00:29,000

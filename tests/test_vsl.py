@@ -17,11 +17,11 @@ VSL = os.path.join(ROOT, "brand", "vsl")
 MANIFEST = os.path.join(ROOT, "brand", "demo", "manifest.json")
 sys.path.insert(0, os.path.join(ROOT, "src"))
 
-from rewindagent import __version__  # noqa: E402
-from rewindagent.bashscan import MAX_SCAN_FILES  # noqa: E402
-from rewindagent.export import MAX_DIFF_BYTES, MAX_DIFF_LINES  # noqa: E402
-from rewindagent.hook import MAX_CHECKPOINT_BYTES, MAX_RESULT_CHARS  # noqa: E402
-from rewindagent.sessions import SHOW_FILES  # noqa: E402
+from rewindagents import __version__  # noqa: E402
+from rewindagents.bashscan import MAX_SCAN_FILES  # noqa: E402
+from rewindagents.export import MAX_DIFF_BYTES, MAX_DIFF_LINES  # noqa: E402
+from rewindagents.hook import MAX_CHECKPOINT_BYTES, MAX_RESULT_CHARS  # noqa: E402
+from rewindagents.sessions import SHOW_FILES  # noqa: E402
 
 VIDEOS = {"vsl-90s": ("16:9", 90000), "vsl-30s": ("16:9", 30000), "vsl-15s-vertical": ("9:16", 15000)}
 # BRAND.md "Words we never use" and "Don't", plus the pitch words it rules out
@@ -34,7 +34,7 @@ ONLY_NEGATED = ["block", "blocks", "blocking", "judge", "judges", "stop", "stops
 HOST = re.compile(r"[\w-]+\.(github\.io|com|dev|io|app|org|net|sh|co|ai)\b", re.I)
 EMOJI = re.compile("[\U0001F300-\U0001FAFF\u2600-\u27BF]")
 # a screen line that looks like a command of ours must be one the README or the demo session has
-COMMAND = re.compile(r"^(rewindagent|python3 -m rewindagent|pipx|pip|git|echo)\b")
+COMMAND = re.compile(r"^(rewindagents|python3 -m rewindagents|pipx|pip|git|echo)\b")
 # a screen line that looks like terminal output must be a line the recorded session printed
 OUTPUT = re.compile(r"^\s*(\d+\s+(Read|Edit|Write|Bash|MultiEdit|NotebookEdit)\b|restore\s|session \w+: rewind|"
                     r"this rewind is step|[ MD?]{2,3}\S)")
@@ -177,11 +177,11 @@ class TestVsl(unittest.TestCase):
         printed = demo_output_lines()
         for v in beats()["videos"]:
             screen = [s for _, f, s in text_fields(v) if f == "screen"]
-            self.assertIn("rewindagent rewind 12", screen, "%s never shows the rewind command" % v["name"])
+            self.assertIn("rewindagents rewind 12", screen, "%s never shows the rewind command" % v["name"])
             self.assertTrue(any(s.rstrip() in printed for s in screen), "%s shows no real output" % v["name"])
         long = next(v for v in beats()["videos"] if v["name"] == "vsl-90s")
         texts = " ".join(t for _, _, t in text_fields(long))
-        for phrase in ("rewindagent replay", "rm -rf tests", "restore  tests/test_config.py", "Apache-2.0",
+        for phrase in ("rewindagents replay", "rm -rf tests", "restore  tests/test_config.py", "Apache-2.0",
                        "planned", "hash", "not yet in a live session", "undo it with"):
             self.assertIn(phrase, texts, "vsl-90s does not say %r" % phrase)
 
@@ -218,7 +218,8 @@ class TestVsl(unittest.TestCase):
                 self.assertNotIn("\u2014", text, "em dash")
                 self.assertNotIn("!", text, "%s %s %s: no exclamation marks" % (v["name"], bid, field))
         for rel in os.listdir(VSL):
-            if rel.endswith((".md", ".srt", ".json")):
+            # claims.json is the verifier's record; its sources cite the pages it read (pypi.org, github.com)
+            if rel.endswith((".md", ".srt", ".json")) and rel != "claims.json":
                 self.assertEqual(hosts(read(os.path.join(VSL, rel))), [], rel)
 
     def test_planned_things_are_called_planned(self):

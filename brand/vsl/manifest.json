@@ -1,5 +1,5 @@
 {
- "beats_sha256": "60aac5c932df43dd4d438ce58a3e3f8a76368037cfc37b66d1ae9fc028f2d1c9",
+ "beats_sha256": "caa493b9c6bc42e6ffe5bf04dc9626656f9d7fe21cf0e12e12eefacf5b10b98d",
  "note": "Written by brand/vsl/render.py. The address in the videos comes from brand/site/config.json at render time; this file keeps no address.",
  "videos": {
   "vsl-15s-vertical": {
@@ -8,7 +8,7 @@
     "master": "loudnorm=I=-16:TP=-1.5:LRA=7",
     "measured": {
      "integrated_lufs": -16.2,
-     "true_peak_dbfs": -7.6
+     "true_peak_dbfs": -7.5
     },
     "music": "synthesised by render.py score(), 84 BPM Am-F-C-G pad, quarter-note ticks, beat-change ticks, a sweep under the rewind",
     "voice": "none: captions carry the words until John approves his cloned voice for product videos"
@@ -112,7 +112,7 @@
    "mp4_facts": {
     "audio_codec": "mp4a",
     "audio_seconds": 13.521,
-    "bytes": 589443,
+    "bytes": 589720,
     "channels": 2,
     "faststart": true,
     "fps": 30.0,
@@ -120,7 +120,7 @@
     "height": 1920,
     "sample_rate": 48000,
     "seconds": 13.5,
-    "sha256": "96600acd1f5f0f5926a359a89065aa55d8d5b0cc89df292865e741c1146c0070",
+    "sha256": "2e159935d5c7e22e54ab4ee5d626f9949ad75d8fd2916cd586274030d109c4e7",
     "video_codec": "avc1",
     "video_seconds": 13.5,
     "width": 1080
@@ -194,11 +194,11 @@
    "captions_burnt_in": [
     "Step thirteen. The agent deletes your tests.",
     "Step fourteen. It overwrites the config.",
-    "rewindagent replay lists every step. Twelve was the last good one.",
+    "rewindagents replay lists every step. Twelve was the last good one.",
     "So rewind to twelve.",
     "Four files back. The tests, and the config.",
     "And the rewind itself can be undone.",
-    "Install it from the repository, then run rewindagent install in your project.",
+    "Install it from the repository, then run rewindagents install in your project.",
     "Your editor has had undo for decades. Now your agent does."
    ],
    "contact_sheet": "vsl/vsl-30s-contact-sheet.png",
@@ -291,7 +291,7 @@
    "mp4_facts": {
     "audio_codec": "mp4a",
     "audio_seconds": 29.021,
-    "bytes": 1186655,
+    "bytes": 1199345,
     "channels": 2,
     "faststart": true,
     "fps": 30.0,
@@ -299,14 +299,14 @@
     "height": 1080,
     "sample_rate": 48000,
     "seconds": 29.0,
-    "sha256": "49c3a4b828fd255cfa5b3e89425c860e724e2737775285c15760e21400173cbe",
+    "sha256": "2ca30ca7602d30c5d5cfd366f155c03ef729087c387667297622183acdcbb6e3",
     "video_codec": "avc1",
     "video_seconds": 29.0,
     "width": 1920
    },
    "srt": "vsl-30s.srt",
    "storyboard_ms": 29000,
-   "unique_frames": 92,
+   "unique_frames": 94,
    "width": 1920
   },
   "vsl-90s": {
@@ -447,7 +447,7 @@
     "Step fourteen. It overwrites the config.",
     "Git status agrees. Two test files, gone.",
     "There were three. The third was never committed. Git can't return it.",
-    "But rewindagent recorded all fourteen steps.",
+    "But rewindagents recorded all fourteen steps.",
     "Step twelve was the last good one.",
     "So rewind to it.",
     "Four files back: all three tests and the config.",
@@ -457,7 +457,7 @@
     "Before every edit, the hook copies the file as it is.",
     "Around every Bash command it saves first, scans after.",
     "So step thirteen kept three copies.",
-    "rewindagent install adds the Claude Code hook. It has run in real sessions.",
+    "rewindagents install adds the Claude Code hook. It has run in real sessions.",
     "Codex and Cursor: built from the vendors' hook documentation, tested with the",
     "documented payloads. Not yet in a live session.",
     "Files over twenty megabytes aren't copied.",
@@ -677,7 +677,7 @@
    "mp4_facts": {
     "audio_codec": "mp4a",
     "audio_seconds": 89.521,
-    "bytes": 3354239,
+    "bytes": 3358733,
     "channels": 2,
     "faststart": true,
     "fps": 30.0,
@@ -685,14 +685,14 @@
     "height": 1080,
     "sample_rate": 48000,
     "seconds": 89.5,
-    "sha256": "afb0816a649347bac038b6e5c37010b6b0a08f128760c377b41fdfee3d17b465",
+    "sha256": "816821ec9628c39f3ada17f4ddcb1439316fddaf74f0f731724ec1ca4553ca35",
     "video_codec": "avc1",
     "video_seconds": 89.5,
     "width": 1920
    },
    "srt": "vsl-90s.srt",
    "storyboard_ms": 89500,
-   "unique_frames": 358,
+   "unique_frames": 365,
    "width": 1920
   }
  }

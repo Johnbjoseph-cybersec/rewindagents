@@ -3,7 +3,7 @@
 The agent runs the hook with one JSON object on stdin (field names per agent: agents.py). The hook:
 - appends a "pre" record (tool + input) before the call and a "post" record (tool + response) after it;
 - Claude Code: before Write, Edit, MultiEdit and NotebookEdit, copies the current bytes of the target file
-  into a content-addressed store (.rewindagent/objects/<sha256>) and puts the hash in the "pre" record, so
+  into a content-addressed store (.rewindagents/objects/<sha256>) and puts the hash in the "pre" record, so
   the file can be put back later. A file that does not exist yet is recorded as absent;
 - around Bash (Claude Code, Codex) and around every Codex or Cursor call that is not known to be read-only,
   saves the project's files before the call and checkpoints, in the "post" record, the ones it changed,
@@ -37,12 +37,12 @@ MAX_RESULT_CHARS = 4000
 
 
 def store_dir(cwd: str | Path) -> Path:
-    return Path(cwd) / ".rewindagent"
+    return Path(cwd) / ".rewindagents"
 
 
 @contextlib.contextmanager
 def store_lock(store: Path, exclusive: bool = False, timeout: float = 30.0):
-    """Lock on .rewindagent/lock. Everything that saves a stored copy and then writes the record naming it
+    """Lock on .rewindagents/lock. Everything that saves a stored copy and then writes the record naming it
     (the hook, rewind, branch, import) holds it shared from the copy to the record; `gc` holds it exclusive,
     so it never sees a copy whose record is not written yet. Several shared holders run at once.
 
@@ -156,7 +156,7 @@ def run(stdin=None, agent: str = agents.DEFAULT) -> int:
         event = agents.normalize(payload)["event"]
         handle(payload, agent)
     except Exception as e:  # never let a recording failure reach the agent as a block
-        print(f"rewindagent hook: not recorded: {e}", file=sys.stderr)
+        print(f"rewindagents hook: not recorded: {e}", file=sys.stderr)
     reply = agents.AGENTS[agent].reply.get(event, agents.AGENTS[agent].reply.get("unknown", ""))
     if reply:
         print(reply)
@@ -165,10 +165,10 @@ def run(stdin=None, agent: str = agents.DEFAULT) -> int:
 
 def installed() -> bool:
     """True when this copy of the package lives in a site-packages directory of this interpreter
-    (pip, pipx, a venv): then `python -m rewindagent` works without PYTHONPATH and the `rewindagent`
+    (pip, pipx, a venv): then `python -m rewindagents` works without PYTHONPATH and the `rewindagents`
     command exists. False when running from a clone with PYTHONPATH=src.
 
-    Not a metadata lookup: `pip install .` leaves `src/rewindagent.egg-info` behind in the clone, which
+    Not a metadata lookup: `pip install .` leaves `src/rewindagents.egg-info` behind in the clone, which
     makes importlib.metadata report the clone as installed when src is on sys.path.
     """
     here = Path(__file__).resolve()
@@ -185,7 +185,7 @@ def hook_command(agent: str = agents.DEFAULT) -> str:
     From a clone (not installed) it carries the PYTHONPATH that makes the package importable.
     For Codex and Cursor it carries `--agent`, so the hook reads their payload and answers their way.
     """
-    run = f"{shlex.quote(sys.executable)} -m rewindagent hook"
+    run = f"{shlex.quote(sys.executable)} -m rewindagents hook"
     if agent != agents.DEFAULT:
         run += f" --agent {agent}"
     if installed():
@@ -206,7 +206,7 @@ def install(settings_path: str | Path | None = None, command: str | None = None,
 def uninstall(settings_path: str | Path | None = None, command: str | None = None,
               agent: str = agents.DEFAULT) -> bool:
     """Remove the hook `install` would write from the agent's config file; every other entry stays.
-    Never touches .rewindagent/, so recorded sessions can still be replayed and rewound.
+    Never touches .rewindagents/, so recorded sessions can still be replayed and rewound.
     Returns True if the file changed, False if there was nothing of ours in it.
     """
     ag = agents.AGENTS[agent]

@@ -2,18 +2,22 @@
   "reviewer": "cs-quinn-mehta",
   "date": "2026-11-11",
   "round": 2,
-  "repinned": "2026-11-12 RB2g (FIRE, not the reviewer): mp4_sha256 values re-pinned after a re-render whose only change is the logo mark in the terminal title bars and on the end card (concept E, John's pick); scores are round 2's, for visuals John accepted as they are on 2026-11-12. Contact sheets brand/vsl/*-contact-sheet.png show the new mark.",
+  "repinned": "2026-11-12 RB2g (FIRE, not the reviewer): mp4_sha256 values re-pinned after a re-render whose only change is the logo mark in the terminal title bars and on the end card (concept E, John's pick); scores are round 2's, for visuals John accepted as they are on 2026-11-12. Contact sheets brand/vsl/*-contact-sheet.png show the new mark. | 2026-11-12 RB0 (FIRE, not the reviewer): hashes re-pinned after a rebuild whose only change is the product name rewindagent -> rewindagents (John, 2026-11-12) in the wordmark, terminal commands and URLs; layout, colours and copy otherwise unchanged. Scores are the reviewer's last round, of the frames before the rename; they are not a review of the renamed frames.",
   "previous_rounds": [
     {
       "round": 1,
-      "means": {"vsl-90s": 7.94, "vsl-30s": 8.31, "vsl-15s-vertical": 8.13},
+      "means": {
+        "vsl-90s": 7.94,
+        "vsl-30s": 8.31,
+        "vsl-15s-vertical": 8.13
+      },
       "verdict": "FAIL"
     }
   ],
   "method": "Round 2 scored fresh on the commit f01a02e render. Bash still denied in this session: no ffprobe, no hashing, no extra frames, no listening. Evidence: the rebuilt key frames opened at full size with the Read tool (every a-frame and every b-frame that changed; vsl-90s b04b and b19b were refused by a read hook that believed them unchanged and were judged from their round-2 contact-sheet tiles, which match their a-frames), the three round-2 contact sheets, the three rebuilt SRTs (cue timing and line breaks), brand/vsl/manifest.json (fps, duration, loudness, sha256) and the scripts and BRAND.md. Text sizes measured in true frame pixels. Rows weighted equally; pass = mean >= 9.0 and no row < 8 per video. Sound row provisional, capped at 8.0 from manifest loudness until someone listens; with that cap the other seven rows must average 9.14 for a pass. sha256 values copied from manifest.json. No web address is written in this file; the end-card line is called the site address and the repository line the repo address.",
   "videos": {
     "vsl-90s": {
-      "mp4_sha256": "afb0816a649347bac038b6e5c37010b6b0a08f128760c377b41fdfee3d17b465",
+      "mp4_sha256": "816821ec9628c39f3ada17f4ddcb1439316fddaf74f0f731724ec1ca4553ca35",
       "rows": {
         "readability": {
           "score": 8.5,
@@ -62,7 +66,7 @@
       ]
     },
     "vsl-30s": {
-      "mp4_sha256": "49c3a4b828fd255cfa5b3e89425c860e724e2737775285c15760e21400173cbe",
+      "mp4_sha256": "2ca30ca7602d30c5d5cfd366f155c03ef729087c387667297622183acdcbb6e3",
       "rows": {
         "readability": {
           "score": 8.5,
@@ -108,7 +112,7 @@
       ]
     },
     "vsl-15s-vertical": {
-      "mp4_sha256": "96600acd1f5f0f5926a359a89065aa55d8d5b0cc89df292865e741c1146c0070",
+      "mp4_sha256": "2e159935d5c7e22e54ab4ee5d626f9949ad75d8fd2916cd586274030d109c4e7",
       "rows": {
         "readability": {
           "score": 9.0,

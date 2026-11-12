@@ -2,154 +2,154 @@
  "reviewer": "claim-verifier",
  "written_by": "fire",
  "date": "2026-11-12",
- "rounds": "round 1: 21 BLOCK (each-file overstatement, Cursor prints, 'full speed', editor undo history, rewind checks, exit code, branch outside git, export path, Codex trust) + 4 UNVERIFIED incl. first-person authorship; round 2: 8 BLOCK (incomplete exception lists, Cursor also prints {}, Codex folder trust, export size caps); round 3: 0 BLOCK, 3 UNVERIFIED, none a public claim; round 4 (RB5e, 2026-11-12, producthunt.md Gallery section only): 1 BLOCK (reviewed-by-a-critic read as approval while every review on file failed) -> reworded -> 0 BLOCK",
- "kit_sha256": "9f34964eca262a3886f9f74827c98b027a8ff6e5a4ccaaf8b799e28f217f5d9b",
+ "rounds": "round 1: 21 BLOCK (each-file overstatement, Cursor prints, 'full speed', editor undo history, rewind checks, exit code, branch outside git, export path, Codex trust) + 4 UNVERIFIED incl. first-person authorship; round 2: 8 BLOCK (incomplete exception lists, Cursor also prints {}, Codex folder trust, export size caps); round 3: 0 BLOCK, 3 UNVERIFIED, none a public claim; round 4 (RB5e, 2026-11-12, producthunt.md Gallery section only): 1 BLOCK (reviewed-by-a-critic read as approval while every review on file failed) -> reworded -> 0 BLOCK; round 5 (RB0 rename to rewindagents, 2026-11-12): diff confirmed name-only, every row re-read against current sources and re-anchored, 3 new rows (command and install line, not on PyPI via pypi.org JSON 404, no live-repo claim); 1 BLOCK outside the copy (exported page heading kept the old name, export.py:275) fixed, verifier confirmed CLEAR; README Pages wording made future",
+ "kit_sha256": "84888d751e384124c3666e8c94f4111e794e3cc5324fad6a2eef2339dd8a2f50",
  "blocked_in_kit": 0,
- "found_beyond_the_kit": "README.md:133 says a rewind exits 1 if anything could not be restored, but cli.py:130 exits 0 when only unscanned steps were skipped; README.md:149 says the project location is not in an export page, but export.py:191-195 leaves a bare project root (e.g. in a cd command) and the Bash summary line unscrubbed. Board task R11.",
+ "found_beyond_the_kit": "Round 5: export.py:275 heading kept the old name (fixed); README.md:310 said the site is published (fixed). Earlier R11 items fixed in 93c9358.",
  "claims": [
   {
    "file": "producthunt.md",
    "claim": "Tagline within 60 characters",
    "verdict": "CLEAR",
-   "source": "help.producthunt.com/en/articles/17834537-4-build-your-product-page (2026-11-12): 'Tagline (up to 60 characters)'; tagline is 51"
+   "source": "help.producthunt.com/en/articles/17834537-4-build-your-product-page (2026-11-12): \"Tagline (up to 60 characters).\"; producthunt.md:13 \"Ctrl+Z for AI coding agents: record, replay, rewind\" = 51, untouched by the rename"
   },
   {
    "file": "producthunt.md",
    "claim": "Description length (260 is our cap)",
    "verdict": "CLEAR",
-   "source": "Same PH page: description up to 500; ours is about 215"
+   "source": "Same PH page (2026-11-12): \"Description (up to 500 characters).\"; producthunt.md:17 does not contain the name and did not change"
   },
   {
    "file": "producthunt.md",
    "claim": "A project file is copied before an edit or a Bash command changes it",
    "verdict": "CLEAR",
-   "source": "hook.py:84-92; bashscan.py:121-132"
+   "source": "hook.py:133 `args[\"checkpoint\"] = checkpoint(target, store / \"objects\")`; hook.py:134-136 `elif agents.scans(ag, tool): ... bashscan.before(...)`; bashscan.py:122 \"PreToolUse: save every project file and remember the list.\""
   },
   {
    "file": "producthunt.md",
    "claim": "Copies before Write/Edit/MultiEdit/NotebookEdit/Bash; exceptions git-ignored, symlinks, >20 MB, >20,000 files, outside git node_modules/.venv/venv/__pycache__",
    "verdict": "CLEAR",
-   "source": "hook.py:30-31, 48-51, 84-89; agents.py:102-103; bashscan.py:24-25, 32-33, 40-54, 88-91"
+   "source": "hook.py:33-35 FILE_TOOLS Write/Edit/MultiEdit/NotebookEdit, `MAX_CHECKPOINT_BYTES = 20 * 1024 * 1024`; agents.py:102-103 `return tool == \"Bash\"`; bashscan.py:24 `SKIP_DIRS = {\".git\", \".rewindagents\", \"node_modules\", \".venv\", \"venv\", \"__pycache__\"}`, :25 `MAX_SCAN_FILES = 20000`, :32-33 `--exclude-standard`, :51 `full.is_symlink()`; `.rewindagents/log.jsonl` = cli.py:21 default"
   },
   {
    "file": "producthunt.md",
    "claim": "Motive: agents change files fast, often through shell commands; steps should be undoable",
    "verdict": "CLEAR",
-   "source": "Statement of motive, not behaviour"
+   "source": "Statement of motive, not behaviour (producthunt.md:30)"
   },
   {
    "file": "producthunt.md",
    "claim": "rewind 12 puts back files later steps changed; the rewind is a step and can be undone",
    "verdict": "CLEAR",
-   "source": "rewind.py:139-191; cli.py:186-188; brand/demo/manifest.json:33"
+   "source": "rewind.py:6-9 \"puts every checkpointed file back the way it was right after step N ... records itself as a step, so a rewind can be rewound too\"; cli.py:212-213 \"undo it with: {invocation()} rewind ...\"; brand/demo/manifest.json:33 \"this rewind is step 15; undo it with: rewindagents rewind 14 --session demo\""
   },
   {
    "file": "producthunt.md",
    "claim": "export one HTML page; sessions --grep; bundle carries a session to another machine",
    "verdict": "CLEAR",
-   "source": "export.py:276-287; sessions.py:32-57; bundle.py:116, 195; cli.py:59-65"
+   "source": "cli.py:55 \"write a session as one self-contained HTML page\"; cli.py:61 `--grep`; cli.py:64-65 \"write one session and the file copies it names to one file, to replay and rewind it on another machine or clone\"; export.py:290-301; sessions.py:32-37; bundle.py:117, 196. (The exported page's heading still shows the old name: see BLOCK row below)"
   },
   {
    "file": "producthunt.md",
    "claim": "Never blocks or changes a call; hook always exits 0",
    "verdict": "CLEAR",
-   "source": "hook.py:103-119; cli.py:68-69; agents.py:17-19"
+   "source": "hook.py:147-148 \"Hook entry point. Always returns 0.\"; hook.py:158 `except Exception as e:  # never let a recording failure reach the agent as a block`; hook.py:163 `return 0`"
   },
   {
    "file": "producthunt.md",
    "claim": "Not on PyPI; Codex/Cursor tested with documented payloads, not live; Cloud tier planned, not built, not priced",
    "verdict": "CLEAR",
-   "source": "README.md:9-11, 241-250; agents.py:7-36"
+   "source": "README.md:15-17 \"Not on PyPI yet. ... the Codex and Cursor hooks are built from the vendors' hook documentation and tested with the documented payloads, not yet in a live session.\"; README.md:283-284 \"A paid Cloud tier (...): planned, not built, not priced.\"; agents.py:35-36"
   },
   {
    "file": "producthunt.md",
    "claim": "Clip: fourteen steps, last two delete tests and overwrite config, one rewind restores four files, script in repo",
    "verdict": "CLEAR",
-   "source": "brand/demo/manifest.json:12, 33; brand/demo/build.py"
+   "source": "brand/demo/manifest.json:12 steps 1-14 incl. \"13  Bash          rm -rf tests  [3 checkpointed]\", \"14  Write         app/config.py  [1 checkpointed]\"; :33 \"(did change 4 files)\"; :84 \"steps\": 14; brand/demo/build.py exists; README.md:21-22"
   },
   {
    "file": "producthunt.md",
    "claim": "Gallery 3 and 4 contents",
    "verdict": "CLEAR",
-   "source": "brand/demo/manifest.json:20, 33"
+   "source": "brand/demo/manifest.json:20 \" D tests/test_config.py\\n D tests/test_server.py\"; :30 \"rewindagents rewind 12\"; :33 four restore lines + undo line; ph-4.png opened: \"$ rewindagents rewind 12\" ... \"this rewind is step 15; undo it with: rewindagents rewind 14 --session demo\""
   },
   {
    "file": "producthunt.md",
    "claim": "Credit line; no first-person authorship",
    "verdict": "CLEAR",
-   "source": "BRAND.md:45; authorship left to John"
+   "source": "BRAND.md:45 \"Credit line, used exactly in footers: made by John B Joseph\"; producthunt.md:5, 58"
   },
   {
    "file": "show-hn.md",
    "claim": "Title within an 80-character limit",
    "verdict": "UNVERIFIED",
-   "source": "Title is 75 characters; news.ycombinator.com/showhn.html states no limit; 80 is third-party. Check the submit form on the day"
+   "source": "Title is now 76 characters (75 before the rename). No official HN limit was found. Check the submit form on the day."
   },
   {
    "file": "show-hn.md",
    "claim": "Copies a project file before an edit tool or Bash command changes it (limits below)",
    "verdict": "CLEAR",
-   "source": "hook.py:84-92; bashscan.py:121-158"
+   "source": "hook.py:128-136; bashscan.py:121-159"
   },
   {
    "file": "show-hn.md",
    "claim": "pre/post records, SHA-256 chain, verify names first bad record, --head pin",
    "verdict": "CLEAR",
-   "source": "log.py:45-62, 73-92; cli.py:144-147"
+   "source": "log.py:3-4 \"Each record carries the SHA-256 of the record before it\"; log.py:83-88 \"record {n}: chain broken\" / \"contents altered\"; log.py:90-91 \"head does not match the pinned hash\"; cli.py:27 `--head`; README.md:276 \"rewindagents verify --head <pinned-hash>\""
   },
   {
    "file": "show-hn.md",
    "claim": "Bash: copy of every project file before, scan after, post record lists only changes; stat cache",
    "verdict": "CLEAR",
-   "source": "bashscan.py:71-110, 135-158"
+   "source": "bashscan.py:4-7 docstring; bashscan.py:11 \"A stat cache (.rewindagents/index.json) means only files whose size or mtime changed are read again.\"; bashscan.py:136-159"
   },
   {
    "file": "show-hn.md",
    "claim": "Rewind checks chain and every stored copy it will restore from, saves current files, records itself",
    "verdict": "CLEAR",
-   "source": "rewind.py:130-132, 159-161, 167-175; cli.py:186-188"
+   "source": "rewind.py:130-132 `refusing to rewind from it`; :160-161 \"stored copy missing or altered\"; :171-176 checkpoint then `record(...)`; cli.py:212-213"
   },
   {
    "file": "show-hn.md",
    "claim": "branch through a temporary index, HEAD and index unchanged",
    "verdict": "CLEAR",
-   "source": "rewind.py:220-233, 243-247"
+   "source": "rewind.py:203 \"Uses a throwaway index, so the user's index, HEAD and current branch are left alone.\"; :222 `GIT_INDEX_FILE=str(Path(d, \"index\"))`"
   },
   {
    "file": "show-hn.md",
    "claim": "Prints nothing except Cursor's required replies, allow before and {} after",
    "verdict": "CLEAR",
-   "source": "agents.py:63-67; hook.py:116-118"
+   "source": "agents.py:67 `reply={\"pre\": '{\"permission\": \"allow\"}', \"post\": \"{}\", ...}`; hook.py:160-162"
   },
   {
    "file": "show-hn.md",
    "claim": "No network; stdlib only; Python 3.10+; Unix file lock",
    "verdict": "CLEAR",
-   "source": "no network imports in src/rewindagent; pyproject.toml:11-12; log.py:15, 49"
+   "source": "no socket/urllib/http import in src/rewindagents (every import read via grep; the only URLs are doc strings in agents.py:9,21,46-47); pyproject.toml:11-12 `requires-python = \">=3.10\"`, `dependencies = []`; log.py:15 `import fcntl`, :49 `fcntl.flock`"
   },
   {
    "file": "show-hn.md",
    "claim": "Limits: 20 MB, symlinks, 20,000 files, project directory only, git-ignored",
    "verdict": "CLEAR",
-   "source": "hook.py:32, 48-51; bashscan.py:25, 32-33, 51, 121-125; rewind.py:147-148; cli.py:189-191"
+   "source": "hook.py:35, 88; bashscan.py:25, 32-33, 51; rewind.py:147-148, 151-152; README.md:69-73"
   },
   {
    "file": "show-hn.md",
    "claim": "Files outside the project: edit-tool change reported, shell changes not seen",
    "verdict": "CLEAR",
-   "source": "rewind.py:151-152; bashscan.py:28-54; README.md:63"
+   "source": "rewind.py:151-152 `p[\"cannot\"].append((path_s, \"outside the project\"))`; README.md:69 \"Only the project directory is scanned. A command that changes files elsewhere is recorded, not saved.\""
   },
   {
    "file": "show-hn.md",
    "claim": "Claude Code hook ran in real sessions; Codex/Cursor not live; not on PyPI; hosted tier planned",
    "verdict": "CLEAR",
-   "source": "README.md:9-11; agents.py:32-33 (project's own record)"
+   "source": "README.md:15-17; agents.py:32-33 \"driven by a real Claude Code session\"; README.md:283-284 (project's own record)"
   },
   {
    "file": "x-thread.md",
    "claim": "Links count 23, posts up to 280",
    "verdict": "CLEAR",
-   "source": "docs.x.com/fundamentals/counting-characters (2026-11-12)"
+   "source": "docs.x.com/fundamentals/counting-characters (2026-11-12): \"count as 23 characters, regardless of the original length\"; \"up to 280 characters\". Each name occurrence adds 1 character. Post 1 is about 255 with the link counted as 23."
   },
   {
    "file": "x-thread.md",
@@ -161,163 +161,191 @@
    "file": "x-thread.md",
    "claim": "Post 2 copy before edit or Bash; git-ignored, symlinks, >20 MB not copied",
    "verdict": "CLEAR",
-   "source": "bashscan.py:51, 121-158; hook.py:48-51"
+   "source": "bashscan.py:32-33, 51, 121-159; hook.py:88-91"
   },
   {
    "file": "x-thread.md",
    "claim": "Post 3 replay, rewind 12, undo command",
    "verdict": "CLEAR",
-   "source": "cli.py:157-164, 186-188; brand/demo/manifest.json:33"
+   "source": "cli.py:182-189 replay; cli.py:212-213; brand/demo/manifest.json:33"
   },
   {
    "file": "x-thread.md",
    "claim": "Post 4 never blocks, exits 0, Cursor replies only",
    "verdict": "CLEAR",
-   "source": "hook.py:103-119; agents.py:67"
+   "source": "hook.py:147-163; agents.py:67"
   },
   {
    "file": "x-thread.md",
    "claim": "Post 4 no server, no network, stdlib only",
    "verdict": "CLEAR",
-   "source": "pyproject.toml:12; README.md:206"
+   "source": "pyproject.toml:12 `dependencies = []`; README.md:246 \"No server, no database, no dependencies beyond the Python standard library.\"; README.md:290 \"the CLI itself makes no network connections\""
   },
   {
    "file": "x-thread.md",
    "claim": "Post 5 status",
    "verdict": "CLEAR",
-   "source": "README.md:9-11; agents.py:32-36"
+   "source": "README.md:15-17; agents.py:32-36"
   },
   {
    "file": "reddit.md",
    "claim": "r/ClaudeAI, r/ChatGPTCoding, r/cursor exist",
    "verdict": "UNVERIFIED",
-   "source": "reddit.com unreachable from the verifier; third-party evidence only. The draft says to open each on Reddit first"
+   "source": "Not re-checked; reddit.com was unreachable before. The draft says to open each subreddit first (reddit.md:4)"
   },
   {
    "file": "reddit.md",
    "claim": "Title; demo recorded by a script; two commands restore four files",
    "verdict": "CLEAR",
-   "source": "brand/demo/manifest.json:12, 33; README.md:15-16"
+   "source": "brand/demo/manifest.json:9 \"rewindagents replay\", :30 \"rewindagents rewind 12\", :33 \"(did change 4 files)\"; README.md:21-22"
   },
   {
    "file": "reddit.md",
    "claim": "Copy before edit or Bash, with the full exception list",
    "verdict": "CLEAR",
-   "source": "bashscan.py:24-25, 32-33, 40-54, 88-91; hook.py:48-51"
+   "source": "bashscan.py:24-25, 32-33, 40-54; hook.py:88-91"
   },
   {
    "file": "reddit.md",
    "claim": "Exits 0; prints nothing except Cursor's required replies",
    "verdict": "CLEAR",
-   "source": "hook.py:103-119; agents.py:63-67"
+   "source": "hook.py:147-163; agents.py:67"
   },
   {
    "file": "reddit.md",
    "claim": "Never blocks, sends nothing anywhere, Apache-2.0, stdlib only, undoable rewind",
    "verdict": "CLEAR",
-   "source": "hook.py:103-119; LICENSE:2-3; pyproject.toml:10-12; rewind.py:167-191"
+   "source": "hook.py:158; LICENSE:2-3 \"Apache License / Version 2.0, January 2004\"; pyproject.toml:10-12; rewind.py:167-192"
   },
   {
    "file": "linkedin-for-jj.md",
    "claim": "Copy before edit or shell command, exceptions incl. folders like node_modules and .venv outside git",
    "verdict": "CLEAR",
-   "source": "hook.py:84-92; bashscan.py:24-25, 40-54, 88-91"
+   "source": "hook.py:128-136; bashscan.py:24-25, 40-54"
   },
   {
    "file": "linkedin-for-jj.md",
    "claim": "[authorship line] placeholder",
    "verdict": "UNVERIFIED",
-   "source": "No claim made yet; John supplies the wording (state/NEEDS_JOHN.md). Do not post before"
+   "source": "No claim made yet; John supplies the wording (linkedin-for-jj.md:12, state/NEEDS_JOHN.md). Do not post before then."
   },
   {
    "file": "linkedin-for-jj.md",
    "claim": "Apache-2.0, stdlib, replay, rewind, undo the undo, never blocks, status lines",
    "verdict": "CLEAR",
-   "source": "LICENSE:2-3; pyproject.toml:10-12; rewind.py:139-191; hook.py:103-119; README.md:9-11, 241-244"
+   "source": "LICENSE:2-3; pyproject.toml:10-12; rewind.py:6-9; hook.py:147-163; README.md:15-17, 283-284"
   },
   {
    "file": "waitlist-welcome.md",
    "claim": "Cloud tier planned, not built, not priced; nothing for sale; the four planned features",
    "verdict": "CLEAR",
-   "source": "README.md:243-250; BRAND.md:27-28"
+   "source": "README.md:283-284 \"A paid Cloud tier (cloud sync, shareable replay links, long retention, session search): planned, not built, not priced.\"; README.md:290 \"No product exists yet, so nothing can be bought.\"; BRAND.md:27"
   },
   {
    "file": "waitlist-welcome.md",
    "claim": "replay, rewind, branch, export, sessions --grep, bundle + import",
    "verdict": "CLEAR",
-   "source": "cli.py:39-65; export.py:276-287; sessions.py:32-57; bundle.py:116, 195"
+   "source": "cli.py:44-70 (replay, rewind, branch, export, sessions --grep, bundle --out, import file); README.md:126-130, 155, 179, 199-201"
   },
   {
    "file": "onboarding-3-emails.md",
    "claim": "Python 3.10+ on macOS or Linux, stdlib only",
    "verdict": "CLEAR",
-   "source": "pyproject.toml:11-12; log.py:15, 49; README.md:207"
+   "source": "pyproject.toml:11-12, 19-20 \"Operating System :: MacOS\", \"Operating System :: POSIX\"; README.md:247 \"Needs a Unix (`fcntl`) for the write lock.\""
   },
   {
    "file": "onboarding-3-emails.md",
    "claim": "install keeps the settings file; --agent codex/cursor; replay --step",
    "verdict": "CLEAR",
-   "source": "agents.py:107-140; cli.py:34-38, 70-74, 157-169"
+   "source": "agents.py:108 \"Keeps everything already there.\"; cli.py:35-37 \"claude: .claude/settings.json, codex: .codex/hooks.json, cursor: .cursor/hooks.json\"; cli.py:46 `--step`; README.md:42, 89-90, 127"
   },
   {
    "file": "onboarding-3-emails.md",
    "claim": "Recording starts next call; Codex needs folder trust and /hooks trust; log kept out of commits",
    "verdict": "CLEAR",
-   "source": "README.md:83-85; agents.py:28-29, 133; hook.py:78-80"
+   "source": "README.md:100-102 \"Codex asks you to trust a new hook before it runs (`/hooks` inside Codex) ... Project hooks load only when the project's `.codex/` folder is trusted.\"; agents.py:28-29; hook.py:118-119 `ignore.write_text(\"*\\n\")`"
   },
   {
    "file": "onboarding-3-emails.md",
    "claim": "Email 2 replay, --step, --dry-run, rewind names what it could not restore",
    "verdict": "CLEAR",
-   "source": "cli.py:157-191; rewind.py:187-191"
+   "source": "cli.py:50 \"print what would change, change nothing\"; cli.py:205-206 `CANNOT   {path}: {why}`; README.md:126-129"
   },
   {
    "file": "onboarding-3-emails.md",
    "claim": "branch in a git repository; log only outside git",
    "verdict": "CLEAR",
-   "source": "rewind.py:199-247; cli.py:184"
+   "source": "rewind.py:241-242 \"In a git work tree the whole working tree is also committed to the branch rewindagents/<name>\"; cli.py:209 \"the rewindagents log only (not a git repo)\""
   },
   {
    "file": "onboarding-3-emails.md",
    "claim": "Checks chain and copies it restores from; exit 1 when a file is not restored; unscanned steps counted",
    "verdict": "CLEAR",
-   "source": "rewind.py:130-132, 147-163; cli.py:130, 180-181, 189-191"
+   "source": "rewind.py:130-132, 159-161; cli.py:155 `return 1 if p[\"cannot\"] or p[\"bash_uncovered\"] else 0`; cli.py:214-216 \"note: {n} step(s) after step {N} were not scanned ...\""
   },
   {
    "file": "onboarding-3-emails.md",
    "claim": "export diff per text file up to 256 KB, cut at 400 lines, no scripts, nothing fetched, path caveat",
    "verdict": "CLEAR",
-   "source": "export.py:28-29, 85-101, 191-195, 244, 251-273"
+   "source": "export.py:30 `MAX_DIFF_BYTES = 256 * 1024`; :31 `MAX_DIFF_LINES = 400`; :7-8 \"inline CSS only: no scripts, no fonts or images fetched from anywhere\"; :193-199 scrub(); README.md:170-171"
   },
   {
    "file": "onboarding-3-emails.md",
    "claim": "sessions --grep; verify names the first bad record",
    "verdict": "CLEAR",
-   "source": "sessions.py:32-37, 56; log.py:73-92; cli.py:144-147"
+   "source": "sessions.py:32-37; log.py:73-92; cli.py:169-172"
   },
   {
    "file": "producthunt.md",
    "claim": "Gallery: five images, 1270 x 760, PH's recommended size",
    "verdict": "CLEAR",
-   "source": "help.producthunt.com/en/articles/17834537-4-build-your-product-page (fetched 2026-11-12): 'Recommended size: 1270x760px.'; gallery.py W, H = 1270, 760"
+   "source": "help.producthunt.com/en/articles/17834537-4-build-your-product-page (2026-11-12): \"Recommended size: 1270x760px.\"; brand/launch/gallery.py:49 `W, H = 1270, 760`; ph-1..ph-5.png exist"
   },
   {
    "file": "producthunt.md",
    "claim": "Gallery built by brand/launch/gallery.py from the recorded session, the README, the BRAND.md promise, this list and the logo set",
    "verdict": "CLEAR",
-   "source": "gallery.py reads brand/demo/manifest.json, README.md, producthunt.md Gallery; render.vsl.PROMISE = BRAND.md:10 word for word; kit.logo = brand/logo/build.py"
+   "source": "gallery.json:61, 74, 247, 283 quote manifest/producthunt.md text with the new name; gallery.json:339 \"pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagents\" = README.md:31; BRAND.md:10"
   },
   {
    "file": "producthunt.md",
    "claim": "An independent critic scores them in brand/launch/review.json; read the verdict there before uploading",
-   "verdict": "CLEAR",
-   "source": "review.json reviewer cs-iris-kapoor, RB5e round 2, png_sha256 = gallery.json sha256 for all five (tests/test_gallery.py); verdict FAIL 8.81, so the sentence must not and does not imply a pass (round 1 BLOCK on reviewed-as-approval wording, fixed)"
+   "verdict": "UNVERIFIED",
+   "source": "review.json:2 reviewer cs-iris-kapoor, :143 \"verdict\": \"FAIL\". The sentence still does not imply a pass. But I cannot confirm the review covers the current renders. review.json:145 and :159 quote the old name ('rewindagent rewind 14', 'rewindagent install') while ph-4.png now shows 'rewindagents rewind 14'. review.json:166 says png_sha256 was copied from gallery.json, not recomputed. I had no shell to hash the PNGs. This is an internal upload instruction, not public copy."
   },
   {
    "file": "producthunt.md",
    "claim": "Item 2: the end of the fourteen steps, the last two marked; the first nine folded into one tick each",
    "verdict": "CLEAR",
-   "source": "manifest.json beat 0 (14 steps, accent_rows [12, 13]); gallery.json ph-2 skipped 9; ph-2.png opened by the verifier: 9 grey ticks, rows 10-14, rows 13 and 14 in Rewind"
+   "source": "manifest.json:4-7 accent_rows [12, 13], :84 steps 14; gallery.json:109 \"skipped\": 9; ph-2.png opened 2026-11-12: \"$ rewindagents replay\", 9 grey ticks, rows 10-14, rows 13 and 14 in the accent colour"
+  },
+  {
+   "file": "producthunt.md",
+   "claim": "NEW (C-i): command `rewindagents` and install line `pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagents` match README.md and pyproject.toml",
+   "verdict": "CLEAR",
+   "source": "pyproject.toml:28-29 \"[project.scripts]\\nrewindagents = \\\"rewindagents.cli:main\\\"\"; pyproject.toml:6 name = \"rewindagents\"; pyproject.toml:26 Source = \"https://github.com/Johnbjoseph-cybersec/rewindagents\"; README.md:31 \"pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagents\"; README.md:32 \"rewindagents --version\"; cli.py:19 prog=\"rewindagents\"; brand/site/config.json:4 repo_url = same URL, so the kit's `pipx install git+{repo_url}` fills to the README line",
+   "files": "README.md, pyproject.toml, show-hn.md, onboarding-3-emails.md, producthunt.md, x-thread.md"
+  },
+  {
+   "file": "producthunt.md",
+   "claim": "NEW (C-ii): 'Not on PyPI yet' / 'it is not on PyPI yet'",
+   "verdict": "CLEAR",
+   "source": "https://pypi.org/pypi/rewindagents/json (2026-11-12): HTTP 404 Not Found; https://pypi.org/simple/rewindagents/ (2026-11-12): HTTP 404 Not Found. The HTML page pypi.org/project/rewindagents/ returned only a JS shell, so I relied on the API and the simple index. README.md:15 \"Not on PyPI yet.\"",
+   "files": "producthunt.md, show-hn.md, x-thread.md, reddit.md, linkedin-for-jj.md, onboarding-3-emails.md"
+  },
+  {
+   "file": "producthunt.md",
+   "claim": "NEW (C-iii): copy does not claim the GitHub repo or site already exists or is live",
+   "verdict": "CLEAR",
+   "source": "Every address in the kit is a placeholder ({repo_url}, {site_url}, {waitlist_url}), filled from brand/site/config.json:3-6. Every draft is marked \"Draft for launch day; not posted\". linkedin-for-jj.md:6 \"Post only after the repository is public\". https://github.com/Johnbjoseph-cybersec/rewindagents (2026-11-12): HTTP 404, so it is unpublished, as stated. Present-tense lines ('The repository has the script', producthunt.md:41; 'Install it from the repository', onboarding:16) are launch-day text and true only after publishing; keep them gated. Outside the kit, README.md:310-311 'published with GitHub Pages' is present tense and not true today.",
+   "files": "all 7 launch files"
+  },
+  {
+   "file": "producthunt.md",
+   "claim": "NEW: the product name is rewindagents in what the copy sends users to (`rewindagents export` writes one HTML page)",
+   "verdict": "CLEAR",
+   "source": "src/rewindagents/export.py:275 `<h1>rewind<span>agent</span> replay</h1>` renders 'rewindagent replay' in the heading of every exported page. The title at export.py:270 and the footer at :283 say 'rewindagents'. The copy and the CLI say rewindagents and the artefact the copy promotes says rewindagent. The two disagree. tests/test_name.py:15 misses it because the <span> splits the word. | FIXED by FIRE after round 5; claim-verifier follow-up 2026-11-12: export.py:275 heading now reads rewindagents replay (CLEAR); README.md:310-311 Pages wording now future tense (CLEAR)",
+   "files": "producthunt.md:34, waitlist-welcome.md:20, onboarding-3-emails.md:75/80 vs src/rewindagents/export.py:275"
   }
  ]
 }

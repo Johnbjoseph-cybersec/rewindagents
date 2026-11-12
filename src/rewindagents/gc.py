@@ -1,12 +1,12 @@
-"""`rewindagent gc`: delete stored copies nothing needs any more.
+"""`rewindagents gc`: delete stored copies nothing needs any more.
 
 Why the store grows: before every Bash call the hook saves a copy of every project file
-(.rewindagent/objects/<sha256>), and only the copies of files the command changed are named in the log
+(.rewindagents/objects/<sha256>), and only the copies of files the command changed are named in the log
 afterwards. The rest stay on disk unless something removes them.
 
 A stored copy is kept when:
 - a log record names it (any session; the args or the result hold {"path": ..., "sha256": <it>}), or
-- a pending scan (.rewindagent/pending/<call>.json, a command whose after-scan has not run) lists it.
+- a pending scan (.rewindagents/pending/<call>.json, a command whose after-scan has not run) lists it.
 Everything else under objects/ whose name is a SHA-256 is deleted. Other files there are left alone.
 
 gc refuses to run when the log does not verify, and it never writes to the log: the chain stays whole.
@@ -123,7 +123,7 @@ def gc(log_path: str | Path, dry_run: bool = False, timeout: float = 30.0,
 
 def _scan_line(s: dict) -> str:
     what = (f"{s['tool']}: {s['command']}" if s["command"] is not None
-            else "command not recorded (scan made before rewindagent named it in the log)")
+            else "command not recorded (scan made before rewindagents named it in the log)")
     what = " ".join(what.split())
     return f"    {s['age_days']:.1f} days old  {what[:100] + '...' if len(what) > 100 else what}"
 

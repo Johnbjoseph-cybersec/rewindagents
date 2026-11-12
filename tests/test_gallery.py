@@ -88,7 +88,7 @@ class TestGallery(unittest.TestCase):
                          "brand/demo/manifest.json changed after the gallery was built: run brand/launch/gallery.py")
 
     def test_terminal_shots_show_the_end_of_a_beat_and_fold_the_rest_visibly(self):
-        want = {"ph-2.png": "rewindagent replay", "ph-3.png": "git status --short", "ph-4.png": "rewindagent rewind 12"}
+        want = {"ph-2.png": "rewindagents replay", "ph-3.png": "git status --short", "ph-4.png": "rewindagents rewind 12"}
         for name, cmd in want.items():
             s = self.shots[name]
             beat = self.demo["beats"][s["beat"]]
@@ -141,13 +141,13 @@ class TestGallery(unittest.TestCase):
         # ph-4 lights the undo line (gallery item 4 names it); the four restored files are the headline's
         lit = accented("ph-4.png")
         self.assertEqual(len(lit), 1)
-        self.assertIn("undo it with: rewindagent rewind 14", lit[0])
+        self.assertIn("undo it with: rewindagents rewind 14", lit[0])
         restored = [text_of(r) for r in self.shots["ph-4.png"]["panels"][0]["rows"] if text_of(r).startswith("  restore  ")]
         self.assertEqual(len(restored), 4)
         self.assertIn("four files restored, and the undo line", self.shots["ph-4.png"]["item"])
         # ph-5's one focal point is the project's own command; ph-1 has no terminal
         lit5 = [t for p in self.shots["ph-5.png"]["panels"] for r in p["rows"] for t, c in r if c == "Rewind"]
-        self.assertEqual(lit5, ["rewindagent install"])
+        self.assertEqual(lit5, ["rewindagents install"])
         self.assertNotIn("panels", self.shots["ph-1.png"])
 
     def test_one_accent_block_per_image(self):
@@ -175,7 +175,7 @@ class TestGallery(unittest.TestCase):
                 cmds.append(cmd)
         self.assertEqual(len(cmds), 2)
         self.assertTrue(cmds[0].startswith("pipx install git+"))
-        self.assertEqual(cmds[1], "rewindagent install")
+        self.assertEqual(cmds[1], "rewindagents install")
         self.assertEqual(s["headline"], s["item"].split(":")[0])
         readme = " ".join(read(ROOT, "README.md").split())
         for note in s["notes"]:

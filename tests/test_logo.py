@@ -19,7 +19,7 @@ sys.path.insert(0, BRAND)
 sys.path.insert(0, os.path.join(BRAND, "logo"))
 
 from contrast_check import PALETTE  # noqa: E402
-from rewindagent.cli import main  # noqa: E402
+from rewindagents.cli import main  # noqa: E402
 import pngsample  # noqa: E402
 
 PNGS = {"logo-light.png": (1024, 1024), "logo-dark.png": (1024, 1024), "avatar-512.png": (512, 512),
@@ -106,7 +106,7 @@ class TestLogo(unittest.TestCase):
     def test_social_command_is_accepted_by_the_cli(self):
         with open(os.path.join(BRAND, "logo", "build.py"), encoding="utf-8") as f:
             cmd = re.search(r'^COMMAND = "([^"]+)"', f.read(), re.M).group(1)
-        prefixes = ("rewindagent ", "python3 -m rewindagent ")
+        prefixes = ("rewindagents ", "python3 -m rewindagents ")
         prefix = next((p for p in prefixes if cmd.startswith(p)), None)
         self.assertIsNotNone(prefix, cmd)
         with TemporaryDirectory() as d:

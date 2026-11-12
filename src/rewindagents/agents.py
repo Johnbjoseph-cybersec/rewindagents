@@ -1,4 +1,4 @@
-"""The coding agents rewindagent hooks into, and how each one's hook protocol differs.
+"""The coding agents rewindagents hooks into, and how each one's hook protocol differs.
 
 The hook body (hook.py) is the same for all of them: record the call, checkpoint first, never block. This
 module holds what differs: where the hook is configured, the shape of that file, the names of the fields in
@@ -134,7 +134,7 @@ def install(agent: Agent, settings_path: str | Path, command: str) -> bool:
                 changed = True
     if changed:
         p.parent.mkdir(parents=True, exist_ok=True)
-        tmp = p.with_name(p.name + ".rewindagent.tmp")
+        tmp = p.with_name(p.name + ".rewindagents.tmp")
         tmp.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
         os.replace(tmp, p)
     return changed
@@ -185,7 +185,7 @@ def uninstall(agent: Agent, settings_path: str | Path, command: str) -> bool:
         return False
     if not hooks:
         del settings["hooks"]
-    tmp = p.with_name(p.name + ".rewindagent.tmp")
+    tmp = p.with_name(p.name + ".rewindagents.tmp")
     tmp.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
     os.replace(tmp, p)
     return True

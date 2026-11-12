@@ -178,9 +178,9 @@ class TestLaunchKit(unittest.TestCase):
         ph = sections(read("producthunt.md"))
         self.assertLessEqual(len(ph["Tagline"]), PH_TAGLINE, ph["Tagline"])
         self.assertLessEqual(len(ph["Description"]), PH_DESCRIPTION, len(ph["Description"]))
-        self.assertEqual(ph["Name"], "rewindagent")
+        self.assertEqual(ph["Name"], "rewindagents")
         title = sections(read("show-hn.md"))["Title"]
-        self.assertTrue(title.startswith("Show HN: rewindagent"), title)
+        self.assertTrue(title.startswith("Show HN: rewindagents"), title)
         self.assertLessEqual(len(title), HN_TITLE, title)
         self.assertEqual(sections(read("show-hn.md"))["URL"], "{repo_url}")
         posts = sections(read("x-thread.md"))

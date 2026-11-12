@@ -4,7 +4,7 @@
 through the real Claude Code hook the way Claude Code drives it (pre record, the change, post record;
 Bash commands really run), then runs the four commands the clip shows and returns what each printed.
 The last two agent steps wreck the project: `rm -rf tests`, then a Write that overwrites app/config.py.
-`rewindagent rewind 12` puts the files back the way they were right after step 12.
+`rewindagents rewind 12` puts the files back the way they were right after step 12.
 
 brand/demo/build.py draws the frames from this record; tests/test_demo.py plays the same session again
 and compares every line, so the GIF cannot show output the code does not produce.
@@ -17,8 +17,8 @@ import subprocess
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
-from rewindagent import hook
-from rewindagent.cli import main as cli_main
+from rewindagents import hook
+from rewindagents.cli import main as cli_main
 
 SESSION = "demo"
 WRECK_STEPS = 2          # the last two agent steps undo the work
@@ -91,12 +91,12 @@ GOOD_STEP = len(STEPS) - WRECK_STEPS
 # The commands the clip shows, in order. `hold` is how long the finished output stays on screen.
 # `accent`: which output lines are drawn in the accent colour (one block per view).
 SHOWN = [
-    {"caption": "# a coding agent has been working in this repo; rewindagent recorded every step",
-     "command": "rewindagent replay", "hold": 2.40, "stream": True, "accent": "wreck"},
+    {"caption": "# a coding agent has been working in this repo; rewindagents recorded every step",
+     "command": "rewindagents replay", "hold": 2.40, "stream": True, "accent": "wreck"},
     {"caption": "# its last two steps deleted the tests and overwrote the config",
      "command": "git status --short", "hold": 2.00},
     {"caption": "# put the files back the way they were right after step %d" % GOOD_STEP,
-     "command": "rewindagent rewind %d" % GOOD_STEP, "hold": 2.80, "accent": "restore"},
+     "command": "rewindagents rewind %d" % GOOD_STEP, "hold": 2.80, "accent": "restore"},
     {"caption": "# the tests are back; the first %d steps stay" % GOOD_STEP,
      "command": "git status --short", "hold": 3.20},
 ]
@@ -173,7 +173,7 @@ class Agent:
 def run_shown(root: Path, command: str) -> tuple[str, int]:
     """Run one shown command from the project directory; return (what it printed, exit code)."""
     words = command.split()
-    if words[0] == "rewindagent":
+    if words[0] == "rewindagents":
         out, err = io.StringIO(), io.StringIO()
         cwd = os.getcwd()
         os.chdir(root)
@@ -186,7 +186,7 @@ def run_shown(root: Path, command: str) -> tuple[str, int]:
     if words[0] == "git":
         r = subprocess.run(words, cwd=root, env=GIT_ENV, capture_output=True, text=True)
         return r.stdout + r.stderr, r.returncode
-    raise ValueError("the demo only shows rewindagent and git commands: %r" % command)
+    raise ValueError("the demo only shows rewindagents and git commands: %r" % command)
 
 
 def accent_rows(beat: dict, lines: list[str]) -> list[int]:

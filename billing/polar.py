@@ -1,4 +1,4 @@
-"""Polar checkout and webhook code for the planned Cloud tier (R8). Not part of the rewindagent package: the CLI
+"""Polar checkout and webhook code for the planned Cloud tier (R8). Not part of the rewindagents package: the CLI
 makes no network connections (tests/test_site.py checks src/), and this file is never installed with it.
 
 Built from Polar's documentation, read 2026-11-11 (API version 2026-10):

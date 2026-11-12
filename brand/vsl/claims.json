@@ -1,57 +1,399 @@
 {
-  "reviewer": "claim-verifier",
-  "date": "2026-11-11",
-  "judged_on": [
-    "~/fire/rewindagent/brand/vsl/beats.json",
-    "~/fire/rewindagent/README.md",
-    "~/fire/rewindagent/brand/demo/manifest.json",
-    "~/fire/rewindagent/brand/BRAND.md",
-    "~/fire/rewindagent/LICENSE",
-    "~/fire/rewindagent/pyproject.toml",
-    "~/fire/rewindagent/src/rewindagent/__init__.py",
-    "~/fire/rewindagent/src/rewindagent/hook.py",
-    "~/fire/rewindagent/src/rewindagent/bashscan.py",
-    "~/fire/rewindagent/src/rewindagent/rewind.py",
-    "~/fire/rewindagent/src/rewindagent/agents.py"
-  ],
-  "beats_sha256": "60aac5c932df43dd4d438ce58a3e3f8a76368037cfc37b66d1ae9fc028f2d1c9",
-  "beats_sha256_note": "Hash supplied by FIRE; I had no shell in this session, so I could not recompute it myself. The file I read in full (295 lines) has written_by \"cs-rohan-iyer\", date 2026-11-11, and beat counts 20 (vsl-90s b01-b20), 8 (vsl-30s b01-b08), 5 (vsl-15s-vertical b01-b05), matching the stated counts. No file was modified. (FIRE: the hash was computed with hashlib on the file the verifier read, unchanged; tests/test_vsl.py fails if beats.json changes after this review.)",
-  "claims": [
-    {"where": ["vsl-90s b01 screen", "vsl-90s b02 screen", "vsl-90s b05 screen", "vsl-90s b13 screen", "vsl-30s b01 screen", "vsl-30s b02 screen", "vsl-30s b03 screen"], "claim": "Terminal line \"   13  Bash          rm -rf tests  [3 checkpointed]\"", "verdict": "CLEAR", "source": "brand/demo/manifest.json beats[0].output: \"   13  Bash          rm -rf tests  [3 checkpointed]\"", "note": "Verbatim, three leading spaces included."},
-    {"where": ["vsl-90s b02 screen", "vsl-90s b05 screen", "vsl-30s b02 screen", "vsl-30s b03 screen"], "claim": "Terminal line \"   14  Write         app/config.py  [1 checkpointed]\"", "verdict": "CLEAR", "source": "brand/demo/manifest.json beats[0].output: \"   14  Write         app/config.py  [1 checkpointed]\"", "note": "Verbatim."},
-    {"where": ["vsl-90s b05 screen", "vsl-90s b06 screen", "vsl-30s b03 screen"], "claim": "Terminal lines \"   10  Edit          README.md  [1 checkpointed]\", \"   11  Bash          git status --short\", \"   12  Read          tests/test_server.py\"", "verdict": "CLEAR", "source": "brand/demo/manifest.json beats[0].output lines 10, 11, 12", "note": "All three verbatim, leading spaces included."},
-    {"where": ["vsl-90s b04 screen"], "claim": "Terminal line \"    6  Write         tests/test_timeout.py  [1 checkpointed]\"", "verdict": "CLEAR", "source": "brand/demo/manifest.json beats[0].output: \"    6  Write         tests/test_timeout.py  [1 checkpointed]\"", "note": "Verbatim, four leading spaces."},
-    {"where": ["vsl-90s b05 screen", "vsl-30s b03 screen", "vsl-30s b03 voice"], "claim": "Command \"rewindagent replay\"; \"rewindagent replay lists every step\"", "verdict": "CLEAR", "source": "manifest.json beats[0].command \"rewindagent replay\"; README.md line 109 \"rewindagent replay              # one line per step: number, tool, file or command\"", "note": "Command is both a recorded demo command and an sh line of the README."},
-    {"where": ["vsl-90s b03 screen", "vsl-90s b10 screen"], "claim": "Command \"git status --short\"", "verdict": "CLEAR", "source": "manifest.json beats[1].command and beats[3].command: \"git status --short\"", "note": "One of the four recorded demo commands."},
-    {"where": ["vsl-90s b03 screen", "vsl-15s-vertical b01 screen", "vsl-15s-vertical b02 screen"], "claim": "First git status output: \" M README.md\", \" M app/config.py\", \" M app/server.py\", \" D tests/test_config.py\", \" D tests/test_server.py\"", "verdict": "CLEAR", "source": "manifest.json beats[1].output: \" M README.md\\n M app/config.py\\n M app/server.py\\n D tests/test_config.py\\n D tests/test_server.py\\n\"", "note": "All five lines verbatim with the single leading space; the 15s cut uses subsets (two D lines; one M line)."},
-    {"where": ["vsl-90s b07 screen", "vsl-30s b04 screen", "vsl-15s-vertical b03 screen"], "claim": "Command \"rewindagent rewind 12\"", "verdict": "CLEAR", "source": "manifest.json beats[2].command \"rewindagent rewind 12\"; README.md line 112 \"rewindagent rewind 12           # files back to how they were right after step 12\"", "note": "Recorded demo command and README sh line."},
-    {"where": ["vsl-90s b08 screen", "vsl-30s b05 screen", "vsl-15s-vertical b04 screen"], "claim": "Rewind report: \"session demo: rewind to step 12 of 14 (did change 4 files)\", \"  restore  tests/test_config.py\", \"  restore  tests/test_server.py\", \"  restore  tests/test_timeout.py\", \"  restore  app/config.py\"", "verdict": "CLEAR", "source": "manifest.json beats[2].output, lines 1-5; manifest \"session\": \"demo\", \"steps\": 14", "note": "All lines verbatim, two leading spaces on the restore lines; the 15s cut omits the header line, which is allowed (every line shown is still a manifest line)."},
-    {"where": ["vsl-90s b09 screen"], "claim": "Terminal line \"  this rewind is step 15; undo it with: rewindagent rewind 14 --session demo\"", "verdict": "CLEAR", "source": "manifest.json beats[2].output last line: \"  this rewind is step 15; undo it with: rewindagent rewind 14 --session demo\"; README.md lines 119-121", "note": "Verbatim. README: \"the command prints `undo it with: rewindagent rewind <step> --session <id>`\"."},
-    {"where": ["vsl-90s b10 screen"], "claim": "Second git status output: \" M README.md\", \" M app/config.py\", \" M app/server.py\", \"?? tests/test_timeout.py\"", "verdict": "CLEAR", "source": "manifest.json beats[3].output: \" M README.md\\n M app/config.py\\n M app/server.py\\n?? tests/test_timeout.py\\n\"", "note": "All four lines verbatim."},
-    {"where": ["vsl-90s b01 voice", "vsl-30s b01 voice", "vsl-15s-vertical b01 voice"], "claim": "\"Step thirteen. The agent deletes your tests.\" / \"Your agent just deleted the tests.\"", "verdict": "CLEAR", "source": "manifest.json beats[0].output step 13 \"Bash rm -rf tests [3 checkpointed]\"; beats[1].caption \"its last two steps deleted the tests and overwrote the config\"; beats[1].output two \" D tests/...\" lines", "note": "Step number, tool and effect all from the recorded session."},
-    {"where": ["vsl-90s b02 voice", "vsl-30s b02 voice", "vsl-15s-vertical b02 voice"], "claim": "\"Step fourteen. It overwrites the config.\" / \"And overwrote the config.\"", "verdict": "CLEAR", "source": "manifest.json beats[0].output step 14 \"Write app/config.py [1 checkpointed]\"; beats[1].caption \"...and overwrote the config\"; BRAND.md line 154-155 \"the last two run `rm -rf tests` and overwrite app/config.py\"", "note": ""},
-    {"where": ["vsl-90s b03 voice"], "claim": "\"Git status agrees. Two test files, gone.\"", "verdict": "CLEAR", "source": "manifest.json beats[1].output: \" D tests/test_config.py\", \" D tests/test_server.py\"", "note": "Exactly two D lines in the recorded git status."},
-    {"where": ["vsl-90s b04 voice", "vsl-90s b04 screen"], "claim": "\"There were three. The third was never committed. Git can't return it.\" and caption \"never committed\"", "verdict": "CLEAR", "source": "manifest.json: step 13 \"[3 checkpointed]\" and three \"restore tests/...\" lines (three test files); beats[1].output lists only two D lines, no entry for tests/test_timeout.py (so it was not tracked when deleted); beats[3].output \"?? tests/test_timeout.py\" (untracked after the rewind); beats[0].output steps 1-14 contain no git commit, step 6 is the Write that created it; README.md line 60-61 \"tracked and untracked files, but not git-ignored ones\"", "note": "Plain reading: a file that is untracked (??) and never appeared as D has no copy in git's index or history, so git cannot restore it; rewindagent's Bash scan covers untracked files, which is why rewind could."},
-    {"where": ["vsl-90s b05 voice"], "claim": "\"But rewindagent recorded all fourteen steps.\"", "verdict": "CLEAR", "source": "manifest.json \"steps\": 14 and beats[0].output lines 1-14; beats[0].caption \"rewindagent recorded every step\"; README.md line 15-16 \"runs fourteen agent steps through the hook\"", "note": ""},
-    {"where": ["vsl-90s b06 voice", "vsl-30s b03 voice"], "claim": "\"Step twelve was the last good one.\" / \"Twelve was the last good one.\"", "verdict": "CLEAR", "source": "manifest.json \"good_step\": 12; beats[1].caption \"its last two steps deleted the tests and overwrote the config\"", "note": "Steps 13 and 14 are the two destructive steps; 12 is a Read."},
-    {"where": ["vsl-90s b07 voice", "vsl-30s b04 voice", "vsl-15s-vertical b03 voice"], "claim": "\"So rewind to it.\" / \"So rewind to twelve.\" / \"Rewind to step twelve.\"", "verdict": "CLEAR", "source": "README.md line 112; manifest.json beats[2].command \"rewindagent rewind 12\"", "note": ""},
-    {"where": ["vsl-90s b08 voice", "vsl-30s b05 voice", "vsl-15s-vertical b04 voice"], "claim": "\"Four files back: all three tests and the config.\" / \"Four files back. The tests, and the config.\" / \"Four files back, as they were after step twelve.\"", "verdict": "CLEAR", "source": "manifest.json beats[2].output \"(did change 4 files)\" plus three tests/ and one app/config.py restore lines; README.md line 112 \"files back to how they were right after step 12\"; rewind.py docstring lines 6-7", "note": "Four is the recorded count; three tests plus config matches the four restore lines."},
-    {"where": ["vsl-90s b09 voice", "vsl-90s b09 screen", "vsl-30s b06 voice", "vsl-30s b06 screen"], "claim": "\"And the rewind is step fifteen. You can undo the undo.\" / \"And the rewind itself can be undone.\" and caption \"A rewind is undoable.\"", "verdict": "CLEAR", "source": "manifest.json beats[2].output \"this rewind is step 15; undo it with: ...\"; README.md line 119 \"A rewind is undoable. It first saves the current bytes of every file it will change and records itself as a new step\"; rewind.py lines 8-9", "note": "Caption is the README sentence verbatim."},
-    {"where": ["vsl-90s b10 voice"], "claim": "\"The first twelve steps stay. So does the new test.\"", "verdict": "CLEAR", "source": "manifest.json beats[3].caption \"the tests are back; the first 12 steps stay\"; beats[3].output \"?? tests/test_timeout.py\" (new test present after rewind); \" M README.md\", \" M app/server.py\", \" M app/config.py\" remain (edits of steps 3, 5, 8, 10)", "note": "app/config.py staying M is consistent: step 3 edited it before step 12."},
-    {"where": ["vsl-90s b11 voice", "vsl-90s b11 screen"], "claim": "\"Every tool call goes into a hash-chained log. Edit one record and verify names it.\"; screen \"rewindagent verify\", \".rewindagent/log.jsonl\", \"each record holds the SHA-256 of the one before\"", "verdict": "CLEAR", "source": "README.md lines 3-4 \"Every tool call your coding agent makes goes into a tamper-evident, hash-chained log you can verify later\"; line 46 \".rewindagent/log.jsonl\"; lines 182-183 \"Each record holds the SHA-256 of the record before it, so editing, deleting or reordering any record makes `verify` fail and name the first bad record\"; line 192 sh \"rewindagent verify\"", "note": "Caption is a close paraphrase of line 182; command is an sh line of the README."},
-    {"where": ["vsl-90s b12 voice", "vsl-90s b12 screen"], "claim": "\"Before every edit, the hook copies the file as it is.\"; screen \"Write  Edit  MultiEdit  NotebookEdit\", \".rewindagent/objects/<sha256>\"", "verdict": "CLEAR", "source": "README.md lines 48-49 \"before `Write`, `Edit`, `MultiEdit` and `NotebookEdit`, the current bytes of the target file are copied to `.rewindagent/objects/<sha256>`\"; hook.py lines 30-31 FILE_TOOLS and lines 40-61 checkpoint()", "note": "The 20 MB exception (README line 50) is stated in b16 of the same script. For Codex and Cursor the file is covered by the whole-project save instead (README lines 92-96), so the statement holds across agents."},
-    {"where": ["vsl-90s b13 voice", "vsl-90s b13 screen"], "claim": "\"Around every Bash command it saves first, scans after. So step thirteen kept three copies.\"; caption \"saved before, scanned after\"", "verdict": "CLEAR", "source": "README.md lines 56-58 \"Around every `Bash` call ... the hook saves the project's files before the command, scans again after it, and checkpoints, in the `post` record, only the files that were changed, deleted or created\"; bashscan.py lines 3-7; manifest.json step 13 \"[3 checkpointed]\" and three restored tests/ files", "note": "Three checkpoints for three deleted files, each with its pre-command bytes (bashscan.py line 157)."},
-    {"where": ["vsl-90s b14 voice", "vsl-90s b14 screen", "vsl-30s b07 voice", "vsl-30s b07 screen"], "claim": "\"rewindagent install adds the Claude Code hook. It has run in real sessions.\" / \"...then run rewindagent install in your project\"; screen \"cd /path/to/your/project\", \"rewindagent install\", \"Claude Code: has run in real sessions\"", "verdict": "CLEAR", "source": "README.md lines 35-36 sh \"cd /path/to/your/project\" / \"rewindagent install            # adds the hook to .claude/settings.json in this project\"; lines 9-10 \"The Claude Code hook has run in real sessions\"; agents.py lines 31-33 \"driven by a real Claude Code session\"", "note": "\"/path/to/your/project\" is the README's placeholder path, not a hostname."},
-    {"where": ["vsl-90s b15 voice", "vsl-90s b15 screen"], "claim": "\"Codex and Cursor: built from the vendors' hook documentation, tested with the documented payloads. Not yet in a live session.\"; screen \"rewindagent install --agent codex\", \"rewindagent install --agent cursor\", and the three status captions", "verdict": "CLEAR", "source": "README.md lines 10-11 \"the Codex and Cursor hooks are built from the vendors' hook documentation and tested with the documented payloads, not yet in a live session\"; lines 72-73 sh install commands; lines 98-99; agents.py lines 35-36 \"the hook has not yet run inside a live Codex or Cursor session\"", "note": "No claim of a live Codex or Cursor run anywhere in the three scripts."},
-    {"where": ["vsl-90s b16 voice", "vsl-90s b16 screen"], "claim": "\"Files over twenty megabytes aren't copied. Over twenty thousand files, no scan, and rewind says so.\"; screen \"files over 20 MB: noted, not copied\", \"over 20,000 files: not scanned, reported\"", "verdict": "CLEAR", "source": "README.md line 50 and 64 \"Files over 20 MB are noted and not copied.\"; line 67 \"A project with more than 20,000 files is not scanned; the call is still recorded and `rewind` reports it.\"; hook.py line 32 MAX_CHECKPOINT_BYTES = 20 * 1024 * 1024; bashscan.py line 25 MAX_SCAN_FILES = 20000 and lines 44, 54 (> comparisons); rewind.py lines 143-148 bash_uncovered", "note": "Code constant is 20 x 1024 x 1024 bytes, which the README itself calls 20 MB; the script uses the README's wording. \"Over\" matches the strict greater-than in code."},
-    {"where": ["vsl-90s b17 voice", "vsl-90s b17 screen"], "claim": "\"Export it as one HTML page. Find it later with sessions.\"; screen \"rewindagent export\", \".rewindagent/replay-<session>.html\", \"rewindagent sessions\"", "verdict": "CLEAR", "source": "README.md line 138 sh \"rewindagent export                                  # writes .rewindagent/replay-<session>.html\"; line 143 \"One HTML file with the whole session\"; line 161 sh \"rewindagent sessions                     # every session in the log...\"; line 8 \"`sessions` (list and search the sessions in a log)\"", "note": ""},
-    {"where": ["vsl-90s b18 voice", "vsl-90s b18 screen", "vsl-30s b07 voice", "vsl-30s b07 screen"], "claim": "\"Apache-2.0, standard library only. Not on PyPI yet: install from the repository.\"; screen \"Apache-2.0\", \"Python 3.10 or newer, standard library only\", \"not on PyPI yet\", \"{repo_url}\"", "verdict": "CLEAR", "source": "LICENSE (Apache License Version 2.0 text); pyproject.toml line 10 license = {text = \"Apache-2.0\"}, line 11 requires-python = \">=3.10\", line 12 dependencies = []; README.md line 9 \"Not on PyPI yet.\", lines 21-22 \"Python 3.10 or newer ... No dependencies beyond the standard library. From the repository:\", line 248 \"Apache-2.0\"", "note": "PyPI appears only with its status (\"not on PyPI yet\") in every place it is mentioned. The four source modules import only stdlib (hashlib, json, os, shlex, site, sys, subprocess, tempfile, pathlib, dataclasses, typing)."},
-    {"where": ["vsl-90s b19 voice", "vsl-90s b19 screen"], "claim": "\"A paid Cloud tier is planned. Not built, not priced.\"; screen \"Cloud tier: planned\", \"planned: cloud sync, shareable replay links\", \"not built, not priced\"", "verdict": "CLEAR", "source": "README.md lines 222-223 \"A paid Cloud tier (cloud sync, shareable replay links, long retention, session search): planned, not built, not priced.\"; BRAND.md lines 27-28 and line 229 \"Say 'planned' next to anything not built, every time.\"", "note": "\"planned\" is present beside every paid/Cloud mention; no price anywhere; nothing paid is presented as existing."},
-    {"where": ["vsl-90s b20 screen", "vsl-30s b08 screen", "vsl-15s-vertical b05 screen"], "claim": "End card: \"rewindagent\", \"Ctrl+Z for AI coding agents: record, replay, rewind.\", \"{site_url}\", \"made by John B Joseph\"", "verdict": "CLEAR", "source": "BRAND.md line 10 \"Ctrl+Z for AI coding agents: record, replay, rewind.\"; line 45 \"Credit line, used exactly in footers: made by John B Joseph\"; line 205 \"Every video ends on the same end card: the name, the one-line promise, the address, the credit line.\"; manifest.json \"credit\": \"made by John B Joseph\"", "note": "Promise and credit line are verbatim BRAND.md. README line 3 and pyproject line 8 phrase the tagline \"record, replay and rewind\" (with \"and\"); the end card correctly uses BRAND.md's one-line promise. The cites field of these beats quotes the README variant rather than the BRAND.md line, which is a bookkeeping mismatch for the builder, not a fact error on screen. The only statement about John in the scripts is this credit line, which is in the brand fact file."},
-    {"where": ["vsl-90s b20 voice", "vsl-30s b08 voice", "vsl-15s-vertical b05 voice"], "claim": "\"Your editor has had undo for decades. Now your agent does.\" / \"Your editor has undo. Now your agent does.\"", "verdict": "CLEAR", "source": "BRAND.md line 41 voice example \"Undo is a feature your editor has had for decades.\"; README.md line 112 and 116-118 (rewind N puts back every file a later step changed)", "note": "General statement in the approved brand voice; the product half is the rewind command demonstrated in the same script."},
-    {"where": ["vsl-90s title", "vsl-30s title", "vsl-15s-vertical title"], "claim": "Titles: \"Step back to twelve: rewindagent on a real session\", \"The agent deleted the tests. Step back to twelve.\", \"Step back to twelve\"", "verdict": "CLEAR", "source": "README.md line 15 \"The clip is a real session, not a mock-up\"; manifest.json good_step 12 and beats[1].caption", "note": "Titles were outside the stated voice/screen scope; checked anyway because \"real session\" is a status claim."},
-    {"where": ["all voice and screen fields, three videos"], "claim": "Negative checks: no hostname typed (placeholders only), no price, no emoji, no section symbol, none of the banned words, \"blocks/judges/stops\" absent entirely, \"planned\" beside anything paid or Cloud, PyPI only with its status", "verdict": "CLEAR", "source": "ripgrep over brand/vsl/beats.json: the banned-word alternation (every word of the NEVER and ONLY_NEGATED lists in tests/test_vsl.py, plus the FIRE-1 scope vocabulary that tests/test_brand.py scans for; the words are not repeated here because that scan covers this file too) matched nothing; hostname/price pattern (https?://|www.|.com|.io|.org|.dev|github|$|EUR|GBP|USD) matched nothing; non-ASCII pattern [^\\x00-\\x7F] matched nothing (so no emoji, no section symbol); {site_url}/{repo_url} occur on 6 lines (note line 4 plus b18, b20, 30s b07, 30s b08, 15s b05); the only hits for paid|cloud|pypi|planned are b18, b19, 30s b07, each with its status word", "note": "The grep covered the whole file including visual and cites fields, so the result also holds for the out-of-scope fields. \"AI\" appears only inside the approved promise \"AI coding agents\"; \"AI-powered\" does not appear."},
-    {"where": ["all voice and screen fields, three videos"], "claim": "Every number spoken or shown (steps 6, 12, 13, 14, 15; 14 steps; 2, 3 and 4 files; 20 MB; 20,000 files; Python 3.10) traces to README.md or manifest.json; no invented users, testimonials, downloads, stars or benchmarks", "verdict": "CLEAR", "source": "manifest.json steps 1-14, good_step 12, \"did change 4 files\", step 15 undo line, [3 checkpointed]; README.md lines 21, 50, 64, 67; hook.py line 32; bashscan.py line 25", "note": "No user, customer, benchmark or adoption figure appears in any script."}
-  ],
-  "blocked_in_scripts": 0
+ "reviewer": "claim-verifier",
+ "date": "2026-11-12",
+ "judged_on": 37,
+ "beats_sha256": "caa493b9c6bc42e6ffe5bf04dc9626656f9d7fe21cf0e12e12eefacf5b10b98d",
+ "beats_sha256_note": "RB0 round (2026-11-12): verifier read beats.json after the rename and confirmed every changed line is the name change only; hash computed by FIRE with hashlib on that file, unchanged since.",
+ "claims": [
+  {
+   "where": [
+    "vsl-90s b01 screen",
+    "vsl-90s b02 screen",
+    "vsl-90s b05 screen",
+    "vsl-90s b13 screen",
+    "vsl-30s b01 screen",
+    "vsl-30s b02 screen",
+    "vsl-30s b03 screen"
+   ],
+   "claim": "Terminal line \"   13  Bash          rm -rf tests  [3 checkpointed]\"",
+   "verdict": "CLEAR",
+   "source": "brand/demo/manifest.json:12 beats[0].output: \"   13  Bash          rm -rf tests  [3 checkpointed]\"",
+   "note": "Verbatim, three leading spaces; unchanged by the re-recording."
+  },
+  {
+   "where": [
+    "vsl-90s b02 screen",
+    "vsl-90s b05 screen",
+    "vsl-30s b02 screen",
+    "vsl-30s b03 screen"
+   ],
+   "claim": "Terminal line \"   14  Write         app/config.py  [1 checkpointed]\"",
+   "verdict": "CLEAR",
+   "source": "brand/demo/manifest.json:12: \"   14  Write         app/config.py  [1 checkpointed]\"",
+   "note": "Verbatim."
+  },
+  {
+   "where": [
+    "vsl-90s b05 screen",
+    "vsl-90s b06 screen",
+    "vsl-30s b03 screen"
+   ],
+   "claim": "Terminal lines \"   10  Edit          README.md  [1 checkpointed]\", \"   11  Bash          git status --short\", \"   12  Read          tests/test_server.py\"",
+   "verdict": "CLEAR",
+   "source": "brand/demo/manifest.json:12 lines 10, 11, 12 verbatim",
+   "note": "Leading spaces included."
+  },
+  {
+   "where": [
+    "vsl-90s b04 screen"
+   ],
+   "claim": "Terminal line \"    6  Write         tests/test_timeout.py  [1 checkpointed]\"",
+   "verdict": "CLEAR",
+   "source": "brand/demo/manifest.json:12: \"    6  Write         tests/test_timeout.py  [1 checkpointed]\"",
+   "note": "Four leading spaces."
+  },
+  {
+   "where": [
+    "vsl-90s b05 screen",
+    "vsl-30s b03 screen",
+    "vsl-30s b03 voice"
+   ],
+   "claim": "Command \"rewindagents replay\"; \"rewindagents replay lists every step\"",
+   "verdict": "CLEAR",
+   "source": "brand/demo/manifest.json:9 \"command\": \"rewindagents replay\"; README.md:126 \"rewindagents replay              # one line per step: number, tool, file or command\"",
+   "note": "Recorded demo command and README sh line."
+  },
+  {
+   "where": [
+    "vsl-90s b03 screen",
+    "vsl-90s b10 screen"
+   ],
+   "claim": "Command \"git status --short\"",
+   "verdict": "CLEAR",
+   "source": "brand/demo/manifest.json:17 and :38 \"command\": \"git status --short\"",
+   "note": ""
+  },
+  {
+   "where": [
+    "vsl-90s b03 screen",
+    "vsl-15s-vertical b01 screen",
+    "vsl-15s-vertical b02 screen"
+   ],
+   "claim": "First git status output: \" M README.md\", \" M app/config.py\", \" M app/server.py\", \" D tests/test_config.py\", \" D tests/test_server.py\"",
+   "verdict": "CLEAR",
+   "source": "brand/demo/manifest.json:20 \" M README.md\\n M app/config.py\\n M app/server.py\\n D tests/test_config.py\\n D tests/test_server.py\\n\"",
+   "note": "15s cut uses subsets."
+  },
+  {
+   "where": [
+    "vsl-90s b07 screen",
+    "vsl-30s b04 screen",
+    "vsl-15s-vertical b03 screen"
+   ],
+   "claim": "Command \"rewindagents rewind 12\"",
+   "verdict": "CLEAR",
+   "source": "brand/demo/manifest.json:30 \"command\": \"rewindagents rewind 12\"; README.md:129 \"rewindagents rewind 12           # files back to how they were right after step 12\"",
+   "note": ""
+  },
+  {
+   "where": [
+    "vsl-90s b08 screen",
+    "vsl-30s b05 screen",
+    "vsl-15s-vertical b04 screen"
+   ],
+   "claim": "Rewind report: \"session demo: rewind to step 12 of 14 (did change 4 files)\", \"  restore  tests/test_config.py\", \"  restore  tests/test_server.py\", \"  restore  tests/test_timeout.py\", \"  restore  app/config.py\"",
+   "verdict": "CLEAR",
+   "source": "brand/demo/manifest.json:33 output lines 1-5 verbatim; :83 \"session\": \"demo\", :84 \"steps\": 14",
+   "note": "Two leading spaces on restore lines."
+  },
+  {
+   "where": [
+    "vsl-90s b09 screen"
+   ],
+   "claim": "Terminal line \"  this rewind is step 15; undo it with: rewindagents rewind 14 --session demo\"",
+   "verdict": "CLEAR",
+   "source": "brand/demo/manifest.json:33 last line: \"  this rewind is step 15; undo it with: rewindagents rewind 14 --session demo\"; README.md:136-137 \"the command prints `undo it with: rewindagents rewind <step> --session <id>`\"; cli.py:15 invocation() returns \"rewindagents\" when installed, cli.py:212-213",
+   "note": "Re-recorded with the new name; verbatim."
+  },
+  {
+   "where": [
+    "vsl-90s b10 screen"
+   ],
+   "claim": "Second git status output: \" M README.md\", \" M app/config.py\", \" M app/server.py\", \"?? tests/test_timeout.py\"",
+   "verdict": "CLEAR",
+   "source": "brand/demo/manifest.json:41 \" M README.md\\n M app/config.py\\n M app/server.py\\n?? tests/test_timeout.py\\n\"",
+   "note": ""
+  },
+  {
+   "where": [
+    "vsl-90s b01 voice",
+    "vsl-30s b01 voice",
+    "vsl-15s-vertical b01 voice"
+   ],
+   "claim": "\"Step thirteen. The agent deletes your tests.\" / \"Your agent just deleted the tests.\"",
+   "verdict": "CLEAR",
+   "source": "brand/demo/manifest.json:12 step 13 \"Bash          rm -rf tests  [3 checkpointed]\"; :16 caption \"# its last two steps deleted the tests and overwrote the config\"",
+   "note": ""
+  },
+  {
+   "where": [
+    "vsl-90s b02 voice",
+    "vsl-30s b02 voice",
+    "vsl-15s-vertical b02 voice"
+   ],
+   "claim": "\"Step fourteen. It overwrites the config.\" / \"And overwrote the config.\"",
+   "verdict": "CLEAR",
+   "source": "brand/demo/manifest.json:12 step 14 \"Write         app/config.py\"; :16 caption; BRAND.md:153 \"run `rm -rf tests` and overwrite app/config.py\"",
+   "note": "BRAND.md line moved from 154-155 to 153."
+  },
+  {
+   "where": [
+    "vsl-90s b03 voice"
+   ],
+   "claim": "\"Git status agrees. Two test files, gone.\"",
+   "verdict": "CLEAR",
+   "source": "brand/demo/manifest.json:20 two \" D tests/...\" lines",
+   "note": ""
+  },
+  {
+   "where": [
+    "vsl-90s b04 voice",
+    "vsl-90s b04 screen"
+   ],
+   "claim": "\"There were three. The third was never committed. Git can't return it.\" and caption \"never committed\"",
+   "verdict": "CLEAR",
+   "source": "brand/demo/manifest.json:12 step 6 Write tests/test_timeout.py, step 13 [3 checkpointed], no commit in steps 1-14; :20 only two D lines; :41 \"?? tests/test_timeout.py\"; README.md:66-67 \"tracked and untracked files, but not git-ignored ones\"",
+   "note": "Same reasoning as before; the evidence is unchanged."
+  },
+  {
+   "where": [
+    "vsl-90s b05 voice"
+   ],
+   "claim": "\"But rewindagents recorded all fourteen steps.\"",
+   "verdict": "CLEAR",
+   "source": "brand/demo/manifest.json:8 caption \"# a coding agent has been working in this repo; rewindagents recorded every step\"; :84 \"steps\": 14; README.md:21-22 \"runs fourteen agent steps through the hook\"",
+   "note": ""
+  },
+  {
+   "where": [
+    "vsl-90s b06 voice",
+    "vsl-30s b03 voice"
+   ],
+   "claim": "\"Step twelve was the last good one.\" / \"Twelve was the last good one.\"",
+   "verdict": "CLEAR",
+   "source": "brand/demo/manifest.json:78 \"good_step\": 12; :16 caption",
+   "note": ""
+  },
+  {
+   "where": [
+    "vsl-90s b07 voice",
+    "vsl-30s b04 voice",
+    "vsl-15s-vertical b03 voice"
+   ],
+   "claim": "\"So rewind to it.\" / \"So rewind to twelve.\" / \"Rewind to step twelve.\"",
+   "verdict": "CLEAR",
+   "source": "README.md:129; brand/demo/manifest.json:30 \"rewindagents rewind 12\"",
+   "note": ""
+  },
+  {
+   "where": [
+    "vsl-90s b08 voice",
+    "vsl-30s b05 voice",
+    "vsl-15s-vertical b04 voice"
+   ],
+   "claim": "\"Four files back: all three tests and the config.\" / \"Four files back. The tests, and the config.\" / \"Four files back, as they were after step twelve.\"",
+   "verdict": "CLEAR",
+   "source": "brand/demo/manifest.json:33 \"(did change 4 files)\" + 3 tests/ + 1 app/config.py restore lines; README.md:129 \"files back to how they were right after step 12\"; rewind.py:6-7",
+   "note": ""
+  },
+  {
+   "where": [
+    "vsl-90s b09 voice",
+    "vsl-90s b09 screen",
+    "vsl-30s b06 voice",
+    "vsl-30s b06 screen"
+   ],
+   "claim": "\"And the rewind is step fifteen. You can undo the undo.\" / \"And the rewind itself can be undone.\" and caption \"A rewind is undoable.\"",
+   "verdict": "CLEAR",
+   "source": "brand/demo/manifest.json:33 \"this rewind is step 15; undo it with: ...\"; README.md:136 \"A rewind is undoable. It first saves the current bytes of every file it will change and records itself\"; rewind.py:8-9",
+   "note": "Caption is the README sentence verbatim."
+  },
+  {
+   "where": [
+    "vsl-90s b10 voice"
+   ],
+   "claim": "\"The first twelve steps stay. So does the new test.\"",
+   "verdict": "CLEAR",
+   "source": "brand/demo/manifest.json:37 caption \"# the tests are back; the first 12 steps stay\"; :41 \"?? tests/test_timeout.py\"",
+   "note": ""
+  },
+  {
+   "where": [
+    "vsl-90s b11 voice",
+    "vsl-90s b11 screen"
+   ],
+   "claim": "\"Every tool call goes into a hash-chained log. Edit one record and verify names it.\"; screen \"rewindagents verify\", \".rewindagents/log.jsonl\", \"each record holds the SHA-256 of the one before\"",
+   "verdict": "CLEAR",
+   "source": "README.md:8-9 \"Every tool call your coding agent makes goes into a tamper-evident, hash-chained log you can verify later.\"; :52 \"`.rewindagents/log.jsonl`\"; :243-244 \"Each record holds the SHA-256 of the record before it, so editing, deleting or reordering any record makes `verify` fail and name the first bad record.\"; :253 \"rewindagents verify     # OK: 1 records, chain intact\"; cli.py:21 default \".rewindagents/log.jsonl\"",
+   "note": "Caption is a close paraphrase of README:243."
+  },
+  {
+   "where": [
+    "vsl-90s b12 voice",
+    "vsl-90s b12 screen"
+   ],
+   "claim": "\"Before every edit, the hook copies the file as it is.\"; screen \"Write  Edit  MultiEdit  NotebookEdit\", \".rewindagents/objects/<sha256>\"",
+   "verdict": "CLEAR",
+   "source": "README.md:54-55 \"before `Write`, `Edit`, `MultiEdit` and `NotebookEdit`, the current bytes of the target file are copied to `.rewindagents/objects/<sha256>`\"; hook.py:33-34 FILE_TOOLS; hook.py:80-101 checkpoint(); hook.py:6 \".rewindagents/objects/<sha256>\"",
+   "note": "The 20 MB exception is in b16."
+  },
+  {
+   "where": [
+    "vsl-90s b13 voice",
+    "vsl-90s b13 screen"
+   ],
+   "claim": "\"Around every Bash command it saves first, scans after. So step thirteen kept three copies.\"; caption \"saved before, scanned after\"",
+   "verdict": "CLEAR",
+   "source": "README.md:62-64 \"the hook saves the project's files before the command, scans again after it, and checkpoints, in the `post` record, only the files that were changed, deleted or created\"; bashscan.py:3-7; brand/demo/manifest.json:12 \"[3 checkpointed]\"",
+   "note": ""
+  },
+  {
+   "where": [
+    "vsl-90s b14 voice",
+    "vsl-90s b14 screen",
+    "vsl-30s b07 voice",
+    "vsl-30s b07 screen"
+   ],
+   "claim": "\"rewindagents install adds the Claude Code hook. It has run in real sessions.\" / \"...then run rewindagents install in your project\"; screen \"cd /path/to/your/project\", \"rewindagents install\", \"Claude Code: has run in real sessions\"",
+   "verdict": "CLEAR",
+   "source": "README.md:41-42 \"cd /path/to/your/project\" / \"rewindagents install            # adds the hook to .claude/settings.json in this project\"; README.md:15-16 \"The Claude Code hook has run in real sessions\"; agents.py:32-33 \"driven by a real Claude Code session\"; pyproject.toml:29",
+   "note": ""
+  },
+  {
+   "where": [
+    "vsl-90s b15 voice",
+    "vsl-90s b15 screen"
+   ],
+   "claim": "\"Codex and Cursor: built from the vendors' hook documentation, tested with the documented payloads. Not yet in a live session.\"; screen \"rewindagents install --agent codex\", \"rewindagents install --agent cursor\", and the three status captions",
+   "verdict": "CLEAR",
+   "source": "README.md:16-17 \"the Codex and Cursor hooks are built from the vendors' hook documentation and tested with the documented payloads, not yet in a live session\"; README.md:89-90 \"rewindagents install --agent codex\" / \"rewindagents install --agent cursor\"; agents.py:35-36",
+   "note": ""
+  },
+  {
+   "where": [
+    "vsl-90s b16 voice",
+    "vsl-90s b16 screen"
+   ],
+   "claim": "\"Files over twenty megabytes aren't copied. Over twenty thousand files, no scan, and rewind says so.\"; screen \"files over 20 MB: noted, not copied\", \"over 20,000 files: not scanned, reported\"",
+   "verdict": "CLEAR",
+   "source": "README.md:56, 70 \"Files over 20 MB are noted and not copied.\"; :73 \"A project with more than 20,000 files is not scanned; the call is still recorded and `rewind` reports it.\"; hook.py:35; bashscan.py:25, 44, 54; rewind.py:147-148",
+   "note": ""
+  },
+  {
+   "where": [
+    "vsl-90s b17 voice",
+    "vsl-90s b17 screen"
+   ],
+   "claim": "\"Export it as one HTML page. Find it later with sessions.\"; screen \"rewindagents export\", \".rewindagents/replay-<session>.html\", \"rewindagents sessions\"",
+   "verdict": "CLEAR",
+   "source": "README.md:155 \"rewindagents export                                  # writes .rewindagents/replay-<session>.html\"; :160 \"One HTML file with the whole session\"; :178 \"rewindagents sessions                     # every session in the log\"; export.py:295",
+   "note": "The on-screen text is CLEAR. See the new row on the exported page's heading."
+  },
+  {
+   "where": [
+    "vsl-90s b18 voice",
+    "vsl-90s b18 screen",
+    "vsl-30s b07 voice",
+    "vsl-30s b07 screen"
+   ],
+   "claim": "\"Apache-2.0, standard library only. Not on PyPI yet: install from the repository.\"; screen \"Apache-2.0\", \"Python 3.10 or newer, standard library only\", \"not on PyPI yet\", \"{repo_url}\"",
+   "verdict": "CLEAR",
+   "source": "LICENSE:2-3; pyproject.toml:10-12; README.md:15 \"Not on PyPI yet.\"; :27-28 \"Python 3.10 or newer ... No dependencies beyond the standard library. From the repository:\"; :331 \"Apache-2.0.\"; pypi.org/pypi/rewindagents/json (2026-11-12): HTTP 404",
+   "note": "PyPI status confirmed for the new name."
+  },
+  {
+   "where": [
+    "vsl-90s b19 voice",
+    "vsl-90s b19 screen"
+   ],
+   "claim": "\"A paid Cloud tier is planned. Not built, not priced.\"; screen \"Cloud tier: planned\", \"planned: cloud sync, shareable replay links\", \"not built, not priced\"",
+   "verdict": "CLEAR",
+   "source": "README.md:283-284 \"A paid Cloud tier (cloud sync, shareable replay links, long retention, session search): planned, not built, not priced.\"; BRAND.md:27; BRAND.md:248 \"Say \\\"planned\\\" next to anything not built, every time.\"",
+   "note": "BRAND.md line moved from 229 to 248."
+  },
+  {
+   "where": [
+    "vsl-90s b20 screen",
+    "vsl-30s b08 screen",
+    "vsl-15s-vertical b05 screen"
+   ],
+   "claim": "End card: \"rewindagents\", \"Ctrl+Z for AI coding agents: record, replay, rewind.\", \"{site_url}\", \"made by John B Joseph\"",
+   "verdict": "CLEAR",
+   "source": "pyproject.toml:6 name = \"rewindagents\"; BRAND.md:10 \"Ctrl+Z for AI coding agents: record, replay, rewind.\"; BRAND.md:45 \"Credit line, used exactly in footers: made by John B Joseph\"; manifest.json:53 \"credit\": \"made by John B Joseph\"",
+   "note": "The cites field still quotes the README variant ('record, replay and rewind'), which is a bookkeeping mismatch as before."
+  },
+  {
+   "where": [
+    "vsl-90s b20 voice",
+    "vsl-30s b08 voice",
+    "vsl-15s-vertical b05 voice"
+   ],
+   "claim": "\"Your editor has had undo for decades. Now your agent does.\" / \"Your editor has undo. Now your agent does.\"",
+   "verdict": "CLEAR",
+   "source": "BRAND.md:41 \"Example: \\\"Undo is a feature your editor has had for decades.\\\"\"; README.md:129, 133-134",
+   "note": ""
+  },
+  {
+   "where": [
+    "vsl-90s title",
+    "vsl-30s title",
+    "vsl-15s-vertical title"
+   ],
+   "claim": "Titles: \"Step back to twelve: rewindagents on a real session\", \"The agent deleted the tests. Step back to twelve.\", \"Step back to twelve\"",
+   "verdict": "CLEAR",
+   "source": "README.md:21 \"The clip is a real session, not a mock-up\"; manifest.json:78 good_step 12; :16 caption",
+   "note": ""
+  },
+  {
+   "where": [
+    "all voice and screen fields, three videos"
+   ],
+   "claim": "Negative checks: no hostname typed (placeholders only), no price, no emoji, no section symbol, none of the banned words, \"blocks/judges/stops\" absent entirely, \"planned\" beside anything paid or Cloud, PyPI only with its status",
+   "verdict": "CLEAR",
+   "source": "ripgrep over brand/vsl/beats.json (2026-11-12): pattern https?://|www\\.|\\.com|\\.io|\\.org|\\.dev|github|\\$|EUR|GBP|USD|[^\\x00-\\x7F] (case-insensitive) matched nothing; the NEVER + ONLY_NEGATED word list from tests/test_vsl.py:28-33 as \\b-bounded alternation matched nothing; paid|cloud|pypi|planned|{site_url}|{repo_url} = 14 hits, all in note line 4, b18, b19, b20, 30s b07, 30s b08, 15s b05",
+   "note": "The whole file was searched, including the visual and cites fields."
+  },
+  {
+   "where": [
+    "all voice and screen fields, three videos"
+   ],
+   "claim": "Every number spoken or shown (steps 6, 12, 13, 14, 15; 14 steps; 2, 3 and 4 files; 20 MB; 20,000 files; Python 3.10) traces to README.md or manifest.json; no invented users, testimonials, downloads, stars or benchmarks",
+   "verdict": "CLEAR",
+   "source": "brand/demo/manifest.json:12, 20, 33, 78, 84; README.md:27, 56, 70, 73; hook.py:35; bashscan.py:25",
+   "note": "The re-recording changed only gif_facts and storyboard_seconds, which the scripts do not quote."
+  },
+  {
+   "where": [
+    "vsl-90s b17 visual"
+   ],
+   "claim": "NEW: an exported page shown in the video carries the product name rewindagents",
+   "verdict": "CLEAR",
+   "source": "src/rewindagents/export.py:275 `<h1>rewind<span>agent</span> replay</h1>`: a real export page's heading reads 'rewindagent replay'",
+   "note": "The videos are not made yet. If b17's 'plain page' is rendered from a real export, it will show the old name on screen. Blocked in the launch kit until export.py:275 is fixed. | claim-verifier follow-up 2026-11-12: export.py:275 heading now reads rewindagents replay (CLEAR); README.md:310-311 Pages wording now future tense (CLEAR); verifier: the vsl b17 UNVERIFIED row is resolved"
+  },
+  {
+   "where": [
+    "vsl-30s b07 screen",
+    "vsl-90s b18 screen",
+    "vsl-90s b20 screen",
+    "vsl-30s b08 screen",
+    "vsl-15s-vertical b05 screen"
+   ],
+   "claim": "NEW (C-iii): no claim that the repo or site is already live; addresses are placeholders",
+   "verdict": "CLEAR",
+   "source": "beats.json:4 \"{site_url} and {repo_url} are filled at render time\"; brand/site/config.json:3-4; https://github.com/Johnbjoseph-cybersec/rewindagents (2026-11-12): HTTP 404 (unpublished, as stated)",
+   "note": "No voice line says the repo or site is live. 'Install it from the repository' becomes true only after publishing."
+  }
+ ],
+ "blocked_in_scripts": 0
 }

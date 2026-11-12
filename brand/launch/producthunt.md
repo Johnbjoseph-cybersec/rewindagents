@@ -1,4 +1,4 @@
-# rewindagent on Product Hunt
+# rewindagents on Product Hunt
 
 Draft for launch day; not posted. Fill the addresses with `python3 brand/launch/fill.py producthunt.md`.
 Every command below is one of the README's; tests/test_launch.py checks each one. The maker comment is written
@@ -6,7 +6,7 @@ without "I built": how the authorship is put (John, with an AI agent team) is Jo
 
 ## Name
 
-rewindagent
+rewindagents
 
 ## Tagline
 
@@ -27,13 +27,13 @@ Developer Tools, Open Source, Artificial Intelligence, GitHub
 
 ## Maker comment
 
-Hi Product Hunt. rewindagent exists because coding agents change files fast, often through shell commands, and every one of those steps should be undoable.
+Hi Product Hunt. rewindagents exists because coding agents change files fast, often through shell commands, and every one of those steps should be undoable.
 
 What it does today:
 
-- A hook for Claude Code records every tool call into `.rewindagent/log.jsonl`, one hash chain, and copies a project file before Write, Edit, MultiEdit, NotebookEdit or a Bash command changes it. The exceptions: git-ignored files, symlinks, files over 20 MB, projects of more than 20,000 files, and, outside a git repository, node_modules, .venv, venv and __pycache__.
-- `rewindagent replay` lists the session one line per step. `rewindagent rewind 12` puts back the files the later steps changed, the way they were right after step 12. The rewind is itself a step, so it can be undone.
-- `rewindagent export` writes a session as one HTML page, `rewindagent sessions --grep config.py` finds sessions, and `rewindagent bundle --out s1.bundle` carries one to another machine.
+- A hook for Claude Code records every tool call into `.rewindagents/log.jsonl`, one hash chain, and copies a project file before Write, Edit, MultiEdit, NotebookEdit or a Bash command changes it. The exceptions: git-ignored files, symlinks, files over 20 MB, projects of more than 20,000 files, and, outside a git repository, node_modules, .venv, venv and __pycache__.
+- `rewindagents replay` lists the session one line per step. `rewindagents rewind 12` puts back the files the later steps changed, the way they were right after step 12. The rewind is itself a step, so it can be undone.
+- `rewindagents export` writes a session as one HTML page, `rewindagents sessions --grep config.py` finds sessions, and `rewindagents bundle --out s1.bundle` carries one to another machine.
 - It never blocks or changes a call, and the hook always exits 0.
 
 What it does not do yet, said plainly: it is not on PyPI yet (install it from the repository with pipx). The Codex and Cursor hooks are built from the vendors' hook documentation and tested with the documented payloads, not yet in a live session. A paid Cloud tier (cloud sync, shareable replay links, long retention, session search) is planned, not built and not priced.
@@ -50,9 +50,9 @@ the logo set. An independent critic scores them in brand/launch/review.json; rea
 uploading.
 
 1. The name, the tagline and the mark.
-2. `rewindagent replay`: the end of the fourteen steps, the last two marked; the first nine are folded into one tick each.
+2. `rewindagents replay`: the end of the fourteen steps, the last two marked; the first nine are folded into one tick each.
 3. `git status --short` after the wreck: the deleted tests.
-4. `rewindagent rewind 12`: four files restored, and the undo line.
-5. Install in two commands: pipx from the repository, then `rewindagent install` in the project.
+4. `rewindagents rewind 12`: four files restored, and the undo line.
+5. Install in two commands: pipx from the repository, then `rewindagents install` in the project.
 
 made by John B Joseph

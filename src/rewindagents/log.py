@@ -8,7 +8,7 @@ Appends take an exclusive lock and re-read the chain head under it, so several
 hook processes writing to the same log at once still produce one valid chain.
 
 A chain alone cannot detect records cut off the END of the file. To catch that,
-keep the head hash somewhere else (`rewindagent head`) and pass it to `verify`.
+keep the head hash somewhere else (`rewindagents head`) and pass it to `verify`.
 """
 from __future__ import annotations
 

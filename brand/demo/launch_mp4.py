@@ -179,7 +179,7 @@ def build(cache):
     subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-framerate", str(FPS),
                     "-i", os.path.join(sdir, "%05d.png"), "-c:v", "libx264", "-preset", "slow", "-crf", "18",
                     "-tune", "animation", "-pix_fmt", "yuv420p", "-r", str(FPS), "-an", "-movflags", "+faststart",
-                    "-metadata", "title=rewindagent: a wrecked repo put back with rewindagent rewind", mp4], check=True)
+                    "-metadata", "title=rewindagents: a wrecked repo put back with rewindagents rewind", mp4], check=True)
     cue_list = cues(tl, kit)
     write_srt(os.path.join(BRAND, OUT + ".srt"), cue_list)
 

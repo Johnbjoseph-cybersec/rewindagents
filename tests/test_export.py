@@ -1,4 +1,4 @@
-"""`rewindagent export`: one self-contained HTML page per session, with file diffs."""
+"""`rewindagents export`: one self-contained HTML page per session, with file diffs."""
 import json
 import os
 import re
@@ -10,8 +10,8 @@ from tempfile import TemporaryDirectory
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-import rewindagent  # noqa: E402
-from rewindagent import export, hook, rewind  # noqa: E402
+import rewindagents  # noqa: E402
+from rewindagents import export, hook, rewind  # noqa: E402
 from test_rewind import Agent, cli  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -188,7 +188,7 @@ class TestPage(unittest.TestCase):
             self.assertIn("5 steps", page)
             self.assertIn("mv junk.py moved.py", page)
             self.assertIn(export.CREDIT, page)
-            self.assertIn(f"rewindagent {rewindagent.__version__}", page)
+            self.assertIn(f"rewindagents {rewindagents.__version__}", page)
             self.assertIn("chain intact", page)
 
     def test_tampered_log_still_exports_and_says_so(self):
@@ -222,9 +222,9 @@ class TestCli(unittest.TestCase):
             a = wrecked(d)
             code, out, err = cli("--log", str(a.log), "export")
             self.assertEqual((code, err), (0, ""))
-            page = Path(d, ".rewindagent", "replay-s1.html")
+            page = Path(d, ".rewindagents", "replay-s1.html")
             self.assertTrue(page.is_file())
-            self.assertIn(f"wrote .rewindagent/replay-s1.html: session s1, 5 steps, {page.stat().st_size:,} bytes", out)
+            self.assertIn(f"wrote .rewindagents/replay-s1.html: session s1, 5 steps, {page.stat().st_size:,} bytes", out)
             self.assertTrue(page.read_text().startswith("<!doctype html>"))
 
     def test_out_session_and_no_diffs_flags(self):

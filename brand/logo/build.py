@@ -1,4 +1,4 @@
-"""Build the rewindagent logo set as SVG (task RB2; the mark is concept E, "Reverse prompt", which John picked
+"""Build the rewindagents logo set as SVG (task RB2; the mark is concept E, "Reverse prompt", which John picked
 on 2026-11-12 from brand/logo/round2-concepts/; RB2g polished it). render.mjs turns the SVGs into PNGs.
 
 The mark is a terminal prompt turned round: a heavy '<' and a red block cursor, drawn on a 16-unit grid. The
@@ -36,9 +36,9 @@ THEMES = {
 }
 
 TAGLINE = "Ctrl+Z for AI coding agents: record, replay, rewind."
-COMMAND = "rewindagent rewind 12"
+COMMAND = "rewindagents rewind 12"
 CREDIT = "made by John B Joseph"
-INSTALL = "pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagent"
+INSTALL = "pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagents"
 
 # Visible rows of the mark on the 16 grid (the '<' top and bottom cuts); x spans 1..15.
 MARK_TOP, MARK_BOTTOM = 3, 13
@@ -124,7 +124,7 @@ FAVICON_SAMPLES = [(2.5, 7.5, "ink"), (6.5, 3.5, "ink"), (6.5, 12.5, "ink"), (12
                    (8.5, 7.5, "ground")]
 
 
-def svg(w, h, body, bg=None, title="rewindagent"):
+def svg(w, h, body, bg=None, title="rewindagents"):
     ground = '<rect width="%s" height="%s" fill="%s"/>' % (g(w), g(h), bg) if bg else ""
     return ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %s %s" width="%s" height="%s" role="img">'
             '<title>%s</title>%s%s</svg>\n' % (g(w), g(h), g(w), g(h), title, ground, body))
@@ -184,14 +184,14 @@ class Face:
 
 
 def wordmark(face, t, mono=None):
-    """Mark + 'rewindagent'. The '<' is LOCKUP_SCALE ascender heights tall, so the mark holds its weight beside
+    """Mark + 'rewindagents'. The '<' is LOCKUP_SCALE ascender heights tall, so the mark holds its weight beside
     the 800 letters; the text baseline is the bottom line the '<' and the cursor share."""
     size = 100.0
     k = LOCKUP_SCALE * face.bounds("d", size)[3] / MARK_H
     pad = 8.0
     mark_w = 16 * k
     base_y = pad + (MARK_BOTTOM - MARK_TOP) * k
-    glyphs, adv = face.outline("rewindagent", size, pad + mark_w + LOCKUP_GAP * size, base_y, tracking=-0.02)
+    glyphs, adv = face.outline("rewindagents", size, pad + mark_w + LOCKUP_GAP * size, base_y, tracking=-0.02)
     w = pad + mark_w + LOCKUP_GAP * size + adv + pad
     h = base_y + face.descent("g", size) + pad
     body = (place(mark_shapes(t, mono), pad, pad, k)
@@ -218,7 +218,7 @@ def in_use(disp, body, mono):
     for i, (t, strip, tab, fav) in enumerate(((L, C["Playhead"], C["Leader"], favicon_shapes(L)),
                                              (D, C["Spool"], C["Reel"], favicon_shapes(D)))):
         x0 = 680 * i
-        title, _ = body.outline("rewindagent", 13, x0 + 54, 39)
+        title, _ = body.outline("rewindagents", 13, x0 + 54, 39)
         parts.append(rect(x0, 0, 640, 56, strip)
                      + '<rect x="%d" y="10" width="270" height="46" rx="8" fill="%s"/>' % (x0 + 12, tab)
                      + '<g transform="translate(%d 25)">%s</g>' % (x0 + 30, fav)
@@ -241,14 +241,14 @@ def in_use(disp, body, mono):
     parts.append('<clipPath id="c2"><circle cx="600" cy="380" r="10"/></clipPath>'
                  '<g clip-path="url(#c2)"><circle cx="600" cy="380" r="10" fill="%s"/>'
                  '<g transform="translate(590 370) scale(1.25)">%s</g></g>' % (C["Leader"], favicon_shapes(L)))
-    org, _ = disp.outline("rewindagent", 26, 156, 372)
+    org, _ = disp.outline("rewindagents", 26, 156, 372)
     sub, _ = body.outline("Ctrl+Z for AI coding agents", 15, 156, 398)
     parts.append('<g fill="%s">%s</g><g fill="%s">%s</g>' % (L["ink"], org, L["sub"], sub))
-    cm, _ = body.outline("rewindagent", 15, 436, 385)
+    cm, _ = body.outline("rewindagents", 15, 436, 385)
     parts.append('<g fill="%s">%s</g>' % (L["ink"], cm))
-    cm2, _ = body.outline("rewindagent", 13, 618, 384)
+    cm2, _ = body.outline("rewindagents", 13, 618, 384)
     parts.append('<g fill="%s">%s</g>' % (L["ink"], cm2))
-    return svg(1320, 460, "".join(parts), bg="#9AA39C", title="rewindagent, in use")
+    return svg(1320, 460, "".join(parts), bg="#9AA39C", title="rewindagents, in use")
 
 
 def build(fonts):
@@ -274,14 +274,14 @@ def build(fonts):
     # 3. PNG sources (rendered by render.mjs into brand/)
     src = {}
     # square logos: stacked lockup, the mark 72 percent of the name's width so the two read as one unit
-    _, adv100 = disp.outline("rewindagent", 100, 0, 0, tracking=-0.02)
+    _, adv100 = disp.outline("rewindagents", 100, 0, 0, tracking=-0.02)
     name_w, mark_w, gap = 760.0, 544.0, 64.0
     size = 100 * name_w / adv100
     asc, desc = disp.bounds("d", size)[3], disp.descent("g", size)
     k = mark_w / 16
     top = (1024 - (MARK_H * k + gap + asc + desc)) / 2
     for theme, t in (("light", L), ("dark", D)):
-        name, _ = disp.outline("rewindagent", size, (1024 - name_w) / 2, top + MARK_H * k + gap + asc,
+        name, _ = disp.outline("rewindagents", size, (1024 - name_w) / 2, top + MARK_H * k + gap + asc,
                                tracking=-0.02)
         x = (1024 - mark_w) / 2
         body_svg = place(mark_shapes(t), x, top, k) + '<g fill="%s">%s</g>' % (t["ink"], name)
@@ -303,7 +303,7 @@ def build(fonts):
     # credit on the left; the mark, large, on the right. Everything inside a 96 px margin (GitHub crops the
     # edges on some cards).
     nsize = 100 * 600 / adv100
-    name, _ = disp.outline("rewindagent", nsize, 96, 176, tracking=-0.02)
+    name, _ = disp.outline("rewindagents", nsize, 96, 176, tracking=-0.02)
     head, tail = TAGLINE.split(": ")
     tag1, a1 = body.outline(head + ":", 46, 96, 268)
     tag2, a2 = body.outline(tail, 46, 96, 326)

@@ -1,4 +1,4 @@
-# rewindagent on Reddit
+# rewindagents on Reddit
 
 Draft for launch day; not posted. Fill the addresses with `python3 brand/launch/fill.py reddit.md`.
 Before posting in a subreddit, open it on Reddit itself and read its rules in the sidebar: some allow a project post
@@ -21,11 +21,11 @@ An undo for coding agents: it records every tool call and rewinds the files to a
 In the demo session (recorded by a script in the repo), fourteen agent steps run through the hook and the last two are the bad kind: `rm -rf tests`, then an overwritten config file. Two commands show what happened and put the four files back:
 
 ```sh
-rewindagent replay
-rewindagent rewind 12
+rewindagents replay
+rewindagents rewind 12
 ```
 
-What it is: an open-source recorder (Apache-2.0, Python standard library only). A hook writes every tool call into a hash-chained JSONL log in `.rewindagent/` and copies a project file before an edit or a Bash command changes it (git-ignored files, symlinks, files over 20 MB, projects of more than 20,000 files and, outside git, node_modules, .venv, venv and __pycache__ are the exceptions). `rewindagent replay` lists the steps, `rewindagent rewind 12` puts the files back the way they were right after step 12, and the rewind is itself a step you can undo.
+What it is: an open-source recorder (Apache-2.0, Python standard library only). A hook writes every tool call into a hash-chained JSONL log in `.rewindagents/` and copies a project file before an edit or a Bash command changes it (git-ignored files, symlinks, files over 20 MB, projects of more than 20,000 files and, outside git, node_modules, .venv, venv and __pycache__ are the exceptions). `rewindagents replay` lists the steps, `rewindagents rewind 12` puts the files back the way they were right after step 12, and the rewind is itself a step you can undo.
 
 What it is not: it never blocks or changes a call, and it does not send anything anywhere. The hook always exits 0; it prints nothing, except the replies Cursor's hook protocol requires ({"permission": "allow"} before a call, {} after).
 

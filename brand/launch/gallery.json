@@ -1,5 +1,5 @@
 {
- "demo_beats_sha256": "b5808ab9335a0036bdce353850c5c7c1dd5fcb2569ec5d1b95da97250b7cca7b",
+ "demo_beats_sha256": "0f9b2dec1cebd80657f445936400ac29da9594cc9818dce4331d55d1ca49ca74",
  "ground": "Record",
  "height": 760,
  "note": "Written by brand/launch/gallery.py from brand/demo/manifest.json, README.md, BRAND.md's promise and producthunt.md's gallery list. Edit those, then rebuild; never edit this file or the PNGs.",
@@ -46,7 +46,7 @@
      "Record"
     ]
    ],
-   "sha256": "1741b00fba105f607a1e294cefb72d6b8002beb3b48094947ed2c886eaa06b15",
+   "sha256": "d56bd0cd9a5c586850c921ff8ae084b233579f14e1ec33c1b4a6c42f87f70775",
    "source": "BRAND.md promise"
   },
   {
@@ -58,7 +58,7 @@
     "working in this repo"
    ],
    "headline_px": 72,
-   "item": "`rewindagent replay`: the end of the fourteen steps, the last two marked; the first nine are folded into one tick each.",
+   "item": "`rewindagents replay`: the end of the fourteen steps, the last two marked; the first nine are folded into one tick each.",
    "kind": "term",
    "mono_px": 37.0,
    "panels": [
@@ -71,7 +71,7 @@
         "Playhead"
        ],
        [
-        "rewindagent replay",
+        "rewindagents replay",
         "Leader"
        ]
       ],
@@ -136,7 +136,7 @@
      "Record"
     ]
    ],
-   "sha256": "52367d26db9b3ca810629a79921cb55c460189be48c6af0523147ed3a424adbe"
+   "sha256": "8f3fc163f842b1362bfcd7108e5d075ca943ac3b06a912be0efa183bebf3b413"
   },
   {
    "beat": 1,
@@ -231,7 +231,7 @@
     "they were right after step 12"
    ],
    "headline_px": 72,
-   "item": "`rewindagent rewind 12`: four files restored, and the undo line.",
+   "item": "`rewindagents rewind 12`: four files restored, and the undo line.",
    "kind": "term",
    "mono_px": 25.0,
    "panels": [
@@ -244,7 +244,7 @@
         "Playhead"
        ],
        [
-        "rewindagent rewind 12",
+        "rewindagents rewind 12",
         "Leader"
        ]
       ],
@@ -280,7 +280,7 @@
       ],
       [
        [
-        "  this rewind is step 15; undo it with: rewindagent rewind 14 --session demo",
+        "  this rewind is step 15; undo it with: rewindagents rewind 14 --session demo",
         "Rewind"
        ]
       ]
@@ -310,7 +310,7 @@
      "Record"
     ]
    ],
-   "sha256": "62d666380e2d1f185ac6c985b989e9da99cb792dc280213350021b3446ca3749"
+   "sha256": "90d0de4aefa14d4bfc457ae956f89731a387086978362af5bfbe0b025940f15e"
   },
   {
    "file": "ph-5.png",
@@ -319,9 +319,9 @@
     "Install in two commands"
    ],
    "headline_px": 72,
-   "item": "Install in two commands: pipx from the repository, then `rewindagent install` in the project.",
+   "item": "Install in two commands: pipx from the repository, then `rewindagents install` in the project.",
    "kind": "term",
-   "mono_px": 27.5,
+   "mono_px": 27.0,
    "notes": [
     "Not on PyPI yet.",
     "No dependencies beyond the standard library."
@@ -336,7 +336,7 @@
         "Playhead"
        ],
        [
-        "pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagent",
+        "pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagents",
         "Leader"
        ]
       ]
@@ -352,7 +352,7 @@
         "Playhead"
        ],
        [
-        "rewindagent install",
+        "rewindagents install",
         "Rewind"
        ]
       ]
@@ -373,12 +373,12 @@
     ],
     [
      4,
-     497,
+     496,
      "Spool"
     ],
     [
      1266,
-     497,
+     496,
      "Spool"
     ],
     [
@@ -392,7 +392,7 @@
      "Record"
     ]
    ],
-   "sha256": "9f0e06be1566b6c44e903649deb9c2e0c8800e64ad98bb58bf8a1489dadeb085"
+   "sha256": "87ed1fd68c829fcf17a873a1acd900919fe9e296a81c91b351976bb87950004c"
   }
  ],
  "width": 1270

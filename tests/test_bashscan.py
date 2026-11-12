@@ -11,7 +11,7 @@ SRC = Path(__file__).resolve().parent.parent / "src"
 sys.path.insert(0, str(SRC))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from rewindagent import bashscan, hook, rewind, verify  # noqa: E402
+from rewindagents import bashscan, hook, rewind, verify  # noqa: E402
 from test_rewind import Agent, cli, git  # noqa: E402
 
 
@@ -73,7 +73,7 @@ class TestBashCheckpoints(unittest.TestCase):
 
     def test_no_pending_scans_left_behind(self):
         self.a.bash("sed", rewrite("notes.txt", "x"))
-        self.assertEqual(list(Path(self.d, ".rewindagent", "pending").iterdir()), [])
+        self.assertEqual(list(Path(self.d, ".rewindagents", "pending").iterdir()), [])
 
     def test_tool_use_id_pairs_identical_commands(self):
         inp = {"command": "./gen.sh"}
@@ -154,13 +154,13 @@ class TestBashLimits(unittest.TestCase):
 
 class TestReadmeMatchesCode(unittest.TestCase):
     def test_limits_and_skip_list_in_readme_are_the_real_ones(self):
-        import rewindagent
+        import rewindagents
         readme = Path(__file__).resolve().parent.parent.joinpath("README.md").read_text()
         self.assertIn(f"more than {bashscan.MAX_SCAN_FILES:,} files", readme)
         self.assertIn(f"Files over {bashscan.MAX_CHECKPOINT_BYTES // (1024 * 1024)} MB", readme)
         for d in bashscan.SKIP_DIRS:
             self.assertIn(f"`{d}`", readme)
-        self.assertIn(f"v{rewindagent.__version__},", readme)
+        self.assertIn(f"v{rewindagents.__version__},", readme)
 
 
 class TestRealHookProcess(unittest.TestCase):
@@ -174,7 +174,7 @@ class TestRealHookProcess(unittest.TestCase):
             def hook_call(event):
                 payload = {"session_id": "real", "cwd": d, "hook_event_name": event, "tool_name": "Bash",
                            "tool_input": {"command": cmd}, "tool_use_id": "toolu_1"}
-                p = subprocess.run([sys.executable, "-m", "rewindagent", "hook"], input=json.dumps(payload),
+                p = subprocess.run([sys.executable, "-m", "rewindagents", "hook"], input=json.dumps(payload),
                                    capture_output=True, text=True, cwd=d, env=env)
                 self.assertEqual((p.returncode, p.stdout, p.stderr), (0, "", ""))
             hook_call("PreToolUse")
@@ -182,7 +182,7 @@ class TestRealHookProcess(unittest.TestCase):
             hook_call("PostToolUse")
             self.assertEqual(Path(d, "app.py").read_text(), "x = 2\n")
             self.assertFalse(Path(d, "data.csv").exists())
-            p = subprocess.run([sys.executable, "-m", "rewindagent", "rewind", "0"], cwd=d, env=env,
+            p = subprocess.run([sys.executable, "-m", "rewindagents", "rewind", "0"], cwd=d, env=env,
                                capture_output=True, text=True)
             self.assertEqual(p.returncode, 0, p.stderr)
             self.assertEqual(Path(d, "app.py").read_text(), "x = 1\n")

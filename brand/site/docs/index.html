@@ -3,27 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Getting started: rewindagent</title>
-<meta name="description" content="Getting started with rewindagent: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, export, find a session, verify the log.">
-<link rel="canonical" href="https://johnbjoseph-cybersec.github.io/rewindagent/docs/">
+<title>Getting started: rewindagents</title>
+<meta name="description" content="Getting started with rewindagents: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, export, find a session, verify the log.">
+<link rel="canonical" href="https://johnbjoseph-cybersec.github.io/rewindagents/docs/">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="rewindagent">
-<meta property="og:title" content="Getting started: rewindagent">
-<meta property="og:description" content="Getting started with rewindagent: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, export, find a session, verify the log.">
-<meta property="og:url" content="https://johnbjoseph-cybersec.github.io/rewindagent/docs/">
-<meta property="og:image" content="https://johnbjoseph-cybersec.github.io/rewindagent/assets/social-preview-1280x640.png">
+<meta property="og:site_name" content="rewindagents">
+<meta property="og:title" content="Getting started: rewindagents">
+<meta property="og:description" content="Getting started with rewindagents: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, export, find a session, verify the log.">
+<meta property="og:url" content="https://johnbjoseph-cybersec.github.io/rewindagents/docs/">
+<meta property="og:image" content="https://johnbjoseph-cybersec.github.io/rewindagents/assets/social-preview-1280x640.png">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="640">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="../assets/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="stylesheet" href="../site.css">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "applicationCategory": "DeveloperApplication", "author": {"@type": "Person", "name": "John B Joseph"}, "codeRepository": "https://github.com/Johnbjoseph-cybersec/rewindagent", "description": "Getting started with rewindagent: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, export, find a session, verify the log.", "license": "https://github.com/Johnbjoseph-cybersec/rewindagent/blob/main/LICENSE", "name": "rewindagent", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "operatingSystem": "macOS, Linux", "softwareVersion": "0.0.7", "url": "https://johnbjoseph-cybersec.github.io/rewindagent/docs/"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "applicationCategory": "DeveloperApplication", "author": {"@type": "Person", "name": "John B Joseph"}, "codeRepository": "https://github.com/Johnbjoseph-cybersec/rewindagents", "description": "Getting started with rewindagents: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, export, find a session, verify the log.", "license": "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE", "name": "rewindagents", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "operatingSystem": "macOS, Linux", "softwareVersion": "0.0.7", "url": "https://johnbjoseph-cybersec.github.io/rewindagents/docs/"}</script>
 </head>
 <body>
 <header class="top"><div class="wrap">
-<a class="brand" href="../index.html" aria-label="rewindagent home"><img src="../assets/logo-wordmark.svg" alt="rewindagent" width="201" height="30"></a>
-<nav class="nav" aria-label="Site"><a href="../index.html#how">How it works</a><a href="../index.html#install">Install</a><a href="../pricing.html">Pricing</a><a href="../docs/" aria-current="page">Docs</a><a href="https://github.com/Johnbjoseph-cybersec/rewindagent">GitHub</a></nav>
+<a class="brand" href="../index.html" aria-label="rewindagents home"><img src="../assets/logo-wordmark.svg" alt="rewindagents" width="214" height="30"></a>
+<nav class="nav" aria-label="Site"><a href="../index.html#how">How it works</a><a href="../index.html#install">Install</a><a href="../pricing.html">Pricing</a><a href="../docs/" aria-current="page">Docs</a><a href="https://github.com/Johnbjoseph-cybersec/rewindagents">GitHub</a></nav>
 </div></header>
 <main>
 
@@ -36,33 +36,33 @@
 <article class="doc">
 <h2 id="install">Install</h2>
 <p>Python &gt;=3.10, standard library only. Tested on Python 3.15 on macOS. Not on PyPI yet, so install from the repository:</p>
-<pre class="term"><code><span class="l"><span class="p">$ </span>pipx install <span class="nb">git+https://</span><wbr><span class="nb">github.com/</span><wbr><span class="nb">Johnbjoseph-cybersec/</span><wbr><span class="nb">rewindagent</span></span>
+<pre class="term"><code><span class="l"><span class="p">$ </span>pipx install <span class="nb">git+https://</span><wbr><span class="nb">github.com/</span><wbr><span class="nb">Johnbjoseph-cybersec/</span><wbr><span class="nb">rewindagents</span></span>
 <span class="l"><span class="c"># or: pip install <span class="nb">git+https://</span><wbr><span class="nb">...</span></span></span>
-<span class="l"><span class="p">$ </span>rewindagent --version</span></code></pre>
+<span class="l"><span class="p">$ </span>rewindagents --version</span></code></pre>
 <p>The last command prints the version it installed:</p>
-<pre class="term"><code><span class="l"><span class="p">$ </span>rewindagent --version</span>
-<span class="l">rewindagent 0.0.7</span></code></pre>
-<p>Or from a clone, <code>pip install .</code>. Without installing, <code>PYTHONPATH=src python3 -m rewindagent</code> runs the same CLI from a clone; then the undo hint says <code>python3 -m rewindagent</code> instead of <code>rewindagent</code>.</p>
+<pre class="term"><code><span class="l"><span class="p">$ </span>rewindagents --version</span>
+<span class="l">rewindagents 0.0.7</span></code></pre>
+<p>Or from a clone, <code>pip install .</code>. Without installing, <code>PYTHONPATH=src python3 -m rewindagents</code> runs the same CLI from a clone; then the undo hint says <code>python3 -m rewindagents</code> instead of <code>rewindagents</code>.</p>
 
 <h2 id="hook">Add the hook</h2>
 <pre class="term"><code><span class="l"><span class="p">$ </span>cd /path/to/your/project</span>
 <span class="l"><span class="c"># adds the hook to .claude/settings.json in this project</span></span>
-<span class="l"><span class="p">$ </span>rewindagent install</span>
-<span class="l"><span class="p">$ </span>rewindagent install --settings ~/.claude/settings.json</span>
+<span class="l"><span class="p">$ </span>rewindagents install</span>
+<span class="l"><span class="p">$ </span>rewindagents install --settings ~/.claude/settings.json</span>
 <span class="l"><span class="c"># or for every project</span></span></code></pre>
-<p><code>install</code> adds a <code>PreToolUse</code> and a <code>PostToolUse</code> hook to the settings file, keeps everything already in it, and does nothing if the hook is already there. The command it writes names the Python that rewindagent was installed into by absolute path, so it runs whether or not a virtualenv is active. To remove the hook, delete those two entries from the settings file.</p>
+<p><code>install</code> adds a <code>PreToolUse</code> and a <code>PostToolUse</code> hook to the settings file, keeps everything already in it, and does nothing if the hook is already there. The command it writes names the Python that rewindagents was installed into by absolute path, so it runs whether or not a virtualenv is active. To remove the hook, delete those two entries from the settings file.</p>
 <pre class="term"><code><span class="l"><span class="c"># adds the hook to .codex/hooks.json in this project</span></span>
-<span class="l"><span class="p">$ </span>rewindagent install --agent codex</span>
+<span class="l"><span class="p">$ </span>rewindagents install --agent codex</span>
 <span class="l"><span class="c"># adds the hook to .cursor/hooks.json in this project</span></span>
-<span class="l"><span class="p">$ </span>rewindagent install --agent cursor</span>
-<span class="l"><span class="p">$ </span>rewindagent install --agent cursor --settings ~/.cursor/hooks.json</span>
+<span class="l"><span class="p">$ </span>rewindagents install --agent cursor</span>
+<span class="l"><span class="p">$ </span>rewindagents install --agent cursor --settings ~/.cursor/hooks.json</span>
 <span class="l"><span class="c"># or for every project</span></span></code></pre>
 <p>For Codex the file is <code>.codex/hooks.json</code>, in the same shape as Claude Code&#x27;s settings; Codex asks you to trust the hook once (<code>/hooks</code>) and remembers the trust by the hook&#x27;s hash. For Cursor the file is <code>.cursor/hooks.json</code> with a <code>preToolUse</code> and a <code>postToolUse</code> entry; because Cursor&#x27;s <code>preToolUse</code> is a permission hook that treats an empty answer as a failure, the hook prints <code>{"permission": "allow"}</code> before a call and <code>{}</code> after one, which changes nothing (a deny from another hook still wins). The Codex and Cursor hooks are tested with the payloads in the vendors&#x27; documentation and through the installed command, not yet in a live session.</p>
 
 <h2 id="first">A first session</h2>
 <p>The session behind the clip on the front page, as it ran. Every line below is what the command printed; <code>tests/test_demo.py</code> runs the same session and fails if a line changes.</p>
-<ol class="walk"><li><p>Ask Claude Code for anything in a project with the hook installed; here, 12 steps that add a timeout to a small service, then two steps that delete the tests and overwrite the config. <code>replay</code> lists every step with its number.</p><pre class="term"><code><span class="l"><span class="c"># a coding agent has been working in this repo; rewindagent recorded every step</span></span>
-<span class="l"><span class="p">$ </span>rewindagent replay</span>
+<ol class="walk"><li><p>Ask Claude Code for anything in a project with the hook installed; here, 12 steps that add a timeout to a small service, then two steps that delete the tests and overwrite the config. <code>replay</code> lists every step with its number.</p><pre class="term"><code><span class="l"><span class="c"># a coding agent has been working in this repo; rewindagents recorded every step</span></span>
+<span class="l"><span class="p">$ </span>rewindagents replay</span>
 <span class="l">    1  Read          README.md</span>
 <span class="l">    2  Read          app/config.py</span>
 <span class="l">    3  Edit          app/config.py  [1 checkpointed]</span>
@@ -83,13 +83,13 @@
 <span class="l"> M app/server.py</span>
 <span class="l"> D tests/test_config.py</span>
 <span class="l"> D tests/test_server.py</span></code></pre></li><li><p>Rewind to the last good step. Every restored file is named, and the rewind is itself a step, so the last line says how to undo it.</p><pre class="term"><code><span class="l"><span class="c"># put the files back the way they were right after step 12</span></span>
-<span class="l"><span class="p">$ </span>rewindagent rewind 12</span>
+<span class="l"><span class="p">$ </span>rewindagents rewind 12</span>
 <span class="l">session demo: rewind to step 12 of 14 (did change 4 files)</span>
 <span class="l"><span class="hit">  restore  tests/test_config.py</span></span>
 <span class="l"><span class="hit">  restore  tests/test_server.py</span></span>
 <span class="l"><span class="hit">  restore  tests/test_timeout.py</span></span>
 <span class="l"><span class="hit">  restore  app/config.py</span></span>
-<span class="l">  this rewind is step 15; undo it with: rewindagent rewind 14 --session demo</span></code></pre></li><li><p>git shows the first 12 steps kept and the tests back.</p><pre class="term"><code><span class="l"><span class="c"># the tests are back; the first 12 steps stay</span></span>
+<span class="l">  this rewind is step 15; undo it with: rewindagents rewind 14 --session demo</span></code></pre></li><li><p>git shows the first 12 steps kept and the tests back.</p><pre class="term"><code><span class="l"><span class="c"># the tests are back; the first 12 steps stay</span></span>
 <span class="l"><span class="p">$ </span>git status --short</span>
 <span class="l"> M README.md</span>
 <span class="l"> M app/config.py</span>
@@ -99,39 +99,39 @@
 <h2 id="recorded">What gets recorded</h2>
 <p>In each project the agent works in, with the hook installed:</p>
 <ul>
-<li>every tool call gets a <code>pre</code> record (tool and input) and a <code>post</code> record (tool and response) in <code>.rewindagent/log.jsonl</code>, in one hash chain. A response longer than 4,000 characters is cut, with the full length noted.</li>
-<li>in Claude Code, before <code>Write</code>, <code>Edit</code>, <code>MultiEdit</code>, <code>NotebookEdit</code>, the current bytes of the target file are copied to <code>.rewindagent/objects/&lt;sha256&gt;</code> and the hash goes into the <code>pre</code> record. A file that does not exist yet is recorded as absent. Files over 20 MB are noted and not copied.</li>
-<li>around every <code>Bash</code> call, the project&#x27;s files are saved before the command and scanned again after it; the <code>post</code> record checkpoints only the files that were changed, deleted or created. Copies are stored by SHA-256, and a stat cache in <code>.rewindagent/index.json</code> means only files whose size or modification time changed are read again.</li>
+<li>every tool call gets a <code>pre</code> record (tool and input) and a <code>post</code> record (tool and response) in <code>.rewindagents/log.jsonl</code>, in one hash chain. A response longer than 4,000 characters is cut, with the full length noted.</li>
+<li>in Claude Code, before <code>Write</code>, <code>Edit</code>, <code>MultiEdit</code>, <code>NotebookEdit</code>, the current bytes of the target file are copied to <code>.rewindagents/objects/&lt;sha256&gt;</code> and the hash goes into the <code>pre</code> record. A file that does not exist yet is recorded as absent. Files over 20 MB are noted and not copied.</li>
+<li>around every <code>Bash</code> call, the project&#x27;s files are saved before the command and scanned again after it; the <code>post</code> record checkpoints only the files that were changed, deleted or created. Copies are stored by SHA-256, and a stat cache in <code>.rewindagents/index.json</code> means only files whose size or modification time changed are read again.</li>
 <li>in Codex and Cursor, that same scan runs around every call except the tools their documentation names that cannot change files (Cursor: <code>Grep</code>, <code>Read</code>; Codex: <code>update_plan</code>), because the input of their edit tools is not documented and the hook never reads a file path out of those payloads.</li>
-<li><code>.rewindagent/</code> gets its own <code>.gitignore</code>, so the log and the copies stay out of your commits.</li>
+<li><code>.rewindagents/</code> gets its own <code>.gitignore</code>, so the log and the copies stay out of your commits.</li>
 </ul>
 <p>The hook never stops a call and never changes one. It prints nothing and always exits 0; any problem goes to stderr only.</p>
 
 <h2 id="replay">Replay and rewind</h2>
 <p>Run these from the project directory. They work on the latest session unless you pass <code>--session ID</code>.</p>
 <pre class="term"><code><span class="l"><span class="c"># one line per step: number, tool, file or command</span></span>
-<span class="l"><span class="p">$ </span>rewindagent replay</span>
+<span class="l"><span class="p">$ </span>rewindagents replay</span>
 <span class="l"><span class="c"># step 12 in full: input, checkpoints, result</span></span>
-<span class="l"><span class="p">$ </span>rewindagent replay --step 12</span>
+<span class="l"><span class="p">$ </span>rewindagents replay --step 12</span>
 <span class="l"><span class="c"># what would change</span></span>
-<span class="l"><span class="p">$ </span>rewindagent rewind 12 --dry-run</span>
+<span class="l"><span class="p">$ </span>rewindagents rewind 12 --dry-run</span>
 <span class="l"><span class="c"># files back to how they were right after step 12</span></span>
-<span class="l"><span class="p">$ </span>rewindagent rewind 12</span>
+<span class="l"><span class="p">$ </span>rewindagents rewind 12</span>
 <span class="l"><span class="c"># keep the current files, then rewind to step 12</span></span>
-<span class="l"><span class="p">$ </span>rewindagent branch 12 --name try2</span></code></pre>
+<span class="l"><span class="p">$ </span>rewindagents branch 12 --name try2</span></code></pre>
 <p><code>replay</code> prints one line per step: number, tool, file or command, and how many files the step checkpointed. <code>replay --step N</code> shows one step in full. <code>rewind N</code> puts back every file that a step after N changed and deletes the files those steps created; <code>rewind 0</code> undoes the whole session. Before writing anything it checks the hash chain and the SHA-256 of every stored copy: if the chain is broken it changes nothing, and a copy that no longer matches is reported and left as it is.</p>
-<p>A rewind is undoable. It first saves the current bytes of every file it will change and records itself as a new step, then prints <code>undo it with: rewindagent rewind &lt;step&gt; --session &lt;id&gt;</code>. In the session above, the rewind to step 12 of 14 became step 15, and undoing it is <code>rewind 14</code>.</p>
+<p>A rewind is undoable. It first saves the current bytes of every file it will change and records itself as a new step, then prints <code>undo it with: rewindagents rewind &lt;step&gt; --session &lt;id&gt;</code>. In the session above, the rewind to step 12 of 14 became step 15, and undoing it is <code>rewind 14</code>.</p>
 
 <h2 id="branch">Branch</h2>
-<p><code>branch N --name X</code> does what <code>rewind N</code> does and, in a git repository, first commits the whole current working tree to the branch <code>rewindagent/X</code>. It does this through a temporary index, so your <code>HEAD</code>, index and current branch stay as they were. Outside git, the current files are kept in the log only.</p>
+<p><code>branch N --name X</code> does what <code>rewind N</code> does and, in a git repository, first commits the whole current working tree to the branch <code>rewindagents/X</code>. It does this through a temporary index, so your <code>HEAD</code>, index and current branch stay as they were. Outside git, the current files are kept in the log only.</p>
 
 <h2 id="export">Export</h2>
-<pre class="term"><code><span class="l"><span class="c"># writes .rewindagent/replay-&lt;session&gt;.html</span></span>
-<span class="l"><span class="p">$ </span>rewindagent export</span>
+<pre class="term"><code><span class="l"><span class="c"># writes .rewindagents/replay-&lt;session&gt;.html</span></span>
+<span class="l"><span class="p">$ </span>rewindagents export</span>
 <span class="l"><span class="c"># a given session, to a given file</span></span>
-<span class="l"><span class="p">$ </span>rewindagent export --session abc --out replay.html</span>
+<span class="l"><span class="p">$ </span>rewindagents export --session abc --out replay.html</span>
 <span class="l"><span class="c"># steps, tools and paths only: no inputs, results or diffs</span></span>
-<span class="l"><span class="p">$ </span>rewindagent export --no-contents</span></code></pre>
+<span class="l"><span class="p">$ </span>rewindagents export --no-contents</span></code></pre>
 <p>One HTML file with the whole session: every step with its tool, input and result, and for every file a step checkpointed, the change that step made as a unified diff (the file before the step against the file after it: its next checkpoint in the session, or the file as it is now). Inline CSS only, no scripts, nothing fetched. Paths are shown relative to the project; where the project lives on disk is not in the page.</p>
 <ul>
 <li>A file over 256 KB on either side is described, not diffed. A diff longer than 400 lines is cut, with the count of lines left out. Binary files show their size before and after.</li>
@@ -141,48 +141,48 @@
 
 <h2 id="sessions">Find a session</h2>
 <pre class="term"><code><span class="l"><span class="c"># every session in the log: id, first and last time, steps, files touched</span></span>
-<span class="l"><span class="p">$ </span>rewindagent sessions</span>
+<span class="l"><span class="p">$ </span>rewindagents sessions</span>
 <span class="l"><span class="c"># only sessions with a step that mentions it, and those steps</span></span>
-<span class="l"><span class="p">$ </span>rewindagent sessions --grep config.py</span></code></pre>
+<span class="l"><span class="p">$ </span>rewindagents sessions --grep config.py</span></code></pre>
 <p>One line per session, in the order the sessions first wrote to the log: the session id, the local time of its first and last record, the number of steps (with how many of them are rewinds or branches) and the files it touched; a second line names the first 5 files and counts the rest. The session that wrote the last record is marked <code>(latest)</code>.</p>
 <p><code>--grep TEXT</code> keeps the sessions with a step whose <code>replay</code> line or checkpointed path contains TEXT, in any case, and lists those steps with their numbers. Exit code 1 if no session matches.</p>
 
 <h2 id="verify">Verify</h2>
-<pre class="term"><code><span class="l"><span class="p">$ </span>rewindagent verify --head &lt;pinned-hash&gt;</span></code></pre>
-<p><code>verify</code> checks every record against the one before it and names the first bad record. A hash chain cannot tell on its own that records were cut off the end or that the whole file was rewritten and re-hashed; <code>rewindagent head</code> prints the current head hash, and <code>verify --head</code> checks against a copy you pinned somewhere the agent cannot write.</p>
+<pre class="term"><code><span class="l"><span class="p">$ </span>rewindagents verify --head &lt;pinned-hash&gt;</span></code></pre>
+<p><code>verify</code> checks every record against the one before it and names the first bad record. A hash chain cannot tell on its own that records were cut off the end or that the whole file was rewritten and re-hashed; <code>rewindagents head</code> prints the current head hash, and <code>verify --head</code> checks against a copy you pinned somewhere the agent cannot write.</p>
 <p>The recorder also works on its own, without the hook:</p>
-<pre class="term"><code><span class="l"><span class="p">$ </span>echo &#x27;{&quot;tool&quot;: &quot;Bash&quot;, &quot;args&quot;: {&quot;command&quot;: &quot;ls&quot;}}&#x27; | rewindagent record --session s1</span>
+<pre class="term"><code><span class="l"><span class="p">$ </span>echo &#x27;{&quot;tool&quot;: &quot;Bash&quot;, &quot;args&quot;: {&quot;command&quot;: &quot;ls&quot;}}&#x27; | rewindagents record --session s1</span>
 <span class="l"><span class="c"># OK: 1 records, chain intact</span></span>
-<span class="l"><span class="p">$ </span>rewindagent verify</span>
+<span class="l"><span class="p">$ </span>rewindagents verify</span>
 <span class="l"><span class="c"># list recorded calls</span></span>
-<span class="l"><span class="p">$ </span>rewindagent show</span>
+<span class="l"><span class="p">$ </span>rewindagents show</span>
 <span class="l"><span class="c"># current head hash</span></span>
-<span class="l"><span class="p">$ </span>rewindagent head</span></code></pre>
+<span class="l"><span class="p">$ </span>rewindagents head</span></code></pre>
 
 <h2 id="limits">Limits</h2>
 <ul>
 <li>Only the project directory is scanned, saved and restored. A command that changes files elsewhere is recorded, not saved, and files outside the project are reported and left alone.</li>
-<li>In a git repository the scan follows <code>git ls-files --cached --others --exclude-standard</code>, so git-ignored files are not saved. Outside git, every file under the project except under <code>.git</code>, <code>.rewindagent</code>, <code>.venv</code>, <code>__pycache__</code>, <code>node_modules</code>, <code>venv</code>.</li>
+<li>In a git repository the scan follows <code>git ls-files --cached --others --exclude-standard</code>, so git-ignored files are not saved. Outside git, every file under the project except under <code>.git</code>, <code>.rewindagents</code>, <code>.venv</code>, <code>__pycache__</code>, <code>node_modules</code>, <code>venv</code>.</li>
 <li>Symlinks are not saved. Files over 20 MB are not copied. A project with more than 20,000 files is not scanned around <code>Bash</code> commands; the call is still recorded and <code>rewind</code> reports the step as not scanned.</li>
 <li>Directories created by later steps stay, empty, after a rewind. If anything could not be restored, <code>rewind</code> lists it and exits 1.</li>
 <li>Appends to the log are locked with <code>fcntl</code>, so it needs a Unix. The Claude Code hook has run in real sessions; the Codex and Cursor hooks are tested with the documented payloads, not yet in a live session.</li>
 </ul>
 
 <h2 id="remove">Remove it</h2>
-<p>Delete the two hook entries from the file you installed into, delete <code>.rewindagent/</code> in the project, and uninstall the package (<code>pipx uninstall rewindagent</code> or <code>pip uninstall rewindagent</code>). Nothing else was created.</p>
+<p>Delete the two hook entries from the file you installed into, delete <code>.rewindagents/</code> in the project, and uninstall the package (<code>pipx uninstall rewindagents</code> or <code>pip uninstall rewindagents</code>). Nothing else was created.</p>
 
 <h2 id="tests">Tests</h2>
 <pre class="term"><code><span class="l"><span class="p">$ </span>python3 -m unittest discover -s tests -v</span></code></pre>
-<p>That runs against the source tree and skips the tests of the installed command. <code>.fire-test-cmd</code> in the repository holds the full command: it builds a venv, installs the package into it and runs every test, including the ones that drive the installed <code>rewindagent</code> binary, replay the session above, and rebuild this site byte for byte.</p>
+<p>That runs against the source tree and skips the tests of the installed command. <code>.fire-test-cmd</code> in the repository holds the full command: it builds a venv, installs the package into it and runs every test, including the ones that drive the installed <code>rewindagents</code> binary, replay the session above, and rebuild this site byte for byte.</p>
 </article>
 </div>
 </div></section>
 
 </main>
 <footer class="foot"><div class="wrap">
-<a class="brand" href="../index.html" aria-label="rewindagent home"><img src="../assets/logo-wordmark-reverse.svg" alt="rewindagent" width="174" height="26"></a>
+<a class="brand" href="../index.html" aria-label="rewindagents home"><img src="../assets/logo-wordmark-reverse.svg" alt="rewindagents" width="186" height="26"></a>
 <span class="credit">made by John B Joseph</span>
-<nav aria-label="Footer"><a href="../docs/">Docs</a><a href="../pricing.html">Pricing</a><a href="https://github.com/Johnbjoseph-cybersec/rewindagent">GitHub</a><a href="https://github.com/Johnbjoseph-cybersec/rewindagent/blob/main/LICENSE">Apache-2.0 licence</a></nav>
+<nav aria-label="Footer"><a href="../docs/">Docs</a><a href="../pricing.html">Pricing</a><a href="https://github.com/Johnbjoseph-cybersec/rewindagents">GitHub</a><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE">Apache-2.0 licence</a></nav>
 <span class="note">This site is static: no scripts, no cookies, no analytics.</span>
 </div></footer>
 </body>

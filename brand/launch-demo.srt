@@ -1,16 +1,16 @@
 1
-00:00:00,400 --> 00:00:04,600
-a coding agent has been working in this repo; rewindagent recorded every step
+00:00:00,400 --> 00:00:04,680
+a coding agent has been working in this repo; rewindagents recorded every step
 
 2
-00:00:04,600 --> 00:00:07,880
+00:00:04,680 --> 00:00:07,960
 its last two steps deleted the tests and overwrote the config
 
 3
-00:00:07,880 --> 00:00:12,120
+00:00:07,960 --> 00:00:12,200
 put the files back the way they were right after step 12
 
 4
-00:00:12,120 --> 00:00:16,600
+00:00:12,200 --> 00:00:16,680
 the tests are back; the first 12 steps stay
 

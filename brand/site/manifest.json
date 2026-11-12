@@ -32,46 +32,46 @@
   },
   "blocks": {
    "agents": [
-    "rewindagent install --agent codex      # adds the hook to .codex/hooks.json in this project",
-    "rewindagent install --agent cursor     # adds the hook to .cursor/hooks.json in this project",
-    "rewindagent install --agent cursor --settings ~/.cursor/hooks.json   # or for every project"
+    "rewindagents install --agent codex      # adds the hook to .codex/hooks.json in this project",
+    "rewindagents install --agent cursor     # adds the hook to .cursor/hooks.json in this project",
+    "rewindagents install --agent cursor --settings ~/.cursor/hooks.json   # or for every project"
    ],
    "export": [
-    "rewindagent export                                  # writes .rewindagent/replay-<session>.html",
-    "rewindagent export --session abc --out replay.html  # a given session, to a given file",
-    "rewindagent export --no-contents                    # steps, tools and paths only: no inputs, results or diffs"
+    "rewindagents export                                  # writes .rewindagents/replay-<session>.html",
+    "rewindagents export --session abc --out replay.html  # a given session, to a given file",
+    "rewindagents export --no-contents                    # steps, tools and paths only: no inputs, results or diffs"
    ],
    "hook": [
     "cd /path/to/your/project",
-    "rewindagent install            # adds the hook to .claude/settings.json in this project",
-    "rewindagent install --settings ~/.claude/settings.json   # or for every project"
+    "rewindagents install            # adds the hook to .claude/settings.json in this project",
+    "rewindagents install --settings ~/.claude/settings.json   # or for every project"
    ],
    "install": [
-    "pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagent     # or: pip install git+https://...",
-    "rewindagent --version"
+    "pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagents     # or: pip install git+https://...",
+    "rewindagents --version"
    ],
    "record": [
-    "echo '{\"tool\": \"Bash\", \"args\": {\"command\": \"ls\"}}' | rewindagent record --session s1",
-    "rewindagent verify     # OK: 1 records, chain intact",
-    "rewindagent show       # list recorded calls",
-    "rewindagent head       # current head hash"
+    "echo '{\"tool\": \"Bash\", \"args\": {\"command\": \"ls\"}}' | rewindagents record --session s1",
+    "rewindagents verify     # OK: 1 records, chain intact",
+    "rewindagents show       # list recorded calls",
+    "rewindagents head       # current head hash"
    ],
    "replay": [
-    "rewindagent replay              # one line per step: number, tool, file or command",
-    "rewindagent replay --step 12    # step 12 in full: input, checkpoints, result",
-    "rewindagent rewind 12 --dry-run # what would change",
-    "rewindagent rewind 12           # files back to how they were right after step 12",
-    "rewindagent branch 12 --name try2   # keep the current files, then rewind to step 12"
+    "rewindagents replay              # one line per step: number, tool, file or command",
+    "rewindagents replay --step 12    # step 12 in full: input, checkpoints, result",
+    "rewindagents rewind 12 --dry-run # what would change",
+    "rewindagents rewind 12           # files back to how they were right after step 12",
+    "rewindagents branch 12 --name try2   # keep the current files, then rewind to step 12"
    ],
    "sessions": [
-    "rewindagent sessions                     # every session in the log: id, first and last time, steps, files touched",
-    "rewindagent sessions --grep config.py    # only sessions with a step that mentions it, and those steps"
+    "rewindagents sessions                     # every session in the log: id, first and last time, steps, files touched",
+    "rewindagents sessions --grep config.py    # only sessions with a step that mentions it, and those steps"
    ],
    "tests": [
     "python3 -m unittest discover -s tests -v"
    ],
    "verify": [
-    "rewindagent verify --head <pinned-hash>"
+    "rewindagents verify --head <pinned-hash>"
    ]
   },
   "diff_kb": 256,
@@ -84,9 +84,9 @@
    "NotebookEdit"
   ],
   "gif": {
-   "frames": 65,
+   "frames": 66,
    "height": 675,
-   "seconds": 16.64,
+   "seconds": 16.72,
    "width": 1200
   },
   "good_step": 12,
@@ -96,7 +96,7 @@
   "show_files": 5,
   "skip_dirs": [
    ".git",
-   ".rewindagent",
+   ".rewindagents",
    ".venv",
    "__pycache__",
    "node_modules",
@@ -110,7 +110,7 @@
  "hero": [
   [
    "cmd",
-   "rewindagent replay"
+   "rewindagents replay"
   ],
   [
    "gap",
@@ -134,7 +134,7 @@
   ],
   [
    "cmd",
-   "rewindagent rewind 12"
+   "rewindagents rewind 12"
   ],
   [
    "out",
@@ -158,7 +158,7 @@
   ],
   [
    "out",
-   "  this rewind is step 15; undo it with: rewindagent rewind 14 --session demo"
+   "  this rewind is step 15; undo it with: rewindagents rewind 14 --session demo"
   ]
  ],
  "pages": [

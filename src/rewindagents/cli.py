@@ -1,4 +1,4 @@
-"""rewindagent command line: record, verify, head, show, hook, install, uninstall, replay, rewind, branch,
+"""rewindagents command line: record, verify, head, show, hook, install, uninstall, replay, rewind, branch,
 export, sessions, bundle, import, gc."""
 from __future__ import annotations
 
@@ -12,13 +12,13 @@ from . import __version__, agents, bundle, export, gc, hook, log, rewind, sessio
 
 def invocation() -> str:
     """How the user runs us: the console command once installed, the module from a clone."""
-    return "rewindagent" if hook.installed() else "python3 -m rewindagent"
+    return "rewindagents" if hook.installed() else "python3 -m rewindagents"
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(prog="rewindagent")
-    ap.add_argument("--version", action="version", version=f"rewindagent {__version__}")
-    ap.add_argument("--log", default=".rewindagent/log.jsonl", help="log file (default: %(default)s)")
+    ap = argparse.ArgumentParser(prog="rewindagents")
+    ap.add_argument("--version", action="version", version=f"rewindagents {__version__}")
+    ap.add_argument("--log", default=".rewindagents/log.jsonl", help="log file (default: %(default)s)")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     r = sub.add_parser("record", help="append one tool call, read as JSON from stdin")
@@ -50,11 +50,11 @@ def main(argv: list[str] | None = None) -> int:
     rw.add_argument("--dry-run", action="store_true", help="print what would change, change nothing")
     br = sub.add_parser("branch", help="keep the current files as a branch, then rewind to step N")
     br.add_argument("step", type=int)
-    br.add_argument("--name", required=True, help="branch name (git: rewindagent/<name>)")
+    br.add_argument("--name", required=True, help="branch name (git: rewindagents/<name>)")
     br.add_argument("--session", help="default: the session that wrote the last record")
     ex = sub.add_parser("export", help="write a session as one self-contained HTML page (steps, inputs, results, file diffs)")
     ex.add_argument("--session", help="default: the session that wrote the last record")
-    ex.add_argument("--out", help="file to write (default: .rewindagent/replay-<session>.html)")
+    ex.add_argument("--out", help="file to write (default: .rewindagents/replay-<session>.html)")
     ex.add_argument("--no-contents", action="store_true",
                     help="leave inputs, results and diffs out: steps, tools and paths only")
     se = sub.add_parser("sessions", help="list every session in the log: id, first and last time, steps, files touched")
@@ -89,13 +89,13 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if a.cmd in ("verify", "show", "replay", "rewind", "branch", "export", "sessions", "bundle", "gc") \
             and not Path(a.log).exists():
-        print(f"rewindagent: no log at {a.log}", file=sys.stderr)
+        print(f"rewindagents: no log at {a.log}", file=sys.stderr)
         return 2
     if a.cmd == "gc":
         try:
             d = gc.gc(a.log, dry_run=a.dry_run, drop_older_than=a.drop_pending_older_than)
         except gc.GcError as e:
-            print(f"rewindagent: {e}", file=sys.stderr)
+            print(f"rewindagents: {e}", file=sys.stderr)
             return 1
         for line in gc.lines(d):
             print(line)
@@ -108,7 +108,7 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 d = bundle.import_bundle(a.file, a.log)
         except bundle.BundleError as e:
-            print(f"rewindagent: {e}", file=sys.stderr)
+            print(f"rewindagents: {e}", file=sys.stderr)
             return 1
         if a.cmd == "bundle":
             print(f"wrote {rewind.relative(d['out'], root)}: session {d['session']}, {d['steps']} steps, "
@@ -126,19 +126,19 @@ def main(argv: list[str] | None = None) -> int:
         for line in sessions.lines(found, root=rewind.project_root(a.log)):
             print(line)
         if a.grep and not found:
-            print(f"rewindagent: no session mentions {a.grep!r}", file=sys.stderr)
+            print(f"rewindagents: no session mentions {a.grep!r}", file=sys.stderr)
             return 1
         return 0
     if a.cmd == "export":
         try:
             d = export.export(a.log, a.session, a.out, contents=not a.no_contents)
         except export.ExportError as e:
-            print(f"rewindagent: {e}", file=sys.stderr)
+            print(f"rewindagents: {e}", file=sys.stderr)
             return 1
         print(f"wrote {rewind.relative(d['out'], rewind.project_root(a.log))}: session {d['session']}, "
               f"{len(d['steps'])} steps, {d['bytes']:,} bytes")
         if not d["chain_ok"]:
-            print(f"rewindagent: the log does not verify ({d['chain_msg']}); the page says so", file=sys.stderr)
+            print(f"rewindagents: the log does not verify ({d['chain_msg']}); the page says so", file=sys.stderr)
             return 1
         return 0
     if a.cmd in ("rewind", "branch"):
@@ -148,7 +148,7 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 p = rewind.branch(a.log, a.step, a.name, a.session)
         except rewind.RewindError as e:
-            print(f"rewindagent: {e}", file=sys.stderr)
+            print(f"rewindagents: {e}", file=sys.stderr)
             return 1
         _report(p, dry_run=getattr(a, "dry_run", False), root=rewind.project_root(a.log))
         # README: "If anything could not be restored, the exit code is 1" - an unscanned step counts.
@@ -157,10 +157,10 @@ def main(argv: list[str] | None = None) -> int:
         try:
             call = json.load(sys.stdin)
         except ValueError as e:
-            print(f"rewindagent: stdin is not JSON: {e}", file=sys.stderr)
+            print(f"rewindagents: stdin is not JSON: {e}", file=sys.stderr)
             return 2
         if not isinstance(call, dict) or "tool" not in call:
-            print("rewindagent: stdin must be an object with a 'tool' key", file=sys.stderr)
+            print("rewindagents: stdin must be an object with a 'tool' key", file=sys.stderr)
             return 2
         rec = log.Recorder(a.log).record(a.session, call["tool"], call.get("args"), call.get("result"),
                                          actor=call.get("actor", "agent"))
@@ -188,7 +188,7 @@ def _replay(log_path: str, session: str | None, step: int | None) -> int:
             print(f"{s['step']:>5}  {s['tool']:<12}  {rewind.summary(s, root=root)}{mark}")
         return 0
     if not 1 <= step <= len(all_steps):
-        print(f"rewindagent: step {step} is out of range (1-{len(all_steps)})", file=sys.stderr)
+        print(f"rewindagents: step {step} is out of range (1-{len(all_steps)})", file=sys.stderr)
         return 2
     print(json.dumps(all_steps[step - 1], indent=2, ensure_ascii=False, default=str))
     return 0
@@ -206,7 +206,7 @@ def _report(p: dict, dry_run: bool, root) -> None:
         print(f"  CANNOT   {rewind.relative(path, root)}: {why}")
     if p.get("branch"):
         b = p["branch"]
-        where = f"git branch {b['git_ref']} ({b['commit'][:12]})" if b["git_ref"] else "the rewindagent log only (not a git repo)"
+        where = f"git branch {b['git_ref']} ({b['commit'][:12]})" if b["git_ref"] else "the rewindagents log only (not a git repo)"
         print(f"  previous files kept in {where}")
     if p.get("record"):
         print(f"  this {('branch' if p.get('branch') else 'rewind')} is step {p['steps'] + 1}; "

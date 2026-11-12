@@ -17,19 +17,19 @@ from html.parser import HTMLParser
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BRAND = os.path.join(ROOT, "brand")
 SITE = os.path.join(BRAND, "site")
-SRC = os.path.join(ROOT, "src", "rewindagent")
+SRC = os.path.join(ROOT, "src", "rewindagents")
 sys.path.insert(0, os.path.join(ROOT, "src"))
 sys.path.insert(0, BRAND)
 
 from contrast_check import PALETTE  # noqa: E402
-import rewindagent  # noqa: E402
-from rewindagent import agents, bashscan, export, hook  # noqa: E402
+import rewindagents  # noqa: E402
+from rewindagents import agents, bashscan, export, hook  # noqa: E402
 
 PAGES = ["index.html", "pricing.html", "docs/index.html"]
 SKIP_DIRS = {".git", ".venv", ".brandcache", "node_modules", "__pycache__", "build", "dist", "assets", "frames", "fonts"}
 # A hostname that would tie the product to a domain nobody has bought (FIRE, 2026-11-11). github.io is the one
 # address in use, and it may appear only in config.json and in the pages built from it.
-PRODUCT_HOST = re.compile(r"rewindagent\.(com|dev|io|app|org|net|sh|co|ai)\b|[\w.-]+\.github\.io", re.I)
+PRODUCT_HOST = re.compile(r"rewindagents\.(com|dev|io|app|org|net|sh|co|ai)\b|[\w.-]+\.github\.io", re.I)
 HOST_ALLOWED = {"brand/site/config.json", "brand/site/manifest.json", "tests/test_site.py"} | {"brand/site/" + p for p in PAGES}
 THIRD_PARTY = ("https://schema.org",)
 BANNED = re.compile(r"revolutionary|seamless|unleash|AI-powered|game-changer|secure|protect|defend|magic|"
@@ -132,7 +132,7 @@ class TestSite(unittest.TestCase):
     def test_site_url_lives_in_config_only(self):
         cfg = config()
         self.assertTrue(cfg["site_url"].startswith("https://"), cfg["site_url"])
-        self.assertTrue(cfg["site_url"].endswith("/rewindagent/"), cfg["site_url"])
+        self.assertTrue(cfg["site_url"].endswith("/rewindagents/"), cfg["site_url"])
         self.assertIsNone(cfg["checkout_url"], "checkout_url must stay null until a Polar product exists")
         for rel, text in repo_text_files():
             if rel in HOST_ALLOWED:
@@ -214,7 +214,7 @@ class TestSite(unittest.TestCase):
         hits = [t for k, t in m["hero"] if k == "hit"]
         self.assertEqual(len(hits), 4)
         self.assertTrue(all(t.startswith("  restore") for t in hits), hits)
-        self.assertTrue(any("undo it with: rewindagent rewind" in t for _, t in m["hero"]))
+        self.assertTrue(any("undo it with: rewindagents rewind" in t for _, t in m["hero"]))
         index = read("index.html")
         for _, text in m["hero"]:
             self.assertIn(text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"), index, text)
@@ -226,7 +226,7 @@ class TestSite(unittest.TestCase):
 
     def test_numbers_come_from_the_code(self):
         f = manifest()["facts"]
-        self.assertEqual(f["version"], rewindagent.__version__)
+        self.assertEqual(f["version"], rewindagents.__version__)
         self.assertEqual(f["result_chars"], hook.MAX_RESULT_CHARS)
         self.assertEqual(f["file_mb"] * 1024 * 1024, hook.MAX_CHECKPOINT_BYTES)
         self.assertEqual(f["scan_files"], bashscan.MAX_SCAN_FILES)
@@ -241,7 +241,7 @@ class TestSite(unittest.TestCase):
             self.assertIn("%d lines" % export.MAX_DIFF_LINES, page)
             for d in bashscan.SKIP_DIRS:
                 self.assertIn(d, page)
-        self.assertIn("v%s" % rewindagent.__version__, index)
+        self.assertIn("v%s" % rewindagents.__version__, index)
         with open(os.path.join(ROOT, "pyproject.toml"), encoding="utf-8") as fh:
             self.assertIn('requires-python = "%s"' % f["py_req"], fh.read())
 
@@ -259,7 +259,7 @@ class TestSite(unittest.TestCase):
                     if not row.startswith('<span class="l"><span class="p">$ </span>'):
                         continue
                     cmd = unesc(re.sub(r"<[^>]+>", "", row)[2:])
-                    if cmd in beat_commands or cmd == "rewindagent --version":
+                    if cmd in beat_commands or cmd == "rewindagents --version":
                         continue
                     # the README's trailing comment sits on the row before (describes) or after (alternative)
                     near = [unesc(re.sub(r"<[^>]+>", "", rows[j])) for j in (i - 1, i + 1)
@@ -267,7 +267,7 @@ class TestSite(unittest.TestCase):
                     ok = cmd in readme_lines or any(ln.startswith(cmd) and ln.endswith(c) for ln in readme_lines for c in near)
                     self.assertTrue(ok, "%s: command not in README: %r" % (p, cmd))
         # the one output line not from the session is the version line, and it is what the binary prints
-        self.assertIn("rewindagent %s" % rewindagent.__version__, text_of("docs/index.html"))
+        self.assertIn("rewindagents %s" % rewindagents.__version__, text_of("docs/index.html"))
 
     def test_planned_items_are_brand_md_phrases_and_nothing_is_for_sale(self):
         build = load_build()

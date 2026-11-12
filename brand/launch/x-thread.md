@@ -1,4 +1,4 @@
-# rewindagent launch thread for X
+# rewindagents launch thread for X
 
 Draft for launch day; not posted. One section per post, in order. Fill the addresses with
 `python3 brand/launch/fill.py x-thread.md`. tests/test_launch.py counts each post at 280 characters with every
@@ -10,7 +10,7 @@ In this recorded session, the agent's last two steps delete the tests and overwr
 
 One command puts the four files back.
 
-rewindagent: Ctrl+Z for AI coding agents. Record, replay, rewind. Open source, Apache-2.0.
+rewindagents: Ctrl+Z for AI coding agents. Record, replay, rewind. Open source, Apache-2.0.
 
 {repo_url}
 
@@ -22,9 +22,9 @@ Git-ignored files, symlinks and files over 20 MB are not copied.
 
 ## Post 3
 
-rewindagent replay lists the session, one line per step.
+rewindagents replay lists the session, one line per step.
 
-rewindagent rewind 12 puts the files back the way they were right after step 12.
+rewindagents rewind 12 puts the files back the way they were right after step 12.
 
 The rewind is a step too, so it prints the command that undoes it.
 
@@ -44,6 +44,6 @@ Not on PyPI yet.
 
 ## Post 6
 
-Install from the repository with pipx, then run rewindagent install in your project.
+Install from the repository with pipx, then run rewindagents install in your project.
 
 Docs and the full clip: {site_url}

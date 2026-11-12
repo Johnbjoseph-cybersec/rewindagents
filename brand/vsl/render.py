@@ -72,7 +72,7 @@ LOUDNESS = "loudnorm=I=-16:TP=-1.5:LRA=7"
 
 # Lines on screen that are commands (typed at a prompt) and lines that are terminal output; anything else in a
 # terminal shot is a note set under or beside the panel. Same patterns as tests/test_vsl.py, plus `cd`.
-COMMAND = re.compile(r"^(rewindagent|python3 -m rewindagent|pipx|pip|git|echo|cd)\b")
+COMMAND = re.compile(r"^(rewindagents|python3 -m rewindagents|pipx|pip|git|echo|cd)\b")
 OUTPUT = re.compile(r"^\s*(\d+\s+(Read|Edit|Write|Bash|MultiEdit|NotebookEdit)\b|restore\s|session \w+: rewind|"
                     r"this rewind is step|[ MD?]{2,3}\S)")
 
@@ -118,7 +118,7 @@ DIRECTION = {
         "b05": dict(kind="term", stagger=True, accent=[[None, [1]], [None, [1, 2]], [None, [1, 2, 3]],
                                                        [None, [1, 2, 3, 4]]]),
         "b06": dict(kind="term", ruler=(15, 12), extra_out=["  this rewind is step 15; undo it with: "
-                                                            "rewindagent rewind 14 --session demo"],
+                                                            "rewindagents rewind 14 --session demo"],
                     accent=[[None, ["extra0"]]]),
         "b07": dict(kind="page", accent_row=0, tape_rows=[1]),
         "b08": dict(kind="end"),
@@ -400,7 +400,7 @@ def draw_panel(cv, kit, L, p, shot, t, side):
     k = tb * 0.45 / lg.MARK_H
     cv.add(lg.place(lg.mark_shapes(lg.THEMES["dark"], mono=C["Leader"]), x + 24, y + (tb - lg.MARK_H * k) / 2, k))
     nsize = tb * 0.42
-    cv.text(kit.disp, "rewindagent", nsize, x + 24 + 16 * k + 12, y + (tb + kit.disp.cap(nsize)) / 2, "Leader",
+    cv.text(kit.disp, "rewindagents", nsize, x + 24 + 16 * k + 12, y + (tb + kit.disp.cap(nsize)) / 2, "Leader",
             tracking=-0.02)
     mono, size, lh = kit.mono, L["MONO"], L["LH"]
     pad = pad_of(L)
@@ -735,7 +735,7 @@ def render_video(kit, video, cfg, cache):
         os.symlink(os.path.join(fdir, uniq[u][:-4] + ".png"), os.path.join(sdir, "%05d.png" % f))
 
     beat_starts = [s["start"] for s in p["shots"]]
-    sweeps = [ln["typed"] + ENTER_MS for ln in p["lines"] if ln["kind"] == "cmd" and ln["text"].startswith("rewindagent rewind")]
+    sweeps = [ln["typed"] + ENTER_MS for ln in p["lines"] if ln["kind"] == "cmd" and ln["text"].startswith("rewindagents rewind")]
     wav = os.path.join(fdir, "score.wav")
     score(total, beat_starts, sweeps, wav)
     mp4 = os.path.join(BRAND, name + ".mp4")

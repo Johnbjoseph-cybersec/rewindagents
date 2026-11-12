@@ -25,7 +25,7 @@ CAPTION_LINES = 2
 PLACEHOLDERS = ("{site_url}", "{repo_url}")
 PROMISE = "Ctrl+Z for AI coding agents: record, replay, rewind."  # BRAND.md "One-line promise", verbatim
 CREDIT = "made by John B Joseph"
-END_CARD = ["rewindagent", PROMISE, "{site_url}", CREDIT]
+END_CARD = ["rewindagents", PROMISE, "{site_url}", CREDIT]
 
 
 def read(*parts):

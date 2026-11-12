@@ -9,8 +9,8 @@ from tempfile import TemporaryDirectory
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from rewindagent import GENESIS, Recorder, head, read, verify  # noqa: E402
-from rewindagent.cli import main  # noqa: E402
+from rewindagents import GENESIS, Recorder, head, read, verify  # noqa: E402
+from rewindagents.cli import main  # noqa: E402
 
 
 def _write_many(path, worker, count):
@@ -71,7 +71,7 @@ class LogTest(unittest.TestCase):
         rec = json.loads(lines[0])
         rec["args"] = {"command": "pwd"}
         rec.pop("hash")
-        from rewindagent.log import _digest
+        from rewindagents.log import _digest
         rec["hash"] = _digest(rec)
         lines[0] = json.dumps(rec, sort_keys=True)
         self.write(lines)

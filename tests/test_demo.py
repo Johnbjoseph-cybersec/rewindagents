@@ -1,6 +1,6 @@
 """Demo GIF (RB2b): the file is a looping GIF of the stated size under 20 s, and every command and every
 line of output it shows is what the CLI and git print today for the same session. Stdlib only; the fonts
-and the renderer are not needed. With REWINDAGENT_BIN set (.fire-test-cmd sets it) the rewind the clip
+and the renderer are not needed. With REWINDAGENTS_BIN set (.fire-test-cmd sets it) the rewind the clip
 shows is also run through the installed binary, undo hint included."""
 import json
 import os
@@ -19,8 +19,8 @@ sys.path.insert(0, os.path.join(ROOT, "src"))
 sys.path.insert(0, BRAND)
 sys.path.insert(0, DEMO)
 
-import rewindagent  # noqa: E402
-from rewindagent import cli  # noqa: E402
+import rewindagents  # noqa: E402
+from rewindagents import cli  # noqa: E402
 from contrast_check import PALETTE  # noqa: E402
 from gifinfo import info  # noqa: E402
 import scenario  # noqa: E402
@@ -61,14 +61,14 @@ class TestDemoGif(unittest.TestCase):
             self.assertIn(PALETTE[name].upper(), colors, name)
 
     def test_the_gif_shows_the_current_version(self):
-        self.assertEqual(manifest()["version"], rewindagent.__version__)
+        self.assertEqual(manifest()["version"], rewindagents.__version__)
 
     def test_every_shown_command_replays_exactly(self):
         # The same project, the same fourteen agent steps through the hook, the same four commands:
-        # output must match to the byte. The clip types `rewindagent ...`, so the undo hint it shows is the
+        # output must match to the byte. The clip types `rewindagents ...`, so the undo hint it shows is the
         # installed command's; this source-tree run says so through the same function.
         m = manifest()
-        self.assertEqual(m["invocation"], "rewindagent")
+        self.assertEqual(m["invocation"], "rewindagents")
         self.assertEqual(len(m["beats"]), len(scenario.SHOWN))
         with TemporaryDirectory() as d, mock.patch.object(cli, "invocation", lambda: m["invocation"]):
             beats = scenario.play(d)
@@ -85,7 +85,7 @@ class TestDemoGif(unittest.TestCase):
         n, good = len(scenario.STEPS), scenario.GOOD_STEP
         self.assertEqual((m["steps"], m["good_step"]), (n, good))
         self.assertEqual([b["command"] for b in m["beats"]],
-                         ["rewindagent replay", "git status --short", "rewindagent rewind %d" % good,
+                         ["rewindagents replay", "git status --short", "rewindagents rewind %d" % good,
                           "git status --short"])
         replay, before, rw, after = (lines(b["output"]) for b in m["beats"])
         self.assertEqual(len(replay), n, "replay lists every agent step")
@@ -101,7 +101,7 @@ class TestDemoGif(unittest.TestCase):
         self.assertEqual(sorted(restored), ["app/config.py", "tests/test_config.py", "tests/test_server.py",
                                             "tests/test_timeout.py"])
         self.assertEqual(m["beats"][2]["accent_rows"], [i for i, l in enumerate(rw) if l.startswith("  restore")])
-        self.assertEqual(rw[-1], "  this rewind is step %d; undo it with: rewindagent rewind %d --session %s"
+        self.assertEqual(rw[-1], "  this rewind is step %d; undo it with: rewindagents rewind %d --session %s"
                          % (n + 1, n, m["session"]))
         self.assertFalse(any(l.startswith(" D ") for l in after), after)
         self.assertIn("?? tests/test_timeout.py", after)
@@ -133,13 +133,13 @@ class TestDemoGif(unittest.TestCase):
         with open(os.path.join(ROOT, "README.md"), encoding="utf-8") as f:
             readme = f.read()
         self.assertIn("](brand/demo.gif)", readme)
-        self.assertIn("rewindagent rewind %d" % scenario.GOOD_STEP, readme)
+        self.assertIn("rewindagents rewind %d" % scenario.GOOD_STEP, readme)
 
-    @unittest.skipUnless(os.environ.get("REWINDAGENT_BIN"), "REWINDAGENT_BIN not set (.fire-test-cmd sets it)")
+    @unittest.skipUnless(os.environ.get("REWINDAGENTS_BIN"), "REWINDAGENTS_BIN not set (.fire-test-cmd sets it)")
     def test_installed_binary_prints_the_rewind_the_clip_shows(self):
         # The hint line is what the installed command prints, not a patched string.
         m = manifest()
-        want = next(b for b in m["beats"] if b["command"].startswith("rewindagent rewind"))
+        want = next(b for b in m["beats"] if b["command"].startswith("rewindagents rewind"))
         with TemporaryDirectory() as d:
             root = Path(os.path.realpath(d))
             scenario.make_project(root)
@@ -147,7 +147,7 @@ class TestDemoGif(unittest.TestCase):
             for tool, spec in scenario.STEPS:
                 agent.step(tool, spec)
             env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
-            p = subprocess.run([os.environ["REWINDAGENT_BIN"]] + want["command"].split()[1:], cwd=root, env=env,
+            p = subprocess.run([os.environ["REWINDAGENTS_BIN"]] + want["command"].split()[1:], cwd=root, env=env,
                                capture_output=True, text=True)
         self.assertEqual(p.returncode, want["exit"], p.stderr)
         self.assertEqual(p.stdout + p.stderr, want["output"])
