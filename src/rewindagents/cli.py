@@ -177,8 +177,9 @@ def main(argv: list[str] | None = None) -> int:
             print(f"rewindagents: {e}", file=sys.stderr)
             return 1
         _report(p, dry_run=getattr(a, "dry_run", False), root=rewind.project_root(a.log))
-        # README: "If anything could not be restored, the exit code is 1" - an unscanned step counts.
-        return 1 if p["cannot"] or p["bash_uncovered"] else 0
+        # README: "If anything could not be restored, the exit code is 1" - an unscanned step counts, and so
+        # does a background command whose after-scan may have been early (nobody can say it was all restored).
+        return 1 if p["cannot"] or p["bash_uncovered"] or p["scan_early"] else 0
     if a.cmd == "record":
         try:
             call = json.load(sys.stdin)
@@ -211,6 +212,8 @@ def _replay(log_path: str, session: str | None, step: int | None) -> int:
     if step is None:
         for s in all_steps:
             mark = f"  [{len(s['checkpoints'])} checkpointed]" if s["checkpoints"] else ""
+            if (s.get("bash_scan") or {}).get("early"):
+                mark += "  [background: scan may be early]"
             print(f"{s['step']:>5}  {s['tool']:<12}  {rewind.summary(s, root=root)}{mark}")
         return 0
     if not 1 <= step <= len(all_steps):
@@ -242,6 +245,9 @@ def _report(p: dict, dry_run: bool, root) -> None:
     if p["bash_uncovered"]:
         print(f"  note: {p['bash_uncovered']} step(s) after step {p['to_step']} were not scanned before and after "
               f"(a command or edit whose scan did not finish); files they changed were not put back")
+    if p["scan_early"]:
+        print(f"  note: {p['scan_early']} step(s) after step {p['to_step']} ran a command in the background, so "
+              f"their after-scan may have run before it finished; files it changed later may not have been put back")
 
 
 if __name__ == "__main__":

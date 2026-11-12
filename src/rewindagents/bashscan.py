@@ -156,4 +156,19 @@ def after(payload: dict, root: Path, store: Path) -> tuple[dict, list[dict]]:
             cps.append({"path": path, "sha256": None, "skipped": was["skipped"]})
         else:
             cps.append({"path": path, "sha256": was})                     # changed or deleted
-    return {"changed": len(cps)}, cps
+    scan: dict[str, Any] = {"changed": len(cps)}
+    if background(payload):
+        scan["early"] = EARLY
+    return scan, cps
+
+
+EARLY = "run_in_background: the after-scan may have run before the command finished"
+
+
+def background(payload: dict) -> bool:
+    """Claude Code's Bash input carries `run_in_background` ("Whether to run the command in background",
+    https://code.claude.com/docs/en/hooks, read 2026-11-12). The same page documents no hook event for a
+    background shell finishing, so the after-scan of such a call may run while the command is still going:
+    files it changes later are missing from this step's checkpoints."""
+    ti = payload.get("tool_input")
+    return isinstance(ti, dict) and ti.get("run_in_background") is True

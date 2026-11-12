@@ -100,4 +100,8 @@ def run(log_path: str | Path, n: int, session: str | None, paths: list[str] | No
     if p["bash_uncovered"]:
         print(f"rewindagents: note: {p['bash_uncovered']} step(s) after step {n} were not scanned before and "
               f"after; files they changed are not in this diff", file=err)
-    return 1 if p["cannot"] or p["bash_uncovered"] else 0
+    if p["scan_early"]:
+        print(f"rewindagents: note: {p['scan_early']} step(s) after step {n} ran a command in the background, "
+              f"so their after-scan may have run before it finished; files it changed later may not be in this diff",
+              file=err)
+    return 1 if p["cannot"] or p["bash_uncovered"] or p["scan_early"] else 0

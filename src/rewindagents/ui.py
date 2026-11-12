@@ -139,7 +139,7 @@ def _step_row(s: dict, raw: dict, ts: dict[int, float], undone_by: int | None) -
             "summary": s["summary"], "time": time.strftime("%H:%M:%S", time.localtime(t)) if t else "",
             "when": sessions.when(t) if t else "", "files": files, "checkpoints": len(raw["checkpoints"]),
             "to_step": s.get("to_step"), "branch": (s.get("branch") or {}).get("name"), "only": raw.get("only"),
-            "unscanned": scan.get("skipped"), "undone_by": undone_by}
+            "unscanned": scan.get("skipped"), "scan_early": bool(scan.get("early")), "undone_by": undone_by}
 
 
 def timeline(log_path: str | Path, session: Any) -> dict:
@@ -219,7 +219,7 @@ def _plan_view(log_path: str | Path, p: dict, only: str | None, diffs: bool) -> 
             changes.append(item)
     cannot = [{"path": rewind.relative(path, root), "why": why} for path, why in p["cannot"] if keep(path)]
     return {"session": p["session"], "to_step": p["to_step"], "steps": p["steps"], "changes": changes,
-            "cannot": cannot, "bash_uncovered": p["bash_uncovered"], "only": rewind.relative(only, root) if only else None,
+            "cannot": cannot, "bash_uncovered": p["bash_uncovered"], "scan_early": p["scan_early"], "only": rewind.relative(only, root) if only else None,
             "new_step": p["steps"] + 1}
 
 
@@ -726,6 +726,7 @@ function renderSteps() {
     if (r.files.length > 4) add(chips, el("span", "chip", "+" + (r.files.length - 4) + " more"));
     if (r.checkpoints) add(chips, el("span", "chip cp", plural(r.checkpoints, "checkpoint")));
     if (r.unscanned) add(chips, el("span", "chip warn", "not scanned: " + r.unscanned));
+    if (r.scan_early) add(chips, el("span", "chip warn", "background: scan may be early"));
     if (r.undone_by) add(chips, el("span", "chip", "rewound by step " + r.undone_by));
     add(body, top, r.event === "rewind" || r.event === "branch" ? null : el("span", "what", r.summary), chips.childNodes.length ? chips : null);
     add(b, el("span", "n", r.step), body);
@@ -816,6 +817,7 @@ function planText(p) {
   var t = n ? "Would change " + plural(n, "file") + (p.only ? " (only " + p.only + ")" : "") + "." : "No file would change: they already match step " + p.to_step + ".";
   if (p.cannot.length) t += " " + plural(p.cannot.length, "file") + " cannot be put back.";
   if (p.bash_uncovered) t += " " + plural(p.bash_uncovered, "step") + " after step " + p.to_step + " were not scanned before and after, so files they changed stay as they are.";
+  if (p.scan_early) t += " " + plural(p.scan_early, "step") + " after step " + p.to_step + " ran a command in the background; files it changed after its scan may stay as they are.";
   return t;
 }
 

@@ -243,6 +243,9 @@ def render(data: dict) -> str:
                 body.append('<p class="note">No result was recorded for this call.</p>')
         if s.get("bash_scan") and "skipped" in s["bash_scan"]:
             body.append(f'<p class="note">Files changed by this command were not checkpointed: {_esc(s["bash_scan"]["skipped"])}.</p>')
+        elif s.get("bash_scan") and s["bash_scan"].get("early"):
+            body.append('<p class="note">This command ran in the background: its after-scan may have run before it '
+                        'finished, so files it changed later may be missing from this step.</p>')
         if s["files"]:
             body.append("<h3>Files</h3><div class=\"files\">")
             for f in s["files"]:

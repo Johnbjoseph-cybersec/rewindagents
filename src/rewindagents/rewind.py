@@ -183,6 +183,8 @@ def plan(log_path: str | Path, n: int, session: str | None = None,
                          # was scanned (see agents.scans), without a "changed" count from the post event
                          "bash_uncovered": sum(1 for s in all_steps[n:] if (s["tool"] == "Bash" or s.get("scanned"))
                                                and "changed" not in (s.get("bash_scan") or {})),
+                         # background commands whose after-scan may have run before they finished (bashscan.EARLY)
+                         "scan_early": sum(1 for s in all_steps[n:] if (s.get("bash_scan") or {}).get("early")),
                          "only": [str(q) for q in only] if only else None, "unmatched": unmatched}
     for path_s, cp in first.items():
         path = Path(path_s)

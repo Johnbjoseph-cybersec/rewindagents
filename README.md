@@ -104,6 +104,10 @@ files that were changed, deleted or created. Details and limits:
 - Copies are stored by SHA-256, so an unchanged file is stored once. A stat cache
   (`.rewindagents/index.json`) means only files whose size or modification time changed are read again.
 - A project with more than 20,000 files is not scanned; the call is still recorded and `rewind` reports it.
+- A Bash call with `run_in_background: true`: Claude Code's hooks reference documents no hook event for a
+  background shell finishing, so the after-scan may run while the command is still going. Files it changes
+  after that are not in the step. `replay` marks such a step `[background: scan may be early]`, and `rewind`
+  and `diff` print a note and exit 1 when one lies after the target step.
 
 To take the hook out again:
 
