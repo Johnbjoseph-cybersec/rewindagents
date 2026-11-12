@@ -1,5 +1,5 @@
-"""rewindagents command line: record, verify, head, show, hook, install, uninstall, replay, rewind, branch,
-export, sessions, bundle, import, gc."""
+"""rewindagents command line: init, record, verify, head, show, hook, install, uninstall, replay, diff, rewind,
+branch, export, sessions, bundle, import, gc."""
 from __future__ import annotations
 
 import argparse
@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from . import __version__, agents, bundle, export, gc, hook, log, rewind, sessions
+from . import diff as diffs, init as setup
 
 
 def invocation() -> str:
@@ -16,7 +17,10 @@ def invocation() -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(prog="rewindagents")
+    ap = argparse.ArgumentParser(
+        prog="rewindagents",
+        description="The flight recorder for coding agents: see exactly what your agent did, and take back any "
+                    "part of it. Start with `rewindagents init`; then `replay`, `diff N`, `rewind N [--only PATH]`.")
     ap.add_argument("--version", action="version", version=f"rewindagents {__version__}")
     ap.add_argument("--log", default=".rewindagents/log.jsonl", help="log file (default: %(default)s)")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -48,6 +52,16 @@ def main(argv: list[str] | None = None) -> int:
     rw.add_argument("step", type=int, help="step number from `replay` (0 = before the first step)")
     rw.add_argument("--session", help="default: the session that wrote the last record")
     rw.add_argument("--dry-run", action="store_true", help="print what would change, change nothing")
+    rw.add_argument("--only", action="append", metavar="PATH",
+                    help="put back only this file (or the files under this directory); repeat for more")
+    dfp = sub.add_parser("diff", help="show what `rewind N` would change, as a unified diff (now -> step N)")
+    dfp.add_argument("step", type=int, help="step number from `replay` (0 = before the first step)")
+    dfp.add_argument("paths", nargs="*", metavar="PATH", help="only these files (or the files under these directories)")
+    dfp.add_argument("--session", help="default: the session that wrote the last record")
+    ini = sub.add_parser("init", help="find the coding agents you use and add the hook to each (asks first)")
+    ini.add_argument("--yes", "-y", action="store_true", help="install without asking")
+    ini.add_argument("--global", dest="global_", action="store_true",
+                     help="write each agent's user config (every project) instead of this project's")
     br = sub.add_parser("branch", help="keep the current files as a branch, then rewind to step N")
     br.add_argument("step", type=int)
     br.add_argument("--name", required=True, help="branch name (git: rewindagents/<name>)")
@@ -87,7 +101,9 @@ def main(argv: list[str] | None = None) -> int:
         changed = hook.uninstall(target, agent=a.agent)
         print(f"removed from {target}" if changed else f"not installed in {target}; left unchanged")
         return 0
-    if a.cmd in ("verify", "show", "replay", "rewind", "branch", "export", "sessions", "bundle", "gc") \
+    if a.cmd == "init":
+        return setup.main(yes=a.yes, global_=a.global_)
+    if a.cmd in ("verify", "show", "replay", "rewind", "branch", "export", "sessions", "bundle", "gc", "diff") \
             and not Path(a.log).exists():
         print(f"rewindagents: no log at {a.log}", file=sys.stderr)
         return 2
@@ -119,6 +135,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  file paths moved from {d['from_root']} to {d['root']}")
             print(f"  replay it with: {invocation()} replay --session {d['session']}")
         return 0
+    if a.cmd == "diff":
+        return diffs.run(a.log, a.step, a.session, a.paths)
     if a.cmd == "replay":
         return _replay(a.log, a.session, a.step)
     if a.cmd == "sessions":
@@ -144,7 +162,7 @@ def main(argv: list[str] | None = None) -> int:
     if a.cmd in ("rewind", "branch"):
         try:
             if a.cmd == "rewind":
-                p = rewind.rewind(a.log, a.step, a.session, dry_run=a.dry_run)
+                p = rewind.rewind(a.log, a.step, a.session, dry_run=a.dry_run, only=a.only)
             else:
                 p = rewind.branch(a.log, a.step, a.name, a.session)
         except rewind.RewindError as e:
@@ -204,6 +222,8 @@ def _report(p: dict, dry_run: bool, root) -> None:
         print(f"  delete   {rewind.relative(path, root)}")
     for path, why in p["cannot"]:
         print(f"  CANNOT   {rewind.relative(path, root)}: {why}")
+    for q in p.get("unmatched") or []:
+        print(f"  skip     {q}: no step after step {p['to_step']} changed it")
     if p.get("branch"):
         b = p["branch"]
         where = f"git branch {b['git_ref']} ({b['commit'][:12]})" if b["git_ref"] else "the rewindagents log only (not a git repo)"

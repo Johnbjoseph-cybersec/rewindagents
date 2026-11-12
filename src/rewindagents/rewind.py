@@ -12,6 +12,10 @@ Safety: nothing is written unless the log's hash chain verifies and every stored
 SHA-256. Files outside the project (the directory holding .rewindagents/) are never touched. A step whose
 before/after scan did not finish (a Bash, Shell or apply_patch call in a project too big to scan, or one
 whose post event never arrived) is counted and reported; the files it changed are not undone.
+
+`rewind(N, only=[PATH, ...])` does the same for the named files only (a directory names every file under it):
+the same checks, the same checkpoint of the current bytes, recorded as a step the same way. `diff.py` shows
+what a rewind would change by reading the same plan(), so the two cannot disagree.
 """
 from __future__ import annotations
 
@@ -77,6 +81,8 @@ def steps_from(recs: list[dict]) -> list[dict]:
             s["agent"] = args["agent"]
         if args.get("to_step") is not None:
             s["to_step"] = args["to_step"]
+        if args.get("only"):
+            s["only"] = args["only"]
         if args.get("branch"):
             s["branch"] = args["branch"]
         if isinstance(args.get("bash_scan"), dict) and "skipped" in args["bash_scan"]:
@@ -102,6 +108,8 @@ def summary(step: dict, width: int = 80, root: Path | None = None) -> str:
     inp = step.get("input")
     if step["event"] in ("rewind", "branch"):
         text = f"rewound to step {step.get('to_step')}"
+        if step.get("only"):
+            text += f" (only {', '.join(step['only'])})"
         if step.get("branch"):
             text += f", branch {step['branch'].get('name')}"
     elif step["tool"] in FILE_TOOLS and isinstance(inp, dict):
@@ -125,8 +133,25 @@ def _inside(path: Path, root: Path) -> bool:
         return False
 
 
-def plan(log_path: str | Path, n: int, session: str | None = None) -> dict:
-    """Work out what rewinding to step n would change. Reads only."""
+def _matcher(only: list[str | Path], cwd: Path | None = None):
+    """A test for "is this file one of the --only paths": the same file, or a file under a named directory.
+    Relative paths are read from `cwd` (default: the current directory), as the user typed them."""
+    base = Path(cwd) if cwd is not None else Path.cwd()
+    wanted = [((base / q) if not Path(q).is_absolute() else Path(q)).resolve() for q in only]
+
+    def hits(path_s: str) -> list[int]:
+        f = Path(path_s).resolve()
+        return [i for i, q in enumerate(wanted) if f == q or q in f.parents]
+    return hits
+
+
+def plan(log_path: str | Path, n: int, session: str | None = None,
+         only: list[str | Path] | None = None) -> dict:
+    """Work out what rewinding to step n would change. Reads only.
+
+    With `only`, the plan covers just those files (or the files under those directories); `p["unmatched"]`
+    lists the `only` entries that no step after n changed, so they are already as they were at step n
+    (as far as the log knows)."""
     ok, _, msg = log.verify(log_path)
     if not ok:
         raise RewindError(f"log does not verify ({msg}); refusing to rewind from it")
@@ -140,12 +165,25 @@ def plan(log_path: str | Path, n: int, session: str | None = None) -> dict:
     for s in all_steps[n:]:
         for cp in s["checkpoints"]:
             first.setdefault(cp["path"], cp)
+    unmatched: list[str] = []
+    if only:
+        hits = _matcher(only)
+        matched: set[int] = set()
+        kept = {}
+        for path_s, cp in first.items():
+            h = hits(path_s)
+            if h:
+                kept[path_s] = cp
+                matched.update(h)
+        first = kept
+        unmatched = [str(q) for i, q in enumerate(only) if i not in matched]
     p: dict[str, Any] = {"session": session, "to_step": n, "steps": len(all_steps),
                          "restore": [], "delete": [], "cannot": [],
                          # steps whose before/after scan did not finish: Bash, or any Codex/Cursor call that
                          # was scanned (see agents.scans), without a "changed" count from the post event
                          "bash_uncovered": sum(1 for s in all_steps[n:] if (s["tool"] == "Bash" or s.get("scanned"))
-                                               and "changed" not in (s.get("bash_scan") or {}))}
+                                               and "changed" not in (s.get("bash_scan") or {})),
+                         "only": [str(q) for q in only] if only else None, "unmatched": unmatched}
     for path_s, cp in first.items():
         path = Path(path_s)
         if not _inside(path, root):
@@ -171,6 +209,8 @@ def _apply(log_path: str | Path, p: dict, event: str, extra: dict | None = None)
     with store_lock(root / ".rewindagents"):  # `gc` must not delete these copies before the record names them
         saved = [checkpoint(Path(path), objects) for path in touched]
         args = {"input": {"to_step": p["to_step"]}, "to_step": p["to_step"], "checkpoints": saved}
+        if p.get("only"):
+            args["input"]["only"] = args["only"] = [relative(q, root) for q in p["only"]]
         args.update(extra or {})
         rec = log.Recorder(log_path).record(p["session"], "rewindagents", args, None,
                                             actor="user", event=event)
@@ -185,8 +225,13 @@ def _apply(log_path: str | Path, p: dict, event: str, extra: dict | None = None)
     return rec
 
 
-def rewind(log_path: str | Path, n: int, session: str | None = None, dry_run: bool = False) -> dict:
-    p = plan(log_path, n, session)
+def rewind(log_path: str | Path, n: int, session: str | None = None, dry_run: bool = False,
+           only: list[str | Path] | None = None) -> dict:
+    """Put files back as they were right after step n (all of them, or just `only`). See plan()."""
+    p = plan(log_path, n, session, only)
+    if only and len(p["unmatched"]) == len(only):
+        raise RewindError(f"no step after step {n} changed {', '.join(map(str, only))}; nothing to put back "
+                          f"(`replay` lists the steps and their files)")
     if not dry_run:
         p["record"] = _apply(log_path, p, "rewind")["seq"]
     return p

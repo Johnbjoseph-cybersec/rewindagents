@@ -22,6 +22,29 @@ The clip is a real session, not a mock-up: `brand/demo/build.py` runs fourteen a
 hook in a temporary project, then the four commands shown, and draws the frames from what they printed.
 `tests/test_demo.py` plays the same session again and fails if any line differs.
 
+## Quick start
+
+The flight recorder for coding agents: see exactly what your agent did, and take back any part of it.
+
+```sh
+pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagents && cd your-project && rewindagents init
+```
+
+`init` looks for the agents it supports (Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen
+Code): their config directory in the project or your home directory, or their command on `PATH`. It prints
+the plan, asks `[y/N]`, and adds the hook to each one it found, one line per agent: `installed`,
+`already there` or `not found`. It never adds a second copy and keeps every hook already in the file.
+`--yes` skips the question. `--global` writes each agent's user config instead, so every project is
+recorded. Without `--yes` and without a terminal to ask on, it only prints the plan.
+
+Then use your agent as usual and:
+
+```sh
+rewindagents replay                    # what it did, one line per step
+rewindagents diff 12                   # what taking it back to step 12 would change
+rewindagents rewind 12 --only src/db.py   # take back just that file
+```
+
 ## Install
 
 Python 3.10 or newer (declared in `pyproject.toml`; tested on 3.15, macOS). No dependencies beyond the
@@ -173,9 +196,22 @@ unless you pass `--session ID`.
 rewindagents replay              # one line per step: number, tool, file or command
 rewindagents replay --step 12    # step 12 in full: input, checkpoints, result
 rewindagents rewind 12 --dry-run # what would change
+rewindagents diff 12             # the same files, as a unified diff: now -> step 12
+rewindagents diff 12 src/db.py   # only that file (a directory means every file under it)
 rewindagents rewind 12           # files back to how they were right after step 12
+rewindagents rewind 12 --only src/db.py --only tests/   # put back only these
 rewindagents branch 12 --name try2   # keep the current files, then rewind to step 12
 ```
+
+- `diff N [PATH ...]` reads the same plan `rewind N` acts on, so it names exactly the files `rewind N
+  --dry-run` lists (a test checks this). The `a/` side is the file now, the `b/` side is the file after the
+  rewind, so `git apply` of the diff does what the rewind would do. Files the rewind would delete diff to
+  `/dev/null`; binary files are named, not printed; files it cannot put back are listed on stderr. It
+  writes nothing. Exit code 1 when something could not be shown, as for `rewind`.
+- `rewind N --only PATH` puts back only those files (or every file under a directory) and leaves the
+  agent's other changes as they are. Same hash-chain and stored-copy checks, and it is recorded as a step
+  like any rewind, so it can be undone. A path no step after N changed is reported as `skip`; if none of
+  the paths was changed, nothing is written and the exit code is 1.
 
 - `rewind N` puts back every file that a step after N changed with `Write`, `Edit`, `MultiEdit`,
   `NotebookEdit` or a `Bash` command, and deletes the files those steps created. `rewind 0` undoes the
