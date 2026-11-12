@@ -359,12 +359,20 @@ class TestSite(unittest.TestCase):
             self.assertIn(t, docs, t)
         for a in agents.AGENTS.values():
             self.assertIn(a.settings, docs, a.settings)
-        # the "no network connections" answer is a test, not a sentence
+        # the "no outbound network connections" answer is a test, not a sentence. The one exception is the timeline
+        # UI, a server that may only ever listen on 127.0.0.1 (ui.HOST, refused otherwise; tests/test_ui.py binds it).
+        from rewindagents import ui
+        self.assertEqual(ui.HOST, "127.0.0.1")
         for name in sorted(os.listdir(SRC)):
-            if name.endswith(".py"):
+            if name.endswith(".py") and name != "ui.py":
                 with open(os.path.join(SRC, name), encoding="utf-8") as fh:
                     self.assertIsNone(NETWORK.search(fh.read()), name)
-        self.assertIn("no network connections", text_of("index.html"))
+        with open(os.path.join(SRC, "ui.py"), encoding="utf-8") as fh:
+            imports = set(re.findall(r"^\s*(?:import|from)\s+([\w.]+)", fh.read(), re.M))
+        self.assertFalse({"socket", "urllib", "urllib.request", "ssl", "smtplib", "ftplib", "requests", "httpx"} & imports,
+                         "ui.py serves locally; it never opens an outbound connection")
+        self.assertIn("no outbound network connections", text_of("index.html"))
+        self.assertIn("127.0.0.1 only", text_of("index.html"))
 
     def test_css_uses_only_the_palette_and_local_fonts(self):
         css = read("site.css")

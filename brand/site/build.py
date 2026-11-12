@@ -522,7 +522,7 @@ def index_html(cfg, f, hero, open_all=False):
         ("Does it stop or change what the agent does?",
          "No. The hook records and checkpoints, then exits 0. It has no opinion about any call. The agent runs exactly as it would without the hook; the difference is that afterwards every step is on record and every file change can be put back."),
         ("Does anything leave my machine?",
-         "No. rewindagents makes no network connections: a test checks that no module under <code>src/</code> imports <code>socket</code>, <code>http</code> or <code>urllib</code>. The log and the file copies live in <code>.rewindagents/</code> inside your project, and nothing reads them but you."),
+         "No. rewindagents makes no outbound network connections: a test checks that no module under <code>src/</code> imports <code>socket</code>, <code>http</code> or <code>urllib</code>, except the timeline UI, which serves <code>rewindagents ui</code> on 127.0.0.1 only and checks a one-time token on every request. The log and the file copies live in <code>.rewindagents/</code> inside your project, and nothing reads them but you."),
         ("Which agents does it work with?",
          "Claude Code, through its <code>PreToolUse</code> and <code>PostToolUse</code> hooks; Codex, through the same hook file shape in <code>%s</code>; Cursor, through <code>%s</code>. The Claude Code hook has run in real sessions. The Codex and Cursor hooks are built from the vendors&#x27; hook documentation and tested with the documented payloads, not yet in a live session; the README says the same." % (f["agents"]["codex"]["settings"], f["agents"]["cursor"]["settings"])),
         ("Does it need git?",

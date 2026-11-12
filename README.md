@@ -394,7 +394,7 @@ rewindagents verify --head <pinned-hash>
 
 `billing/polar.py` is the checkout and webhook code for that Cloud tier, written against Polar's API documentation
 (the pages and the date are cited at the top of the file). It is not part of the `rewindagents` package and is never
-installed with it; the CLI itself makes no network connections. No product exists yet, so nothing can be bought.
+installed with it; the CLI makes no outbound network connections (`rewindagents ui` listens on 127.0.0.1 only). No product exists yet, so nothing can be bought.
 
 ```sh
 python3 billing/polar.py link --product <id>              # a reusable checkout link, printed
