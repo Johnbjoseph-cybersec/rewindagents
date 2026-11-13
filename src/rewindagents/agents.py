@@ -30,7 +30,10 @@ Sources, read on 2026-11-11 (every field name below is quoted from them):
 
 - Claude Code: `.claude/settings.json`, events `PreToolUse` and `PostToolUse`, fields `session_id`, `cwd`,
   `hook_event_name`, `tool_name`, `tool_input`, `tool_use_id`, `tool_response`; stdout empty. Built in R2 and
-  driven by a real Claude Code session; the fixtures in tests/test_hook.py are its payloads.
+  driven by a real Claude Code session; the fixtures in tests/test_hook.py are its payloads. A call that fails
+  goes to `PostToolUseFailure` ("After a tool call fails", code.claude.com/docs/en/hooks, read 2026-11-14), not
+  to PostToolUse: in a real session (ux-review/DOGFOOD.md, F11) a Bash command that exited 1 got no post event,
+  so its after-scan never ran and the files it changed were not checkpointed. The hook is installed there too.
 
 Read on 2026-11-12 (same rule: every field name quoted from the vendor page named):
 
@@ -173,7 +176,7 @@ class Agent:
 
 AGENTS: dict[str, Agent] = {
     "claude": Agent("claude", ".claude/settings.json", ("PreToolUse", "PostToolUse"), "groups", file_tools=True,
-                    win_shell="bash"),
+                    win_shell="bash", also_post=("PostToolUseFailure",)),
     "codex": Agent("codex", ".codex/hooks.json", ("PreToolUse", "PostToolUse"), "groups",
                    read_only=frozenset({"update_plan"})),
     "cursor": Agent("cursor", ".cursor/hooks.json", ("preToolUse", "postToolUse"), "cursor",

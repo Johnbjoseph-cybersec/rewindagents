@@ -120,7 +120,8 @@ class StaleTest(unittest.TestCase):
         self.assertEqual(code, 0, out)
         self.assertIn("removed stale", self.line(out, "claude"))
         got = agents.commands_in(agents.AGENTS["claude"], f)
-        self.assertEqual(got, {"PreToolUse": [live], "PostToolUse": [live]})
+        ag = agents.AGENTS["claude"]
+        self.assertEqual(got, {e: [live] for e in ag.events + ag.also_post})
 
     # status ---------------------------------------------------------------------------------------------------
     def test_status_reports_each_file_writes_nothing_and_exits_1_on_stale(self):

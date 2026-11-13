@@ -140,7 +140,8 @@ class TestInit(Base):
         (self.root / ".claude/settings.json").write_text(json.dumps(partial))
         self.run_init(yes=True)
         got = agents.commands_in(agents.AGENTS["claude"], self.root / ".claude/settings.json")
-        self.assertEqual(got, {"PreToolUse": [cmd], "PostToolUse": [cmd]})
+        ag = agents.AGENTS["claude"]       # PreToolUse, PostToolUse and PostToolUseFailure (a failed call)
+        self.assertEqual(got, {e: [cmd] for e in ag.events + ag.also_post})
 
     def test_another_rewindagents_hook_is_left_alone_not_doubled(self):
         (self.root / ".claude").mkdir()

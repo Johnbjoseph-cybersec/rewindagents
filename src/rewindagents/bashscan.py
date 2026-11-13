@@ -6,8 +6,8 @@ A Bash command does not say which files it will touch, so the hook looks at the 
 - after it (PostToolUse), the project is scanned again and only the files that differ are checkpointed in
   the "post" record: changed or deleted files with their bytes from before, new files as absent.
 
-Project files: in a git work tree, `git ls-files --cached --others --exclude-standard` (tracked plus
-untracked), plus the files git ignores one by one (`.env`, `config.local.json`, `*.log`) but not the directories
+Project files: in a git work tree, `git ls-files --cached` plus `--others --exclude-standard` (tracked plus
+untracked, but not untracked files under SKIP_DIRS such as `__pycache__/`), plus the files git ignores one by one (`.env`, `config.local.json`, `*.log`) but not the directories
 it ignores as a whole (`node_modules/`, `build/`, `.venv/`): a deleted `.env` is the one file neither git nor the
 agent can bring back, while an ignored directory is usually rebuilt output. Elsewhere, a walk that skips
 SKIP_DIRS. Symlinks are not followed or saved.
@@ -46,7 +46,12 @@ def project_files(root: Path, ignored_files: bool = False) -> list[str] | None:
     ignored_files=True adds the files git ignores one by one, never the contents of a directory it ignores as
     a whole, nor anything under SKIP_DIRS (the Bash scan uses this; `fork` does not, as a fresh worktree
     would not have them)."""
-    rels = _ls(root, "--cached", "--others", "--exclude-standard")
+    rels = _ls(root, "--cached")
+    if rels is not None:
+        # untracked files under SKIP_DIRS (a __pycache__ or venv the .gitignore does not name) are rebuilt
+        # output, as in the walk below: scanning them turned every `python` command into .pyc "changes"
+        others = _ls(root, "--others", "--exclude-standard")
+        rels += [r for r in others or [] if not set(Path(r).parts) & SKIP_DIRS]
     if rels is not None and ignored_files:
         extra = _ls(root, "--others", "--ignored", "--exclude-standard", "--directory")
         rels += [r for r in extra or [] if not r.endswith("/") and not set(Path(r).parts) & SKIP_DIRS]
