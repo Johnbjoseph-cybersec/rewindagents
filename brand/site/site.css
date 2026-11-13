@@ -16,6 +16,7 @@
   --mono: "Commit Mono", "SFMono-Regular", Menlo, Consolas, monospace;
   --gutter: 32px; --measure: 64ch; --col: 1200px;
   --ease: cubic-bezier(.22, 1, .36, 1); --snap: cubic-bezier(.5, 0, .1, 1);
+  --gap: 64px;   /* the ONE gutter of every two-column grid, so panels and cards land on the same x */
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -31,7 +32,7 @@ p code, li code, h3 code, summary code { background: transparent; padding: 0; co
 h1, h2, h3 { font-family: var(--display); letter-spacing: -0.02em; line-height: 1.06; margin: 0; font-weight: 800; }
 h2 { font-size: clamp(30px, 3.4vw, 46px); letter-spacing: -0.03em; max-width: 18ch; text-wrap: balance; }
 h3 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
-p { margin: 0 0 1em; max-width: var(--measure); }
+p { margin: 0 0 1em; max-width: var(--measure); text-wrap: pretty; }
 ul, ol { padding-left: 1.2em; max-width: var(--measure); }
 li { margin: 0.35em 0; }
 strong { font-weight: 600; }
@@ -69,7 +70,11 @@ strong { font-weight: 600; }
 .hero h1 { font-size: clamp(44px, 5.6vw, 76px); letter-spacing: -0.04em; line-height: 0.98; max-width: 11ch; text-wrap: balance; }
 .hero .lede { margin-top: 28px; font-size: 19px; color: var(--tape); max-width: 46ch; }
 .hero .lede strong { color: var(--reel); display: block; margin-bottom: 6px; }
-.hero-install { margin-top: 22px; max-width: 520px; }
+/* the install row: under the promise and the session, on the hero's own two columns, after one hairline, so the
+   install line is on the first screen. On a phone it comes straight after the buttons. */
+.hero-install { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 11fr) minmax(0, 13fr); gap: 12px var(--gap); margin-top: 44px; padding-top: 24px; border-top: 1px solid var(--rule); align-items: start; }
+.hero-install .small { margin: 0; max-width: 40ch; }
+.hero-install .small b { color: var(--reel); }
 .hero-install pre.term { font-size: 12.5px; }
 .cta { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 32px; }
 .btn { display: inline-flex; align-items: center; gap: 10px; min-height: 50px; font-family: var(--body); font-weight: 600; font-size: 16px; padding: 0 22px; border-radius: 3px; text-decoration: none; border: 1px solid var(--reel); transition: background-color .2s var(--ease), color .2s var(--ease), border-color .2s var(--ease), transform .2s var(--ease); }
@@ -142,8 +147,15 @@ strong { font-weight: 600; }
 .panel .term { border-radius: 0; margin: 0; }
 pre.term { background: var(--spool); color: var(--leader); margin: 0; padding: 20px 22px; border-radius: 6px; font-family: var(--mono); font-size: 13.5px; line-height: 1.6; white-space: normal; max-width: 100%; position: relative; }
 pre.term code { font-size: inherit; font-family: inherit; color: inherit; border: 0; padding: 0; }
-pre.term .l { display: block; white-space: pre-wrap; overflow-wrap: anywhere; padding-left: 4ch; text-indent: -4ch; }
-pre.term .p { color: var(--playhead); user-select: none; }
+pre.term .l { display: block; white-space: pre-wrap; overflow-wrap: anywhere; padding-left: var(--i, 4ch); text-indent: calc(-1 * var(--i, 4ch)); }   /* --i: build.py hang() */
+pre.term .p { color: var(--playhead); user-select: none; -webkit-user-select: none; }
+/* one click selects a whole command and never the prompt: the copy, without a script */
+pre.term .sel { user-select: all; -webkit-user-select: all; }
+pre.term .sel::selection, pre.term .sel ::selection { background: var(--leader); color: var(--reel); }
+pre.term .x { text-decoration: line-through; text-decoration-color: var(--rewind); text-decoration-thickness: 1px; color: var(--playhead); }   /* steps a rewind undid */
+.panel-head .tl { display: inline-flex; align-items: center; gap: 10px; color: var(--leader); white-space: nowrap; }   /* the session as a ruler: playhead on the step rewound to */
+/* hanging indents for wrapped output rows, one class per width (build.py hang(), HANG_MAX) */
+.l.i0 { --i: 0ch; } .l.i1 { --i: 1ch; } .l.i2 { --i: 2ch; } .l.i3 { --i: 3ch; } .l.i4 { --i: 4ch; } .l.i5 { --i: 5ch; } .l.i6 { --i: 6ch; } .l.i7 { --i: 7ch; } .l.i8 { --i: 8ch; } .l.i9 { --i: 9ch; } .l.i10 { --i: 10ch; } .l.i11 { --i: 11ch; } .l.i12 { --i: 12ch; } .l.i13 { --i: 13ch; } .l.i14 { --i: 14ch; } .l.i15 { --i: 15ch; } .l.i16 { --i: 16ch; } .l.i17 { --i: 17ch; } .l.i18 { --i: 18ch; } .l.i19 { --i: 19ch; } .l.i20 { --i: 20ch; } .l.i21 { --i: 21ch; } .l.i22 { --i: 22ch; } .l.i23 { --i: 23ch; } .l.i24 { --i: 24ch; }
 pre.term .c { color: var(--playhead); }
 pre.term .hit { color: var(--rewind); }
 pre.term.fill { height: 100%; }
@@ -153,6 +165,7 @@ pre.term.has-copy { padding-right: 84px; }
 .nb { white-space: nowrap; }
 h3 + pre.term { margin-top: 14px; }
 pre.term + p { margin-top: 16px; }
+pre.term + pre.term { margin-top: 12px; }   /* two panels in a row read as two, not one (F6) */
 
 
 /* the original page's parts the redesign stylesheet did not carry */
@@ -191,6 +204,14 @@ pre.term + p { margin-top: 16px; }
 .ledger li:hover { background: var(--leader); }
 .ledger .k { font-family: var(--mono); font-size: 15px; font-weight: 700; padding-top: 1px; color: var(--record); }
 
+/* tested: a claim, then the tests that check it, on the ledger's grid */
+.proof .claim { font-weight: 600; }
+.proof .cites { display: flex; flex-direction: column; gap: 6px; }
+.proof .cites a { display: grid; grid-template-columns: 23ch minmax(0, 1fr); font-family: var(--mono); font-size: 13px; line-height: 1.5; color: var(--reel); text-decoration: none; overflow-wrap: anywhere; }
+.proof .cites a .f { color: var(--tape); }
+.proof .cites a:hover { color: var(--record); text-decoration: underline; }
+.proof + .cmdrow { margin-top: 8px; }
+
 /* install: two columns of text + command */
 .cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 64px; }
 .cols p { font-size: 16px; color: var(--tape); }
@@ -201,19 +222,22 @@ pre.term + p { margin-top: 16px; }
 .cmdrow { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px 64px; padding: 36px 0; border-bottom: 1px solid var(--rule); align-items: start; }
 .cmdrow p { font-size: 16px; margin: 10px 0 0; color: var(--tape); }
 .cmdrow pre.term { margin: 0; }
+.cmdrow.plain { border-bottom: 0; padding-bottom: 0; align-items: center; }
+.cmdrow.plain .small { margin: 0; }
+.cmdrow pre.term + pre.term { margin-top: 12px; }
 
 /* pricing */
 .plans { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
 .plan { border: 1px solid var(--rule); border-radius: 6px; padding: 32px 32px 30px; display: flex; flex-direction: column; background: var(--leader); transition: border-color .2s var(--ease); }
 .plan:first-child { border: 2px solid var(--reel); }
-.plan h3 { font-size: 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.plan h3, .plan h2 { font-size: 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .plan .price { font-family: var(--display); font-size: 44px; font-weight: 800; letter-spacing: -0.03em; margin: 18px 0 4px; }
 .plan .pricenote { color: var(--tape); font-size: 15px; margin-bottom: 20px; }
 .plan ul { padding-left: 0; list-style: none; margin: 0 0 26px; flex: 1; }
 .plan li { padding: 11px 0; border-top: 1px solid var(--rule); font-size: 16px; display: grid; grid-template-columns: 1.1em minmax(0, 1fr); gap: 10px; margin: 0; }
 .plan li::before { content: ""; width: 9px; height: 9px; margin-top: 8px; background: var(--record); }
 .plan li.planned::before { background: transparent; border: 1.5px solid var(--tape); }
-.plan .btn { align-self: flex-start; }
+.plan .btn { justify-self: start; align-self: end; }
 .pill { font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 2px; border: 1px solid var(--reel); color: var(--reel); }
 .pill-planned { color: var(--tape); border-color: var(--tape); }
 
@@ -253,8 +277,8 @@ details > p { padding-bottom: 22px; margin: 0; color: var(--tape); }
 .doc pre.term { margin: 14px 0 18px; }
 .doc ul { padding-left: 1.1em; }
 .walk { list-style: none; padding: 0; margin: 0; max-width: none; counter-reset: walk; }
-.walk li { margin: 0 0 22px; padding-left: 2.4em; position: relative; counter-increment: walk; }
-.walk li::before { content: counter(walk, decimal-leading-zero); position: absolute; left: 0; top: 2px; font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--reel); }
+.walk li { margin: 0 0 22px; padding-left: 0; position: relative; counter-increment: walk; }
+.walk li::before { content: counter(walk, decimal-leading-zero); position: absolute; left: -32px; top: 2px;   /* in the gutter: panels keep the doc column's edge (F11) */ font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--reel); }
 .walk li p { font-size: 16px; margin: 0 0 10px; }
 
 /* footer: dark, like the end of a tape */
@@ -273,6 +297,11 @@ details > p { padding-bottom: 22px; margin: 0; color: var(--tape); }
   .ledger li { grid-template-columns: minmax(0, 1fr); gap: 6px; }
   .head { margin-bottom: 40px; }
   .hero .wrap { gap: 40px; }
+  .hero-text { order: 1; }
+  .hero-install { order: 2; grid-template-columns: minmax(0, 1fr); margin-top: 32px; padding-top: 0; border-top: 0; }
+  .hero-install .small { max-width: var(--measure); }
+  .hero-panel { order: 3; margin-top: 8px; }
+  .proof .cites a { grid-template-columns: minmax(0, 1fr); }
   .toc { position: static; flex-direction: row; flex-wrap: wrap; gap: 0 18px; border-top: 0; margin-bottom: 8px; }
   .toc a { min-height: 40px; padding: 0; border-bottom: 1px solid var(--rule); }
   .sec { padding: 80px 0; }
@@ -297,12 +326,25 @@ details > p { padding-bottom: 22px; margin: 0; color: var(--tape); }
   .eyebrow { white-space: normal; }
   .facts { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .ledger li { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .plans { grid-template-columns: minmax(0, 1fr); row-gap: 28px; }
+  .steps li { display: block; }
+  .eyebrow { text-wrap: balance; }
+  .toc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--gap); }   /* two even columns, not a ragged flow (F12) */
+  .toc a { min-height: 44px; }
   .plan { padding: 22px 18px; }
   .top .wrap { min-height: 60px; }
   .nav { gap: 0; font-size: 15px; margin-left: -10px; }
   .nav a:last-child { padding-right: 10px; }
   pre.term { font-size: 12px; padding: 14px 14px; }
-  .hero-panel pre.term, .session pre.term { font-size: 12px; }
+  /* no cap on the hanging indent: a wrapped replay row continues under its own column, and the 25 characters
+     left are enough for every continuation in the session (pass 2, F10) */
+  .hero-panel pre.term, .session pre.term, .hero-install pre.term, .cmdrow pre.term { font-size: 12px; padding: 14px 14px; }
+  /* the session tables at 11.5px: 47 characters a row, so every wrapped row breaks at a space and continues under
+     its column (at 12px `-q` split into `-` and `q`) */
+  .hero-panel pre.term, .session pre.term { font-size: 11.5px; }
+  .proof .cites a { display: block; font-size: 12.5px; }
+  .proof .cites a .f { display: block; }
+  .proof .cites { gap: 10px; margin-top: 6px; }
   /* a 1200 px terminal at 358 px is a dark box with 5 px text: the session as text stands in for it on a phone */
   .clip { display: none; }
   .walk li { padding-left: 0; padding-top: 24px; }      /* the step number sits above, so the panel keeps the full width */
@@ -635,3 +677,10 @@ kbd { font-family: var(--mono); font-size: 12px; border: 1px solid var(--rule); 
 .plan { display: flex; flex-direction: column; }
 .plan .btn { margin-top: auto; }
 .plan ul { margin-bottom: 32px; }
+
+/* ==== merge of the alignment pass (hero install row, struck session, Tested, hanging indents) ==== */
+.hero-install { grid-template-columns: var(--split); column-gap: var(--gap); margin-top: 48px; }
+.hero-install + .agents { margin-top: 32px; }
+.panel-head .tl::before, .panel-head .tl span::before { content: none; }
+@media (min-width: 601px) { .hero-panel pre.term .l { padding-left: var(--i, 2ch); text-indent: calc(-1 * var(--i, 2ch)); } }
+@media (max-width: 960px) { .hero-install { grid-template-columns: minmax(0, 1fr); margin-top: 32px; } .hero .agents { order: 4; } }
