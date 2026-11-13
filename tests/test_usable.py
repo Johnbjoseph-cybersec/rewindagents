@@ -179,14 +179,42 @@ class TestStatus(unittest.TestCase):
     def test_a_hook_that_runs_but_cannot_record_is_failing_and_exits_1(self):
         broken = (f"{sys.executable} -c \"import sys; sys.stderr.write('No module named rewindagents\\n')\" "
                   f"rewindagents hook")
-        hook.install(self.root / ".claude/settings.json", command=broken, agent="claude")
-        self.assertEqual(hook.stale(broken), None)           # the stale check cannot see this one
-        code, out = self.status()
+        # The realistic case: the config holds exactly the command this install writes, but it cannot record
+        # (the package was removed from that interpreter). Only that command is ever probed.
+        with mock.patch.object(hook, "hook_command", return_value=broken):
+            hook.install(self.root / ".claude/settings.json", command=broken, agent="claude")
+            self.assertEqual(hook.stale(broken), None)       # the stale check cannot see this one
+            code, out = self.status()
         self.assertEqual(code, 1, out)
         self.assertRegex(out, r"claude\s+FAILING\s+\.claude/settings\.json  \(ran but recorded nothing: "
                               r"No module named rewindagents\)")
         self.assertIn("A FAILING hook records nothing", out)
         self.assertNotIn("Recording works", out)
+
+    @unittest.skipUnless(os.name == "posix", "the probe runs on POSIX shells only")
+    def test_status_never_runs_a_command_taken_from_the_config(self):
+        # A cloned project's config is untrusted: a command that only mentions `rewindagents hook` must not run.
+        pwned = self.root / "PWNED"
+        evil = f"touch {pwned}; {sys.executable} -m rewindagents hook"
+        hook.install(self.root / ".claude/settings.json", command=evil, agent="claude")
+        code, out = self.status()
+        self.assertFalse(pwned.exists(), out)
+        self.assertRegex(out, r"claude\s+ok\s+\.claude/settings\.json  \(another rewindagents hook, not tested")
+        self.assertNotIn("Recording works", out)
+
+    def test_a_hook_missing_an_event_is_partial_and_exits_1(self):
+        # A config from before PostToolUseFailure was hooked: failed shell commands would go unrecorded.
+        cfg = self.root / ".claude/settings.json"
+        hook.install(cfg, agent="claude")
+        data = json.loads(cfg.read_text())
+        self.assertIn("PostToolUseFailure", data["hooks"])
+        del data["hooks"]["PostToolUseFailure"]
+        cfg.write_text(json.dumps(data))
+        code, out = self.status(probe=False)
+        self.assertEqual(code, 1, out)
+        self.assertRegex(out, r"claude\s+PARTIAL\s+\.claude/settings\.json  \(not on every event")
+        self.assertIn("A PARTIAL hook misses some steps", out)
+        self.assertIn("init --yes", out)
 
     def test_store_size_is_shown(self):
         store = self.root / ".rewindagents" / "objects"

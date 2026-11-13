@@ -139,7 +139,7 @@ class StaleTest(unittest.TestCase):
         self.assertRegex(self.line(out, "cursor"),
                          rf"cursor\s+STALE\s+\.cursor/hooks\.json  \({self.gone} no longer exists\)$")
         self.assertRegex(self.line(out, "gemini"), r"gemini\s+no hook\s+")
-        self.assertRegex(self.line(out, "qwen"), r"qwen\s+partial\s+")
+        self.assertRegex(self.line(out, "qwen"), r"qwen\s+PARTIAL\s+")
         self.assertNotIn("codex", out)                    # no file, no line
         self.assertIn("A stale hook records nothing. Fix: ", out)
         self.assertIn("init --yes", out)

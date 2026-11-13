@@ -205,18 +205,25 @@ def recording(path: Path) -> tuple[str, str]:
 
 
 def probe_hooks(name: str, path: Path, timeout: float = 30.0) -> str | None:
-    """Run each rewindagents hook command in this config file the way the agent would (through the shell, a
-    tool call's JSON on stdin) in a scratch directory, and check that it wrote a record there. Returns why it
-    did not (the hook's own stderr, last line), or None when every command recorded. Nothing is written in the
-    project: the scratch directory is a new temporary one, removed afterwards. Not run on Windows, where the
-    agents' shells differ (agents.py)."""
+    """Run the hook command this install writes for `name` the way the agent would (through the shell, a tool
+    call's JSON on stdin) in a scratch directory, and check that it wrote a record there. Returns why it did not
+    (the hook's own stderr, last line), or None when it recorded. Nothing is written in the project: the scratch
+    directory is a new temporary one, removed afterwards. Not run on Windows, where the agents' shells differ
+    (agents.py).
+
+    Only hook.hook_command(name) is ever run, and only when the config file holds exactly that command. A
+    command is never taken from the file itself: a cloned project's config is untrusted, and a command that
+    merely mentions `rewindagents hook` could run anything (`touch x; python -m rewindagents hook`)."""
     if os.name != "posix":
         return None
+    mine = hook.hook_command(name)
     try:
         have = agents.commands_in(agents.AGENTS[name], path)
     except (ValueError, OSError, AttributeError, TypeError, KeyError):
         return None
-    for cmd in dict.fromkeys(c for cmds in have.values() for c in cmds if hook.ours(c)):
+    if not any(c == mine for cmds in have.values() for c in cmds):
+        return None
+    for cmd in (mine,):
         with tempfile.TemporaryDirectory(prefix="rewindagents-probe-") as d:
             payload = {"session_id": "rewindagents-status-probe", "cwd": d, "hook_event_name": "PreToolUse",
                        "tool_name": "Read", "tool_input": {"file_path": os.path.join(d, "probe.txt")}}
@@ -262,7 +269,7 @@ def status(global_: bool = False, root: Path | None = None, home: Path | None = 
     home = Path(home or Path.home())
     out = out or sys.stdout
     run = "rewindagents" if hook.installed() else "python3 -m rewindagents"
-    bad, shown, hooked, failing = 0, 0, 0, 0
+    bad, shown, hooked, failing, partial, unprobed = 0, 0, 0, 0, 0, 0
     for name in agents.AGENTS:
         t = target(name, root, home, global_)
         if not t.is_file():
@@ -281,10 +288,15 @@ def status(global_: bool = False, root: Path | None = None, home: Path | None = 
             line, why = "ok", ""
             hooked += 1
         elif st == "other":
-            line, why = "ok", "another rewindagents hook, which can run"
+            # Not run by the probe: only the command this install writes is ever executed (probe_hooks).
+            line, why = "ok", "another rewindagents hook, not tested by status"
             hooked += 1
+            unprobed += 1
         elif any(hook.ours(c) for cmds in agents.commands_in(agents.AGENTS[name], t).values() for c in cmds):
-            line, why = "partial", "not on every event"
+            # e.g. a config from before PostToolUseFailure was hooked: failed shell commands go unrecorded.
+            line, why = "PARTIAL", "not on every event: some steps are not recorded"
+            bad += 1
+            partial += 1
         else:
             line, why = "no hook", ""
         if line == "ok" and probe:
@@ -297,13 +309,17 @@ def status(global_: bool = False, root: Path | None = None, home: Path | None = 
     if not shown:
         print(f"No agent config file {'in your home directory' if global_ else 'in this project'}. "
               f"To add the hook: {run} init", file=out)
-    if bad > failing:
+    if partial:
+        print(f"A PARTIAL hook misses some steps (such as a shell command that fails), so they cannot be undone. "
+              f"Fix: {run} init --yes" + (" --global" if global_ else ""), file=out)
+    if bad > failing + partial:
         print(f"A stale hook records nothing. Fix: {run} init --yes" + (" --global" if global_ else ""), file=out)
     if failing:
         print(f"A FAILING hook records nothing, and your agent does not show its error. Reinstall rewindagents "
               f"(pipx install --force ...), then: {run} init --yes" + (" --global" if global_ else ""), file=out)
-    if not bad and hooked and probe and os.name == "posix":
-        print("Recording works: each hook above ran once in a scratch folder and wrote a record.", file=out)
+    if not bad and hooked > unprobed and probe and os.name == "posix":
+        print("Recording works: each hook above ran once in a scratch folder and wrote a record"
+              + (", except those marked not tested." if unprobed else "."), file=out)
     # The log is always this project's: a global hook records into the project the agent runs in too.
     default = ".rewindagents/log.jsonl"
     lp = Path(log_path or default)
