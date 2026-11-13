@@ -142,8 +142,8 @@ Each record and its newline go to the log in one write. If a write is still cut 
 process), the next record starts on a fresh line chained to the last whole record and the cut-off line stays
 where it is, so recording goes on. `verify` and `status` then name that line ("torn write at the end of the
 log", or "not a valid record" once records follow it) and exit 1, because the call it was recording is lost.
-`rewind`, `diff` and `gc` still work from such a log, print a note about the torn write and exit 1;
-`bundle` refuses it. `tests/test_torn_write.py` drives this through the real hook.
+`rewind`, `diff`, `gc` and `import` still work from such a log, print a note about the torn write and
+exit 1; `bundle` refuses it. `tests/test_torn_write.py` drives this through the real hook.
 
 Around every `Bash` call (for example `sed -i`, `rm`, `mv`, a code generator), the hook saves the
 project's files before the command, scans again after it, and checkpoints, in the `post` record, only the
@@ -487,6 +487,9 @@ Then `replay`, `rewind` and `branch` work on that session in the other clone, wi
 - `import` writes nothing until everything checks out: the file's own SHA-256, every record's hash, that every
   record belongs to the session and is in log order, every stored copy against its SHA-256, that no copy a
   record names is missing, that this project's log verifies, and that it does not already hold the session.
+  The one exception: a log here whose only damage is a torn write still takes the session in. The torn line
+  stays where it is, the new records chain on from the last whole record, and `import` prints a note and
+  exits 1.
 - The records join this project's chain in order, with their original times; they get new sequence
   numbers and hashes here.
 - File paths under the old project move under this one, so a rewind puts the files back in this clone.

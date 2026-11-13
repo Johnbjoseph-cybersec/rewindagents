@@ -224,6 +224,41 @@ class InstalledCommandTest(unittest.TestCase):
             self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
             self.assertEqual(Path(proj, "app.py").read_text(), "x = 1\n")
 
+    def test_import_through_the_binary_into_a_torn_log_exits_1_and_rewinds(self):
+        with TemporaryDirectory() as src, TemporaryDirectory() as dst, TemporaryDirectory() as carry:
+            shell = "sed -i.bak s/1/2/ app.py && rm app.py.bak"
+            for proj, session in ((src, "moved"), (dst, "here")):
+                Path(proj, "app.py").write_text("x = 1\n")
+                self.assertEqual(self._run("install", cwd=proj).returncode, 0)
+                cmd = json.loads(Path(proj, ".claude", "settings.json").read_text())["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
+                for event in ("PreToolUse", "PostToolUse"):
+                    payload = {"session_id": session, "cwd": proj, "hook_event_name": event, "tool_name": "Bash",
+                               "tool_input": {"command": shell}, "tool_use_id": "toolu_1"}
+                    p = subprocess.run(cmd, shell=True, cwd=proj, env=clean_env(), input=json.dumps(payload),
+                                       capture_output=True, text=True, timeout=120)
+                    self.assertEqual((p.returncode, p.stderr), (0, ""))
+                    if event == "PreToolUse":
+                        subprocess.run(["sh", "-c", shell], cwd=proj, check=True)
+            out = str(Path(carry, "moved.bundle"))
+            self.assertEqual(self._run("bundle", "--out", out, cwd=src).returncode, 0)
+            lp = Path(dst, ".rewindagents", "log.jsonl")
+            last = lp.read_bytes().splitlines()[-1]
+            with lp.open("ab") as fh:                              # a write cut off before its newline
+                fh.write(last[: len(last) // 2])
+            before = lp.read_bytes()
+            r = self._run("import", out, cwd=dst)
+            self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+            self.assertIn("imported session moved: 1 steps, 2 records", r.stdout)
+            self.assertIn("note: this log has a torn write (record 3: not a valid record", r.stdout)
+            self.assertTrue(lp.read_bytes().startswith(before))
+            r = self._run("verify", cwd=dst)
+            self.assertEqual(r.returncode, 1)
+            self.assertIn("the 2 records after it chain on intact", r.stdout + r.stderr)
+            Path(dst, "app.py").write_text("x = 9\n")
+            r = self._run("rewind", "0", "--session", "moved", cwd=dst)
+            self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+            self.assertEqual(Path(dst, "app.py").read_text(), "x = 1\n")
+
     def test_install_for_codex_and_cursor_writes_commands_their_payloads_drive(self):
         """`install --agent codex|cursor` through the binary; then the command from the written file, run as the
         agent would run it (no PYTHONPATH, the documented payload on stdin), records a shell edit that the binary

@@ -245,6 +245,10 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
                   f"{d['objects']} stored files ({d['already_here']} already here)")
             print(f"  file paths moved from {d['from_root']} to {d['root']}")
             print(f"  replay it with: {invocation()} replay --session {d['session']}")
+            if d["torn"]:
+                print(f"  note: this log has a torn write ({d['torn']}); the torn line stays where it is and the "
+                      f"imported records chain on from the last whole record")
+                return 1
         return 0
     if a.cmd == "diff":
         return diffs.run(a.log, a.step, a.session, a.paths)

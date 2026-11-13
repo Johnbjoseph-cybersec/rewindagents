@@ -230,6 +230,86 @@ class TornWrite(unittest.TestCase):
         self.assertIn("torn write", p.stderr)
         self.assertFalse((self.d / "b.json").exists())
 
+    # ------------------------------------------------------------------------ import into a torn log
+    def source_bundle(self, session="moved"):
+        """Session `session`, one Write of lib.py recorded through the real hook in another project, bundled."""
+        tmp = TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        src = Path(tmp.name).resolve()
+        lib = src / "lib.py"
+        lib.write_text("A = 1\n")
+        for when in ("pre", "post"):
+            p = payload("claude", src, when, tool="Write", tool_input={"file_path": str(lib), "content": "A = 2\n"})
+            p["session_id"] = session
+            r = run_hook(json.dumps(p), src, "claude")
+            self.assertEqual(r.returncode, 0, r.stderr)
+            if when == "pre":
+                lib.write_text("A = 2\n")
+        out = src / f"{session}.bundle"
+        p = cli(src, "bundle", "--out", str(out))
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+        return out
+
+    def test_import_adds_to_a_log_whose_only_damage_is_a_torn_write(self):
+        """After one torn write a project must still take in a session: the torn line stays where it is (every
+        byte before the import unchanged), the imported records chain on from the last whole record, and the
+        command says so and exits 1, as rewind/diff/gc do."""
+        b = self.source_bundle()
+        self.write_step("print('v2')\n")                        # records 1-2, session s-1
+        torn = self.tear()                                       # line 3: a fragment, no newline
+        p = cli(self.d, "import", str(b))
+        self.assertEqual(p.returncode, 1, p.stdout + p.stderr)
+        self.assertIn("imported session moved: 1 steps, 2 records", p.stdout)
+        self.assertIn("note: this log has a torn write (record 3: not a valid record", p.stdout)
+        raw = self.lp.read_bytes()
+        self.assertTrue(raw.startswith(torn), "bytes already in the log were rewritten")
+        self.assertEqual(raw[len(torn):len(torn) + 1], b"\n", "the first imported record must start a new line")
+        recs = log.read(self.lp)
+        self.assertEqual([(r["seq"], r["session"]) for r in recs], [(1, "s-1"), (2, "s-1"), (4, "moved"), (5, "moved")])
+        self.assertEqual(recs[2]["prev"], recs[1]["hash"], "imported records chain to the last whole record")
+        ok, n, msg, torn_only = log.check(self.lp)
+        self.assertEqual((ok, n, torn_only), (False, 5, True))
+        self.assertEqual(msg, "record 3: not a valid record (not JSON, as a torn write leaves; "
+                              "the 2 records after it chain on intact)")
+        r = cli(self.d, "rewind", "0", "--session", "moved")      # the imported session rewinds here
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertEqual((self.d / "lib.py").read_text(), "A = 1\n")
+        self.assertEqual(self.app.read_text(), "print('v2')\n")  # the other session is left alone
+        again = cli(self.d, "import", str(b))                     # the session is here now
+        self.assertEqual(again.returncode, 1)
+        self.assertIn("already holds session 'moved'", again.stderr)
+
+    def test_import_into_a_torn_log_still_runs_every_other_check_first(self):
+        b = self.source_bundle()
+        self.write_step("print('v2')\n")
+        before = self.tear()
+        objects = self.objects()
+        bad = json.loads(b.read_text())
+        bad["records"][0]["result"] = "edited"                    # altered after bundling
+        alt = b.with_name("altered.bundle")
+        alt.write_text(json.dumps(bad))
+        p = cli(self.d, "import", str(alt))
+        self.assertEqual(p.returncode, 1)
+        self.assertIn("bundle altered", p.stderr)
+        self.assertEqual(self.lp.read_bytes(), before, "nothing may be written when a check fails")
+        self.assertEqual(self.objects(), objects)
+
+    def test_import_still_refuses_a_log_damaged_other_than_by_a_torn_write(self):
+        b = self.source_bundle()
+        self.write_step("print('v2')\n")
+        self.write_step("print('v3')\n")
+        lines = self.lp.read_bytes().splitlines()
+        lines[1] = lines[1][:40]                                # chain broken, not torn-only
+        self.lp.write_bytes(b"\n".join(lines) + b"\n")
+        before, objects = self.lp.read_bytes(), self.objects()
+        self.assertFalse(log.check(self.lp)[3])
+        p = cli(self.d, "import", str(b))
+        self.assertEqual(p.returncode, 1)
+        self.assertIn("this log does not verify (record 3: chain broken", p.stderr)
+        self.assertIn("refusing to add to it", p.stderr)
+        self.assertEqual(self.lp.read_bytes(), before)
+        self.assertEqual(self.objects(), objects)
+
 
 if __name__ == "__main__":
     unittest.main()

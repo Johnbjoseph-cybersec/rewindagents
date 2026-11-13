@@ -16,6 +16,12 @@ altered: a bundle that cannot be rewound is not worth carrying.
 Then it writes the stored copies and appends the records to the destination log, in order, with their
 original times. They join the destination's own chain, so they get new sequence numbers and new hashes.
 
+The one exception to "the destination log verifies" is a log whose only damage is torn writes (log.check
+torn_only), as `gc` allows: refusing would lock the project out of every import after one full disk. The torn
+line stays where it is (every byte already in the log is kept; the recorder starts the first imported record
+on a fresh line), the records chain on from the last whole record, and the result carries the torn-write
+message so the CLI can say so and exit 1. `bundle` still refuses such a log as a source.
+
 Paths: a record names files by absolute path on the machine that recorded it. On import, every path under
 the source project is moved under the destination project (the directory holding .rewindagents/), so
 `rewind` there puts the files back in the clone, not at the old address. Commands and results keep their
@@ -276,10 +282,12 @@ def import_bundle(path: str | Path, log_path: str | Path) -> dict:
     log_path = Path(log_path)
     root = rewind.project_root(log_path)
     store = root / ".rewindagents"
+    torn = False
     if log_path.exists():
-        ok, _, msg = log.verify(log_path)
-        if not ok:
+        ok, _, msg, torn_only = log.check(log_path)
+        if not ok and not torn_only:
             raise BundleError(f"this log does not verify ({msg}); refusing to add to it")
+        torn = not ok
         if log.read(log_path, session):
             raise BundleError(f"this log already holds session {session!r}; nothing imported")
     have = 0
@@ -307,4 +315,5 @@ def import_bundle(path: str | Path, log_path: str | Path) -> dict:
             rec.record(session, r["tool"], move_paths(r.get("args"), b["root_spellings"], root), r.get("result"),
                        actor=r.get("actor", "agent"), event=r.get("event", "tool_call"), ts=r.get("ts"))
     return {"session": session, "records": len(b["records"]), "steps": len(rewind.steps_from(b["records"])),
-            "objects": len(data), "already_here": have, "from_root": b.get("root"), "root": root}
+            "objects": len(data), "already_here": have, "from_root": b.get("root"), "root": root,
+            "torn": log.check(log_path)[2] if torn else None}
