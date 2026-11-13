@@ -119,6 +119,8 @@ def steps_from(recs: list[dict]) -> list[dict]:
             s["only"] = args["only"]
         if args.get("branch"):
             s["branch"] = args["branch"]
+        if args.get("revert") is not None:
+            s["reverted"] = args["revert"]
         if r.get("event") != "pre" and isinstance(args.get("after"), list):
             s["after"] = args["after"]                        # a rewind's own record: what it left
         if isinstance(args.get("bash_scan"), dict) and "skipped" in args["bash_scan"]:
@@ -144,6 +146,8 @@ def summary(step: dict, width: int = 80, root: Path | None = None) -> str:
     inp = step.get("input")
     if step["event"] == "fork" and isinstance(inp, dict):
         text = f"run {inp.get('fork')} starts here: the files as they were right after step {inp.get('from_step')}"
+    elif step["event"] == "revert":
+        text = f"reverted step {step.get('reverted')}, keeping the steps after it"
     elif step["event"] in ("rewind", "branch"):
         text = f"rewound to step {step.get('to_step')}"
         if step.get("only"):

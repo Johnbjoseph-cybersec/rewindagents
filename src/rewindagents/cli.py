@@ -1,5 +1,5 @@
 """rewindagents command line: init, status, record, verify, head, show, hook, install, uninstall, replay, diff,
-rewind, branch, fork, compare, export, sessions, bundle, import, gc."""
+rewind, revert, branch, fork, compare, export, sessions, bundle, import, gc."""
 from __future__ import annotations
 
 import argparse
@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 from . import __version__, agents, bundle, export, gc, hook, log, project, rewind, runs, sessions
-from . import diff as diffs, init as setup
+from . import diff as diffs, init as setup, revert as reverts
 
 
 def invocation() -> str:
@@ -20,7 +20,8 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         prog="rewindagents",
         description="The flight recorder for coding agents: see exactly what your agent did, and take back any "
-                    "part of it. Start with `rewindagents init`; then `replay`, `diff N`, `rewind N [--only PATH]`.",
+                    "part of it. Start with `rewindagents init`; then `replay`, `diff N`, `rewind N [--only PATH]`, "
+                    "`revert K` (take back step K alone, keep everything after it).",
         epilog="Exit codes: 0 done; 1 it ran but something was not done or does not check out (a file a rewind "
                "could not put back or refused to overwrite, a log that does not verify); 2 it could not run as "
                "asked (an option it cannot parse, a step number the session does not have, or no log yet). A --session, "
@@ -68,6 +69,11 @@ def main(argv: list[str] | None = None) -> int:
     rw.add_argument("--force", action="store_true",
                     help="rewind even when a file changed after the steps it takes back (by hand or another "
                          "session); those bytes are kept as a step, so the rewind can be undone")
+    rv = sub.add_parser("revert", help="take back step K alone and keep every later step and hand edit: a three-way "
+                                       "merge per file; on a conflict nothing changes (exit 1)")
+    rv.add_argument("step", type=int, help="step number from `replay`")
+    rv.add_argument("--session", help="default: the session that wrote the last record")
+    rv.add_argument("--dry-run", action="store_true", help="print what would change, change nothing")
     dfp = sub.add_parser("diff", help="show what `rewind N` would change, as a unified diff (now -> step N)")
     dfp.add_argument("step", type=int, help="step number from `replay` (0 = before the first step)")
     dfp.add_argument("paths", nargs="*", metavar="PATH", help="only these files (or the files under these directories)")
@@ -185,7 +191,7 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
         return setup.main(yes=a.yes, global_=a.global_)
     if a.cmd == "compare":
         return _compare(a)
-    if a.cmd in ("verify", "show", "replay", "rewind", "branch", "export", "sessions", "bundle", "gc", "diff", "fork") \
+    if a.cmd in ("verify", "show", "replay", "rewind", "revert", "branch", "export", "sessions", "bundle", "gc", "diff", "fork") \
             and not Path(a.log).exists():
         print(f"rewindagents: no log at {a.log}" + ("" if explicit_log else ", here or in a parent directory"),
               file=sys.stderr)
@@ -278,6 +284,8 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
             print(f"rewindagents: the log does not verify ({d['chain_msg']}); the page says so", file=sys.stderr)
             return 1
         return 0
+    if a.cmd == "revert":
+        return _revert(a)
     if a.cmd in ("rewind", "branch"):
         try:
             if a.cmd == "rewind":
@@ -323,6 +331,66 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
         print(f"{rec['seq']:>5}  {rec['session']}  {rec.get('event', '')}  {rec['tool']}  "
               f"{json.dumps(rec['args'], ensure_ascii=False)}")
     return 0
+
+
+def _revert(a: argparse.Namespace) -> int:
+    root = rewind.project_root(a.log)
+    try:
+        p = reverts.revert(a.log, a.step, a.session, dry_run=a.dry_run)
+    except reverts.ConflictError as e:
+        _revert_conflict(e.plan, root)
+        return 1
+    except rewind.StepRangeError as e:
+        print(f"rewindagents: {e}", file=sys.stderr)
+        return 2
+    except rewind.RewindError as e:
+        print(f"rewindagents: {e}", file=sys.stderr)
+        return 1
+    k, sid = p["step"], p["session"]
+    if p["conflict"]:              # --dry-run: the same message a real revert gives, on stdout
+        _revert_conflict(p, root, sys.stdout, dry_run=True)
+        return 1
+    verb = "would" if a.dry_run else "did"
+    n = len(p["write"]) + len(p["delete"])
+    print(f"session {sid}: revert step {k} of {p['steps']}, keeping the steps after it ({verb} change "
+          f"{n} file{'s' if n != 1 else ''})")
+    for q, _, _ in p["write"]:
+        if q in p["merged"]:
+            print(f"  merge    {rewind.relative(q, root)}: step {k}'s change taken out, later changes kept")
+        else:
+            print(f"  restore  {rewind.relative(q, root)}")
+    for q in p["delete"]:
+        print(f"  delete   {rewind.relative(q, root)}")
+    for q in p["same"]:
+        print(f"  same     {rewind.relative(q, root)}: already without step {k}'s change")
+    for q, why in p["cannot"]:
+        print(f"  CANNOT   {rewind.relative(q, root)}: {why}")
+    if p.get("record"):
+        print(f"  this revert is step {p['steps'] + 1}; undo it with: {invocation()} rewind {p['steps']} "
+              f"--session {sid}")
+    if p.get("early"):
+        print(f"  note: step {k} ran a command in the background, so its after-scan may have run before it "
+              f"finished; files it changed later were not seen")
+    if p.get("torn"):
+        print(f"  note: the log has a torn write ({p['torn']}); the call it was recording is not in the log")
+    return 1 if p["cannot"] or p.get("early") or p.get("torn") else 0
+
+
+def _revert_conflict(p: dict, root, out=None, dry_run: bool = False) -> None:
+    out = out or sys.stderr
+    k, sid = p["step"], p["session"]
+    n = len(p["conflict"])
+    head = "would conflict" if dry_run else "refused, nothing changed"
+    print(f"rewindagents: revert {k} {head}: {n} file{'s' if n != 1 else ''} changed after step {k} where "
+          f"step {k} changed {'them' if n != 1 else 'it'}:", file=out)
+    for q, why in p["conflict"]:
+        print(f"  CONFLICT {rewind.relative(q, root)}: {why}", file=out)
+    print(f"  what step {k} changed: {invocation()} replay --step {k} --diff --session {sid}", file=out)
+    only = " ".join(f"--only {rewind.relative(q, root)}" for q, _ in p["conflict"])
+    print(f"  then either edit those lines back by hand, or put {'those files' if n != 1 else 'the file'} back as "
+          f"{'they were' if n != 1 else 'it was'} before step {k}, losing the later changes in "
+          f"{'them' if n != 1 else 'it'} (kept as a step, so it can be undone): "
+          f"{invocation()} rewind {k - 1} {only} --force --session {sid}", file=out)
 
 
 def _compare(a: argparse.Namespace) -> int:

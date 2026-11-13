@@ -150,6 +150,10 @@
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents rewind 12</span></span>
 <span class="l"><span class="c"># put back only these</span></span>
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents rewind 12 <span class="nb">--only src/db.py</span> <span class="nb">--only tests/</span></span></span>
+<span class="l"><span class="c"># what taking back step 12 alone would change</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents revert 12 <span class="nb">--dry-run</span></span></span>
+<span class="l"><span class="c"># take back step 12 alone, keep every later step and hand edit</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents revert 12</span></span>
 <span class="l"><span class="c"># keep the current files, then rewind to step 12</span></span>
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents branch 12 <span class="nb">--name try2</span></span></span></code></pre>
 <p><code>replay</code> prints one line per step: number, tool, file or command, and how many files the step checkpointed. <code>replay --step N</code> shows one step in full. <code>rewind N</code> puts back every file that a step after N changed and deletes the files those steps created; <code>rewind 0</code> undoes the whole session. Before writing anything it checks the hash chain and the SHA-256 of every stored copy: if the chain is broken it changes nothing, and a copy that no longer matches is reported and left as it is.</p>

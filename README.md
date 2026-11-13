@@ -323,6 +323,8 @@ rewindagents diff 12             # the same files, as a unified diff: now -> ste
 rewindagents diff 12 src/db.py   # only that file (a directory means every file under it)
 rewindagents rewind 12           # files back to how they were right after step 12
 rewindagents rewind 12 --only src/db.py --only tests/   # put back only these
+rewindagents revert 12 --dry-run # what taking back step 12 alone would change
+rewindagents revert 12           # take back step 12 alone, keep every later step and hand edit
 rewindagents branch 12 --name try2   # keep the current files, then rewind to step 12
 ```
 
@@ -342,6 +344,20 @@ rewindagents branch 12 --name try2   # keep the current files, then rewind to st
   agent's other changes as they are. Same hash-chain and stored-copy checks, and it is recorded as a step
   like any rewind, so it can be undone. A path no step after N changed is reported as `skip`; if none of
   the paths was changed, nothing is written and the exit code is 1.
+
+- `revert K` takes back step K alone and keeps everything after it: later agent steps, later sessions and
+  hand edits, in other files and in the same file. For each file step K changed it does a three-way merge
+  (base: the file right after step K, which the hook keeps a copy of; theirs: the file right before step K;
+  ours: the file now), so step K's lines go back and the other lines stay. A file step K created is removed
+  only if it is unchanged since; a file it deleted comes back only if nothing created it again. When a later
+  change touched the same lines as step K (or lines right next to them, as `git merge-file` counts it), or
+  changed a file step K created or deleted, that is a conflict: `revert` changes nothing, names each file,
+  says how to see step K's change and how to put the file back by hand, and exits 1. `--dry-run` prints the
+  plan, conflicts included. A revert is recorded as a step like a rewind, current bytes first, so `rewind
+  <step before it>` undoes it. It has the same limits as `rewind` (files outside the project, over 20 MB or
+  not checkpointed are reported, exit 1). Steps recorded by an older version kept only the hash of the file
+  after the step, so for them `revert` needs those bytes from somewhere else: the file now, or a later
+  step's copy of it; otherwise that file is reported, not guessed.
 
 - `rewind N` puts back every file that a step after N changed with `Write`, `Edit`, `MultiEdit`,
   `NotebookEdit` or a `Bash` command, and deletes the files those steps created. `rewind 0` undoes the
