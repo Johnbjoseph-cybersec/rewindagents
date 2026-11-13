@@ -22,6 +22,9 @@ jobs:
           - os: windows-latest
             py: python
     runs-on: ${{ matrix.os }}
+    # The suite takes about 1 min on Linux and 2 on macOS. Without a limit, a hung test holds the job for the
+    # 6 h default and its log stays unreadable (run 43432945827, Windows); -v names the last test that started.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:

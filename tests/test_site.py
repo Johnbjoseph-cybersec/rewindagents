@@ -485,7 +485,7 @@ class TestSite(unittest.TestCase):
             self.assertIn(s.strip(), prose)
         # the action has not run on GitHub (R18b): the page says so while the README does
         if "It has not run on GitHub yet" in prose:
-            self.assertIn("It has not run on GitHub yet: this repository is not public.", said)
+            self.assertIn("It has not run on GitHub yet.", said)
         html_toc = re.search(r'<nav class="toc".*?</nav>', html, re.S).group(0)
         toc = re.findall(r'<a href="#([a-z]+)">', html_toc)
         self.assertLess(toc.index("branch"), toc.index("ui"))

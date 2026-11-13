@@ -5,6 +5,14 @@
   <img src="brand/logo-wordmark.svg" alt="rewindagents" height="40">
 </picture>
 
+![Rewind to any step. Let another agent take it from there. rewindagents fork 2 and rewindagents compare --check: the first run fails its check, the second try from step 2 passes](brand/readme/launch-1200x630.png)
+
+**Rewind to any step. Let another agent take it from there.** Fork any recorded step, hand it to another
+agent, model, prompt or person, and compare the runs on what they did to the files and on your own check
+([Fork a step, compare the runs](#fork-a-step-compare-the-runs)).
+
+![rewindagents fork and compare: a recorded session, a second try forked from step 2, compare --check shows FAIL for the first run and pass for the second, compare --diff shows how they differ](brand/readme/fork-and-compare-800.gif)
+
 rewindagents rewinds what your coding agent changed, step by step, from one verifiable log, including the files
 only a shell command touched.
 
@@ -340,9 +348,11 @@ rewindagents branch 12 --name try2   # keep the current files, then rewind to st
 
 Exit codes, the same in every command: 0 when it did what you asked; 1 when it ran but something was not
 done or does not check out (a file a rewind could not put back or refused to overwrite, a log that does not
-verify); 2 when it could not run as asked: a bad argument, or no log yet. A step number the session does
-not have is a bad argument in `replay --step`, `rewind`, `diff`, `branch` and `fork` alike: exit 2, and
-the message gives the numbers the session has. `rewindagents --help` says this too.
+verify); 2 when it could not run as asked: an option it cannot parse or combine, a step number the session
+does not have, or no log yet. A step number the session does not have is a bad argument in `replay --step`,
+`rewind`, `diff`, `branch` and `fork` alike: exit 2, and the message gives the numbers the session has. A name that
+matches nothing (an unknown or ambiguous `--session`, a run `compare` cannot find), a `fork --name` that is
+not valid or already taken, or a `fork --dir` inside the project exits 1, and the message says why. `rewindagents --help` says this too.
 
 ## Fork a step, compare the runs
 
@@ -508,8 +518,7 @@ updates that comment instead of adding another.
   is still uploaded and the comment step logs a warning instead of failing.
 - If the log does not verify, the page is uploaded with its notice, and then the job fails.
 - `attach/attach.py` is not part of the package; the CLI still makes no network connections. Tested in
-  `tests/test_attach.py` against a fake GitHub API on 127.0.0.1. It has not run on GitHub yet: this repository
-  is not public.
+  `tests/test_attach.py` against a fake GitHub API on 127.0.0.1. It has not run on GitHub yet.
 
 ## Clean up stored copies
 
@@ -609,14 +618,15 @@ python3 billing/polar.py verify --headers h.json --body b.json   # check a saved
 
 ## Site
 
-`brand/site/` holds the landing page, the pricing page and the getting-started docs, to be published with GitHub Pages
-by `.github/workflows/pages.yml` once the repository is public. The pages are built by `brand/site/build.py` from this README, the package and
+`brand/site/` holds the landing page, the pricing page and the getting-started docs, published with GitHub Pages
+by `.github/workflows/pages.yml`. The pages are built by `brand/site/build.py` from this README, the package and
 the clip's session, and `tests/test_site.py` fails if a committed page differs from a fresh build. The site's
 address lives in one place, `brand/site/config.json`.
 
 `brand/vsl/` holds the scripts and captions of the launch videos, rendered by `brand/vsl/build.py` from
 `brand/vsl/beats.json`; every command and terminal line in them is one of this README's or one the clip's session
-printed, and `tests/test_vsl.py` checks that. The videos themselves are not made yet.
+printed, and `tests/test_vsl.py` checks that. The rendered videos are `brand/vsl-90s.mp4`, `brand/vsl-30s.mp4` and
+`brand/vsl-15s-vertical.mp4`; the site plays `brand/vsl/vsl-90s-web.mp4`, a copy of the 90-second one.
 
 ## Tests
 

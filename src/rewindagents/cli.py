@@ -23,7 +23,8 @@ def main(argv: list[str] | None = None) -> int:
                     "part of it. Start with `rewindagents init`; then `replay`, `diff N`, `rewind N [--only PATH]`.",
         epilog="Exit codes: 0 done; 1 it ran but something was not done or does not check out (a file a rewind "
                "could not put back or refused to overwrite, a log that does not verify); 2 it could not run as "
-               "asked (a bad argument, such as a step number the session does not have, or no log yet).")
+               "asked (an option it cannot parse, a step number the session does not have, or no log yet). A --session, "
+               "run, --name or --dir that matches nothing, is taken or is not allowed exits 1 and says why.")
     ap.add_argument("--version", action="version", version=f"rewindagents {__version__}")
     ap.add_argument("--log", help="log file (default: .rewindagents/log.jsonl here, or in the nearest parent "
                                   "directory that has one, as git finds a repository)")

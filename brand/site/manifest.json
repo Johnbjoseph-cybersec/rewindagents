@@ -21,7 +21,7 @@
    "It installs `rewindagents` from the same commit as the action, so pinning the action's SHA pins the tool.",
    "The token is handed to the comment step only.",
    "If the log does not verify, the page is uploaded with its notice, and then the job fails.",
-   "It has not run on GitHub yet: this repository is not public."
+   "It has not run on GitHub yet."
   ],
   "agents": {
    "claude": {

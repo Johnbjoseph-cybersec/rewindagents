@@ -50,6 +50,30 @@ class TestOutOfRange(unittest.TestCase):
         self.assertEqual(self.log.read_bytes(), self.before)       # nothing recorded
         self.assertFalse(Path(dest).exists())
 
+    def test_a_name_that_matches_nothing_or_is_taken_exits_1(self):
+        # README "Exit codes": exit 2 is for options it cannot parse, step numbers and a missing log; a --session,
+        # run, --name or --dir that matches nothing, is taken or is not allowed exits 1 and says why
+        root = Path(self.tmp.name).resolve()
+        dest = str(root) + "-run"
+        cases = [
+            (("replay", "--session", "nope"), "no session 'nope'"),
+            (("rewind", "0", "--session", "nope"), "no session 'nope'"),
+            (("fork", "1", "--name", "bad name!", "--dir", dest), "not a run name"),
+            (("fork", "1", "--name", "x", "--dir", str(root / "sub")), "inside the project"),
+            (("compare", "zz"), "no run"),
+        ]
+        for args, says in cases:
+            code, out, err = cli(*args)
+            self.assertEqual(code, 1, f"{args}: {err}")
+            self.assertIn(says, err, args)
+        self.assertEqual(self.log.read_bytes(), self.before)       # nothing recorded
+        self.assertFalse(Path(dest).exists())
+        code, out, err = cli("fork", "1", "--name", "x", "--dir", dest)
+        self.assertEqual(code, 0, err)
+        code, out, err = cli("fork", "1", "--name", "x", "--dir", dest + "2")
+        self.assertEqual(code, 1, err)
+        self.assertIn("already has a run named 'x'", err)
+
     def test_help_documents_the_exit_codes(self):
         import io
         from contextlib import redirect_stdout
