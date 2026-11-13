@@ -1,0 +1,278 @@
+02:38:34  unit T01-semver/race0  (runs so far 3, cost so far 0.61 USD)
+  T01-semver/race0       race         wall   29.7s  cost 0.1515984  visible True  hidden True
+  T01-semver/race0       race         wall   29.7s  cost 0.15461  visible True  hidden True
+  T01-semver/race0       race         wall   29.7s  cost 0.1552784  visible True  hidden True
+02:39:05  unit T02-glob/h1  (runs so far 6, cost so far 1.07 USD)
+  T02-glob/h1            solo         wall   34.4s  cost 0.1747748  visible True  hidden True
+  T02-glob/h1            h1-resume    wall   18.5s  cost 0.10816880000000001  visible True  hidden True
+  T02-glob/h1            h1-restart   wall   47.9s  cost 0.2360954  visible True  hidden True
+02:40:46  unit T02-glob/race0  (runs so far 9, cost so far 1.59 USD)
+  T02-glob/race0         race         wall   30.8s  cost 0.1583614  visible True  hidden True
+  T02-glob/race0         race         wall   36.4s  cost 0.1840044  visible True  hidden True
+  T02-glob/race0         race         wall   36.4s  cost 0.16795500000000002  visible True  hidden True
+02:41:24  unit T03-dotenv/h1  (runs so far 12, cost so far 2.10 USD)
+  T03-dotenv/h1          solo         wall   43.1s  cost 0.2135876  visible True  hidden True
+  T03-dotenv/h1          h1-resume    wall   32.3s  cost 0.15618680000000001  visible True  hidden True
+  T03-dotenv/h1          h1-restart   wall   67.1s  cost 0.2949464  visible True  hidden False
+02:43:48  unit T03-dotenv/race0  (runs so far 15, cost so far 2.76 USD)
+  T03-dotenv/race0       race         wall   42.6s  cost 0.20718679999999998  visible True  hidden True
+  T03-dotenv/race0       race         wall   45.3s  cost 0.20860720000000002  visible True  hidden False
+  T03-dotenv/race0       race         wall   45.3s  cost 0.17948980000000003  visible True  hidden True
+02:44:34  unit T04-allocate/h1  (runs so far 18, cost so far 3.36 USD)
+  T04-allocate/h1        solo         wall   22.7s  cost 0.1244194  visible True  hidden True
+  T04-allocate/h1        h1-resume    wall   14.8s  cost 0.0936412  visible True  hidden True
+  T04-allocate/h1        h1-restart   wall   51.8s  cost 0.24825620000000004  visible True  hidden True
+02:46:06  unit T04-allocate/race0  (runs so far 21, cost so far 3.83 USD)
+  T04-allocate/race0     race         wall   26.9s  cost 0.13741820000000002  visible True  hidden True
+  T04-allocate/race0     race         wall   26.9s  cost 0.1261264  visible True  hidden True
+  T04-allocate/race0     race         wall   27.6s  cost 0.13888920000000002  visible True  hidden True
+02:46:35  unit T05-intervals/h1  (runs so far 24, cost so far 4.23 USD)
+  T05-intervals/h1       solo         wall   34.3s  cost 0.1691118  visible True  hidden True
+  T05-intervals/h1       h1-resume    wall   19.4s  cost 0.0990606  visible True  hidden True
+  T05-intervals/h1       h1-restart   wall   41.7s  cost 0.200937  visible True  hidden True
+02:48:13  unit T05-intervals/race0  (runs so far 27, cost so far 4.70 USD)
+  T05-intervals/race0    race         wall   30.8s  cost 0.1605384  visible True  hidden True
+  T05-intervals/race0    race         wall   30.8s  cost 0.1393146  visible True  hidden True
+  T05-intervals/race0    race         wall   30.8s  cost 0.1402714  visible True  hidden True
+02:48:45  unit T06-toposort/h1  (runs so far 30, cost so far 5.14 USD)
+  T06-toposort/h1        solo         wall   33.9s  cost 0.171234  visible True  hidden True
+  T06-toposort/h1        h1-resume    wall   27.3s  cost 0.146326  visible True  hidden True
+  T06-toposort/h1        h1-restart   wall   44.2s  cost 0.2235472  visible True  hidden True
+02:50:33  unit T06-toposort/race0  (runs so far 33, cost so far 5.68 USD)
+  T06-toposort/race0     race         wall   33.0s  cost 0.17074219999999998  visible True  hidden True
+  T06-toposort/race0     race         wall   33.0s  cost 0.1562594  visible True  hidden True
+  T06-toposort/race0     race         wall   34.6s  cost 0.17485779999999998  visible True  hidden True
+02:51:08  unit T07-duration/h1  (runs so far 36, cost so far 6.18 USD)
+  T07-duration/h1        solo         wall   40.7s  cost 0.19670179999999998  visible True  hidden True
+  T07-duration/h1        h1-resume    wall   41.2s  cost 0.18809880000000004  visible True  hidden True
+  T07-duration/h1        h1-restart   wall   52.9s  cost 0.246407  visible True  hidden True
+02:53:25  unit T07-duration/race0  (runs so far 39, cost so far 6.81 USD)
+  T07-duration/race0     race         wall   32.7s  cost 0.1598496  visible True  hidden True
+  T07-duration/race0     race         wall   39.2s  cost 0.18355899999999997  visible True  hidden True
+  T07-duration/race0     race         wall   42.6s  cost 0.19846019999999998  visible True  hidden True
+02:54:09  unit T08-ttlcache/h1  (runs so far 42, cost so far 7.35 USD)
+  T08-ttlcache/h1        solo         wall   37.6s  cost 0.1960938  visible True  hidden True
+  T08-ttlcache/h1        h1-resume    wall   25.3s  cost 0.1445886  visible True  hidden True
+  T08-ttlcache/h1        h1-restart   wall   45.1s  cost 0.232381  visible True  hidden True
+02:55:59  unit T08-ttlcache/race0  (runs so far 45, cost so far 7.93 USD)
+  T08-ttlcache/race0     race         wall   39.3s  cost 0.19748560000000004  visible True  hidden True
+  T08-ttlcache/race0     race         wall   39.3s  cost 0.1761738  visible True  hidden True
+  T08-ttlcache/race0     race         wall   39.3s  cost 0.17414  visible True  hidden True
+02:56:40  unit T09-widthwrap/h1  (runs so far 48, cost so far 8.47 USD)
+  T09-widthwrap/h1       solo         wall   36.5s  cost 0.1817056  visible True  hidden True
+  T09-widthwrap/h1       h1-resume    wall   15.8s  cost 0.094833  visible True  hidden True
+  T09-widthwrap/h1       h1-restart   wall   48.5s  cost 0.24168440000000005  visible True  hidden True
+02:58:22  unit T09-widthwrap/race0  (runs so far 51, cost so far 8.99 USD)
+  T09-widthwrap/race0    race         wall   42.8s  cost 0.19842560000000004  visible True  hidden True
+  T09-widthwrap/race0    race         wall   52.9s  cost 0.2275156  visible True  hidden True
+  T09-widthwrap/race0    race         wall   52.9s  cost 0.1729476  visible True  hidden True
+02:59:17  unit T10-querystring/h1  (runs so far 54, cost so far 9.59 USD)
+  T10-querystring/h1     solo         wall   37.1s  cost 0.18465220000000002  visible True  hidden True
+  T10-querystring/h1     h1-resume    wall   32.2s  cost 0.16228780000000004  visible True  hidden True
+  T10-querystring/h1     h1-restart   wall   44.0s  cost 0.21473979999999998  visible True  hidden True
+03:01:12  unit T10-querystring/race0  (runs so far 57, cost so far 10.15 USD)
+  T10-querystring/race0  race         wall   37.3s  cost 0.184997  visible True  hidden True
+  T10-querystring/race0  race         wall   37.9s  cost 0.187332  visible True  hidden True
+  T10-querystring/race0  race         wall   37.9s  cost 0.1862224  visible True  hidden True
+03:01:51  unit T01-semver/solo1  (runs so far 60, cost so far 10.71 USD)
+  T01-semver/solo1       solo         wall   27.8s  cost 0.1567334  visible True  hidden True
+03:02:19  unit T01-semver/race1  (runs so far 61, cost so far 10.87 USD)
+  T01-semver/race1       race         wall   29.4s  cost 0.1572906  visible True  hidden True
+  T01-semver/race1       race         wall   29.4s  cost 0.1567074  visible True  hidden True
+  T01-semver/race1       race         wall   29.4s  cost 0.1523198  visible True  hidden True
+03:02:50  unit T02-glob/solo1  (runs so far 64, cost so far 11.33 USD)
+  T02-glob/solo1         solo         wall   31.8s  cost 0.16140600000000002  visible True  hidden True
+03:03:22  unit T02-glob/race1  (runs so far 65, cost so far 11.50 USD)
+  T02-glob/race1         race         wall   36.2s  cost 0.1777724  visible True  hidden True
+  T02-glob/race1         race         wall   36.2s  cost 0.16631900000000002  visible True  hidden True
+  T02-glob/race1         race         wall   36.2s  cost 0.1670402  visible True  hidden True
+03:04:00  unit T03-dotenv/solo1  (runs so far 68, cost so far 12.01 USD)
+  T03-dotenv/solo1       solo         wall   37.2s  cost 0.1876594  visible True  hidden False
+03:04:38  unit T03-dotenv/race1  (runs so far 69, cost so far 12.19 USD)
+  T03-dotenv/race1       race         wall   50.5s  cost 0.2433422  visible True  hidden True
+  T03-dotenv/race1       race         wall   50.5s  cost 0.23330099999999998  visible True  hidden True
+  T03-dotenv/race1       race         wall   50.5s  cost 0.2093242  visible True  hidden True
+03:05:30  unit T04-allocate/solo1  (runs so far 72, cost so far 12.88 USD)
+  T04-allocate/solo1     solo         wall   26.4s  cost 0.1327664  visible True  hidden True
+03:05:56  unit T04-allocate/race1  (runs so far 73, cost so far 13.01 USD)
+  T04-allocate/race1     race         wall   22.5s  cost 0.119439  visible True  hidden True
+  T04-allocate/race1     race         wall   29.4s  cost 0.1501198  visible True  hidden True
+  T04-allocate/race1     race         wall   29.4s  cost 0.1256952  visible True  hidden True
+03:06:27  unit T05-intervals/solo1  (runs so far 76, cost so far 13.41 USD)
+  T05-intervals/solo1    solo         wall   24.6s  cost 0.13024919999999998  visible True  hidden True
+03:06:53  unit T05-intervals/race1  (runs so far 77, cost so far 13.54 USD)
+  T05-intervals/race1    race         wall   28.4s  cost 0.1451612  visible True  hidden True
+  T05-intervals/race1    race         wall   35.9s  cost 0.173905  visible True  hidden True
+  T05-intervals/race1    race         wall   35.9s  cost 0.1437934  visible True  hidden True
+03:07:30  unit T06-toposort/solo1  (runs so far 80, cost so far 14.00 USD)
+  T06-toposort/solo1     solo         wall   35.6s  cost 0.1854966  visible True  hidden True
+03:08:06  unit T06-toposort/race1  (runs so far 81, cost so far 14.19 USD)
+  T06-toposort/race1     race         wall   36.2s  cost 0.18506020000000004  visible True  hidden True
+  T06-toposort/race1     race         wall   36.2s  cost 0.1760542  visible True  hidden True
+  T06-toposort/race1     race         wall   36.2s  cost 0.173028  visible True  hidden True
+03:08:44  unit T07-duration/solo1  (runs so far 84, cost so far 14.72 USD)
+  T07-duration/solo1     solo         wall   37.9s  cost 0.18728099999999998  visible True  hidden True
+03:09:22  unit T07-duration/race1  (runs so far 85, cost so far 14.91 USD)
+  T07-duration/race1     race         wall   30.0s  cost 0.1560538  visible True  hidden True
+  T07-duration/race1     race         wall   40.7s  cost 0.19179500000000002  visible True  hidden True
+  T07-duration/race1     race         wall   41.1s  cost 0.2020732  visible True  hidden True
+03:10:04  unit T08-ttlcache/solo1  (runs so far 88, cost so far 15.46 USD)
+  T08-ttlcache/solo1     solo         wall   39.0s  cost 0.20693739999999997  visible True  hidden True
+03:10:44  unit T08-ttlcache/race1  (runs so far 89, cost so far 15.67 USD)
+  T08-ttlcache/race1     race         wall   34.7s  cost 0.179738  visible True  hidden True
+  T08-ttlcache/race1     race         wall   35.7s  cost 0.18361480000000002  visible True  hidden True
+  T08-ttlcache/race1     race         wall   35.7s  cost 0.18593920000000003  visible True  hidden True
+03:11:21  unit T09-widthwrap/solo1  (runs so far 92, cost so far 16.21 USD)
+  T09-widthwrap/solo1    solo         wall   46.4s  cost 0.21187299999999998  visible True  hidden True
+03:12:08  unit T09-widthwrap/race1  (runs so far 93, cost so far 16.43 USD)
+  T09-widthwrap/race1    race         wall   43.8s  cost 0.20153480000000001  visible True  hidden True
+  T09-widthwrap/race1    race         wall   44.4s  cost 0.20303000000000002  visible True  hidden True
+  T09-widthwrap/race1    race         wall   44.4s  cost 0.19255480000000003  visible True  hidden True
+03:12:54  unit T10-querystring/solo1  (runs so far 96, cost so far 17.02 USD)
+  T10-querystring/solo1  solo         wall   34.6s  cost 0.18036619999999998  visible True  hidden True
+03:13:29  unit T10-querystring/race1  (runs so far 97, cost so far 17.20 USD)
+  T10-querystring/race1  race         wall   32.1s  cost 0.17518840000000002  visible True  hidden True
+  T10-querystring/race1  race         wall   41.5s  cost 0.2140106  visible True  hidden True
+  T10-querystring/race1  race         wall   41.5s  cost 0.17664719999999998  visible True  hidden True
+03:14:12  unit T01-semver/solo2  (runs so far 100, cost so far 17.77 USD)
+  T01-semver/solo2       solo         wall   25.5s  cost 0.1511232  visible True  hidden True
+03:14:38  unit T01-semver/race2  (runs so far 101, cost so far 17.92 USD)
+  T01-semver/race2       race         wall   26.9s  cost 0.1551536  visible True  hidden True
+  T01-semver/race2       race         wall   27.5s  cost 0.15647280000000002  visible True  hidden True
+  T01-semver/race2       race         wall   27.5s  cost 0.15503880000000003  visible True  hidden True
+03:15:06  unit T02-glob/solo2  (runs so far 104, cost so far 18.39 USD)
+  T02-glob/solo2         solo         wall   31.6s  cost 0.1695662  visible True  hidden True
+03:15:38  unit T02-glob/race2  (runs so far 105, cost so far 18.56 USD)
+  T02-glob/race2         race         wall   36.6s  cost 0.1773278  visible True  hidden True
+  T02-glob/race2         race         wall   36.6s  cost 0.1722802  visible True  hidden True
+  T02-glob/race2         race         wall   36.6s  cost 0.17510179999999997  visible True  hidden True
+03:16:16  unit T03-dotenv/solo2  (runs so far 108, cost so far 19.08 USD)
+  T03-dotenv/solo2       solo         wall   58.7s  cost 0.2675628  visible True  hidden True
+03:17:15  unit T03-dotenv/race2  (runs so far 109, cost so far 19.35 USD)
+  T03-dotenv/race2       race         wall   59.5s  cost 0.2729102  visible True  hidden True
+  T03-dotenv/race2       race         wall   59.5s  cost 0.20743240000000002  visible True  hidden True
+  T03-dotenv/race2       race         wall   59.4s  cost 0.2210076  visible True  hidden False
+03:18:16  unit T04-allocate/solo2  (runs so far 112, cost so far 20.05 USD)
+  T04-allocate/solo2     solo         wall   29.5s  cost 0.1490932  visible True  hidden True
+03:18:46  unit T04-allocate/race2  (runs so far 113, cost so far 20.20 USD)
+  T04-allocate/race2     race         wall   32.0s  cost 0.16193600000000002  visible True  hidden True
+  T04-allocate/race2     race         wall   32.0s  cost 0.15307739999999997  visible True  hidden True
+  T04-allocate/race2     race         wall   32.0s  cost 0.12135020000000002  visible True  hidden True
+03:19:19  unit T05-intervals/solo2  (runs so far 116, cost so far 20.64 USD)
+  T05-intervals/solo2    solo         wall   30.1s  cost 0.15622100000000003  visible True  hidden True
+03:19:49  unit T05-intervals/race2  (runs so far 117, cost so far 20.79 USD)
+  T05-intervals/race2    race         wall   28.2s  cost 0.13467200000000001  visible True  hidden True
+  T05-intervals/race2    race         wall   28.2s  cost 0.1407488  visible True  hidden True
+  T05-intervals/race2    race         wall   34.5s  cost 0.1612238  visible True  hidden True
+03:20:26  unit T06-toposort/solo2  (runs so far 120, cost so far 21.23 USD)
+  T06-toposort/solo2     solo         wall   36.7s  cost 0.1800038  visible True  hidden True
+03:21:03  unit T06-toposort/race2  (runs so far 121, cost so far 21.41 USD)
+  T06-toposort/race2     race         wall   35.4s  cost 0.17971079999999998  visible True  hidden True
+  T06-toposort/race2     race         wall   35.4s  cost 0.1464194  visible True  hidden True
+  T06-toposort/race2     race         wall   35.4s  cost 0.15259460000000002  visible True  hidden True
+03:21:40  unit T07-duration/solo2  (runs so far 124, cost so far 21.89 USD)
+  T07-duration/solo2     solo         wall   29.9s  cost 0.1418524  visible True  hidden True
+03:22:10  unit T07-duration/race2  (runs so far 125, cost so far 22.03 USD)
+  T07-duration/race2     race         wall   36.3s  cost 0.1753566  visible True  hidden True
+  T07-duration/race2     race         wall   36.3s  cost 0.169069  visible True  hidden True
+  T07-duration/race2     race         wall   40.8s  cost 0.19841060000000002  visible True  hidden True
+03:22:52  unit T08-ttlcache/solo2  (runs so far 128, cost so far 22.57 USD)
+  T08-ttlcache/solo2     solo         wall   29.4s  cost 0.16186180000000003  visible True  hidden True
+03:23:22  unit T08-ttlcache/race2  (runs so far 129, cost so far 22.73 USD)
+  T08-ttlcache/race2     race         wall   39.9s  cost 0.20738779999999998  visible True  hidden True
+  T08-ttlcache/race2     race         wall   39.9s  cost 0.1777692  visible True  hidden True
+  T08-ttlcache/race2     race         wall   39.9s  cost 0.1562132  visible True  hidden True
+03:24:03  unit T09-widthwrap/solo2  (runs so far 132, cost so far 23.28 USD)
+  T09-widthwrap/solo2    solo         wall   45.1s  cost 0.20496219999999998  visible True  hidden True
+03:24:48  unit T09-widthwrap/race2  (runs so far 133, cost so far 23.48 USD)
+  T09-widthwrap/race2    race         wall   47.0s  cost 0.22489580000000003  visible True  hidden True
+  T09-widthwrap/race2    race         wall   47.0s  cost 0.1726742  visible True  hidden True
+  T09-widthwrap/race2    race         wall   51.2s  cost 0.21791459999999999  visible True  hidden True
+03:25:41  unit T10-querystring/solo2  (runs so far 136, cost so far 24.10 USD)
+  T10-querystring/solo2  solo         wall   34.5s  cost 0.17937619999999999  visible True  hidden True
+03:26:16  unit T10-querystring/race2  (runs so far 137, cost so far 24.28 USD)
+  T10-querystring/race2  race         wall   38.6s  cost 0.1847894  visible True  hidden True
+  T10-querystring/race2  race         wall   38.6s  cost 0.18239139999999998  visible True  hidden True
+  T10-querystring/race2  race         wall   38.6s  cost 0.1672448  visible True  hidden True
+03:26:56  unit T01-semver/solo3  (runs so far 140, cost so far 24.81 USD)
+  T01-semver/solo3       solo         wall   21.8s  cost 0.13066260000000002  visible True  hidden True
+03:27:18  unit T01-semver/race3  (runs so far 141, cost so far 24.94 USD)
+  T01-semver/race3       race         wall   28.0s  cost 0.15513659999999999  visible True  hidden True
+  T01-semver/race3       race         wall   30.3s  cost 0.15770800000000001  visible True  hidden True
+  T01-semver/race3       race         wall   30.3s  cost 0.15303160000000002  visible True  hidden True
+03:27:50  unit T02-glob/solo3  (runs so far 144, cost so far 25.41 USD)
+  T02-glob/solo3         solo         wall   29.3s  cost 0.15983340000000001  visible True  hidden True
+03:28:20  unit T02-glob/race3  (runs so far 145, cost so far 25.57 USD)
+  T02-glob/race3         race         wall   43.1s  cost 0.20764879999999997  visible True  hidden True
+  T02-glob/race3         race         wall   43.1s  cost 0.17672939999999998  visible True  hidden True
+  T02-glob/race3         race         wall   43.1s  cost 0.1946  visible True  hidden True
+03:29:04  unit T03-dotenv/solo3  (runs so far 148, cost so far 26.15 USD)
+  T03-dotenv/solo3       solo         wall   46.8s  cost 0.2208764  visible True  hidden True
+03:29:51  unit T03-dotenv/race3  (runs so far 149, cost so far 26.37 USD)
+  T03-dotenv/race3       race         wall   47.2s  cost 0.2269862  visible True  hidden True
+  T03-dotenv/race3       race         wall   47.2s  cost 0.1983776  visible True  hidden True
+  T03-dotenv/race3       race         wall   47.2s  cost 0.2157092  visible True  hidden True
+03:30:40  unit T04-allocate/solo3  (runs so far 152, cost so far 27.01 USD)
+  T04-allocate/solo3     solo         wall   29.7s  cost 0.1413108  visible True  hidden True
+03:31:10  unit T04-allocate/race3  (runs so far 153, cost so far 27.15 USD)
+  T04-allocate/race3     race         wall   25.9s  cost 0.1309256  visible True  hidden True
+  T04-allocate/race3     race         wall   26.9s  cost 0.129877  visible True  hidden True
+  T04-allocate/race3     race         wall   31.8s  cost 0.1564716  visible True  hidden True
+03:31:43  unit T05-intervals/solo3  (runs so far 156, cost so far 27.57 USD)
+  T05-intervals/solo3    solo         wall   26.2s  cost 0.1422708  visible True  hidden True
+03:32:10  unit T05-intervals/race3  (runs so far 157, cost so far 27.71 USD)
+  T05-intervals/race3    race         wall   24.5s  cost 0.136373  visible True  hidden True
+  T05-intervals/race3    race         wall   33.2s  cost 0.17101339999999998  visible True  hidden True
+  T05-intervals/race3    race         wall   33.2s  cost 0.1342052  visible True  hidden True
+03:32:44  unit T06-toposort/solo3  (runs so far 160, cost so far 28.15 USD)
+  T06-toposort/solo3     solo         wall   31.3s  cost 0.1539604  visible True  hidden True
+03:33:16  unit T06-toposort/race3  (runs so far 161, cost so far 28.30 USD)
+  T06-toposort/race3     race         wall   35.2s  cost 0.17409060000000004  visible True  hidden True
+  T06-toposort/race3     race         wall   35.2s  cost 0.1644814  visible True  hidden True
+  T06-toposort/race3     race         wall   35.2s  cost 0.17068580000000003  visible True  hidden True
+03:33:53  unit T07-duration/solo3  (runs so far 164, cost so far 28.81 USD)
+  T07-duration/solo3     solo         wall   34.3s  cost 0.16625840000000003  visible True  hidden True
+03:34:27  unit T07-duration/race3  (runs so far 165, cost so far 28.98 USD)
+  T07-duration/race3     race         wall   40.2s  cost 0.1840152  visible True  hidden True
+  T07-duration/race3     race         wall   40.2s  cost 0.1839762  visible True  hidden True
+  T07-duration/race3     race         wall   40.2s  cost 0.1744484  visible True  hidden True
+03:35:09  unit T08-ttlcache/solo3  (runs so far 168, cost so far 29.52 USD)
+  T08-ttlcache/solo3     solo         wall   35.6s  cost 0.1768876  visible True  hidden True
+03:35:45  unit T08-ttlcache/race3  (runs so far 169, cost so far 29.70 USD)
+  T08-ttlcache/race3     race         wall   32.6s  cost 0.1711826  visible True  hidden True
+  T08-ttlcache/race3     race         wall   36.1s  cost 0.17970380000000002  visible True  hidden True
+  T08-ttlcache/race3     race         wall   36.1s  cost 0.17468879999999998  visible True  hidden True
+03:36:22  unit T09-widthwrap/solo3  (runs so far 172, cost so far 30.22 USD)
+  T09-widthwrap/solo3    solo         wall   40.4s  cost 0.1855914  visible True  hidden True
+03:37:04  unit T09-widthwrap/race3  (runs so far 173, cost so far 30.41 USD)
+  T09-widthwrap/race3    race         wall   62.4s  cost 0.2354466  visible True  hidden True
+  T09-widthwrap/race3    race         wall   62.4s  cost 0.1992334  visible True  hidden True
+  T09-widthwrap/race3    race         wall   62.4s  cost 0.1715146  visible True  hidden True
+03:38:08  unit T10-querystring/solo3  (runs so far 176, cost so far 31.02 USD)
+  T10-querystring/solo3  solo         wall   36.7s  cost 0.1806454  visible True  hidden True
+03:38:45  unit T10-querystring/race3  (runs so far 177, cost so far 31.20 USD)
+  T10-querystring/race3  race         wall   37.2s  cost 0.18230039999999997  visible True  hidden True
+  T10-querystring/race3  race         wall   37.2s  cost 0.17600879999999997  visible True  hidden True
+  T10-querystring/race3  race         wall   37.2s  cost 0.17247400000000002  visible True  hidden True
+03:39:23  unit T01-semver/solo4  (runs so far 180, cost so far 31.73 USD)
+  T01-semver/solo4       solo         wall   31.0s  cost 0.16471560000000002  visible True  hidden True
+03:39:54  unit T02-glob/solo4  (runs so far 181, cost so far 31.89 USD)
+  T02-glob/solo4         solo         wall   49.0s  cost 0.23909399999999997  visible True  hidden True
+03:40:44  unit T03-dotenv/solo4  (runs so far 182, cost so far 32.13 USD)
+  T03-dotenv/solo4       solo         wall   52.1s  cost 0.24080260000000003  visible True  hidden True
+03:41:36  unit T04-allocate/solo4  (runs so far 183, cost so far 32.37 USD)
+  T04-allocate/solo4     solo         wall   26.2s  cost 0.13562999999999997  visible True  hidden True
+03:42:03  unit T05-intervals/solo4  (runs so far 184, cost so far 32.51 USD)
+  T05-intervals/solo4    solo         wall   25.4s  cost 0.1426558  visible True  hidden True
+03:42:28  unit T06-toposort/solo4  (runs so far 185, cost so far 32.65 USD)
+  T06-toposort/solo4     solo         wall   33.2s  cost 0.17485140000000005  visible True  hidden True
+03:43:02  unit T07-duration/solo4  (runs so far 186, cost so far 32.82 USD)
+  T07-duration/solo4     solo         wall   35.0s  cost 0.17689800000000003  visible True  hidden True
+03:43:37  unit T08-ttlcache/solo4  (runs so far 187, cost so far 33.00 USD)
+  T08-ttlcache/solo4     solo         wall   33.5s  cost 0.1859078  visible True  hidden True
+03:44:11  unit T09-widthwrap/solo4  (runs so far 188, cost so far 33.19 USD)
+  T09-widthwrap/solo4    solo         wall   35.4s  cost 0.17462919999999998  visible True  hidden True
+03:44:47  unit T10-querystring/solo4  (runs so far 189, cost so far 33.36 USD)
+  T10-querystring/solo4  solo         wall   36.0s  cost 0.18931780000000004  visible True  hidden True
+schedule complete
+exit 0
