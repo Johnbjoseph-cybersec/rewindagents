@@ -1,5 +1,5 @@
 // Screenshot reel.html (ux-review/tools/reel.py) frame by frame, then encode MP4 and GIF with ffmpeg.
-// usage: node reel.mjs <reelDir> <outDir> <chromeProfileDir> [fps]
+// usage: [REEL_NAME=fork-and-compare] node reel.mjs <reelDir> <outDir> <chromeProfileDir> [fps]
 import { createRequire } from "module";
 import fs from "fs";
 import path from "path";
@@ -25,7 +25,8 @@ for (let i = 0; i < n; i++) {
   await page.screenshot({ path: path.join(frames, String(i).padStart(4, "0") + ".png") });
 }
 await browser.close();
-const mp4 = path.join(out, "rewind-in-action-1280x720.mp4"), gif = path.join(out, "rewind-in-action-800.gif");
+const stem = process.env.REEL_NAME || "rewind-in-action";
+const mp4 = path.join(out, stem + "-1280x720.mp4"), gif = path.join(out, stem + "-800.gif");
 execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-framerate", String(fps), "-i", path.join(frames, "%04d.png"),
   "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18", "-movflags", "+faststart", mp4]);
 execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-framerate", String(fps), "-i", path.join(frames, "%04d.png"),

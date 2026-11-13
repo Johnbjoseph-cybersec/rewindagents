@@ -53,7 +53,8 @@ ASSETS = ["ui-timeline.png", "demo.gif", "logo-wordmark.svg", "logo-wordmark-rev
 # brand/site/og/ files, copied into assets/ next to the brand/ ones. The share card is rendered from this build's
 # own pages (`build.py cards DIR`, then ux-review/tools/cards.mjs), so it is committed as a PNG here.
 SITE_ASSETS = ["og-1200x630.png"]
-OG_ALT = "rewindagents: Ctrl+Z for AI coding agents. A terminal shows rewindagents rewind 12 restoring four files."
+OG_ALT = ("rewindagents: Rewind to any step. Let another agent take it from there. A terminal shows rewindagents fork 2 "
+          "and rewindagents compare --check: the agent's run fails the check, the second try passes.")
 FONTS = {"bricolage-grotesque": (700, 800), "hanken-grotesk": (400, 600), "commit-mono": (400, 700)}
 C = {"Leader": "#F2F4F1", "Reel": "#121412", "Spool": "#1C201D", "Tape": "#55605A",
      "Record": "#B82A16", "Rewind": "#FF7A59", "Playhead": "#B9C2BB", "Rule": "#838C86"}
@@ -1132,70 +1133,69 @@ CARD_CSS = """
 html, body { margin: 0; background: var(--leader); }
 .card { box-sizing: border-box; overflow: hidden; background: var(--leader); color: var(--reel); position: relative; }
 .card .mark { height: 34px; width: auto; align-self: flex-start; }
-.card h1 { font-family: var(--display); font-weight: 800; letter-spacing: -0.03em; line-height: 1.0; margin: 0; text-wrap: balance; }
-.card .meta { font-family: var(--mono); color: var(--tape); letter-spacing: 0.04em; margin: 0; }
+.card h1 { font-family: var(--display); font-weight: 800; letter-spacing: -0.03em; line-height: 1.02; margin: 0; text-wrap: balance; }
+.card .sub { font-family: var(--body); color: var(--tape); margin: 0; max-width: none; text-wrap: balance; }
+.card .meta { font-family: var(--mono); color: var(--tape); letter-spacing: 0.04em; margin: 0; max-width: none; }
 .card .meta b { color: var(--reel); }
 .card .panel-head { font-size: inherit; }
-.card pre.term { font-size: inherit; padding: 18px 22px; }
-.card pre.term .l { white-space: pre; }
+.card pre.term { font-size: inherit; padding: 18px 20px; }
+.card pre.term .l { white-space: pre; padding-left: 0; text-indent: 0; }
 .card .host { font-family: var(--mono); font-weight: 700; color: var(--reel); }
-.card .rule { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: var(--reel); }
-.card .rule i { position: absolute; top: -6px; width: 6px; height: 12px; background: var(--record); }
-.wide { width: %(w)dpx; height: %(h)dpx; padding: 56px 64px 62px; display: grid; grid-template-columns: 470px minmax(0, 1fr); gap: 0 52px; align-items: end; }
+.card .credit { font-family: var(--mono); color: var(--reel); }
+.wide { width: %(w)dpx; height: %(h)dpx; padding: 52px 60px 50px; display: grid; grid-template-columns: 410px minmax(0, 1fr); gap: 0 44px; align-items: center; }
 .wide .left { display: flex; flex-direction: column; height: 100%%; justify-content: space-between; }
-.wide h1 { font-size: 56px; margin-top: 40px; }
-.wide .meta { font-size: 15px; line-height: 1.6; }
-.wide .panel { font-size: 14.5px; }
-.tall { width: 1080px; height: 1350px; padding: 80px 72px 86px; display: flex; flex-direction: column; gap: 44px; }
-.tall h1 { font-size: 92px; max-width: 11ch; }
-.tall .panel { font-size: 18.5px; }
-.tall .meta { font-size: 20px; }
-.tall .install { font-size: 19px; }
+.wide h1 { font-size: 50px; margin-top: 28px; }
+.wide .sub { font-size: 18px; line-height: 1.45; margin-top: 16px; }
+.wide .meta { font-size: 14px; line-height: 1.65; }
+.wide .panel { font-size: 12.6px; }
+.tall { width: 1080px; height: 1350px; padding: 76px 72px 72px; display: flex; flex-direction: column; gap: 40px; }
+.tall h1 { font-size: 88px; max-width: 12ch; }
+.tall .sub { font-size: 27px; line-height: 1.4; margin-top: -12px; }
+.tall .panel { font-size: 17.5px; }
+.tall .meta { font-size: 19px; line-height: 1.6; }
+.tall .install { font-size: 17px; }
 .tall .foot2 { margin-top: auto; display: flex; justify-content: space-between; align-items: end; gap: 24px; }
 """
 
 
 def cards(out):
-    """Share images as HTML pages built from this site's CSS and the real session (UX audit F5): og (1200x630),
-    linkedin (1200x627) and portrait (1080x1350). ux-review/tools/cards.mjs screenshots them; the og PNG is
-    committed as brand/site/og/og-1200x630.png. The text is the page's own: the promise, the eyebrow, the
-    README install line and lines from brand/demo/manifest.json, which tests/test_demo.py replays."""
+    """Share images as HTML pages built from this site's CSS and the real runs (UX audit F5; course 2026-11-13):
+    og (1200x630), linkedin (1200x627) and portrait (1080x1350). ux-review/tools/cards.mjs screenshots them; the og
+    PNG is committed as brand/site/og/og-1200x630.png. The text is the page's own: the course line, the README
+    install line, and lines from brand/demo/runs.json, which tests/test_runs_demo.py checks against a fresh run of
+    ux-review/try-runs.sh. Every card carries the credit line. No full-bleed strip at the edge: the ruler is the
+    one in the panel head (a strip there cropped to a stray tick on LinkedIn's 627 px)."""
     cfg, f = config(), facts()
     os.makedirs(out, exist_ok=True)
     shutil.copyfile(os.path.join(HERE, "site.css"), os.path.join(out, "site.css"))
     shutil.copytree(os.path.join(HERE, "fonts"), os.path.join(out, "fonts"), dirs_exist_ok=True)
     shutil.copyfile(os.path.join(BRAND, "logo-wordmark.svg"), os.path.join(out, "logo-wordmark.svg"))
-    hero = hero_rows(f["beats"])
-    replay = f["beats"][0]
-    wreck = {ln for i, ln in enumerate(replay["output"].rstrip("\n").split("\n")) if i in replay["accent_rows"]}
+    rows = runs_rows(f["runs"], "hero")
     host = cfg["site_url"].split("//", 1)[1].rstrip("/")
-    n, good = f["steps"], f["good_step"]
-    tl = ruler(good, n=n, w=4 + 6 * (n - 1), h=16, dark=True)
-    head = ('<div class="panel-head"><span>a session of %d steps; the last %d wrecked the repo</span>'
-            '<span class="tl">%s<span>rewind %d</span></span></div>' % (n, f["wreck_steps"], tl, good))
-    short = [r for r in hero if not (r[0] == "out" and r[1].startswith(("   11", "   12")) or "undo it with" in r[1])]
+    head = ('<div class="panel-head"><span>a session, and a second try from step 2</span>'
+            '<span class="tl">%s<span>fork 2</span></span></div>' % ruler(2, n=3, w=40, h=16, dark=True))
+    # the wide cards keep the commands and the two tables; the long fork line and the header line are left out
+    short = [r for r in rows if r[0] in ("cmd", "tab", "tabhit") or r == ("out", "")]
     pipx, _ = split_comment(f["blocks"]["install"][0])
-    meta = '<b>v%s</b> &middot; open source, %s' % (e(f["version"]), e(LICENCE))
-    agents_line = e(eyebrow(f))
+    meta = '<b>v%s</b> &middot; open source, %s<br>%s' % (e(f["version"]), e(LICENCE), e(eyebrow(f)))
+    sub = "Fork any recorded step, let another agent try, compare the runs. Built on rewind."
     def doc(body, w, h):
         return ('<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="site.css">'
                 '<style>%s</style></head><body>%s</body></html>' % (CARD_CSS % {"w": w, "h": h}, body))
-    def struck(rows):
-        return {i for i, (k, t) in enumerate(rows) if k == "out" and t in wreck}
     for name, (w, h) in {"og": (1200, 630), "linkedin": (1200, 627)}.items():
         body = ('<div class="card wide"><div class="left"><img class="mark" src="logo-wordmark.svg" alt="">'
-                '<h1>%s</h1><p class="meta">%s<br>%s<br><span class="host">%s</span></p></div>'
-                '<div class="panel">%s%s</div><div class="rule"><i style="left:%d%%"></i></div></div>'
-                % (e(PROMISE), meta, agents_line, e(host), head, panel(short, struck=struck(short)), round(100 * good / n)))
+                '<div><h1>%s</h1><p class="sub">%s</p></div>'
+                '<p class="meta">%s<br><span class="host">%s</span> &middot; <span class="credit">%s</span></p></div>'
+                '<div class="panel">%s%s</div></div>'
+                % (e(COURSE), e(sub), meta, e(host), e(CREDIT), head, panel(short)))
         with open(os.path.join(out, name + ".html"), "w", encoding="utf-8") as fh:
             fh.write(doc(body, w, h))
     body = ('<div class="card tall"><img class="mark" src="logo-wordmark.svg" alt="" style="height:44px">'
-            '<h1>%s</h1><div class="panel">%s%s</div>'
+            '<h1>%s</h1><p class="sub">%s</p><div class="panel">%s%s</div>'
             '<div class="install">%s</div>'
-            '<div class="foot2"><p class="meta" style="margin:0">%s<br>%s</p><span class="host" style="font-size:24px">%s</span></div>'
-            '<div class="rule"><i style="left:%d%%"></i></div></div>'
-            % (e(PROMISE), head, panel(hero, struck=struck(hero)), panel([("cmd", pipx)]), meta, agents_line, e(host),
-               round(100 * good / n)))
+            '<div class="foot2"><p class="meta">%s</p><p class="meta" style="text-align:right">'
+            '<span class="host" style="font-size:24px">%s</span><br><span class="credit">%s</span></p></div></div>'
+            % (e(COURSE), e(sub), head, panel(short), panel([("cmd", pipx)]), meta, e(host), e(CREDIT)))
     with open(os.path.join(out, "portrait.html"), "w", encoding="utf-8") as fh:
         fh.write(doc(body, 1080, 1350))
     return ["og.html", "linkedin.html", "portrait.html"]

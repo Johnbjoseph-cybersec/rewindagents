@@ -40,6 +40,7 @@ print("live run matches brand/demo/manifest.json: %d commands" % len(beats))
 shutil.copyfile(os.path.join(ROOT, "brand", "site", "site.css"), os.path.join(out, "site.css"))
 shutil.copytree(os.path.join(ROOT, "brand", "site", "fonts"), os.path.join(out, "fonts"), dirs_exist_ok=True)
 shutil.copyfile(os.path.join(ROOT, "brand", "logo-wordmark.svg"), os.path.join(out, "logo-wordmark.svg"))
+HOST = build.config()["site_url"].split("//", 1)[1].rstrip("/")
 n, good = len(scenario.STEPS), scenario.GOOD_STEP
 data = [{"caption": b["caption"], "command": b["command"], "rows": b["output"].rstrip("\n").split("\n"),
          "accent": b["accent_rows"]} for b in beats]
@@ -57,10 +58,13 @@ html, body { margin: 0; background: var(--leader); }
 pre.term { font-size: 17.5px; line-height: 1.5; padding: 18px 24px; border-radius: 0; }
 pre.term .l { white-space: pre; }
 .cursor { display: inline-block; width: 0.6em; height: 1.1em; vertical-align: -0.2em; background: var(--leader); }
+.bottom { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 15px; color: var(--tape); }
+.bottom b { color: var(--reel); }
 </style></head><body><div class="stage">
 <div class="top"><img src="logo-wordmark.svg" alt=""><span class="promise">%(promise)s</span></div>
 <div class="panel"><div class="panel-head"><span id="head">a session of %(n)d steps</span><span class="tl" id="tl"></span></div>
 <div class="screen"><pre class="term"><code id="code"></code></pre></div></div>
+<div class="bottom"><span>%(sub)s</span><span><b>%(host)s</b> &middot; %(credit)s</span></div>
 </div><script>
 const BEATS = %(data)s, RULERS = %(rulers)s, N = %(n)d, GOOD = %(good)d;
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -68,7 +72,9 @@ const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, 
 const TYPE = 1 / 22, HOLD = [3.2, 2.4, 3.6, 3.0];
 let t0 = 0; const plan = BEATS.map((b, i) => { const s = t0, typed = s + b.command.length * TYPE + 0.25; t0 = typed + HOLD[i] + 0.5; return { s, typed }; });
 window.DURATION = t0 + 0.4;
-window.show = (t) => {
+// the screen shows whole lines only: its height is a whole number of lines, so a scrolled line is never cut in half
+const fit = () => { const scr = document.querySelector(".screen"); if (scr.dataset.fit) return; const pre = scr.querySelector("pre"); const cs = getComputedStyle(pre), lh = parseFloat(cs.lineHeight), pb = parseFloat(cs.paddingBottom), H = scr.getBoundingClientRect().height; const k = Math.floor((H - pb - 16) / lh); scr.style.flex = "none"; scr.style.height = (k * lh + pb) + "px"; scr.style.marginTop = (H - k * lh - pb) + "px"; pre.style.paddingTop = "0"; scr.dataset.fit = "1"; };
+window.show = (t) => { fit();
   const lines = []; let rewound = false;
   BEATS.forEach((b, i) => {
     const p = plan[i]; if (t < p.s) return;
@@ -88,7 +94,56 @@ window.show = (t) => {
   document.getElementById("head").textContent = rewound ? "the last 2 steps undone, 12 kept" : "a session of " + N + " steps; the last 2 wrecked the repo";
 };
 show(0);
-</script></body></html>""" % {"promise": html.escape(build.PROMISE), "n": n, "good": good, "data": json.dumps(data), "rulers": json.dumps(rulers)}
+</script></body></html>""" % {"promise": html.escape(build.PROMISE), "sub": "undo, the base: rewind any step", "host": HOST, "credit": html.escape(build.CREDIT), "n": n, "good": good, "data": json.dumps(data), "rulers": json.dumps(rulers)}
 with open(os.path.join(out, "reel.html"), "w", encoding="utf-8") as fh:
     fh.write(page)
 print("wrote", os.path.join(out, "reel.html"))
+
+
+# ---- the second clip: fork and compare, from brand/demo/runs.json (what ux-review/try-runs.sh printed against an
+# installed build; tests/test_runs_demo.py runs the script again and fails if a quoted line changes). The rows are
+# the site's own (build.runs_rows), so the clip shows nothing the pages do not. Captions are the script's headings.
+runs = json.load(open(os.path.join(ROOT, "brand", "demo", "runs.json"), encoding="utf-8"))
+hero, diff = build.runs_rows(runs, "hero"), build.runs_rows(runs, "diff")
+cut = [i for i, r in enumerate(hero) if r[0] == "cmd"][1]
+heads = {"fork": build.RUNS_FORK, "compare": build.RUNS_COMPARE, "diff": build.RUNS_DIFF}
+def beat(key, rows):
+    return {"caption": "# " + heads[key], "command": rows[0][1], "rows": [t for _, t in rows[1:]],
+            "accent": [j for j, (k, _) in enumerate(rows[1:]) if k in ("hit", "tabhit")]}
+rdata = [beat("fork", hero[:cut]), beat("compare", hero[cut:]), beat("diff", diff)]
+fork_ruler = build.ruler(2, n=3, w=60, h=20, dark=True)
+rpage = page.split("<script>")[0].replace(html.escape(build.PROMISE), html.escape(build.COURSE)).replace(
+    "undo, the base: rewind any step", "fork any recorded step, compare the runs").replace(
+    ".top .promise { font-family: var(--display); font-weight: 800; font-size: 24px;",
+    ".top .promise { font-family: var(--display); font-weight: 800; font-size: 22px;") + """<script>
+const BEATS = %(data)s;
+const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const TYPE = 1 / 22, HOLD = [2.6, 4.2, 3.6];
+let t0 = 0; const plan = BEATS.map((b, i) => { const s = t0, typed = s + b.command.length * TYPE + 0.25; t0 = typed + HOLD[i] + 0.5; return { s, typed }; });
+window.DURATION = t0 + 0.4;
+// the screen shows whole lines only: its height is a whole number of lines, so a scrolled line is never cut in half
+const fit = () => { const scr = document.querySelector(".screen"); if (scr.dataset.fit) return; const pre = scr.querySelector("pre"); const cs = getComputedStyle(pre), lh = parseFloat(cs.lineHeight), pb = parseFloat(cs.paddingBottom), H = scr.getBoundingClientRect().height; const k = Math.floor((H - pb - 16) / lh); scr.style.flex = "none"; scr.style.height = (k * lh + pb) + "px"; scr.style.marginTop = (H - k * lh - pb) + "px"; pre.style.paddingTop = "0"; scr.dataset.fit = "1"; };
+window.show = (t) => { fit();
+  const lines = [];
+  BEATS.forEach((b, i) => {
+    const p = plan[i]; if (t < p.s) return;
+    lines.push('<span class="l"><span class="c">' + esc(b.caption) + '</span></span>');
+    const k = Math.min(b.command.length, Math.floor((t - p.s) / TYPE));
+    const typing = t < p.typed;
+    lines.push('<span class="l"><span class="p">$ </span>' + esc(b.command.slice(0, k)) + (typing ? '<span class="cursor"></span>' : '') + '</span>');
+    if (!typing) b.rows.forEach((r, j) => lines.push('<span class="l">' + (b.accent.includes(j) ? '<span class="hit">' + esc(r) + '</span>' : esc(r)) + '</span>'));
+  });
+  if (t >= plan[BEATS.length - 1].typed) lines.push('<span class="l"><span class="p">$ </span><span class="cursor"></span></span>');
+  document.getElementById("code").innerHTML = lines.join("\\n");
+  document.getElementById("tl").innerHTML = %(ruler)s + "<span>fork 2</span>";
+  document.getElementById("head").textContent = "a session, and a second try from step 2";
+};
+show(0);
+</script></body></html>""" % {"data": json.dumps(rdata), "ruler": json.dumps(fork_ruler)}
+os.makedirs(os.path.join(out, "runs"), exist_ok=True)
+for name in ("site.css", "logo-wordmark.svg"):
+    shutil.copyfile(os.path.join(out, name), os.path.join(out, "runs", name))
+shutil.copytree(os.path.join(out, "fonts"), os.path.join(out, "runs", "fonts"), dirs_exist_ok=True)
+with open(os.path.join(out, "runs", "reel.html"), "w", encoding="utf-8") as fh:
+    fh.write(rpage)
+print("wrote", os.path.join(out, "runs", "reel.html"))

@@ -207,7 +207,7 @@ pre.term + pre.term { margin-top: 12px; }   /* two panels in a row read as two, 
 /* tested: a claim, then the tests that check it, on the ledger's grid */
 .proof .claim { font-weight: 600; }
 .proof .cites { display: flex; flex-direction: column; gap: 6px; }
-.proof .cites a { display: grid; grid-template-columns: 23ch minmax(0, 1fr); font-family: var(--mono); font-size: 13px; line-height: 1.5; color: var(--reel); text-decoration: none; overflow-wrap: anywhere; }
+.proof .cites a { display: grid; grid-template-columns: 25ch minmax(0, 1fr); font-family: var(--mono); font-size: 13px; line-height: 1.5; color: var(--reel); text-decoration: none; overflow-wrap: anywhere; }
 .proof .cites a .f { color: var(--tape); }
 .proof .cites a:hover { color: var(--record); text-decoration: underline; }
 .proof + .cmdrow { margin-top: 8px; }
@@ -700,3 +700,9 @@ pre.term .l:empty::before { content: "\200b"; }
 .plain-list li { font-size: 16px; color: var(--tape); }
 #fork .cmdrow h3 { margin-bottom: 0; }
 #fork p code { display: inline-block; max-width: 100%; vertical-align: baseline; }
+/* phone: comments and prose output wrap under themselves instead of running off the panel; only table rows
+   (.t) and the session's columns keep one line and scroll */
+@media (max-width: 600px) {
+  pre.term .l:has(> .c), .hero-panel pre.term .l:not(.t), .hero-install pre.term .l, #fork pre.term .l:not(.t) { white-space: pre-wrap; overflow-wrap: anywhere; padding-left: 2ch; text-indent: -2ch; }
+}
+@media (max-width: 600px) { .hero-panel .caption::before { content: "The table scrolls sideways to its check column. "; color: var(--reel); } }
