@@ -344,6 +344,9 @@ bug report or a code review, or keep it with the session.
   like a secret (`..._TOKEN`, `PASSWORD`, `API_KEY`, `client_secret`), and every value in a `.env` or
   `.env.*` file. It is pattern matching: a secret of another shape stays, so read the page before you pass
   it on. A file whose change was only inside a replaced value says so. `--no-redact` turns this off.
+- The log keeps only the first 4,000 characters of a long input or result. When that cut ends inside a
+  secret (a key, a private key block, a `.env` value), the part before the cut is replaced too, in the page
+  and in a bundle.
 
 ## Find a session
 

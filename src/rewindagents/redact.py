@@ -12,6 +12,9 @@ What is replaced, each by `[redacted <kind>]`:
   `"name": "value"` form, and a recorded input's or result's field with such a name;
 - in a file named .env or .env.<anything>, the value of every `NAME=value` line.
 
+A value the hook clipped to its first characters (is_clip) also loses a secret its cut ends inside
+(cut_start), and a clipped .env input is still read as a .env file.
+
 It works on text. Bytes that are not UTF-8 are left as they are. It is pattern matching, so a secret with
 none of these shapes stays: read the page or the bundle before you pass it on.
 """
@@ -95,11 +98,57 @@ def data(b: bytes | None, env_file: bool = False) -> tuple[bytes | None, int]:
     return (out.encode("utf-8") if n else b), n
 
 
+# What could follow the end of a cut head: key characters then a space (an AWS key id is exactly 16 after
+# its prefix, every other pattern takes any length from its minimum up), or a PEM block's END line.
+_FILLERS = ["A" * n + " " for n in range(17)] + ["A" * 64 + " "]
+_PEM_END = "\n-----END PRIVATE KEY-----"
+# A secret that shows at least its pattern's minimum before the cut is matched by text() already; every
+# minimum is under 40 characters, so only the head's last _TAIL characters can hold a cut one.
+_TAIL = 256
+
+
+def is_clip(obj: Any) -> bool:
+    """The shape the hook records for a long input or result: its first characters and its length."""
+    return (isinstance(obj, dict) and set(obj) == {"truncated", "chars", "head"} and obj["truncated"] is True
+            and isinstance(obj["head"], str) and isinstance(obj["chars"], int) and obj["chars"] > len(obj["head"]))
+
+
+def cut_start(head: str) -> tuple[int, str] | None:
+    """Where a secret cut off by the end of `head` begins, and its kind; None if the end cuts none.
+
+    The hook keeps only the first characters of a long value, so a token can end with the head and be too
+    short for its pattern (sk-ant- needs 20 characters, a PEM block its END line). Each pattern is tried on
+    the head followed by what could have come next; a match that runs past the end means the cut is
+    inside a secret."""
+    best: tuple[int, str] | None = None
+    for kind, pat, group in _PATTERNS:
+        # a PEM block is cut anywhere after its BEGIN line; the rest only near the end
+        off = 0 if kind == "private key" else max(0, len(head) - _TAIL)
+        for filler in ([_PEM_END] if kind == "private key" else _FILLERS):
+            for m in pat.finditer(head[off:] + filler):
+                start = off + m.start(group)
+                if off + m.end(group) > len(head) and start < len(head) and (best is None or start < best[0]):
+                    best = (start, kind)
+    return best
+
+
+def _clip_value(obj: dict, env_file: bool = False) -> tuple[dict, int]:
+    head, n = obj["head"], 0
+    cut = cut_start(head)
+    if cut and not head[cut[0]:].startswith("[redacted"):
+        head, n = head[:cut[0]] + f"[redacted {cut[1]}]", 1
+    head, k = text(head, env_file)
+    return {**obj, "head": head}, n + k
+
+
 def value(obj: Any) -> tuple[Any, int]:
     """A JSON-shaped value (a recorded input or result) with secrets replaced in every string. A dict that
-    names a .env file (file_path / path / notebook_path) gets every NAME=value line in it replaced too."""
+    names a .env file (file_path / path / notebook_path) gets every NAME=value line in it replaced too.
+    A clipped value (is_clip) also loses a secret its cut ends inside (cut_start)."""
     if isinstance(obj, str):
         return text(obj)
+    if is_clip(obj):
+        return _clip_value(obj)
     if isinstance(obj, list):
         out, total = [], 0
         for v in obj:
@@ -116,6 +165,8 @@ def value(obj: Any) -> tuple[Any, int]:
                 v2, k = "[redacted secret value]", 1
             elif env and isinstance(v, str) and key not in ("file_path", "path", "notebook_path"):
                 v2, k = text(v, env_file=True)
+            elif env and is_clip(v):
+                v2, k = _clip_value(v, env_file=True)
             else:
                 v2, k = value(v)
             out_d[key] = v2
