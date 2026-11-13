@@ -125,13 +125,13 @@ use is the pull). `ROADMAP.md` names the measurements.
 - `rewindagents compare [RUN ...] [--check CMD] [--diff A B] [--json]`: per run, agents and their tool calls
   since the start, files changed/created/deleted, lines +/-; per file, which runs ended with identical bytes;
   the user's check command's exit code in each; a git-appliable diff between two runs.
-- `tests/test_runs.py`: 18 tests, all through the real hook. Among them: the fork's files equal step N's
+- `tests/test_runs.py`: 19 tests, all through the real hook. Among them: the fork's files equal step N's
   (incl. an untracked file, and a file a Bash `rm` deleted later) while the project's files, `HEAD` and index
-  are unchanged; an agent in the run records into the run's log, not the project's, and `rewind` works there;
+  are unchanged; a project in a subdirectory of a repository becomes a plain directory; an agent in the run records into the run's log, not the project's, and `rewind` works there;
   an unscanned step, a tampered log, a bad name, a path inside the project, and a failure injected half-way
   each leave nothing behind; identical outcomes get the same letter; `--check` exit codes; `git apply` of
   `compare --diff proj b` makes the project's files equal run b's; `gc` in a run keeps the starting copies.
-  All 18 fail on the previous commit (the module does not exist there).
+  All 19 fail on the previous commit (the module does not exist there).
 
 ### Try it in five minutes
 

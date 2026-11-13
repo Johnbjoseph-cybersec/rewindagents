@@ -1,5 +1,5 @@
 """rewindagents command line: init, status, record, verify, head, show, hook, install, uninstall, replay, diff,
-rewind, branch, export, sessions, bundle, import, gc."""
+rewind, branch, fork, compare, export, sessions, bundle, import, gc."""
 from __future__ import annotations
 
 import argparse
@@ -7,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import __version__, agents, bundle, export, gc, hook, log, project, rewind, sessions
+from . import __version__, agents, bundle, export, gc, hook, log, project, rewind, runs, sessions
 from . import diff as diffs, init as setup
 
 
@@ -75,6 +75,22 @@ def main(argv: list[str] | None = None) -> int:
     br.add_argument("step", type=int)
     br.add_argument("--name", required=True, help="branch name (git: rewindagents/<name>)")
     br.add_argument("--session", help="default: the session that wrote the last record")
+    fk = sub.add_parser("fork", help="start a separate run from step N: a new directory (a git worktree in a repo) "
+                                     "holding the files as they were right after step N, with its own log")
+    fk.add_argument("step", type=int, help="step number from `replay` (0 = before the first step)")
+    fk.add_argument("--name", required=True, help="the run's name (git branch rewindagents/run/<name>)")
+    fk.add_argument("--session", help="default: the session that wrote the last record")
+    fk.add_argument("--dir", help="where to make it (default: next to the project, <project>-<name>)")
+    cp = sub.add_parser("compare", help="line up runs forked from the same step: steps, agents, files and lines "
+                                        "changed, which runs ended the same, and your check command in each")
+    cp.add_argument("runs", nargs="*", metavar="RUN",
+                    help="run names or directories (default: this project and every run forked from it)")
+    cp.add_argument("--check", metavar="CMD", help="run this command (your tests) in each run; its exit code "
+                                                   "is the result")
+    cp.add_argument("--check-timeout", type=float, default=600.0, metavar="SECONDS",
+                    help="stop a check after this long (default: %(default)g)")
+    cp.add_argument("--diff", action="store_true", help="with two runs: how they differ, as a unified diff")
+    cp.add_argument("--json", action="store_true", help="print the comparison as JSON")
     ex = sub.add_parser("export", help="write a session as one self-contained HTML page (steps, inputs, results, file diffs)")
     ex.add_argument("--session", help="default: the session that wrote the last record")
     ex.add_argument("--out", help="file to write (default: .rewindagents/replay-<session>.html)")
@@ -155,7 +171,9 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
         return 0
     if a.cmd == "init":
         return setup.main(yes=a.yes, global_=a.global_)
-    if a.cmd in ("verify", "show", "replay", "rewind", "branch", "export", "sessions", "bundle", "gc", "diff") \
+    if a.cmd == "compare":
+        return _compare(a)
+    if a.cmd in ("verify", "show", "replay", "rewind", "branch", "export", "sessions", "bundle", "gc", "diff", "fork") \
             and not Path(a.log).exists():
         print(f"rewindagents: no log at {a.log}" + ("" if explicit_log else ", here or in a parent directory"),
               file=sys.stderr)
@@ -163,6 +181,22 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
             print(f"Nothing has been recorded for this project yet. Add the hook with `{invocation()} init`, run "
                   f"your agent, then try again; `{invocation()} status` checks the hook.", file=sys.stderr)
         return 2
+    if a.cmd == "fork":
+        try:
+            d = runs.fork(a.log, a.step, a.name, a.session, a.dir)
+        except (runs.RunError, rewind.RewindError) as e:
+            print(f"rewindagents: {e}", file=sys.stderr)
+            return 1
+        where = f"git worktree on branch {d['git_branch']}" if d["git_branch"] else "a plain directory (not a git repo)"
+        print(f"run {d['name']}: {d['dir']}")
+        print(f"  {d['files']} files as they were right after step {d['step']} of session {d['session']}; {where}")
+        if d["hooked"]:
+            print(f"  recorded there: {', '.join(d['hooked'])} (their hook is in the run's config or your global one)")
+        else:
+            print(f"  no agent hook reaches it, so an agent's steps there will not be recorded: run "
+                  f"`{invocation()} init` in it (compare still compares the files)")
+        print(f"  next: cd {d['dir']} and let any agent (or you) continue; then, back here: {invocation()} compare")
+        return 0
     if a.cmd == "gc":
         try:
             d = gc.gc(a.log, dry_run=a.dry_run, drop_older_than=a.drop_pending_older_than)
@@ -256,6 +290,27 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
     for rec in log.read(a.log, a.session):
         print(f"{rec['seq']:>5}  {rec['session']}  {rec.get('event', '')}  {rec['tool']}  "
               f"{json.dumps(rec['args'], ensure_ascii=False)}")
+    return 0
+
+
+def _compare(a: argparse.Namespace) -> int:
+    try:
+        if a.diff:
+            if len(a.runs) != 2:
+                print("rewindagents: --diff needs exactly two runs: compare --diff RUN_A RUN_B", file=sys.stderr)
+                return 2
+            for text in runs.diff_runs(Path.cwd(), a.runs[0], a.runs[1]):
+                sys.stdout.write(text)
+            return 0
+        c = runs.compare(Path.cwd(), a.runs or None, a.check, a.check_timeout)
+    except (runs.RunError, rewind.RewindError) as e:
+        print(f"rewindagents: {e}", file=sys.stderr)
+        return 1
+    if a.json:
+        print(json.dumps(c, indent=1, sort_keys=True))
+    else:
+        for line in runs.lines(c):
+            print(line)
     return 0
 
 
