@@ -303,6 +303,9 @@ def page(cfg, path, title, description, body, current):
 <meta name="twitter:image:alt" content="%(og_alt)s">
 <link rel="icon" href="%(rel)sassets/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="%(rel)sassets/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="preload" href="%(rel)sfonts/bricolage-grotesque-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="%(rel)sfonts/hanken-grotesk-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="%(rel)sfonts/commit-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="%(rel)ssite.css">
 <script type="application/ld+json">%(ld)s</script>
 </head>
@@ -336,7 +339,9 @@ def svg_width(name, height):
 
 
 # ---- pages ------------------------------------------------------------------------------------------------
-def plans(cfg, rel):
+def plans(cfg, rel, h="h3"):
+    """Both plan cards. `h` is the card heading level: h3 under the landing page's h2, h2 under the pricing
+    page's h1, so the outline never skips a level (Lighthouse heading-order)."""
     has = [("has", "The recorder and the Claude Code hook: every tool call in a hash-chained log, every file saved before it changes"),
            ("has", "<code>replay</code>, <code>rewind</code> and <code>branch</code>, and <code>verify</code> against a pinned head"),
            ("has", "<code>export</code>: one session as one HTML page, with the diff each step made"),
@@ -350,12 +355,13 @@ def plans(cfg, rel):
         status = ("Not for sale yet. No price has been set, so none is shown. If you want it, open the waitlist issue "
                   "on GitHub and say what you would pay for.")
     return ('<div class="plans">'
-            '<section class="plan" aria-labelledby="plan-oss"><h3 id="plan-oss">Open source <span class="pill">%s</span></h3>'
-            '<div class="price">Free</div><p class="pricenote">Everything the tool does today.</p><ul>%s</ul>'
-            '<a class="btn btn-primary" href="%sindex.html#install">Install</a></section>'
-            '<section class="plan" aria-labelledby="plan-cloud"><h3 id="plan-cloud">Cloud <span class="pill pill-planned">planned</span></h3>'
-            '<div class="price">Not yet priced</div><p class="pricenote">%s</p><ul>%s</ul>%s</section></div>'
-            % (LICENCE, items(has), rel, e(status), items([("planned", e(t)) for _, t in PLANNED]), buy))
+            '<section class="plan" aria-labelledby="plan-oss"><%(h)s id="plan-oss">Open source <span class="pill">%(lic)s</span></%(h)s>'
+            '<div class="price">Free</div><p class="pricenote">Everything the tool does today.</p><ul>%(has)s</ul>'
+            '<a class="btn btn-primary" href="%(rel)sindex.html#install">Install</a></section>'
+            '<section class="plan" aria-labelledby="plan-cloud"><%(h)s id="plan-cloud">Cloud <span class="pill pill-planned">planned</span></%(h)s>'
+            '<div class="price">Not yet priced</div><p class="pricenote">%(status)s</p><ul>%(planned)s</ul>%(buy)s</section></div>'
+            % {"h": h, "lic": LICENCE, "has": items(has), "rel": rel, "status": e(status),
+               "planned": items([("planned", e(t)) for _, t in PLANNED]), "buy": buy})
 
 
 def faq_html(items, open_all=False):
@@ -598,7 +604,7 @@ def pricing_html(cfg, f):
 <div class="head"><h2 id="h-q">Before you ask.</h2></div>
 %(faq)s
 </div></section>
-""" % {"label": label(1, "Pricing"), "plans": plans(cfg, rel), "label2": label(2, "Questions about paying"),
+""" % {"label": label(1, "Pricing"), "plans": plans(cfg, rel, h="h2"), "label2": label(2, "Questions about paying"),
        "faq": faq_html(items, open_all=True)}
     return page(cfg, "pricing.html", "Pricing: %s" % NAME, desc, body, "pricing")
 
