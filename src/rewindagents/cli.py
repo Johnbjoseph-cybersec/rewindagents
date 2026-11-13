@@ -52,6 +52,9 @@ def main(argv: list[str] | None = None) -> int:
     rp.add_argument("--diff", action="store_true",
                     help="with --step N: what step N itself changed, as a unified diff per file (before the step "
                          "-> right after it)")
+    rp.add_argument("--no-redact", action="store_true",
+                    help="show secrets (API keys, tokens, private keys, .env values) as recorded; by default they "
+                         "are replaced, as in export")
     rw = sub.add_parser("rewind", help="put the files back the way they were right after step N")
     rw.add_argument("step", type=int, help="step number from `replay` (0 = before the first step)")
     rw.add_argument("--session", help="default: the session that wrote the last record")
@@ -242,7 +245,7 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
         if a.diff and a.step is None:
             print("rewindagents: --diff needs --step N (diff N compares now with step N)", file=sys.stderr)
             return 2
-        return _replay(a.log, a.session, a.step, a.diff)
+        return _replay(a.log, a.session, a.step, a.diff, redact=not a.no_redact)
     if a.cmd == "sessions":
         found = sessions.sessions(a.log, a.grep)
         for line in sessions.lines(found, root=rewind.project_root(a.log)):
@@ -335,22 +338,40 @@ def _redaction_line(n: int | None) -> str:
     return f"  {n} secret value{'s' if n != 1 else ''} replaced with [redacted ...]; --no-redact keeps them"
 
 
-def _replay(log_path: str, session: str | None, step: int | None, show_diff: bool = False) -> int:
+def _replay(log_path: str, session: str | None, step: int | None, show_diff: bool = False,
+            redact: bool = True) -> int:
+    """With redact (the default, as for export and bundle), secrets in summaries, inputs, results and diffs are
+    replaced before they reach the terminal: terminal output gets pasted into issues and chats."""
+    from . import redact as _redact
     all_steps = rewind.steps(log_path, session)
     root = rewind.project_root(log_path)
     if step is None:
+        found = 0
         for s in all_steps:
             mark = f"  [{len(s['checkpoints'])} checkpointed]" if s["checkpoints"] else ""
             if (s.get("bash_scan") or {}).get("early"):
                 mark += "  [background: scan may be early]"
-            print(f"{s['step']:>5}  {s['tool']:<12}  {rewind.summary(s, root=root)}{mark}")
+            line = rewind.summary(s, width=sys.maxsize, root=root)
+            if redact:
+                line, k = _redact.text(line)
+                found += k
+            line = line if len(line) <= 80 else line[:77] + "..."   # redacted before the cut: no half token
+            print(f"{s['step']:>5}  {s['tool']:<12}  {line}{mark}")
+        diffs.redaction_note(found, sys.stderr)
         return 0
     if not 1 <= step <= len(all_steps):
         print(f"rewindagents: step {step} is out of range (1-{len(all_steps)})", file=sys.stderr)
         return 2
     if show_diff:
-        return diffs.step_run(log_path, all_steps, step, root)
-    print(export.show(all_steps[step - 1]))
+        return diffs.step_run(log_path, all_steps, step, root, redact=redact)
+    value = all_steps[step - 1]
+    if not redact:
+        print(export.show(value))
+        return 0
+    found = export.clips(value)                  # clip lengths as recorded, before redaction changes a head
+    value, k = _redact.value(value)
+    print(export.show(value, found))
+    diffs.redaction_note(k, sys.stderr)
     return 0
 
 
