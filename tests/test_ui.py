@@ -261,6 +261,21 @@ class TestPage(UICase):
             self.assertIn(font, css)
         self.assertIn("made by John B Joseph", self.s.req("/")[2].decode())
 
+    def test_input_and_result_wrap_diffs_do_not(self):
+        # R34: the same sideways scroll R33 fixed in export; a clipped 4,000-char input ran off the panel.
+        import re
+        css = self.s.req("/app.css")[2].decode()
+        js = self.s.req("/app.js")[2].decode()
+        rules = dict(re.findall(r"^(pre[.\w]*)\{([^}]*)\}", css, re.M))
+        self.assertIn("white-space:pre-wrap", rules["pre.io"])
+        self.assertIn("overflow-wrap:anywhere", rules["pre.io"])
+        self.assertNotIn("white-space", rules["pre"])               # diffs keep the browser's pre, columns line up
+        self.assertNotIn("pre.diff{", css)                          # nothing gives diffs a wrapping rule
+        self.assertIn('el("summary", "", "Input"), el("pre", "io", d.input)', js)
+        self.assertIn('el("pre", "io", d.result)', js)
+        self.assertIn('var pre = el("pre", "diff");', js)
+        self.assertEqual(len(re.findall(r'el\("pre", "io"', js)), 2)  # input + result, nothing else
+
     def test_keyboard_keys_are_wired(self):
         js = self.s.req("/app.js")[2].decode()
         for key in ('"j"', '"k"', '"d"', '"r"'):

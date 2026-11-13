@@ -582,7 +582,8 @@ h3{font:700 12px/1 var(--body);text-transform:uppercase;letter-spacing:.06em;col
 .fh{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px;margin:0 0 6px}
 .fh code{font-weight:700;font-size:13px}
 .fh .cnt{font-family:var(--mono);font-size:12px;color:var(--tape)}
-pre{margin:0;background:var(--spool);color:var(--leader);padding:12px;overflow:auto;font:12.5px/1.5 var(--mono);border-radius:3px;max-height:420px;white-space:pre}
+pre{margin:0;background:var(--spool);color:var(--leader);padding:12px;overflow:auto;font:12.5px/1.5 var(--mono);border-radius:3px;max-height:420px}
+pre.io{white-space:pre-wrap;overflow-wrap:anywhere}
 pre.diff .add{color:var(--rewind)}
 pre.diff .del{color:var(--playhead);text-decoration:line-through}
 pre.diff .hunk{color:var(--playhead)}
@@ -794,10 +795,10 @@ function renderDetail(d) {
   }
   if (!isRw) {
     var inp = el("details", "io"); inp.open = !d.files.length;
-    add(inp, el("summary", "", "Input"), el("pre", "", d.input));
+    add(inp, el("summary", "", "Input"), el("pre", "io", d.input));
     add(box, inp);
     var res = el("details", "io");
-    add(res, el("summary", "", "Result"), d.result === null ? el("p", "note", "No result was recorded for this call.") : el("pre", "", d.result));
+    add(res, el("summary", "", "Result"), d.result === null ? el("p", "note", "No result was recorded for this call.") : el("pre", "io", d.result));
     add(box, res);
   }
 }
