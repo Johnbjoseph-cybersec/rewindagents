@@ -10,7 +10,9 @@ The agent runs the hook with one JSON object on stdin (field names per agent: ag
   saves the project's files before the call and checkpoints, in the "post" record, the ones it changed,
   created or deleted (see bashscan.py);
 - in the "post" record, the SHA-256 of each file the call wrote or changed as it is right after the call
-  (args["after"]), so a later rewind can tell when a file changed outside any recorded step.
+  (args["after"]), so a later rewind can tell when a file changed outside any recorded step. A copy of those
+  bytes goes into the store too (the entry then also has "sha256" and "mode"), so `revert K` has the file as
+  step K left it even after a later hand edit; gc and bundle keep that copy like any checkpoint.
 
 It never blocks, never decides and never changes the call: it always exits 0, even when its own input is
 broken or the disk is full, and prints nothing to stdout except the answer an agent's docs require (Cursor's
@@ -169,11 +171,14 @@ def checkpoint(path: Path, objects: Path) -> dict:
     return entry
 
 
-def after_hash(path: Path) -> dict:
-    """What a file holds right after a step, as a hash only (no copy is stored): {"path", "after": sha256 or
-    None when the file is absent}, or {"path", "skipped": why} when it is too big to hash here. rewind compares
-    it with the file's bytes later, to tell a change made outside the log (by hand, by another tool) from
-    the step's own. The key is "after", not "sha256", so bundle and gc never look for a stored copy of it."""
+def after_hash(path: Path, objects: Path | None = None) -> dict:
+    """What a file holds right after a step: {"path", "after": sha256 or None when the file is absent}, or
+    {"path", "skipped": why} when it is too big to hash here. rewind compares "after" with the file's bytes
+    later, to tell a change made outside the log (by hand, by another tool) from the step's own.
+
+    With `objects`, the bytes are also copied into the store and the entry gets "sha256" (the same hash) and
+    "mode": `revert K` merges from the file as step K left it, and gc and bundle keep and carry the copy because
+    the entry names it the way a checkpoint does. Entries written before this (hash only) still work for rewind."""
     entry: dict[str, Any] = {"path": str(path)}
     if not path.is_file():
         entry["after"] = None
@@ -181,7 +186,13 @@ def after_hash(path: Path) -> dict:
     if path.stat().st_size > MAX_CHECKPOINT_BYTES:
         entry["skipped"] = f"larger than {MAX_CHECKPOINT_BYTES} bytes"
         return entry
-    entry["after"] = hashlib.sha256(path.read_bytes()).hexdigest()
+    if objects is None:
+        entry["after"] = hashlib.sha256(path.read_bytes()).hexdigest()
+        return entry
+    cp = checkpoint(path, objects)
+    entry["after"] = cp["sha256"]
+    if cp["sha256"] is not None:
+        entry["sha256"], entry["mode"] = cp["sha256"], cp["mode"]
     return entry
 
 
@@ -248,7 +259,7 @@ def _handle(payload: dict, ag, agent: str, n: dict, store: Path, rec: Recorder, 
             target = Path(tool_input[key])
             if not target.is_absolute():
                 target = cwd / target
-            args["after"] = [after_hash(target)]
+            args["after"] = [after_hash(target, store / "objects")]
         elif agents.scans(ag, tool):
             from . import bashscan
             afters: list[dict] = []

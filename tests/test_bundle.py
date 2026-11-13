@@ -49,7 +49,9 @@ class TestRoundTrip(unittest.TestCase):
             out = Path(src, ".rewindagents", "s1.bundle")
             d = bundle.bundle(a.log, out)
             self.assertEqual((d["session"], d["steps"], d["records"]), ("s1", 4, 8))
-            self.assertEqual(d["objects"], 2)          # a.txt v1 (before step 2's Write), v2 (before step 4's rm)
+            # a.txt v1 (before step 2's Write), v2 (before step 4's rm), and sub/b.txt as step 3 left it (the copy
+            # each post record keeps for `revert`; v1 and v2 are also what steps 1 and 2 left)
+            self.assertEqual(d["objects"], 3)
             dest_log = Path(dst, ".rewindagents", "log.jsonl")
             got = bundle.import_bundle(out, dest_log)
             self.assertEqual((got["session"], got["steps"], got["records"], got["already_here"]), ("s1", 4, 8, 0))

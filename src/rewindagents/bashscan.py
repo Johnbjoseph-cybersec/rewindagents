@@ -158,7 +158,8 @@ def before(payload: dict, root: Path, store: Path) -> dict:
 def after(payload: dict, root: Path, store: Path, afters: list | None = None) -> tuple[dict, list[dict]]:
     """PostToolUse: the checkpoints for files the command changed, created or deleted. When `afters` is a
     list, one entry per such file is appended to it with its hash right after the command (hook.after_hash's
-    shape: {"path", "after": sha256 or None}, or {"path", "skipped"})."""
+    shape: {"path", "after": sha256 or None, with "sha256" and "mode" when a copy is stored}, or
+    {"path", "skipped"})."""
     pend = store / "pending" / f"{_key(payload)}.json"
     try:
         old = json.loads(pend.read_text(encoding="utf-8"))
@@ -187,12 +188,29 @@ def after(payload: dict, root: Path, store: Path, afters: list | None = None) ->
         if afters is not None:
             if isinstance(now, dict):
                 afters.append({"path": path, "skipped": now["skipped"]})
-            else:                                                         # None: deleted by the command
-                afters.append({"path": path, "after": _split(now)[0] if now else None})
+            elif now is None:                                             # deleted by the command
+                afters.append({"path": path, "after": None})
+            else:
+                afters.append(_after_copy(Path(path), store / "objects", *_split(now)))
     scan: dict[str, Any] = {"changed": len(cps)}
     if background(payload):
         scan["early"] = EARLY
     return scan, cps
+
+
+def _after_copy(path: Path, objects: Path, sha: str, mode: int | None) -> dict:
+    """The after entry for a file the command changed: its hash from the scan, plus a stored copy ("sha256",
+    "mode") when the bytes are still the scanned ones (`revert` merges from them). A file that changed again
+    between the scan and the copy keeps the scan's hash only."""
+    entry: dict[str, Any] = {"path": str(path), "after": sha}
+    try:
+        cp = checkpoint(path, objects)
+    except OSError:
+        return entry
+    if cp.get("sha256") == sha:
+        entry["sha256"] = sha
+        entry["mode"] = cp["mode"] if mode is None else mode
+    return entry
 
 
 EARLY = "run_in_background: the after-scan may have run before the command finished"
