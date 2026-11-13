@@ -122,6 +122,16 @@ ATTACH_ACTION_SENTENCES = ("The action in `attach/` imports the bundle", "A late
                            "Secrets are always replaced in the page", "It installs `rewindagents` from the same commit",
                            "The token is handed to the comment step only", "If the log does not verify, the page is uploaded",
                            "It has not run on GitHub yet")
+# The README's words about `init`, under "Add the hook" on the docs page (R28).
+INIT_SENTENCES = ("`init` looks for the agents it supports", "It prints the plan, asks", "It never adds a second copy",
+                  "`--yes` skips the question", "`--global` writes each agent's user config instead",
+                  "Without `--yes` and without a terminal to ask on")
+MORE_AGENTS = "Gemini CLI, Copilot CLI, Droid and Qwen Code hooks"
+# README sections with a ```sh block that the docs page leaves out on purpose, each with the reason.
+# tests/test_site.py fails when any other section's commands are missing from a docs panel (R28).
+NOT_ON_DOCS = {
+    "Payments code (not live)": "checkout code for a tier that is not built; not part of the package and not a user command",
+}
 
 
 def facts():
@@ -152,6 +162,8 @@ def facts():
             ("export", "Export a replay"), ("sessions", "Find a session"), ("verify", "What the chain does not catch"),
             ("record", "Use it"), ("tests", "Tests"), ("quick", "Quick start"), ("ui", "Timeline UI"))},
         "quick_use": readme_blocks(readme, "Quick start")[1],
+        "init_says": [readme_sentence(readme, s) for s in INIT_SENTENCES],
+        "more_agents": readme_blocks(readme, MORE_AGENTS)[0],
         "uninstall": next(blk for blk in readme_blocks(readme, "Claude Code hook") if blk[0].startswith("rewindagents uninstall")),
         "status": next(blk for blk in readme_blocks(readme, "Claude Code hook") if blk[0].startswith("rewindagents status")),
         "status_says": [readme_sentence(readme, s) for s in STATUS_SENTENCES],
@@ -252,7 +264,7 @@ def code(lines):
 def plain(lines):
     """A README block that is not shell (the attach workflow's yaml) as a panel: every line as written, no prompt,
     comment lines in Playhead."""
-    return panel([("c" if ln.lstrip().startswith("#") else "out", ln) for ln in lines])
+    return panel([("c" if ln.lstrip().startswith("#") else "out", ln) for ln in lines], "file")
 
 
 def beat_rows(b, lit=True):
@@ -268,19 +280,16 @@ AGENT_MARKS = {"claude": ("Claude Code", "claude-code.svg"), "codex": ("Codex", 
                "droid": ("Factory Droid", None), "qwen": ("Qwen Code", "qwen.svg")}
 
 
-def more_agents_html():
-    """One docs paragraph for every agent beyond Claude Code, Codex and Cursor, generated from agents.AGENTS so a new
-    hook appears in the docs the day it ships."""
-    rows = []
-    for key, a in agents.AGENTS.items():
-        if key in ("claude", "codex", "cursor"):
-            continue
-        rows.append("<li><b>%s</b>: <code>rewindagents install --agent %s</code> writes the hook to <code>%s</code>.</li>"
-                    % (e(AGENT_MARKS[key][0]), e(key), e(a.settings)))
-    if not rows:
-        return ""
+def more_agents_html(block):
+    """The docs answer for every agent beyond Claude Code, Codex and Cursor: the README's install block for them.
+    The build stops when that block and agents.AGENTS name different agents, so a new hook cannot ship without
+    its README line, and the README line cannot name a hook that does not exist."""
+    others = [k for k in agents.AGENTS if k not in ("claude", "codex", "cursor")]
+    named = re.findall(r"rewindagents install --agent (\w+)", "\n".join(block))
+    if named != others:
+        raise SystemExit("README '## %s' installs %s, agents.AGENTS has %s" % (MORE_AGENTS, named, others))
     return ("<p>The other agents with a hook, each built from the vendor&#x27;s hook documentation and tested with the "
-            "documented payloads, not yet in a live session:</p><ul>%s</ul>" % "".join(rows))
+            "documented payloads, not yet in a live session:</p>\n%s" % code(block))
 
 
 def agent_strip(rel=""):
@@ -700,6 +709,9 @@ def docs_html(cfg, f):
 <p>Or from a clone, <code>pip install .</code>. Without installing, <code>PYTHONPATH=src python3 -m rewindagents</code> runs the same CLI from a clone; then the undo hint says <code>python3 -m rewindagents</code> instead of <code>rewindagents</code>.</p>
 
 <h2 id="hook">Add the hook</h2>
+%(init)s
+<p>%(init_says)s</p>
+<p>Or add it to one agent at a time:</p>
 %(hook)s
 <p><code>install</code> adds a <code>PreToolUse</code> and a <code>PostToolUse</code> hook to the settings file, keeps everything already in it, and does nothing if the hook is already there. The command it writes names the Python that rewindagents was installed into by absolute path, so it runs whether or not a virtualenv is active. To remove the hook, run <code>rewindagents uninstall</code> (see <a href="#remove">Remove it</a>).</p>
 %(agents)s
@@ -806,7 +818,8 @@ def docs_html(cfg, f):
        "attach_yaml": plain(f["attach_yaml"]), "action_says": " ".join(md_inline(s) for s in f["action_says"]),
        "codex": e(f["agents"]["codex"]["settings"]),
        "cursor": e(f["agents"]["cursor"]["settings"]),
-       "more_agents": more_agents_html(),
+       "more_agents": more_agents_html(f["more_agents"]),
+       "init": code(b["quick"]), "init_says": " ".join(md_inline(s) for s in f["init_says"]),
        "cursor_ro": ", ".join("<code>%s</code>" % e(t) for t in f["agents"]["cursor"]["read_only"]),
        "codex_ro": ", ".join("<code>%s</code>" % e(t) for t in f["agents"]["codex"]["read_only"]),
        "first": first, "chars": "{:,}".format(f["result_chars"]),

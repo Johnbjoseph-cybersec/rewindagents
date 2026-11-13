@@ -201,6 +201,21 @@
    "width": 1200
   },
   "good_step": 12,
+  "init_says": [
+   "`init` looks for the agents it supports (Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen Code): their config directory in the project or your home directory, or their command on `PATH`.",
+   "It prints the plan, asks `[y/N]`, and adds the hook to each one it found, one line per agent: `installed`, `already there`, `replaced` or `not found`.",
+   "It never adds a second copy and keeps every hook already in the file.",
+   "`--yes` skips the question.",
+   "`--global` writes each agent's user config instead, so every project is recorded.",
+   "Without `--yes` and without a terminal to ask on, it only prints the plan."
+  ],
+  "more_agents": [
+   "rewindagents install --agent gemini     # adds the hook to .gemini/settings.json in this project",
+   "rewindagents install --agent copilot    # adds the hook to .github/hooks/rewindagents.json in this repository",
+   "rewindagents install --agent droid      # adds the hook to .factory/settings.json (or .factory/hooks.json if it exists)",
+   "rewindagents install --agent qwen       # adds the hook to .qwen/settings.json in this project",
+   "rewindagents uninstall --agent qwen     # same flags as install, for every agent"
+  ],
   "py_req": ">=3.10",
   "quick_use": [
    "rewindagents replay                    # what it did, one line per step",

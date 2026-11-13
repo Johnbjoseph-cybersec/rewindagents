@@ -52,6 +52,9 @@
 <p>Or from a clone, <code>pip install .</code>. Without installing, <code>PYTHONPATH=src python3 -m rewindagents</code> runs the same CLI from a clone; then the undo hint says <code>python3 -m rewindagents</code> instead of <code>rewindagents</code>.</p>
 
 <h2 id="hook">Add the hook</h2>
+<pre class="term"><code><span class="l"><span class="p">$ </span>pipx install <span class="nb">git+https://</span><wbr><span class="nb">github.com/</span><wbr><span class="nb">Johnbjoseph-cybersec/</span><wbr><span class="nb">rewindagents</span> &amp;&amp; cd <span class="nb">your-project</span> &amp;&amp; rewindagents init</span></code></pre>
+<p><code>init</code> looks for the agents it supports (Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen Code): their config directory in the project or your home directory, or their command on <code>PATH</code>. It prints the plan, asks <code>[y/N]</code>, and adds the hook to each one it found, one line per agent: <code>installed</code>, <code>already there</code>, <code>replaced</code> or <code>not found</code>. It never adds a second copy and keeps every hook already in the file. <code>--yes</code> skips the question. <code>--global</code> writes each agent&#x27;s user config instead, so every project is recorded. Without <code>--yes</code> and without a terminal to ask on, it only prints the plan.</p>
+<p>Or add it to one agent at a time:</p>
 <pre class="term"><code><span class="l"><span class="p">$ </span>cd /path/to/your/project</span>
 <span class="l"><span class="c"># adds the hook to .claude/settings.json in this project</span></span>
 <span class="l"><span class="p">$ </span>rewindagents install</span>
@@ -65,7 +68,17 @@
 <span class="l"><span class="p">$ </span>rewindagents install --agent cursor --settings ~/.cursor/hooks.json</span>
 <span class="l"><span class="c"># or for every project</span></span></code></pre>
 <p>For Codex the file is <code>.codex/hooks.json</code>, in the same shape as Claude Code&#x27;s settings; Codex asks you to trust the hook once (<code>/hooks</code>) and remembers the trust by the hook&#x27;s hash. For Cursor the file is <code>.cursor/hooks.json</code> with a <code>preToolUse</code> and a <code>postToolUse</code> entry; because Cursor&#x27;s <code>preToolUse</code> is a permission hook that treats an empty answer as a failure, the hook prints <code>{"permission": "allow"}</code> before a call and <code>{}</code> after one, which changes nothing (a deny from another hook still wins). The Codex and Cursor hooks are tested with the payloads in the vendors&#x27; documentation and through the installed command, not yet in a live session.</p>
-<p>The other agents with a hook, each built from the vendor&#x27;s hook documentation and tested with the documented payloads, not yet in a live session:</p><ul><li><b>Gemini CLI</b>: <code>rewindagents install --agent gemini</code> writes the hook to <code>.gemini/settings.json</code>.</li><li><b>GitHub Copilot</b>: <code>rewindagents install --agent copilot</code> writes the hook to <code>.github/hooks/rewindagents.json</code>.</li><li><b>Factory Droid</b>: <code>rewindagents install --agent droid</code> writes the hook to <code>.factory/settings.json</code>.</li><li><b>Qwen Code</b>: <code>rewindagents install --agent qwen</code> writes the hook to <code>.qwen/settings.json</code>.</li></ul>
+<p>The other agents with a hook, each built from the vendor&#x27;s hook documentation and tested with the documented payloads, not yet in a live session:</p>
+<pre class="term"><code><span class="l"><span class="c"># adds the hook to .gemini/settings.json in this project</span></span>
+<span class="l"><span class="p">$ </span>rewindagents install --agent gemini</span>
+<span class="l"><span class="c"># adds the hook to .github/hooks/rewindagents.json in this repository</span></span>
+<span class="l"><span class="p">$ </span>rewindagents install --agent copilot</span>
+<span class="l"><span class="c"># adds the hook to .factory/settings.json (or .factory/hooks.json if it exists)</span></span>
+<span class="l"><span class="p">$ </span>rewindagents install --agent droid</span>
+<span class="l"><span class="c"># adds the hook to .qwen/settings.json in this project</span></span>
+<span class="l"><span class="p">$ </span>rewindagents install --agent qwen</span>
+<span class="l"><span class="c"># same flags as install, for every agent</span></span>
+<span class="l"><span class="p">$ </span>rewindagents uninstall --agent qwen</span></code></pre>
 
 <h2 id="first">A first session</h2>
 <p>The session behind the clip on the front page, as it ran. Every line below is what the command printed; <code>tests/test_demo.py</code> runs the same session and fails if a line changes.</p>
@@ -185,7 +198,7 @@
 <span class="l"><span class="p">$ </span>rewindagents bundle --out <span class="nb">.rewindagents-pr.bundle</span></span>
 <span class="l"><span class="p">$ </span>git add <span class="nb">.rewindagents-pr.bundle</span></span></code></pre>
 <p>The <code>.rewindagents/</code> store is git-ignored, so the checkout holds no log of its own; commit a bundle.</p>
-<pre class="term"><code><span class="l"><span class="c"># .github/workflows/replay.yml</span></span>
+<pre class="term file"><code><span class="l"><span class="c"># .github/workflows/replay.yml</span></span>
 <span class="l">on: pull_request</span>
 <span class="l">permissions:</span>
 <span class="l">  contents: read</span>

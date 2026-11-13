@@ -363,11 +363,11 @@ class TestSite(unittest.TestCase):
         # after the first answer: the README's yaml block as a plain panel, then the README's words about the action
         readme = read("README.md", ROOT)
         html = read("docs/index.html")
-        m = re.search(r'<h2 id="attach">.*?</p>\n(<pre class="term"><code>.*?</code></pre>)\n<p>(.*?)</p>', html, re.S)
+        m = re.search(r'<h2 id="attach">.*?</p>\n(<pre class="term file"><code>.*?</code></pre>)\n<p>(.*?)</p>', html, re.S)
         self.assertIsNotNone(m)
         yaml = build.readme_blocks(readme, "Attach a replay to a pull request", "yaml")[0]
         self.assertEqual(m.group(1), build.plain(yaml))
-        shown = [unesc(re.sub(r"<[^>]+>", "", r)) for r in m.group(1)[len('<pre class="term"><code>'):-len("</code></pre>")].split("\n")]
+        shown = [unesc(re.sub(r"<[^>]+>", "", r)) for r in m.group(1)[len('<pre class="term file"><code>'):-len("</code></pre>")].split("\n")]
         self.assertEqual(shown, yaml)          # every line as written, nothing typed
         self.assertNotIn('class="p"', m.group(1))
         prose = " ".join(readme.split())
@@ -384,6 +384,74 @@ class TestSite(unittest.TestCase):
         toc = re.findall(r'<a href="#([a-z]+)">', html_toc)
         self.assertLess(toc.index("branch"), toc.index("ui"))
         self.assertEqual(toc.index("bundle") + 1, toc.index("attach"))
+
+    @staticmethod
+    def docs_panel_commands(html):
+        """Every `$ command` in a terminal panel on a page, as plain text."""
+        cmds = set()
+        for block in re.findall(r'<pre class="term[^"]*"><code>(.*?)</code></pre>', html, re.S):
+            for row in block.split("\n"):
+                if 'class="p"' in row:
+                    cmds.add(unesc(re.sub(r"<[^>]+>", "", row))[2:])
+        return cmds
+
+    @staticmethod
+    def readme_sh_sections(readme):
+        """(heading, first command of each ```sh block) for every README ## section holding one. The first command
+        is the first line that runs `rewindagents` (a URL ending in rewindagents does not count), else the first
+        line; trailing comments are dropped."""
+        out = []
+        for m in re.finditer(r"^## ([^\n]+)\n(.*?)(?=^## |\Z)", readme, re.S | re.M):
+            firsts = []
+            for blk in re.findall(r"```sh\n(.*?)```", m.group(2), re.S):
+                lines = [re.sub(r"\s+# .*", "", ln).strip() for ln in blk.split("\n") if ln.strip()]
+                firsts.append(next((ln for ln in lines if re.search(r"(?<![/\w-])rewindagents ", ln)), lines[0]))
+            if firsts:
+                out.append((m.group(1), firsts))
+        return out
+
+    def test_every_readme_command_section_is_on_the_docs_page(self):
+        """R14, R25, R26 and R27 each found a README section missing from the docs page by hand. This finds the
+        next one: each README section with a sh block has each block's first command in a docs panel, or is in
+        build.NOT_ON_DOCS with a reason."""
+        build = load_build()
+        sections = self.readme_sh_sections(read("README.md", ROOT))
+        self.assertGreaterEqual(len(sections), 15)          # the walk found the README's sections, not none
+        cmds = self.docs_panel_commands(read("docs/index.html"))
+        missing = [(h, c) for h, firsts in sections if h not in build.NOT_ON_DOCS for c in firsts if c not in cmds]
+        self.assertEqual(missing, [], "README commands with no docs panel: add a docs section rendering the README "
+                                      "block, or list the heading in NOT_ON_DOCS with a reason")
+        # the exceptions are real, reasoned, and still needed
+        headings = {h for h, _ in sections}
+        for h, why in build.NOT_ON_DOCS.items():
+            self.assertIn(h, headings, "NOT_ON_DOCS names %r, which is not a README section with a sh block" % h)
+            self.assertGreater(len(why.split()), 3, h)
+            firsts = dict(sections)[h]
+            self.assertFalse(all(c in cmds for c in firsts), "%r is on the docs page now; drop it from NOT_ON_DOCS" % h)
+
+    def test_docs_init_and_more_agents_are_the_readme_blocks(self):
+        build = load_build()
+        readme = read("README.md", ROOT)
+        html = read("docs/index.html")
+        m = re.search(r'<h2 id="hook">Add the hook</h2>\n(<pre class="term"><code>.*?</code></pre>)\n<p>(.*?)</p>', html, re.S)
+        self.assertIsNotNone(m, "docs 'Add the hook' does not open with the init block")
+        self.assertEqual(m.group(1), build.code(build.readme_blocks(readme, "Quick start")[0]))
+        prose = " ".join(readme.split())
+        sentences = re.findall(r".+?\.(?=\s|$)", unesc(re.sub(r"</?code>", "`", m.group(2))))
+        self.assertEqual(len(sentences), len(build.INIT_SENTENCES))
+        for s, start in zip(sentences, build.INIT_SENTENCES):
+            self.assertTrue(s.strip().startswith(start), s)
+            self.assertIn(s.strip(), prose)
+        block = build.readme_blocks(readme, build.MORE_AGENTS)[0]
+        self.assertIn(build.code(block), html)
+        others = [k for k in agents.AGENTS if k not in ("claude", "codex", "cursor")]
+        self.assertEqual(re.findall(r"rewindagents install --agent (\w+)", "\n".join(block)), others)
+
+    def test_yaml_panel_gets_a_copy_button(self):
+        """site.js copies the prompt lines of a command panel and every line of a file panel (the workflow yaml)."""
+        js = read("site.js")
+        self.assertIn('pre.classList.contains("file")', js)
+        self.assertIn('<pre class="term file">', read("docs/index.html"))
 
     def test_planned_items_are_brand_md_phrases_and_nothing_is_for_sale(self):
         build = load_build()

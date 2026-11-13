@@ -74,12 +74,13 @@
     if (!navigator.clipboard) return;
     $$("pre.term").forEach(function (pre) {
       if (pre.closest(".session") || pre.closest(".hero-panel")) return;     // a record of a session, not commands to run
-      var cmds = $$(".l", pre).filter(function (l) { return l.firstElementChild && l.firstElementChild.classList.contains("p"); })
+      var file = pre.classList.contains("file");                              // a file to paste (the workflow yaml): every line
+      var cmds = $$(".l", pre).filter(function (l) { return file || (l.firstElementChild && l.firstElementChild.classList.contains("p")); })
         .map(function (l) { return l.textContent.replace(/^\$ /, ""); });
       if (!cmds.length) return;
       var b = document.createElement("button");
       b.type = "button"; b.className = "copy"; b.textContent = "Copy";
-      b.setAttribute("aria-label", cmds.length > 1 ? "Copy " + cmds.length + " commands" : "Copy the command");
+      b.setAttribute("aria-label", file ? "Copy the file" : cmds.length > 1 ? "Copy " + cmds.length + " commands" : "Copy the command");
       b.addEventListener("click", function () {
         navigator.clipboard.writeText(cmds.join("\n")).then(function () { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1600); });
       });
