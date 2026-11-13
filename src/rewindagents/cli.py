@@ -225,7 +225,7 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
             return 1
         for line in gc.lines(d):
             print(line)
-        return 0
+        return 1 if d["torn"] else 0
     if a.cmd in ("bundle", "import"):
         root = rewind.project_root(a.log)
         try:

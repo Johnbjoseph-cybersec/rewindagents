@@ -197,6 +197,33 @@ class InstalledCommandTest(unittest.TestCase):
             r = self._run("verify", cwd=proj)
             self.assertEqual((r.returncode, r.stdout.strip()), (0, "OK: 1 records, chain intact"), r.stderr)
 
+    def test_gc_through_the_binary_runs_after_a_torn_write_and_exits_1(self):
+        with TemporaryDirectory() as proj:
+            Path(proj, "app.py").write_text("x = 1\n")
+            Path(proj, "big.txt").write_text("b" * 1000)
+            self.assertEqual(self._run("install", cwd=proj).returncode, 0)
+            cmd = json.loads(Path(proj, ".claude", "settings.json").read_text())["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
+            shell = "sed -i.bak s/1/2/ app.py && rm app.py.bak"
+            for event in ("PreToolUse", "PostToolUse"):
+                payload = {"session_id": "torn", "cwd": proj, "hook_event_name": event, "tool_name": "Bash",
+                           "tool_input": {"command": shell}, "tool_use_id": "toolu_1"}
+                p = subprocess.run(cmd, shell=True, cwd=proj, env=clean_env(), input=json.dumps(payload),
+                                   capture_output=True, text=True, timeout=120)
+                self.assertEqual((p.returncode, p.stderr), (0, ""))
+                if event == "PreToolUse":
+                    subprocess.run(["sh", "-c", shell], cwd=proj, check=True)
+            lp = Path(proj, ".rewindagents", "log.jsonl")
+            last = lp.read_bytes().splitlines()[-1]
+            with lp.open("ab") as fh:                              # a write cut off before its newline
+                fh.write(last[: len(last) // 2])
+            r = self._run("gc", cwd=proj)
+            self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+            self.assertIn("deleted 2 stored copies", r.stdout)
+            self.assertIn("note: the log has a torn write (record 3: torn write at the end of the log", r.stdout)
+            r = self._run("rewind", "0", cwd=proj)
+            self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+            self.assertEqual(Path(proj, "app.py").read_text(), "x = 1\n")
+
     def test_install_for_codex_and_cursor_writes_commands_their_payloads_drive(self):
         """`install --agent codex|cursor` through the binary; then the command from the written file, run as the
         agent would run it (no PYTHONPATH, the documented payload on stdin), records a shell edit that the binary

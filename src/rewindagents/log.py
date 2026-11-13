@@ -144,6 +144,12 @@ def verify(path: str | Path, expected_head: str | None = None) -> tuple[bool, in
     return check(path, expected_head)[:3]
 
 
+def torn_lines(path: str | Path) -> list[bytes]:
+    """The raw bytes of every torn line (not JSON at all), in order."""
+    with Path(path).open("rb") as fh:
+        return [raw for raw in _lines(fh)[0] if not _json(raw)[0]]
+
+
 def read(path: str | Path, session: str | None = None) -> list[dict]:
     """Every record, in order. A torn line (not a record) is skipped; `verify` is what reports it."""
     with Path(path).open("rb") as fh:

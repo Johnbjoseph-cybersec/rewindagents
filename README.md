@@ -142,8 +142,8 @@ Each record and its newline go to the log in one write. If a write is still cut 
 process), the next record starts on a fresh line chained to the last whole record and the cut-off line stays
 where it is, so recording goes on. `verify` and `status` then name that line ("torn write at the end of the
 log", or "not a valid record" once records follow it) and exit 1, because the call it was recording is lost.
-`rewind` and `diff` still work from such a log, print a note about the torn write and exit 1; `gc` and
-`bundle` refuse it. `tests/test_torn_write.py` drives this through the real hook.
+`rewind`, `diff` and `gc` still work from such a log, print a note about the torn write and exit 1;
+`bundle` refuses it. `tests/test_torn_write.py` drives this through the real hook.
 
 Around every `Bash` call (for example `sed -i`, `rm`, `mv`, a code generator), the hook saves the
 project's files before the command, scans again after it, and checkpoints, in the `post` record, only the
@@ -482,6 +482,8 @@ Then `replay`, `rewind` and `branch` work on that session in the other clone, wi
   and rewinding that file in the other clone writes the placeholder, not the secret. `--no-redact`
   carries the session exactly as recorded.
 - `bundle` refuses a log whose chain does not verify, and a session whose stored copies are missing or altered.
+  That includes a log whose only damage is a torn write: the log it moves to would not show the torn line, so
+  the call that was lost would leave no trace there.
 - `import` writes nothing until everything checks out: the file's own SHA-256, every record's hash, that every
   record belongs to the session and is in log order, every stored copy against its SHA-256, that no copy a
   record names is missing, that this project's log verifies, and that it does not already hold the session.
@@ -545,7 +547,9 @@ many it deleted and the bytes those files took on disk.
 
 - Every step of every session in the log can still be rewound afterwards; the copies a rewind needs are the
   ones the log names.
-- It refuses to run when the log does not verify, and it never writes to the log.
+- It refuses to run when the log does not verify, and it never writes to the log. The exception is a log
+  whose only damage is a torn write (a full disk is the likeliest cause, and that is when you need the
+  space): it runs, also keeps every copy a torn line names, prints a note and exits 1.
 - While it runs it holds the store lock, so a hook call waits for it to finish, and it waits (up to 30 s) for
   a hook, rewind or import that has saved a copy but not yet written the record naming it.
 - It lists every pending scan with its age and the command it belongs to. A scan whose after-scan never ran

@@ -5,6 +5,7 @@ still name it. Driven through the real hook process where the hook is involved.
 Before this fix the next append json-loaded the fragment, raised, and the hook - which never blocks - exited 0
 having recorded nothing, for every call from then on.
 """
+import hashlib
 import io
 import json
 import os
@@ -159,13 +160,75 @@ class TornWrite(unittest.TestCase):
         self.assertEqual(d.returncode, 1)
         self.assertIn("torn write", d.stderr)
 
-    def test_gc_and_bundle_still_refuse_a_log_that_does_not_verify(self):
+    # -------------------------------------------------------------------------------- gc frees space anyway
+    def stored(self, text):
+        """Put a copy nothing names into the store, as a Bash pre-scan leaves an unchanged file; its name."""
+        name = hashlib.sha256(text.encode()).hexdigest()
+        (self.lp.parent / "objects").mkdir(exist_ok=True)
+        (self.lp.parent / "objects" / name).write_text(text)
+        return name
+
+    def objects(self):
+        return {p.name for p in (self.lp.parent / "objects").iterdir()}
+
+    def test_gc_frees_space_after_a_torn_write_and_exits_1(self):
+        self.write_step("print('v2')\n")
+        named = self.objects()                                   # the checkpoint the pre record names
+        self.assertTrue(named)
+        orphan = self.stored("nobody names me\n")
+        self.tear()
+        raw = self.lp.read_bytes()
+        p = cli(self.d, "gc", "--dry-run")
+        self.assertEqual(p.returncode, 1, p.stdout + p.stderr)
+        self.assertIn("would delete 1 stored copies (16 bytes)", p.stdout)
+        self.assertIn("note: the log has a torn write (record 3: torn write at the end of the log", p.stdout)
+        self.assertEqual(self.objects(), named | {orphan})
+        p = cli(self.d, "gc")
+        self.assertEqual(p.returncode, 1, p.stdout + p.stderr)
+        self.assertIn("deleted 1 stored copies (16 bytes freed)", p.stdout)
+        self.assertIn("torn write", p.stdout)
+        self.assertEqual(self.objects(), named)
+        self.assertEqual(self.lp.read_bytes(), raw, "gc never writes to the log")
+        r = cli(self.d, "rewind", "0")                           # every whole record still rewinds
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertEqual(self.app.read_text(), "print('v1')\n")
+
+    def test_gc_keeps_a_copy_only_the_torn_fragment_names(self):
+        """A torn pre record may be the only line naming its checkpoint; gc cannot rule out that someone will
+        recover it by hand, so every SHA-256 written in a torn line is kept."""
+        self.write_step("print('v2')\n")
+        frag_only = self.stored("checkpoint of the lost call\n")
+        orphan = self.stored("nobody names me\n")
+        with self.lp.open("ab") as fh:
+            fh.write(('{"args": {"checkpoint": [{"path": "lost.py", "sha256": "%s"}]}, "ev' % frag_only).encode())
+        self.assertTrue(log.check(self.lp)[3])
+        p = cli(self.d, "gc")
+        self.assertEqual(p.returncode, 1, p.stdout + p.stderr)
+        self.assertIn(frag_only, self.objects())
+        self.assertNotIn(orphan, self.objects())
+
+    def test_gc_still_refuses_a_log_damaged_other_than_by_a_torn_write(self):
+        self.write_step("print('v2')\n")
+        self.write_step("print('v3')\n")
+        orphan = self.stored("nobody names me\n")
+        lines = self.lp.read_bytes().splitlines()
+        lines[1] = lines[1][:40]                                # chain broken, not torn-only
+        self.lp.write_bytes(b"\n".join(lines) + b"\n")
+        self.assertFalse(log.check(self.lp)[3])
+        p = cli(self.d, "gc")
+        self.assertEqual(p.returncode, 1)
+        self.assertIn("refusing to delete anything", p.stderr)
+        self.assertIn(orphan, self.objects())
+
+    def test_bundle_still_refuses_a_torn_log(self):
+        """A bundle carries records to another log, which would not show the torn line: the lost call would
+        vanish from the record without a trace. So bundle keeps refusing."""
         self.write_step("print('v2')\n")
         self.tear()
-        for argv in (("gc", "--dry-run"), ("bundle", "--out", str(self.d / "b.json"))):
-            p = cli(self.d, *argv)
-            self.assertNotEqual(p.returncode, 0, argv)
-            self.assertIn("torn write", p.stdout + p.stderr, argv)
+        p = cli(self.d, "bundle", "--out", str(self.d / "b.json"))
+        self.assertEqual(p.returncode, 1)
+        self.assertIn("torn write", p.stderr)
+        self.assertFalse((self.d / "b.json").exists())
 
 
 if __name__ == "__main__":
