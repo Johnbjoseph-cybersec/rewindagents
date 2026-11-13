@@ -118,3 +118,24 @@ F10. **`fork` needs `--name`.** `rewindagents fork 2` -> `error: the following a
 
 So a shell command in a 15,000-file repo costs about 0.7 s of hook time; an edit about 0.1 s. Acceptable for
 daily use, not invisible; documented in the README.
+
+## What was fixed on branch usable/v0.1 (each with a test that fails on the code before it)
+
+| # | friction | status | test |
+|---|---|---|---|
+| F11 | failing command never checkpointed | fixed: hook installed on `PostToolUseFailure`; checked live in `p4` | `tests/test_recording_gaps.py` |
+| F1 | init writes 4 agents' files into the repo | fixed: `init --agent NAME`; created files go to `.git/info/exclude`; a tracked one is named | `tests/test_usable.py` TestInitAgentAndExclude |
+| F2 | no undo of init | fixed: `init --undo` (all agents, stale hooks too, keeps history) | TestInitUndo |
+| F4 | no "what did it just do" | fixed: `rewindagents summary` (net files, lines, steps, 3 undo commands) | TestSummary |
+| F3 | `replay 2` rejected | fixed: positional step | TestReplayStep |
+| F5 | `.pyc` noise in git repos | fixed: untracked files under skip dirs are not scanned | `tests/test_recording_gaps.py` |
+| F6 | >20,000 files: shell steps silently unprotected | fixed: `replay` marks `[NOT checkpointed: ...]`, `status` warns, `summary` notes | TestNotScannedIsVisible |
+| F8, F9 | failing hook invisible; status said "run the hook by hand" | fixed: `status` runs each hook once in a temp dir: `FAILING` + the hook's own error, exit 1; "Recording works" when it does | TestStatus |
+| F7 | store size invisible | partly: `status` shows the store's size and points at `gc`; no automatic gc (the store is a copy of the project that the next shell step needs again) | TestStatus |
+| F10 | `fork` needs `--name` | not fixed | - |
+
+After the fixes, the quickstart from the built wheel in a fresh venv (`pip install rewindagents-0.0.8-py3-none-any.whl`,
+`init --yes --agent claude`, one real `claude -p` run that added a function and then `rm`'d the test file):
+`summary` listed `deleted test_calc.py -3 steps 2, 3` and `changed calc.py +4 -0`, `revert 3` brought the test
+file back with the agent's new test in it, `python3 test_calc.py` printed `ok`, `init --undo` left `git status`
+showing only the agent's own changes. `__pycache__/` was not reported.
