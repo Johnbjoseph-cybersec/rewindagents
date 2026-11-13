@@ -307,26 +307,51 @@ class TestSite(unittest.TestCase):
         # the one output line not from the session is the version line, and it is what the binary prints
         self.assertIn("rewindagents %s" % rewindagents.__version__, text_of("docs/index.html"))
 
-    def test_docs_status_answer_is_the_readme_block_and_words(self):
+    def check_docs_answer(self, anchor, title, heading, first, sentences_from):
+        """A docs section is one README sh block (picked by heading + first line) and README sentences, word for word."""
         readme = read("README.md", ROOT)
         html = read("docs/index.html")
-        m = re.search(r'<h2 id="status">Is it recording\?</h2>\n(<pre class="term[^"]*"><code>.*?</code></pre>)\n<p>(.*?)</p>',
-                      html, re.S)
-        self.assertIsNotNone(m, "docs page has no 'Is it recording?' answer")
-        self.assertIn('<a href="#status">Is it recording?</a>', html)
-        # the panel is exactly the README's status block, as code() renders it
+        m = re.search(r'<h2 id="%s">%s</h2>\n(<pre class="term[^"]*"><code>.*?</code></pre>)\n<p>(.*?)</p>'
+                      % (anchor, re.escape(title)), html, re.S)
+        self.assertIsNotNone(m, "docs page has no '%s' answer" % title)
+        self.assertIn('<a href="#%s">%s</a>' % (anchor, title), html)
+        # the panel is exactly the README block, as code() renders it
         build = load_build()
-        block = next(blk for blk in build.readme_blocks(readme, "Claude Code hook") if blk[0].startswith("rewindagents status"))
+        block = next(blk for blk in build.readme_blocks(readme, heading) if blk[0].startswith(first))
         self.assertEqual(m.group(1), build.code(block))
         page_cmds = [unesc(re.sub(r"<[^>]+>", "", r))[2:] for r in m.group(1).split("\n") if 'class="p"' in r]
-        self.assertEqual(page_cmds, ["rewindagents status"])
-        # every sentence under it is a README sentence, word for word
+        readme_cmds = [re.sub(r"\s+#.*", "", ln).strip() for ln in block if ln.strip() and not ln.startswith("#")]
+        self.assertEqual(page_cmds, readme_cmds)
+        # every sentence under it is a README sentence, word for word, one per listed opening
         prose = " ".join(readme.split())
         said = unesc(re.sub(r"</?code>", "`", m.group(2)))
         sentences = re.findall(r".+?\.(?=\s|$)", said)
-        self.assertEqual(len(sentences), len(build.STATUS_SENTENCES))
-        for s in sentences:
+        self.assertEqual(len(sentences), len(sentences_from))
+        for s, start in zip(sentences, sentences_from):
+            self.assertTrue(s.strip().startswith(start), s)
             self.assertIn(s.strip(), prose)
+        return page_cmds
+
+    def test_docs_status_answer_is_the_readme_block_and_words(self):
+        build = load_build()
+        cmds = self.check_docs_answer("status", "Is it recording?", "Claude Code hook", "rewindagents status",
+                                      build.STATUS_SENTENCES)
+        self.assertEqual(cmds, ["rewindagents status"])
+
+    def test_docs_move_and_free_space_are_the_readme_blocks_and_words(self):
+        build = load_build()
+        cmds = self.check_docs_answer("bundle", "Move a session", "Move a session to another machine",
+                                      "rewindagents bundle", build.MOVE_SENTENCES)
+        self.assertIn("rewindagents import s1.bundle", cmds)
+        cmds = self.check_docs_answer("gc", "Free space", "Clean up stored copies", "rewindagents gc",
+                                      build.GC_SENTENCES)
+        self.assertEqual(cmds[:2], ["rewindagents gc --dry-run", "rewindagents gc"])
+        # the TOC lists them in page order
+        html = read("docs/index.html")
+        toc = re.findall(r'<a href="#([a-z]+)">', re.search(r'<nav class="toc".*?</nav>', html, re.S).group(0))
+        heads = re.findall(r'<h2 id="([a-z]+)">', html)
+        self.assertEqual(toc, [h for h in heads if h in toc])
+        self.assertLess(toc.index("sessions"), toc.index("bundle"))
 
     def test_planned_items_are_brand_md_phrases_and_nothing_is_for_sale(self):
         build = load_build()

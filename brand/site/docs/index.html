@@ -39,7 +39,7 @@
 <div class="head"><h1 id="h1" class="h1-small">Getting started.</h1>
 <p class="lede">Install, add the hook to one project, let the agent work, then look at the session and step back when you need to. Every command here is the README&#x27;s, and a test checks that each one is a real subcommand.</p></div>
 <div class="docs">
-<nav class="toc" aria-label="On this page"><a href="#install">Install</a><a href="#hook">Add the hook</a><a href="#first">A first session</a><a href="#recorded">What gets recorded</a><a href="#replay">Replay and rewind</a><a href="#branch">Branch</a><a href="#export">Export</a><a href="#sessions">Find a session</a><a href="#verify">Verify</a><a href="#status">Is it recording?</a><a href="#overhead">Overhead</a><a href="#limits">Limits</a><a href="#remove">Remove it</a></nav>
+<nav class="toc" aria-label="On this page"><a href="#install">Install</a><a href="#hook">Add the hook</a><a href="#first">A first session</a><a href="#recorded">What gets recorded</a><a href="#replay">Replay and rewind</a><a href="#branch">Branch</a><a href="#export">Export</a><a href="#sessions">Find a session</a><a href="#bundle">Move a session</a><a href="#verify">Verify</a><a href="#status">Is it recording?</a><a href="#gc">Free space</a><a href="#overhead">Overhead</a><a href="#limits">Limits</a><a href="#remove">Remove it</a></nav>
 <article class="doc">
 <h2 id="install">Install</h2>
 <p>Python &gt;=3.10, standard library only. Tested on Python 3.15 on macOS. Not on PyPI yet, so install from the repository:</p>
@@ -163,6 +163,17 @@
 <p>One line per session, in the order the sessions first wrote to the log: the session id, the local time of its first and last record, the number of steps (with how many of them are rewinds or branches) and the files it touched; a second line names the first 5 files and counts the rest. The session that wrote the last record is marked <code>(latest)</code>.</p>
 <p><code>--grep TEXT</code> keeps the sessions with a step whose <code>replay</code> line or checkpointed path contains TEXT, in any case, and lists those steps with their numbers. Exit code 1 if no session matches.</p>
 
+<h2 id="bundle">Move a session</h2>
+<pre class="term"><code><span class="l"><span class="c"># the latest session, and the file copies it names, in one file</span></span>
+<span class="l"><span class="p">$ </span>rewindagents bundle --out s1.bundle</span>
+<span class="l"><span class="c"># a given session</span></span>
+<span class="l"><span class="p">$ </span>rewindagents bundle --session abc --out abc.bundle</span>
+<span class="l"><span class="c"># carry secrets as recorded (they are replaced by default)</span></span>
+<span class="l"><span class="p">$ </span>rewindagents bundle <span class="nb">--no-redact</span> --out s1.bundle</span>
+<span class="l"><span class="c"># in another clone: check the file, then add the session to its log</span></span>
+<span class="l"><span class="p">$ </span>rewindagents import s1.bundle</span></code></pre>
+<p>Then <code>replay</code>, <code>rewind</code> and <code>branch</code> work on that session in the other clone, with <code>--session &lt;id&gt;</code>. By default, secrets are replaced in the records and the stored copies, as <code>export</code> replaces them. <code>import</code> writes nothing until everything checks out: the file&#x27;s own SHA-256, every record&#x27;s hash, that every record belongs to the session and is in log order, every stored copy against its SHA-256, that no copy a record names is missing, that this project&#x27;s log verifies, and that it does not already hold the session. Nothing goes over a network; carry the file however you like.</p>
+
 <h2 id="verify">Verify</h2>
 <pre class="term"><code><span class="l"><span class="p">$ </span>rewindagents verify --head <span class="nb">&lt;pinned-hash&gt;</span></span></code></pre>
 <p><code>verify</code> checks every record against the one before it and names the first bad record. A hash chain cannot tell on its own that records were cut off the end or that the whole file was rewritten and re-hashed; <code>rewindagents head</code> prints the current head hash, and <code>verify --head</code> checks against a copy you pinned somewhere the agent cannot write.</p>
@@ -179,6 +190,15 @@
 <pre class="term"><code><span class="l"><span class="c"># per agent config file: ok, STALE, partial or no hook; then the log: records, last write, chain</span></span>
 <span class="l"><span class="p">$ </span>rewindagents status</span></code></pre>
 <p>The last line of <code>status</code> is this project&#x27;s log: how many records it holds, when the last one was written, and whether the chain verifies. <code>status</code> writes nothing. A hook is stale when its interpreter path or its <code>PYTHONPATH</code> directory no longer exists; <code>status</code> then exits 1.</p>
+
+<h2 id="gc">Free space</h2>
+<pre class="term"><code><span class="l"><span class="c"># what would be deleted, and how many bytes</span></span>
+<span class="l"><span class="p">$ </span>rewindagents gc <span class="nb">--dry-run</span></span>
+<span class="l"><span class="c"># delete it</span></span>
+<span class="l"><span class="p">$ </span>rewindagents gc</span>
+<span class="l"><span class="c"># first drop scans whose command never finished</span></span>
+<span class="l"><span class="p">$ </span>rewindagents gc <span class="nb">--drop-pending-older-than</span> 7</span></code></pre>
+<p><code>gc</code> deletes every stored copy that no log record (in any session) and no pending scan (a command whose after-scan has not run) names, and prints how many it deleted and the bytes those files took on disk. Every step of every session in the log can still be rewound afterwards; the copies a rewind needs are the ones the log names. It refuses to run when the log does not verify, and it never writes to the log. A scan whose after-scan never ran (the agent was killed, a crash) stays pending and keeps its copies; <code>--drop-pending-older-than DAYS</code> removes the scans older than DAYS first, so their copies are collected too. Scans younger than 1 day are never dropped.</p>
 
 <h2 id="overhead">Overhead</h2>
 <p>Time the hook adds to one tool call (both hook processes, before and after the call), median of 15 calls, measured by <code>bench/hook_overhead.py</code> on macOS 27.0.1, Apple M6, 12 CPUs, Python 3.15.0, on 2026-11-12 (commit b11b369, load average 22.2 at the start). Each hook event is a new Python process; starting one and importing the package alone takes 108 ms (median), and every call starts two.</p>

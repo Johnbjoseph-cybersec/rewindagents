@@ -105,6 +105,13 @@ def md_inline(s):
 # "exits 1." goes last so a wrap never starts a line with "1." (it read as a list item at 1440).
 STATUS_SENTENCES = ("The last line of `status` is this project's log", "`status` writes nothing",
                     "A hook is stale when")
+# The README's words under "Move a session" and "Free space" on the docs page (R26); none ends on a number.
+MOVE_SENTENCES = ("Then `replay`, `rewind` and `branch` work on that session",
+                  "By default, secrets are replaced in the records and the stored copies",
+                  "`import` writes nothing until everything checks out", "Nothing goes over a network")
+GC_SENTENCES = ("`gc` deletes every stored copy that no", "Every step of every session in the log can still be rewound",
+                "It refuses to run when the log does not verify", "A scan whose after-scan never ran",
+                "Scans younger than 1 day are never dropped")
 
 
 def facts():
@@ -138,6 +145,10 @@ def facts():
         "uninstall": next(blk for blk in readme_blocks(readme, "Claude Code hook") if blk[0].startswith("rewindagents uninstall")),
         "status": next(blk for blk in readme_blocks(readme, "Claude Code hook") if blk[0].startswith("rewindagents status")),
         "status_says": [readme_sentence(readme, s) for s in STATUS_SENTENCES],
+        "bundle": next(blk for blk in readme_blocks(readme, "Move a session to another machine") if blk[0].startswith("rewindagents bundle")),
+        "bundle_says": [readme_sentence(readme, s) for s in MOVE_SENTENCES],
+        "gc": next(blk for blk in readme_blocks(readme, "Clean up stored copies") if blk[0].startswith("rewindagents gc")),
+        "gc_says": [readme_sentence(readme, s) for s in GC_SENTENCES],
         "beats": demo["beats"],
         "gif": {k: demo["gif_facts"][k] for k in ("width", "height", "seconds", "frames")},
     }
@@ -642,7 +653,8 @@ def docs_html(cfg, f):
     desc = "Getting started with rewindagents: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, export, find a session, verify the log."
     toc = [("install", "Install"), ("hook", "Add the hook"), ("first", "A first session"), ("recorded", "What gets recorded"),
            ("replay", "Replay and rewind"), ("branch", "Branch"), ("export", "Export"), ("sessions", "Find a session"),
-           ("verify", "Verify"), ("status", "Is it recording?"), ("overhead", "Overhead"), ("limits", "Limits"),
+           ("bundle", "Move a session"), ("verify", "Verify"), ("status", "Is it recording?"), ("gc", "Free space"),
+           ("overhead", "Overhead"), ("limits", "Limits"),
            ("remove", "Remove it")]
     first = "".join('<li><p>%s</p>%s</li>' % (text, panel(beat_rows(bt, lit=(i == 2)))) for i, (text, bt) in enumerate(zip((
         "Ask Claude Code for anything in a project with the hook installed; here, %d steps that add a timeout to a small service, then two steps that delete the tests and overwrite the config. <code>replay</code> lists every step with its number." % f["good_step"],
@@ -709,6 +721,10 @@ def docs_html(cfg, f):
 <p>One line per session, in the order the sessions first wrote to the log: the session id, the local time of its first and last record, the number of steps (with how many of them are rewinds or branches) and the files it touched; a second line names the first %(show)d files and counts the rest. The session that wrote the last record is marked <code>(latest)</code>.</p>
 <p><code>--grep TEXT</code> keeps the sessions with a step whose <code>replay</code> line or checkpointed path contains TEXT, in any case, and lists those steps with their numbers. Exit code 1 if no session matches.</p>
 
+<h2 id="bundle">Move a session</h2>
+%(bundle)s
+<p>%(bundle_says)s</p>
+
 <h2 id="verify">Verify</h2>
 %(verify)s
 <p><code>verify</code> checks every record against the one before it and names the first bad record. A hash chain cannot tell on its own that records were cut off the end or that the whole file was rewritten and re-hashed; <code>rewindagents head</code> prints the current head hash, and <code>verify --head</code> checks against a copy you pinned somewhere the agent cannot write.</p>
@@ -718,6 +734,10 @@ def docs_html(cfg, f):
 <h2 id="status">Is it recording?</h2>
 %(status)s
 <p>%(status_says)s</p>
+
+<h2 id="gc">Free space</h2>
+%(gc)s
+<p>%(gc_says)s</p>
 
 <h2 id="overhead">Overhead</h2>
 %(overhead)s
@@ -746,6 +766,8 @@ def docs_html(cfg, f):
        "version": panel([("cmd", "rewindagents --version"), ("out", "rewindagents %s" % f["version"])]),
        "hook": code(b["hook"]), "agents": code(b["agents"]), "uninstall": code(f["uninstall"]),
        "status": code(f["status"]), "status_says": " ".join(md_inline(s) for s in f["status_says"]),
+       "bundle": code(f["bundle"]), "bundle_says": " ".join(md_inline(s) for s in f["bundle_says"]),
+       "gc": code(f["gc"]), "gc_says": " ".join(md_inline(s) for s in f["gc_says"]),
        "codex": e(f["agents"]["codex"]["settings"]),
        "cursor": e(f["agents"]["cursor"]["settings"]),
        "more_agents": more_agents_html(),

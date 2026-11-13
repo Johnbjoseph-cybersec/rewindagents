@@ -459,6 +459,9 @@ summary:hover { color: var(--record); }
 p code, li code, h3 code, summary code { border-bottom: 0; color: var(--reel); font-weight: 600; }
 #how code { color: var(--leader); }
 a > code { border-bottom: 1px solid currentColor; }
+/* an inline command moves to the next line whole instead of splitting at a hyphen ("-" / "-session" at
+   1440, "--drop-pending-" at 390, R26); only a span wider than the column wraps inside itself */
+.doc p code, .doc li code { display: inline-block; max-width: 100%; vertical-align: baseline; }
 /* 12. display tracking */
 h1, h2, .plan h3 { letter-spacing: -0.025em; word-spacing: 0.04em; }
 h2 { text-wrap: balance; }

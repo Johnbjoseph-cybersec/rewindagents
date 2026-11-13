@@ -128,6 +128,18 @@
     "rewindagents verify --head <pinned-hash>"
    ]
   },
+  "bundle": [
+   "rewindagents bundle --out s1.bundle                 # the latest session, and the file copies it names, in one file",
+   "rewindagents bundle --session abc --out abc.bundle  # a given session",
+   "rewindagents bundle --no-redact --out s1.bundle     # carry secrets as recorded (they are replaced by default)",
+   "rewindagents import s1.bundle                       # in another clone: check the file, then add the session to its log"
+  ],
+  "bundle_says": [
+   "Then `replay`, `rewind` and `branch` work on that session in the other clone, with `--session <id>`.",
+   "By default, secrets are replaced in the records and the stored copies, as `export` replaces them.",
+   "`import` writes nothing until everything checks out: the file's own SHA-256, every record's hash, that every record belongs to the session and is in log order, every stored copy against its SHA-256, that no copy a record names is missing, that this project's log verifies, and that it does not already hold the session.",
+   "Nothing goes over a network; carry the file however you like."
+  ],
   "diff_kb": 256,
   "diff_lines": 400,
   "file_mb": 20,
@@ -136,6 +148,18 @@
    "Edit",
    "MultiEdit",
    "NotebookEdit"
+  ],
+  "gc": [
+   "rewindagents gc --dry-run   # what would be deleted, and how many bytes",
+   "rewindagents gc             # delete it",
+   "rewindagents gc --drop-pending-older-than 7   # first drop scans whose command never finished"
+  ],
+  "gc_says": [
+   "`gc` deletes every stored copy that no log record (in any session) and no pending scan (a command whose after-scan has not run) names, and prints how many it deleted and the bytes those files took on disk.",
+   "Every step of every session in the log can still be rewound afterwards; the copies a rewind needs are the ones the log names.",
+   "It refuses to run when the log does not verify, and it never writes to the log.",
+   "A scan whose after-scan never ran (the agent was killed, a crash) stays pending and keeps its copies; `--drop-pending-older-than DAYS` removes the scans older than DAYS first, so their copies are collected too.",
+   "Scans younger than 1 day are never dropped."
   ],
   "gif": {
    "frames": 66,
