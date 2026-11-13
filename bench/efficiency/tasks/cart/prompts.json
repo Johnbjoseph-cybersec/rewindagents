@@ -1,0 +1,5 @@
+{
+ "fix": "The tests in tests/ fail. Fix cart.py so that every function does what its docstring says. Run `python3 -m unittest discover -s tests` to check. Do not edit the tests.",
+ "coupons": "Write coupons.py as SPEC.md describes, and add a test for it in tests/test_coupons.py. Run `python3 -m unittest discover -s tests` to check.",
+ "both": "First: the tests in tests/ fail. Fix cart.py so that every function does what its docstring says. Do not edit the existing tests. Then: write coupons.py as SPEC.md describes, and add a test for it in tests/test_coupons.py. Run `python3 -m unittest discover -s tests` to check."
+}
