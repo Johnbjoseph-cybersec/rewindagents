@@ -8,7 +8,9 @@ The agent runs the hook with one JSON object on stdin (field names per agent: ag
   the file can be put back later. A file that does not exist yet is recorded as absent;
 - around Bash (Claude Code) and around every call of the other agents that is not known to be read-only,
   saves the project's files before the call and checkpoints, in the "post" record, the ones it changed,
-  created or deleted (see bashscan.py).
+  created or deleted (see bashscan.py);
+- in the "post" record, the SHA-256 of each file the call wrote or changed as it is right after the call
+  (args["after"]), so a later rewind can tell when a file changed outside any recorded step.
 
 It never blocks, never decides and never changes the call: it always exits 0, even when its own input is
 broken or the disk is full, and prints nothing to stdout except the answer an agent's docs require (Cursor's
@@ -111,6 +113,22 @@ def checkpoint(path: Path, objects: Path) -> dict:
     return entry
 
 
+def after_hash(path: Path) -> dict:
+    """What a file holds right after a step, as a hash only (no copy is stored): {"path", "after": sha256 or
+    None when the file is absent}, or {"path", "skipped": why} when it is too big to hash here. rewind compares
+    it with the file's bytes later, to tell a change made outside the log (by hand, by another tool) from
+    the step's own. The key is "after", not "sha256", so bundle and gc never look for a stored copy of it."""
+    entry: dict[str, Any] = {"path": str(path)}
+    if not path.is_file():
+        entry["after"] = None
+        return entry
+    if path.stat().st_size > MAX_CHECKPOINT_BYTES:
+        entry["skipped"] = f"larger than {MAX_CHECKPOINT_BYTES} bytes"
+        return entry
+    entry["after"] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return entry
+
+
 def _clip(value: Any) -> Any:
     text = value if isinstance(value, str) else json.dumps(value, ensure_ascii=False, default=str)
     if len(text) <= MAX_RESULT_CHARS:
@@ -169,9 +187,17 @@ def _handle(payload: dict, ag, agent: str, n: dict, store: Path, rec: Recorder, 
         return rec.record(session, tool, args, None, event="pre")
     if event == "post":
         args = {"input": recorded, "agent": agent}
-        if agents.scans(ag, tool):
+        key = FILE_TOOLS.get(tool) if ag.file_tools else None
+        if key and isinstance(tool_input, dict) and tool_input.get(key):
+            target = Path(tool_input[key])
+            if not target.is_absolute():
+                target = cwd / target
+            args["after"] = [after_hash(target)]
+        elif agents.scans(ag, tool):
             from . import bashscan
-            args["bash_scan"], args["checkpoints"] = bashscan.after(payload, root, store)
+            afters: list[dict] = []
+            args["bash_scan"], args["checkpoints"] = bashscan.after(payload, root, store, afters)
+            args["after"] = afters
         return rec.record(session, tool, args, _clip(n["response"]), event="post")
     return rec.record(session, tool, {"input": recorded, "agent": agent}, None, event=event)
 

@@ -133,8 +133,10 @@ def before(payload: dict, root: Path, store: Path) -> dict:
     return {"files": len(snap), "pending": key}
 
 
-def after(payload: dict, root: Path, store: Path) -> tuple[dict, list[dict]]:
-    """PostToolUse: the checkpoints for files the command changed, created or deleted."""
+def after(payload: dict, root: Path, store: Path, afters: list | None = None) -> tuple[dict, list[dict]]:
+    """PostToolUse: the checkpoints for files the command changed, created or deleted. When `afters` is a
+    list, one entry per such file is appended to it with its hash right after the command (hook.after_hash's
+    shape: {"path", "after": sha256 or None}, or {"path", "skipped"})."""
     pend = store / "pending" / f"{_key(payload)}.json"
     try:
         old = json.loads(pend.read_text(encoding="utf-8"))
@@ -156,6 +158,11 @@ def after(payload: dict, root: Path, store: Path) -> tuple[dict, list[dict]]:
             cps.append({"path": path, "sha256": None, "skipped": was["skipped"]})
         else:
             cps.append({"path": path, "sha256": was})                     # changed or deleted
+        if afters is not None:
+            if isinstance(now, dict):
+                afters.append({"path": path, "skipped": now["skipped"]})
+            else:
+                afters.append({"path": path, "after": now})              # None: deleted by the command
     scan: dict[str, Any] = {"changed": len(cps)}
     if background(payload):
         scan["early"] = EARLY

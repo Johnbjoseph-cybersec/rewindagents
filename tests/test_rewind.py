@@ -262,7 +262,7 @@ class TestCli(unittest.TestCase):
         with TemporaryDirectory() as d:
             a = Agent(d)
             a.write("app.py", "v1")
-            self.assertEqual(cli("--log", str(a.log), "rewind", "7")[0], 1)
+            self.assertEqual(cli("--log", str(a.log), "rewind", "7")[0], 2)   # out of range: 2, as replay (test_exit_codes)
             self.assertEqual(cli("--log", str(Path(d, "none.jsonl")), "rewind", "0")[0], 2)
             code, out, _ = cli("--log", str(a.log), "rewind", "0", "--dry-run")
             self.assertEqual(code, 0)

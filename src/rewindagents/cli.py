@@ -20,7 +20,10 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         prog="rewindagents",
         description="The flight recorder for coding agents: see exactly what your agent did, and take back any "
-                    "part of it. Start with `rewindagents init`; then `replay`, `diff N`, `rewind N [--only PATH]`.")
+                    "part of it. Start with `rewindagents init`; then `replay`, `diff N`, `rewind N [--only PATH]`.",
+        epilog="Exit codes: 0 done; 1 it ran but something was not done or does not check out (a file a rewind "
+               "could not put back or refused to overwrite, a log that does not verify); 2 it could not run as "
+               "asked (a bad argument, such as a step number the session does not have, or no log yet).")
     ap.add_argument("--version", action="version", version=f"rewindagents {__version__}")
     ap.add_argument("--log", help="log file (default: .rewindagents/log.jsonl here, or in the nearest parent "
                                   "directory that has one, as git finds a repository)")
@@ -52,12 +55,18 @@ def main(argv: list[str] | None = None) -> int:
     rp.add_argument("--diff", action="store_true",
                     help="with --step N: what step N itself changed, as a unified diff per file (before the step "
                          "-> right after it)")
+    rp.add_argument("--no-redact", action="store_true",
+                    help="show secrets (API keys, tokens, private keys, .env values) as recorded; by default they "
+                         "are replaced, as in export")
     rw = sub.add_parser("rewind", help="put the files back the way they were right after step N")
     rw.add_argument("step", type=int, help="step number from `replay` (0 = before the first step)")
     rw.add_argument("--session", help="default: the session that wrote the last record")
     rw.add_argument("--dry-run", action="store_true", help="print what would change, change nothing")
     rw.add_argument("--only", action="append", metavar="PATH",
                     help="put back only this file (or the files under this directory); repeat for more")
+    rw.add_argument("--force", action="store_true",
+                    help="rewind even when a file changed after the steps it takes back (by hand or another "
+                         "session); those bytes are kept as a step, so the rewind can be undone")
     dfp = sub.add_parser("diff", help="show what `rewind N` would change, as a unified diff (now -> step N)")
     dfp.add_argument("step", type=int, help="step number from `replay` (0 = before the first step)")
     dfp.add_argument("paths", nargs="*", metavar="PATH", help="only these files (or the files under these directories)")
@@ -75,6 +84,8 @@ def main(argv: list[str] | None = None) -> int:
     br.add_argument("step", type=int)
     br.add_argument("--name", required=True, help="branch name (git: rewindagents/<name>)")
     br.add_argument("--session", help="default: the session that wrote the last record")
+    br.add_argument("--force", action="store_true",
+                    help="branch even when a file changed after the steps it takes back (see rewind --force)")
     fk = sub.add_parser("fork", help="start a separate run from step N: a new directory (a git worktree in a repo) "
                                      "holding the files as they were right after step N, with its own log")
     fk.add_argument("step", type=int, help="step number from `replay` (0 = before the first step)")
@@ -184,12 +195,20 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
     if a.cmd == "fork":
         try:
             d = runs.fork(a.log, a.step, a.name, a.session, a.dir)
+        except rewind.StepRangeError as e:
+            print(f"rewindagents: {e}", file=sys.stderr)
+            return 2
         except (runs.RunError, rewind.RewindError) as e:
             print(f"rewindagents: {e}", file=sys.stderr)
             return 1
         where = f"git worktree on branch {d['git_branch']}" if d["git_branch"] else "a plain directory (not a git repo)"
         print(f"run {d['name']}: {d['dir']}")
         print(f"  {d['files']} files as they were right after step {d['step']} of session {d['session']}; {where}")
+        if d.get("drift"):
+            print(f"  WARNING  {len(d['drift'])} file(s) changed after the steps this run starts before, so the run "
+                  f"starts without those changes (your project keeps them):")
+            for x in d["drift"]:
+                print(f"    {x['path']}: {x['why']}")
         if d["hooked"]:
             print(f"  recorded there: {', '.join(d['hooked'])} (their hook is in the run's config or your global one)")
         else:
@@ -232,7 +251,7 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
         if a.diff and a.step is None:
             print("rewindagents: --diff needs --step N (diff N compares now with step N)", file=sys.stderr)
             return 2
-        return _replay(a.log, a.session, a.step, a.diff)
+        return _replay(a.log, a.session, a.step, a.diff, redact=not a.no_redact)
     if a.cmd == "sessions":
         found = sessions.sessions(a.log, a.grep)
         for line in sessions.lines(found, root=rewind.project_root(a.log)):
@@ -257,15 +276,23 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
     if a.cmd in ("rewind", "branch"):
         try:
             if a.cmd == "rewind":
-                p = rewind.rewind(a.log, a.step, a.session, dry_run=a.dry_run, only=a.only)
+                p = rewind.rewind(a.log, a.step, a.session, dry_run=a.dry_run, only=a.only, force=a.force)
             else:
-                p = rewind.branch(a.log, a.step, a.name, a.session)
+                p = rewind.branch(a.log, a.step, a.name, a.session, force=a.force)
+        except rewind.DriftError as e:
+            _refused(e.plan, a)
+            return 1
+        except rewind.StepRangeError as e:
+            print(f"rewindagents: {e}", file=sys.stderr)
+            return 2
         except rewind.RewindError as e:
             print(f"rewindagents: {e}", file=sys.stderr)
             return 1
         _report(p, dry_run=getattr(a, "dry_run", False), root=rewind.project_root(a.log))
         # README: "If anything could not be restored, the exit code is 1" - an unscanned step counts, and so
         # does a background command whose after-scan may have been early (nobody can say it was all restored).
+        if p.get("drift") and getattr(a, "dry_run", False) and not a.force:
+            return 1        # the real rewind would refuse
         return 1 if p["cannot"] or p["bash_uncovered"] or p["scan_early"] else 0
     if a.cmd == "record":
         try:
@@ -320,23 +347,63 @@ def _redaction_line(n: int | None) -> str:
     return f"  {n} secret value{'s' if n != 1 else ''} replaced with [redacted ...]; --no-redact keeps them"
 
 
-def _replay(log_path: str, session: str | None, step: int | None, show_diff: bool = False) -> int:
+def _replay(log_path: str, session: str | None, step: int | None, show_diff: bool = False,
+            redact: bool = True) -> int:
+    """With redact (the default, as for export and bundle), secrets in summaries, inputs, results and diffs are
+    replaced before they reach the terminal: terminal output gets pasted into issues and chats."""
+    from . import redact as _redact
     all_steps = rewind.steps(log_path, session)
     root = rewind.project_root(log_path)
     if step is None:
+        found = 0
         for s in all_steps:
             mark = f"  [{len(s['checkpoints'])} checkpointed]" if s["checkpoints"] else ""
             if (s.get("bash_scan") or {}).get("early"):
                 mark += "  [background: scan may be early]"
-            print(f"{s['step']:>5}  {s['tool']:<12}  {rewind.summary(s, root=root)}{mark}")
+            line = rewind.summary(s, width=sys.maxsize, root=root)
+            if redact:
+                line, k = _redact.text(line)
+                found += k
+            line = line if len(line) <= 80 else line[:77] + "..."   # redacted before the cut: no half token
+            print(f"{s['step']:>5}  {s['tool']:<12}  {line}{mark}")
+        diffs.redaction_note(found, sys.stderr)
         return 0
     if not 1 <= step <= len(all_steps):
-        print(f"rewindagents: step {step} is out of range (1-{len(all_steps)})", file=sys.stderr)
+        print(f"rewindagents: {rewind.range_message(step, session or rewind.latest_session(log_path), len(all_steps), 1)}",
+              file=sys.stderr)
         return 2
     if show_diff:
-        return diffs.step_run(log_path, all_steps, step, root)
-    print(export.show(all_steps[step - 1]))
+        return diffs.step_run(log_path, all_steps, step, root, redact=redact)
+    value = all_steps[step - 1]
+    if not redact:
+        print(export.show(value))
+        return 0
+    found = export.clips(value)                  # clip lengths as recorded, before redaction changes a head
+    value, k = _redact.value(value)
+    print(export.show(value, found))
+    diffs.redaction_note(k, sys.stderr)
     return 0
+
+
+def drift_lines(p: dict, root, indent: str = "  ") -> list[str]:
+    """The files a rewind to p["to_step"] would overwrite although they changed after the steps it takes back."""
+    out = []
+    for d in p.get("drift") or []:
+        out.append(f"{indent}{rewind.relative(d['path'], root)}: {rewind.drift_why(d)}")
+    return out
+
+
+def _refused(p: dict, a: argparse.Namespace) -> None:
+    root = rewind.project_root(a.log)
+    cmd = "rewind" if a.cmd == "rewind" else "branch"
+    n = len(p["drift"])
+    print(f"rewindagents: {cmd} refused, nothing changed: {n} file{'s' if n != 1 else ''} changed after the steps "
+          f"it takes back, and it would overwrite {'those changes' if n != 1 else 'that change'}:", file=sys.stderr)
+    for line in drift_lines(p, root):
+        print(line, file=sys.stderr)
+    print(f"  see exactly what would be lost: {invocation()} diff {p['to_step']} --session {p['session']}", file=sys.stderr)
+    print(f"  {cmd} anyway with --force: the current bytes are kept as a step, so it can be undone with "
+          f"`{invocation()} rewind {p['steps']} --session {p['session']}`", file=sys.stderr)
 
 
 def _report(p: dict, dry_run: bool, root) -> None:
@@ -351,6 +418,19 @@ def _report(p: dict, dry_run: bool, root) -> None:
         print(f"  CANNOT   {rewind.relative(path, root)}: {why}")
     for q in p.get("unmatched") or []:
         print(f"  skip     {q}: no step after step {p['to_step']} changed it")
+    if p.get("drift"):
+        n = len(p["drift"])
+        if dry_run:
+            print(f"  WARNING  {n} file{'s' if n != 1 else ''} changed after the steps this rewind takes back; "
+                  f"rewinding would overwrite {'those changes' if n != 1 else 'that change'}:")
+        else:
+            print(f"  overwrote {n} file{'s' if n != 1 else ''} that changed after the steps it took back "
+                  f"(--force); their bytes before this rewind are kept in it:")
+        for line in drift_lines(p, root, "    "):
+            print(line)
+        if dry_run:
+            print("  a real rewind refuses this unless you add --force (it then keeps the current bytes as a step, "
+                  "so it can be undone)")
     if p.get("branch"):
         b = p["branch"]
         where = f"git branch {b['git_ref']} ({b['commit'][:12]})" if b["git_ref"] else "the rewindagents log only (not a git repo)"
