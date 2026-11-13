@@ -12,14 +12,15 @@ the way it would in real use, then runs its own undo recipe. The bench then comp
 
 Goals:
 - ("to", K):   files as they were right after agent step K; changes after it made by hand are kept;
-- ("only", K): undo agent step K alone and keep everything after it.
+- ("only", K): undo agent step K alone and keep everything after it (a path changed both by step K and after
+               it needs the merged bytes, `merge`).
 
 The expected state is not written by hand: the harness snapshots the files after every step of the run, so
 the oracle comes from the session itself. A path changed after K both by the agent and by hand needs the
 merged bytes, which the scenario states (`merge`).
 
 Tools (measured): rewindagents, through `python -m rewindagents hook` per event exactly as an agent runs it,
-then its CLI; git with a commit after every agent step; git with a stash snapshot before the session. Their
+then its CLI (`rewind`, and in a second column the same recording undone with `revert` only); git with a commit after every agent step; git with a stash snapshot before the session. Their
 recipes are fixed per tool and goal (RECIPES below), not chosen per scenario.
 
     python3 bench/takeback/takeback.py                       # all tools, all scenarios, table on stdout
@@ -179,6 +180,18 @@ SCENARIOS: list[Scenario] = [
     Scenario("S15", "undo the whole session over uncommitted work from before it",
              [Step("Edit", "app.py", "def total(items, tax=0):\n", "def total(items):\n"),
               Step("Bash", command="rm README.md")], ("to", 0)),
+    # S09 and S10 where the later work is in the same file as the step taken back
+    Scenario("S16", "undo only the bad Edit to config.yaml; the user then edited another line of it by hand",
+             [Step("Edit", "config.yaml", "debug: true\n", "debug: false\n"),
+              Step("Write", "CHANGELOG.md", "## 0.2\n- debug on\n"),
+              Step("hand", "config.yaml", "debug: true\nport: 8080\nretries: 5\n")],
+             ("only", 1), merge={"config.yaml": "debug: false\nport: 8080\nretries: 5\n"},
+             precious={"config.yaml": "retries: 5"}),
+    Scenario("S17", "undo only the bad `sed -i` on config.yaml; a later agent Edit changed another line of it",
+             [Step("Bash", command="sed -i.bak 's/debug: false/debug: true/' config.yaml && rm config.yaml.bak"),
+              Step("Edit", "config.yaml", "retries: 5\n", "retries: 3\n")],
+             ("only", 1), merge={"config.yaml": "debug: false\nport: 8080\nretries: 5\n"},
+             precious={"config.yaml": "retries: 5"}),
 ]
 # uncommitted work the user had before the agent started (written after the base commit)
 DIRTY = {"S15": ("app.py", APP + "\n\ndef count(items):\n    return len(items)\n")}
@@ -244,6 +257,12 @@ def expected(scn: Scenario, snaps: list[dict], agent_index: list[int]) -> dict[s
     else:   # only: undo agent step k, keep the rest
         i = agent_index[k]
         for p in paths:
+            later = any(snaps[j].get(p) != snaps[j - 1].get(p) for j in range(i + 1, len(snaps)))
+            if snaps[i].get(p) != snaps[i - 1].get(p) and later:
+                if p not in scn.merge:
+                    raise ValueError(f"{scn.id}: {p} changed by step {k} and after it: give merge")
+                out[p] = text_state(scn.merge[p])
+                continue
             v = snaps[i - 1].get(p) if snaps[i].get(p) != snaps[i - 1].get(p) else final.get(p)
             if v is not None:
                 out[p] = v
@@ -343,6 +362,25 @@ class RewindAgents(Tool):
         return p.returncode, (p.stdout + p.stderr).strip()
 
 
+class RewindAgentsRevert(RewindAgents):
+    """The same recording; undo with `revert` only, one command per agent step taken back, newest first.
+    Goal ("only", K): `revert K`. Goal ("to", K): `revert` every agent step after K, from the last one down.
+    Step numbers stay valid because each revert is appended after them. Stops at the first non-zero exit."""
+    name = "rewindagents revert"
+
+    def undo(self, scn, root):
+        kind, k = scn.goal
+        last = sum(1 for s in scn.steps if s.agent)
+        todo = [k] if kind == "only" else list(range(last, k, -1))
+        out = []
+        for n in todo:
+            p = self.cli(root, "revert", str(n))
+            out.append((p.stdout + p.stderr).strip())
+            if p.returncode != 0:
+                return p.returncode, "\n".join(out)
+        return 0, "\n".join(out)
+
+
 class GitPerStep(Tool):
     """Like aider's auto-commits, applied to every agent step including shell commands (more than aider does):
     `git add -A && git commit` before the session (uncommitted work) and after each agent step.
@@ -401,7 +439,7 @@ class GitStash(Tool):
         return max(p.returncode for p in ps), "".join(p.stderr for p in ps).strip()
 
 
-TOOLS: dict[str, type[Tool]] = {t.name: t for t in (RewindAgents, GitPerStep, GitStash)}
+TOOLS: dict[str, type[Tool]] = {t.name: t for t in (RewindAgents, RewindAgentsRevert, GitPerStep, GitStash)}
 
 
 # ---------------------------------------------------------------- one run

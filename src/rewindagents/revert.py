@@ -155,7 +155,9 @@ def plan(log_path: str | Path, k: int, session: str | None = None) -> dict:
         raise RewindError(f"step {k} ran a command whose before/after scan did not finish, so what it changed is "
                           f"not known; nothing to revert. `replay --step {k}` shows the step")
     if not paths:
-        raise RewindError(f"step {k} changed no file the log knows of; nothing to revert "
+        scope = (" (a command's scan covers the regular files inside the project: a file outside it or a symlink "
+                 "it changed is not recorded)" if step.get("scanned") or step["tool"] == "Bash" else "")
+        raise RewindError(f"step {k} changed no file the log knows of{scope}; nothing to revert "
                           f"(`replay --step {k}` shows the step)")
     for path_s in paths:
         path = Path(path_s)

@@ -247,6 +247,7 @@ class TestLimits(Case):
         code, _, err = cli("revert", "1")
         self.assertEqual(code, 1)
         self.assertIn("changed no file", err)
+        self.assertIn("a file outside it or a symlink it changed is not recorded", err)
 
     def test_a_broken_chain_changes_nothing(self):
         self.put("config.yaml", CONFIG)
