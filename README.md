@@ -295,6 +295,10 @@ rewindagents branch 12 --name try2   # keep the current files, then rewind to st
 - `replay --step N --diff` names each file step N changed, created or deleted, then diffs the file right
   before the step against the file right after it (its next checkpoint in the session, else the file now),
   the same before and after the export page shows. `git apply -R` of that diff undoes exactly that step.
+- `replay` replaces secrets the way `export` does, in the step list, in `--step N` and in `--step N
+  --diff`, and says on stderr how many it replaced, because terminal output gets pasted into issues and
+  chats. `--no-redact` shows them as recorded (use it before `git apply -R` of a diff that touches a
+  secret: a diff with placeholders in it does not apply).
 - `diff N [PATH ...]` reads the same plan `rewind N` acts on, so it names exactly the files `rewind N
   --dry-run` lists (a test checks this). The `a/` side is the file now, the `b/` side is the file after the
   rewind, so `git apply` of the diff does what the rewind would do. Files the rewind would delete diff to
@@ -311,6 +315,16 @@ rewindagents branch 12 --name try2   # keep the current files, then rewind to st
 - A rewind is undoable. It first saves the current bytes of every file it will change and records itself
   as a new step; the command prints `undo it with: rewindagents rewind <step> --session <id>` (from an
   uninstalled clone it says `python3 -m rewindagents` instead).
+- A rewind does not silently overwrite later work. The hook records each file's SHA-256 right after every
+  step, so a rewind can tell when a file it would put back or delete has changed since the steps it takes
+  back: by a later session (named with its step), or outside any recorded step (by hand, or by a tool with
+  no hook). `diff N` and `rewind N --dry-run` list each such file with a WARNING and exit 1. `rewind N` and
+  `branch N` refuse and change nothing; `--force` rewinds anyway, and because the rewind saves the current
+  bytes first, the undo command it prints brings that work back. The timeline UI refuses the same rewind
+  with the same message. `fork N` changes nothing in the project, so it only warns that the run starts
+  without those changes. A file that is absent now loses nothing and is not listed. Sessions recorded by
+  an older version hold no after-hashes: for those, a later session's change is still caught, a hand edit
+  is not.
 - `branch N --name X` does the same and, in a git repo, also commits the whole current working tree to the
   branch `rewindagents/X`. It does this through a temporary index, so your `HEAD`, index and current
   branch stay as they were. Outside git, the current files are kept in the log only.
@@ -323,6 +337,12 @@ rewindagents branch 12 --name try2   # keep the current files, then rewind to st
   are not put back. Directories created by
   later steps stay (empty). Files over 20 MB were never copied, so they are reported and not restored. If
   anything could not be restored, the exit code is 1.
+
+Exit codes, the same in every command: 0 when it did what you asked; 1 when it ran but something was not
+done or does not check out (a file a rewind could not put back or refused to overwrite, a log that does not
+verify); 2 when it could not run as asked: a bad argument, or no log yet. A step number the session does
+not have is a bad argument in `replay --step`, `rewind`, `diff`, `branch` and `fork` alike: exit 2, and
+the message gives the numbers the session has. `rewindagents --help` says this too.
 
 ## Fork a step, compare the runs (prototype)
 
