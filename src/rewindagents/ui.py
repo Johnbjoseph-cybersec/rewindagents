@@ -540,7 +540,7 @@ h2{font:700 12px/1 var(--body);text-transform:uppercase;letter-spacing:.06em;col
 .timeline ol{list-style:none;margin:0;padding:8px 0 40px;flex:1;min-height:0;overflow:auto}
 .step{position:relative}
 .step::before{content:"";position:absolute;left:62px;top:0;bottom:0;border-left:1px solid var(--rule)}
-.step>button{display:grid;grid-template-columns:44px 1fr;gap:0 24px;width:100%%;text-align:left;background:none;border:0;border-left:3px solid transparent;padding:9px 18px 9px 13px;cursor:pointer;position:relative}
+.step>button{display:grid;grid-template-columns:44px minmax(0,1fr);gap:0 24px;width:100%%;text-align:left;background:none;border:0;border-left:3px solid transparent;padding:9px 18px 9px 13px;cursor:pointer;position:relative}
 .step>button::before{content:"";position:absolute;left:58px;top:17px;width:9px;height:1px;background:var(--rule)}
 .step>button:hover{background:rgba(242,244,241,.04)}
 .step.sel>button{border-left-color:var(--rewind);background:var(--reel)}
@@ -609,7 +609,10 @@ dialog h2{font:800 22px/1.2 var(--display);letter-spacing:-.02em;color:var(--ree
 dialog .lead{margin:0 0 12px;font-size:14px}
 dialog .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;position:sticky;bottom:-22px;background:var(--leader);padding:12px 0 2px}
 .foot{flex:none;display:flex;justify-content:space-between;padding:6px 20px;border-top:1px solid var(--rule);font-size:12px;color:var(--tape)}
-@media (max-width:1100px){.app{grid-template-columns:200px 1fr;grid-template-rows:minmax(0,1fr) minmax(0,1fr)}.detail{grid-column:1/-1;border-top:1px solid var(--rule)}.keys{display:none}}
+@media (max-width:1100px){.app{grid-template-columns:200px minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1fr)}.detail{grid-column:1/-1;border-top:1px solid var(--rule)}.keys{display:none}}
+@media (max-width:640px){.bar{flex-wrap:wrap;gap:4px 14px;padding:10px 16px}.project{min-width:0;overflow-wrap:anywhere}
+.app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) minmax(0,1fr)}
+.sessions{max-height:22vh;border-right:0;border-bottom:1px solid var(--rule);padding:10px 0}.top{flex-wrap:wrap}}
 """ % export.PALETTE
 
 JS = r"""

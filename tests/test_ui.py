@@ -276,6 +276,23 @@ class TestPage(UICase):
         self.assertIn('var pre = el("pre", "diff");', js)
         self.assertEqual(len(re.findall(r'el\("pre", "io"', js)), 2)  # input + result, nothing else
 
+    def test_narrow_layout_fits_the_viewport(self):
+        # R35: at 390 px the page was 448 wide: the header never wrapped (the chain line sat past the edge) and a
+        # step row's 1fr track kept its chips' min-content width inside a 190 px timeline column.
+        import re
+        css = self.s.req("/app.css")[2].decode()
+        media = dict(re.findall(r"@media \(max-width:(\d+)px\)\{(.*?\})\}\s*$", css, re.M | re.S))
+        rules = lambda body: {k.strip(): v for k, v in re.findall(r"([^{}]+)\{([^}]*)\}", body)}
+        step = dict(re.findall(r"^(\.step>button)\{([^}]*)\}", css, re.M))[".step>button"]
+        self.assertIn("grid-template-columns:44px minmax(0,1fr)", step)   # the text track may shrink below its content
+        self.assertIn("grid-template-columns:200px minmax(0,1fr)", rules(media["1100"])[".app"])
+        narrow = rules(media["640"])
+        self.assertIn("grid-template-columns:minmax(0,1fr)", narrow[".app"])  # one column: sessions, timeline, detail
+        self.assertIn("flex-wrap:wrap", narrow[".bar"])
+        self.assertIn("min-width:0", narrow[".project"])
+        self.assertIn("overflow-wrap:anywhere", narrow[".project"])
+        self.assertNotIn("1fr)", re.sub(r"minmax\([^)]*\)", "", css))     # no bare 1fr track anywhere
+
     def test_keyboard_keys_are_wired(self):
         js = self.s.req("/app.js")[2].decode()
         for key in ('"j"', '"k"', '"d"', '"r"'):
