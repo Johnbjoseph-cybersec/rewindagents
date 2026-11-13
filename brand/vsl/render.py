@@ -181,8 +181,11 @@ DIRECTION = {
         "b17": dict(kind="map", rows_colour=["Tape", "Tape", "Tape", "Record"], new_rows=[3]),
         # one real line of output under each chip (r2 fix 5, r3 fix 4): diff 12's '+++' line, and the second line
         # `rewind 12 --only app/config.py` prints on the demo session; the second chip waits for the first's output
-        "b18": dict(kind="rows", appear_on=["diff", None, "--only", None], out_rows=[1, 3]),
-        "b19": dict(kind="ui", wipe="section"),   # the match cut keeps the full wipe
+        # the ruler goes back to the 14-step session inside the wipe (claim-verifier 2026-11-13: both outputs are what
+        # the demo session prints BEFORE the rewind; a ruler still at 15 steps showed the state where diff 12 is empty)
+        "b18": dict(kind="rows", appear_on=["diff", None, "--only", None], out_rows=[1, 3], ruler=(14, 14, -100, 450)),
+        # ...and returns to the rewound session for the ui, whose screenshot shows step 15 'Rewind' (rewound by 15)
+        "b19": dict(kind="ui", wipe="section", ruler=(15, 12, -100, 450)),   # the match cut keeps the full wipe
         "b20": dict(kind="rows"),     # the old b20 'Up next' card folded in here (fix 6); no row in the accent (fix 8)
         "b21": dict(kind="end", wipe="section"),
     },
