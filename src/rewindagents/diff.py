@@ -81,14 +81,14 @@ def diff(log_path: str | Path, n: int, session: str | None = None,
 
 def run(log_path: str | Path, n: int, session: str | None, paths: list[str] | None, out=None, err=None) -> int:
     """CLI body. The diff goes to stdout; anything rewind could not put back goes to stderr.
-    Exit 0, or 1 when something could not be shown (the rewind would report it and exit 1 too) or a file
+    Exit 2 for a step the session does not have (as every command), 0, or 1 when something could not be shown (the rewind would report it and exit 1 too) or a file
     changed after the steps the rewind takes back (p["drift"]: the rewind would refuse without --force)."""
     out, err = out or sys.stdout, err or sys.stderr
     try:
         p = diff(log_path, n, session, paths)
     except rewind.RewindError as e:
         print(f"rewindagents: {e}", file=err)
-        return 1
+        return 2 if isinstance(e, rewind.StepRangeError) else 1
     root = rewind.project_root(log_path)
     for _, text in p["files"]:
         out.write(text)

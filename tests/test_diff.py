@@ -95,7 +95,7 @@ class TestDiff(unittest.TestCase):
 
     def test_out_of_range_step_is_an_error(self):
         code, _, err = cli("--log", self.log, "diff", "99")
-        self.assertEqual(code, 1)
+        self.assertEqual(code, 2)          # a step the session does not have: 2 in every command (test_exit_codes)
         self.assertIn("out of range", err)
 
     @unittest.skipUnless(shutil.which("git"), "git not installed")

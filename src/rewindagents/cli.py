@@ -20,7 +20,10 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         prog="rewindagents",
         description="The flight recorder for coding agents: see exactly what your agent did, and take back any "
-                    "part of it. Start with `rewindagents init`; then `replay`, `diff N`, `rewind N [--only PATH]`.")
+                    "part of it. Start with `rewindagents init`; then `replay`, `diff N`, `rewind N [--only PATH]`.",
+        epilog="Exit codes: 0 done; 1 it ran but something was not done or does not check out (a file a rewind "
+               "could not put back or refused to overwrite, a log that does not verify); 2 it could not run as "
+               "asked (a bad argument, such as a step number the session does not have, or no log yet).")
     ap.add_argument("--version", action="version", version=f"rewindagents {__version__}")
     ap.add_argument("--log", help="log file (default: .rewindagents/log.jsonl here, or in the nearest parent "
                                   "directory that has one, as git finds a repository)")
@@ -192,6 +195,9 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
     if a.cmd == "fork":
         try:
             d = runs.fork(a.log, a.step, a.name, a.session, a.dir)
+        except rewind.StepRangeError as e:
+            print(f"rewindagents: {e}", file=sys.stderr)
+            return 2
         except (runs.RunError, rewind.RewindError) as e:
             print(f"rewindagents: {e}", file=sys.stderr)
             return 1
@@ -276,6 +282,9 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
         except rewind.DriftError as e:
             _refused(e.plan, a)
             return 1
+        except rewind.StepRangeError as e:
+            print(f"rewindagents: {e}", file=sys.stderr)
+            return 2
         except rewind.RewindError as e:
             print(f"rewindagents: {e}", file=sys.stderr)
             return 1
@@ -360,7 +369,8 @@ def _replay(log_path: str, session: str | None, step: int | None, show_diff: boo
         diffs.redaction_note(found, sys.stderr)
         return 0
     if not 1 <= step <= len(all_steps):
-        print(f"rewindagents: step {step} is out of range (1-{len(all_steps)})", file=sys.stderr)
+        print(f"rewindagents: {rewind.range_message(step, session or rewind.latest_session(log_path), len(all_steps), 1)}",
+              file=sys.stderr)
         return 2
     if show_diff:
         return diffs.step_run(log_path, all_steps, step, root, redact=redact)

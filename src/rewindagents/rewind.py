@@ -53,6 +53,19 @@ class DriftError(RewindError):
         self.plan = plan
 
 
+class StepRangeError(RewindError):
+    """The step number is not one of the session's. The CLI exits 2 for it, as for any argument it cannot use."""
+
+
+def range_message(n: int, session: str | None, count: int, lowest: int = 0) -> str:
+    """One wording for an out-of-range step, in every command: the step, the session, the numbers it has."""
+    if count < lowest:
+        return f"step {n} is out of range: session {session} has no steps"
+    return (f"step {n} is out of range: session {session} has {count} step{'s' if count != 1 else ''}, "
+            f"so use {lowest}-{count}" + (" (0 = before the first step)" if lowest == 0 else "")
+            + "; `replay` lists them")
+
+
 UNKNOWN = object()      # a file's hash at some moment that the log does not hold
 
 
@@ -263,7 +276,7 @@ def plan(log_path: str | Path, n: int, session: str | None = None,
     session = session or latest_session(log_path)
     all_steps = steps(log_path, session)
     if not 0 <= n <= len(all_steps):
-        raise RewindError(f"step {n} is out of range: session {session} has {len(all_steps)} steps")
+        raise StepRangeError(range_message(n, session, len(all_steps)))
     root = project_root(log_path)
     objects = root / ".rewindagents" / "objects"
     first: dict[str, dict] = {}
