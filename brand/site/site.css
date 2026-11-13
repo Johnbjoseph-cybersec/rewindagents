@@ -365,18 +365,27 @@ pre.term + pre.term { margin-top: 12px; }
 .head .lede { padding-bottom: 6px; }
 .session { margin-top: 8px; }
 
-/* ---- intro: hidden only while motion is pending; a failsafe shows it after 2.5 s regardless ---------- */
-.js-motion:not(.motion-ready) .hero h1, .js-motion:not(.motion-ready) .hero .eyebrow, .js-motion:not(.motion-ready) .hero .lede,
-.js-motion:not(.motion-ready) .hero .cta, .js-motion:not(.motion-ready) .hero-panel { opacity: 0; animation: failsafe 0s 2.5s forwards; }
-@keyframes failsafe { to { opacity: 1; } }
-.h1-line { padding-bottom: 0.06em; }
-.panel.lit pre.term .hit { animation: lit 1.4s var(--ease) both; }
+/* ---- intro: CSS only, so the first screen paints without waiting for any script (none runs before first paint).
+   It ends with everything in place, scripts or not, and is off with reduced motion. GSAP arrives later (site.js). */
+@media (prefers-reduced-motion: no-preference) {
+  .hero .eyebrow, .hero h1, .hero .lede, .hero .cta, .hero-panel { animation: rise .8s var(--ease) both; }
+  .hero h1 { animation-delay: .06s; }
+  .hero-panel { animation-delay: .12s; }
+  .hero .lede { animation-delay: .18s; }
+  .hero .cta { animation-delay: .26s; }
+  .hero-panel pre.term .hit { animation: lit 1.4s var(--ease) .9s both; }
+}
+@keyframes rise { from { transform: translateY(14px); } }   /* no fade: the text is painted, and counted, from the first frame */
 @keyframes lit { 0% { color: var(--leader); } 30% { color: var(--reel); background: var(--rewind); } 100% { color: var(--rewind); background: transparent; } }
 
 /* ---- the film: a full-bleed dark band; the picture grows into it as it scrolls up ----------------------- */
 .film { background: var(--reel); color: var(--leader); padding: 88px 0 64px; margin: 8px 0 72px; overflow: clip; }
 .film-frame { position: relative; max-width: 1280px; margin: 0 auto; overflow: hidden; background: var(--spool); transform-origin: 50% 0; will-change: transform; }
-.film-video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: var(--spool); cursor: pointer; }
+.film-video { position: relative; display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: transparent; cursor: pointer; }
+/* the poster sits under the video (which is see-through until it has a frame), so native controls stay on top
+   without scripts; a lazy, sized <picture> instead of the video's poster attribute, which loads at once, full size */
+.film-poster img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.film-frame:fullscreen .film-poster { display: none; }
 .film-play { position: absolute; inset: 0; margin: auto; width: max-content; height: max-content; display: flex; flex-direction: column; align-items: center; gap: 14px; background: transparent; border: 0; cursor: pointer; color: var(--leader); font-family: var(--mono); }
 .film-play-dot { width: 104px; height: 104px; border-radius: 50%; background: var(--record); display: grid; place-items: center; padding-left: 6px; position: relative; transition: transform .35s var(--ease), background-color .3s var(--ease); }
 .film-play-dot::after { content: ""; position: absolute; inset: -10px; border-radius: 50%; border: 2px solid var(--record); animation: ring 2.2s var(--ease) infinite; }

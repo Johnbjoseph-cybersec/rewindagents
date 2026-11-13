@@ -27,12 +27,9 @@
 <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="preload" href="fonts/bricolage-grotesque-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/hanken-grotesk-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/hanken-grotesk-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/commit-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="site.css">
-<script src="vendor/flag.js"></script>
-<script src="vendor/gsap.min.js" defer></script>
-<script src="vendor/ScrollTrigger.min.js" defer></script>
-<script src="vendor/SplitText.min.js" defer></script>
+<link rel="stylesheet" href="site.min.css">
 <script src="site.js" defer></script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "applicationCategory": "DeveloperApplication", "author": {"@type": "Person", "name": "John B Joseph"}, "codeRepository": "https://github.com/Johnbjoseph-cybersec/rewindagents", "description": "Rewind to any step of a coding agent's session, fork it, let another agent take it from there, and compare the runs on what they changed and on your own check. Open source; every tool call goes into a hash-chained log and every file is saved before it changes. Hooks for Claude Code, Codex, Cursor and more.", "license": "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE", "name": "rewindagents", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "operatingSystem": "macOS, Linux", "softwareVersion": "0.0.7", "url": "https://rewindagents.com/"}</script>
 </head>
@@ -109,7 +106,8 @@
 </div>
 <div class="film" id="film" data-total="90.00">
 <div class="film-frame">
-<video class="film-video" controls preload="none" playsinline poster="assets/film-poster.jpg" aria-label="The rewindagents film, 1:30, with captions">
+<picture class="film-poster"><source type="image/avif" srcset="assets/film-poster-480.avif 480w, assets/film-poster-960.avif 960w, assets/film-poster-1440.avif 1440w, assets/film-poster-1920.avif 1920w" sizes="(min-width: 1600px) 1600px, 100vw"><source type="image/webp" srcset="assets/film-poster-480.webp 480w, assets/film-poster-960.webp 960w, assets/film-poster-1440.webp 1440w, assets/film-poster-1920.webp 1920w" sizes="(min-width: 1600px) 1600px, 100vw"><img src="assets/film-poster.jpg" alt="" width="1920" height="1080" loading="lazy" decoding="async"></picture>
+<video class="film-video" controls preload="none" playsinline aria-label="The rewindagents film, 1:30, with captions">
 <source src="assets/vsl-90s.mp4" type="video/mp4">
 <track kind="captions" src="assets/vsl-90s.vtt" srclang="en" label="English" default>
 </video>

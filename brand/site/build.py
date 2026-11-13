@@ -25,6 +25,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -456,7 +457,8 @@ def film(cues):
                     (' data-title="%s"' % e(starts[i])) if i in starts else "") for i, (a, _, _) in enumerate(cues))
     return """<div class="film" id="film" data-total="%(total).2f">
 <div class="film-frame">
-<video class="film-video" controls preload="none" playsinline poster="assets/film-poster.jpg" aria-label="The rewindagents film, %(len)s, with captions">
+%(poster)s
+<video class="film-video" controls preload="none" playsinline aria-label="The rewindagents film, %(len)s, with captions">
 <source src="assets/%(name)s.mp4" type="video/mp4">
 <track kind="captions" src="assets/%(name)s.vtt" srclang="en" label="English" default>
 </video>
@@ -464,7 +466,23 @@ def film(cues):
 </div>
 <div class="wrap film-bar" hidden><div class="film-ruler" role="slider" tabindex="0" aria-label="Film position" aria-valuemin="0" aria-valuemax="%(totali)d" aria-valuenow="0"><span class="film-fill"></span>%(ticks)s</div><span class="film-time">0:00 / %(len)s</span><button class="film-fs" type="button" aria-label="Full screen">Full</button></div>
 <p class="wrap film-now" aria-live="off"></p>
-</div>""" % {"total": total, "totali": round(total), "len": length, "name": FILM, "ticks": ticks}
+</div>""" % {"total": total, "totali": round(total), "len": length, "name": FILM, "ticks": ticks, "poster": film_poster()}
+
+
+# The film's poster at phone-to-desktop sizes, written by brand/vsl/narration.py (POSTER_WIDTHS there). A lazy <picture>
+# under the video instead of the video's poster attribute, which a browser fetches at once and at full size: on a phone
+# the 122 KB JPEG competed with the first screen (Lighthouse mobile, GATE.md pass 3). width/height keep CLS at 0.
+POSTER_WIDTHS = (480, 960, 1440, 1920)
+POSTER_SIZES = "(min-width: 1600px) 1600px, 100vw"
+
+
+def film_poster():
+    def srcset(fmt):
+        return ", ".join("assets/film-poster-%d.%s %dw" % (w, fmt, w) for w in POSTER_WIDTHS)
+    return ('<picture class="film-poster"><source type="image/avif" srcset="%s" sizes="%s">'
+            '<source type="image/webp" srcset="%s" sizes="%s">'
+            '<img src="assets/film-poster.jpg" alt="" width="1920" height="1080" loading="lazy" decoding="async"></picture>'
+            % (srcset("avif"), POSTER_SIZES, srcset("webp"), POSTER_SIZES))
 
 
 def ruler(at, n=8, w=84, h=18, dark=False):
@@ -538,12 +556,9 @@ def page(cfg, path, title, description, body, current):
 <link rel="icon" href="%(rel)sassets/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="preload" href="%(rel)sfonts/bricolage-grotesque-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="%(rel)sfonts/hanken-grotesk-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="%(rel)sfonts/hanken-grotesk-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="%(rel)sfonts/commit-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="%(rel)ssite.css">
-<script src="%(rel)svendor/flag.js"></script>
-<script src="%(rel)svendor/gsap.min.js" defer></script>
-<script src="%(rel)svendor/ScrollTrigger.min.js" defer></script>
-<script src="%(rel)svendor/SplitText.min.js" defer></script>
+<link rel="stylesheet" href="%(rel)ssite.min.css">
 <script src="%(rel)ssite.js" defer></script>
 <script type="application/ld+json">%(ld)s</script>
 </head>
@@ -1087,6 +1102,17 @@ def overhead_html():
             % (r["results"][0]["tools"]["Read"]["runs"], e(bench.where(r)), ms(r["startup"]["median_ms"]), rows))
 
 
+def min_css(src):
+    """site.css without comments and spare whitespace; the pages link this copy (13 KB fewer bytes before a phone's
+    first screen). Quoted strings are kept exactly as written."""
+    src = re.sub(r"/\*.*?\*/", "", src, flags=re.S)
+    parts = re.split(r'("(?:[^"\\\n]|\\.)*")', src)
+    for i in range(0, len(parts), 2):
+        p = re.sub(r"\s+", " ", parts[i])
+        parts[i] = re.sub(r"\s*([{};,>])\s*", r"\1", p)
+    return "".join(parts).strip() + "\n"
+
+
 # ---- build ------------------------------------------------------------------------------------------------
 def build(out=None, cfg=None, open_variant=False):
     out = out or HERE
@@ -1107,6 +1133,8 @@ def build(out=None, cfg=None, open_variant=False):
         shutil.copyfile(os.path.join(BRAND, name), os.path.join(assets, name))
     for name in SITE_ASSETS:
         shutil.copyfile(os.path.join(HERE, "og", name), os.path.join(assets, name))
+    with open(os.path.join(out, "site.min.css"), "w", encoding="utf-8") as fh:
+        fh.write(min_css(read("brand", "site", "site.css")))
     if os.path.abspath(out) != HERE:        # a build elsewhere needs the static files beside the pages too
         shutil.copyfile(os.path.join(HERE, "site.css"), os.path.join(out, "site.css"))
         shutil.copyfile(os.path.join(HERE, "site.js"), os.path.join(out, "site.js"))
@@ -1117,6 +1145,10 @@ def build(out=None, cfg=None, open_variant=False):
     # included once the narration exists); the captions are the VSL's own .srt
     shutil.copyfile(os.path.join(BRAND, "vsl", FILM + "-web.mp4"), os.path.join(assets, FILM + ".mp4"))
     shutil.copyfile(os.path.join(BRAND, "vsl", FILM + "-poster.jpg"), os.path.join(assets, "film-poster.jpg"))
+    for w in POSTER_WIDTHS:
+        for fmt in ("avif", "webp"):
+            shutil.copyfile(os.path.join(BRAND, "vsl", "%s-poster-%d.%s" % (FILM, w, fmt)),
+                            os.path.join(assets, "film-poster-%d.%s" % (w, fmt)))
     with open(os.path.join(assets, FILM + ".vtt"), "w", encoding="utf-8") as fh:
         fh.write(vtt(srt_cues("brand/vsl/%s.srt" % FILM)))
     manifest = {"pages": sorted(p for p in pages if p in PAGES), "facts": {k: v for k, v in f.items() if k != "beats"},
@@ -1201,8 +1233,19 @@ def cards(out):
     return ["og.html", "linkedin.html", "portrait.html"]
 
 
+# @fontsource/commit-mono's "latin" files hold the whole font (1,175 code points, Cyrillic and Greek included, 48 KB
+# each); the other two families' latin files hold fontsource's latin range. `fonts` cuts Commit Mono to that same range
+# with every OpenType feature kept, so Latin text renders the same at 21 KB a weight (a phone fetched 54 KB less before
+# its first screen: GATE.md pass 4). Needs fontTools (`pip install fonttools brotli`), like the npm cache, by hand.
+LATIN = ("U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,"
+         "U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD")
+SUBSET = {"commit-mono"}
+FONT_MAX_BYTES = 25000
+
+
 def fonts(cache=os.path.join(ROOT, ".brandcache")):
-    """Copy the WOFF2 files the CSS declares, plus each family's OFL licence, into brand/site/fonts/."""
+    """Copy the WOFF2 files the CSS declares, plus each family's OFL licence, into brand/site/fonts/; families in
+    SUBSET are cut to LATIN (OFL 1.1 allows a subset; the font keeps its name, no Reserved Font Name is declared)."""
     out = os.path.join(HERE, "fonts")
     os.makedirs(out, exist_ok=True)
     for pkg, weights in FONTS.items():
@@ -1212,8 +1255,14 @@ def fonts(cache=os.path.join(ROOT, ".brandcache")):
         shutil.copyfile(os.path.join(src, "LICENSE"), os.path.join(out, "LICENSE-%s.txt" % pkg))
         for w in weights:
             name = "%s-latin-%d-normal.woff2" % (pkg, w)
-            shutil.copyfile(os.path.join(src, "files", name), os.path.join(out, name))
-            print("copied", name)
+            if pkg in SUBSET:
+                subprocess.run(["pyftsubset", os.path.join(src, "files", name), "--unicodes=" + LATIN,
+                                "--layout-features=*", "--name-IDs=*", "--notdef-outline", "--flavor=woff2",
+                                "--output-file=" + os.path.join(out, name)], check=True)
+                print("subset", name, os.path.getsize(os.path.join(out, name)), "bytes")
+            else:
+                shutil.copyfile(os.path.join(src, "files", name), os.path.join(out, name))
+                print("copied", name)
 
 
 if __name__ == "__main__":
