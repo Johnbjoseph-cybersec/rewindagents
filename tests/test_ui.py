@@ -349,8 +349,8 @@ class TestData(UICase):
     def test_long_input_is_cut(self):
         Agent(self.d, "big").write("big.txt", "y" * (ui.MAX_TEXT + 500))
         code, d = self.s.json("/api/step?s=big&n=1")
-        self.assertIn('"truncated": true', d["input"])          # the hook cut it already (R30)
-        self.assertIn(f'"chars": {ui.MAX_TEXT + 500}', d["input"])
+        self.assertIn(f"... first 4,000 of {ui.MAX_TEXT + 500:,} characters kept in the log", d["input"])  # R30 cut, R32 note
+        self.assertNotIn('"truncated"', d["input"])
         self.assertLess(len(d["input"]), ui.MAX_TEXT + 100)
         # a record written before the hook cut inputs keeps the whole text: the page still cuts that
         long = "y" * (ui.MAX_TEXT + 500)

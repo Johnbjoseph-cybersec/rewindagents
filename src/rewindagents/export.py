@@ -18,6 +18,7 @@ import html
 import json
 import os
 import re
+import secrets
 import sys
 from pathlib import Path
 from typing import Any
@@ -158,6 +159,7 @@ def build(log_path: str | Path, session: str | None = None, contents: bool = Tru
             files.append(entry)
         (summary, k), step_in, step_res = _summary(s, root, roots, redact=redact), s.get("input"), s.get("result")
         redacted += k
+        in_clips, res_clips = clips(step_in), clips(step_res)
         if redact:
             step_in, k1 = _redact.value(step_in)
             step_res, k2 = _redact.value(step_res)
@@ -165,6 +167,7 @@ def build(log_path: str | Path, session: str | None = None, contents: bool = Tru
         steps_out.append({"step": s["step"], "tool": s["tool"], "event": s["event"],
                           "summary": summary,
                           "input": step_in, "result": step_res, "files": files,
+                          "input_clips": in_clips, "result_clips": res_clips,
                           "to_step": s.get("to_step"), "branch": s.get("branch"),
                           "bash_scan": s.get("bash_scan")})
     return {"project": root.name, "roots": roots, "session": session, "steps": steps_out,
@@ -225,8 +228,58 @@ def _summary(step: dict, root: Path, roots: list[str], width: int = 120, redact:
     return (text if len(text) <= width else text[: width - 3] + "..."), n
 
 
-def _json(value: Any, roots: list[str]) -> str:
-    return _esc(scrub(json.dumps(value, indent=2, ensure_ascii=False, default=str), roots))
+def clips(value: Any, path: tuple = ()) -> list[dict]:
+    """Every clipped value (redact.is_clip) inside `value`: where it sits, how many characters the log kept
+    and how long the text was. Taken from the value as recorded, before redaction can change a head's length."""
+    if _redact.is_clip(value):
+        return [{"path": list(path), "kept": len(value["head"]), "chars": value["chars"]}]
+    if isinstance(value, dict):
+        return [c for k, v in value.items() for c in clips(v, path + (k,))]
+    if isinstance(value, list):
+        return [c for i, v in enumerate(value) for c in clips(v, path + (i,))]
+    return []
+
+
+def clip_note(kept: int, chars: int) -> str:
+    return f"... first {kept:,} of {chars:,} characters kept in the log"
+
+
+def show(value: Any, found: list[dict] | None = None) -> str:
+    """A recorded input, result or step as readable text: JSON, except that each clipped value prints as its
+    head followed by one line saying how much of it the log kept. `found` is clips() of the value as
+    recorded (export passes it because redaction runs in between); by default it is read from `value`."""
+    found = clips(value) if found is None else found
+    whole = next((c for c in found if not c["path"]), None)       # the value itself was clipped
+    if whole and isinstance(value, dict) and isinstance(value.get("head"), str):
+        return value["head"] + "\n" + clip_note(whole["kept"], whole["chars"])
+    marks: dict[str, dict] = {}
+    copy = json.loads(json.dumps(value, ensure_ascii=False, default=str))
+    tag = secrets.token_hex(8)
+    for i, c in enumerate(found):
+        node = copy
+        try:
+            for key in c["path"][:-1]:
+                node = node[key]
+            head = node[c["path"][-1]]["head"]
+        except (KeyError, IndexError, TypeError):
+            continue
+        token = f"clip-{tag}-{i}"
+        node[c["path"][-1]] = token
+        marks[json.dumps(token)] = {"head": head, **c}
+    lines = []
+    for line in json.dumps(copy, indent=2, ensure_ascii=False).split("\n"):
+        hit = next((m for m in marks if m in line), None)
+        if hit is None:
+            lines.append(line)
+            continue
+        c = marks[hit]
+        lines.append(line.replace(hit, json.dumps(c["head"], ensure_ascii=False), 1))
+        lines.append(" " * (len(line) - len(line.lstrip(" "))) + clip_note(c["kept"], c["chars"]))
+    return "\n".join(lines)
+
+
+def _json(value: Any, roots: list[str], found: list[dict] | None = None) -> str:
+    return _esc(scrub(show(value, found), roots))
 
 
 def _diff_html(change: dict) -> str:
@@ -264,9 +317,9 @@ def render(data: dict) -> str:
         elif not data["contents"]:
             body.append('<p class="note">Input and result left out (exported without contents).</p>')
         else:
-            body.append(f"<h3>Input</h3><pre>{_json(s['input'], root)}</pre>")
+            body.append(f"<h3>Input</h3><pre>{_json(s['input'], root, s.get('input_clips'))}</pre>")
             if s["result"] is not None:
-                body.append(f"<h3>Result</h3><pre>{_json(s['result'], root)}</pre>")
+                body.append(f"<h3>Result</h3><pre>{_json(s['result'], root, s.get('result_clips'))}</pre>")
             elif s["tool"] != "rewindagents":
                 body.append('<p class="note">No result was recorded for this call.</p>')
         if s.get("bash_scan") and "skipped" in s["bash_scan"]:

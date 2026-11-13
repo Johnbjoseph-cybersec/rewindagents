@@ -169,9 +169,9 @@ def step_detail(log_path: str | Path, session: Any, n: Any) -> dict:
     s = data["steps"][n - 1]
     roots = data["roots"]
     row = _step_row(s, raw[n - 1], ts, None)
-    row["input"] = _clip(export.scrub(json.dumps(s["input"], indent=2, ensure_ascii=False, default=str), roots))
+    row["input"] = _clip(export.scrub(export.show(s["input"], s.get("input_clips")), roots))
     row["result"] = None if s["result"] is None else _clip(
-        export.scrub(json.dumps(s["result"], indent=2, ensure_ascii=False, default=str), roots))
+        export.scrub(export.show(s["result"], s.get("result_clips")), roots))
     row["files"] = [{"path": f["path"], "before": f["before"], "after": f.get("after"),
                      "change": f.get("change"), **_counts(f.get("change"))} for f in s["files"]]
     return row

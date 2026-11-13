@@ -245,7 +245,7 @@ def _replay(log_path: str, session: str | None, step: int | None) -> int:
     if not 1 <= step <= len(all_steps):
         print(f"rewindagents: step {step} is out of range (1-{len(all_steps)})", file=sys.stderr)
         return 2
-    print(json.dumps(all_steps[step - 1], indent=2, ensure_ascii=False, default=str))
+    print(export.show(all_steps[step - 1]))
     return 0
 
 

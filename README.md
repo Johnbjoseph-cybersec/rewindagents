@@ -333,7 +333,9 @@ bug report or a code review, or keep it with the session.
 - Paths inside the project are shown relative to it; where the project lives on disk is not in the page.
 - A file over 256 KB on either side is described, not diffed. A diff longer than 400 lines is cut, with
   the count of the lines left out. Binary files show their size before and after.
-- Inputs and results are the recorded ones, so a result that was cut at 4,000 characters stays cut.
+- Inputs and results are the recorded ones, so a result that was cut at 4,000 characters stays cut. A cut
+  value shows its first characters and then one line, `... first 4,000 of N characters kept in the log`,
+  here, in `rewindagents ui` and in `replay --step`.
 - `--no-contents` drops inputs, results and diffs (a `Write` input is the file's content). Each step keeps
   the one-line summary `replay` prints, so a `Bash` command line is still on the page.
 - If the log's hash chain does not verify, the page is still written, with a notice naming the first bad
