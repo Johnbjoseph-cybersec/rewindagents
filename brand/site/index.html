@@ -78,7 +78,7 @@
 <div class="head"><h2 id="h-fork">Rewind to a step, fork it, compare.</h2>
 <p class="lede">Rewind to any step, fork it, let another agent take it from there, compare. A recorded step is a starting point you can hand to another agent, another model, another prompt or a person, and the runs that follow can be compared on what they actually did to the files and on your own check.</p></div>
 <div class="cmdlist">
-<div class="cmdrow"><div><h3>Fork any recorded step</h3><p><code>rewindagents fork 12 --name try2</code> makes a new directory next to the project (<code>&lt;project&gt;-try2</code>; <code>--dir</code> picks another place outside it) holding the project&#x27;s files as <code>rewind 12</code> would leave them: the project as it is now, with every change that session made after step 12 taken back, untracked files included. In a git repository it is a <code>git worktree</code> on the branch <code>rewindagents/run/try2</code>, so your <code>HEAD</code>, index and files stay as they were; elsewhere it is a plain directory. Run any agent there, or edit by hand: with a hook in place (the project&#x27;s agent config comes along when git does not ignore it, or a <code>--global</code> hook), its steps go into the run&#x27;s own log, and <code>replay</code>, <code>rewind</code> and <code>diff</code> work in the run as in any project.</p></div><pre class="term"><code><span class="l"><span class="c"># pick the step to start from, say 12</span></span>
+<div class="cmdrow"><div><h3>Fork any recorded step</h3><p><code>rewindagents fork 12 --name try2</code> makes a new directory holding the project as <code>rewind 12</code> would leave it. Run any agent there, or edit by hand.</p></div><pre class="term"><code><span class="l"><span class="c"># pick the step to start from, say 12</span></span>
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents replay</span></span>
 <span class="l"><span class="c"># <span class="nb">../&lt;project&gt;-try2</span> with step 12&#x27;s files</span></span>
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents fork 12 <span class="nb">--name try2</span></span></span>
@@ -87,7 +87,7 @@
 <span class="l"><span class="p">$ </span><span class="sel">cd - &amp;&amp; rewindagents compare <span class="nb">--check &quot;python3</span> -m pytest -q&quot;</span></span>
 <span class="l"><span class="c"># how two runs differ, as a git diff</span></span>
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents compare <span class="nb">--diff your-project</span> try2</span></span></code></pre></div>
-<div class="cmdrow"><div><h3>Compare the runs</h3><p>Back in the project, <code>rewindagents compare</code> lines up the project and every run forked from the same step: per run, the agents and their number of tool calls since the start, the files changed, created or deleted and the lines added and removed; per file, which runs ended with the same bytes (the same letter). <code>rewindagents compare --check &quot;python3 -m pytest -q&quot;</code> runs your command in each run and reports pass or the exit code, with the last lines of a failing one. <code>rewindagents compare --diff proj try2</code> prints how two runs differ as a git diff (<code>git apply</code> in the first turns its files into the second&#x27;s).</p></div><pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">rewindagents compare <span class="nb">--diff shop</span> clamp</span></span>
+<div class="cmdrow"><div><h3>Compare the runs</h3><p><code>rewindagents compare</code> lines up the project and every run forked from the same step: files changed, lines added and removed. <code>--check</code> runs your own check in each run and reports pass or the exit code.</p></div><pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">rewindagents compare <span class="nb">--diff shop</span> clamp</span></span>
 <span class="l i2">diff --git a/cart.py b/cart.py</span>
 <span class="l i2">--- a/cart.py</span>
 <span class="l i2">+++ b/cart.py</span>
@@ -97,6 +97,7 @@
 <span class="l i5"><span class="hit">+    return max(0, sum(prices) - discount)</span></span></code></pre></div>
 <div class="cmdrow"><div><h3>What it will not do</h3></div><ul class="plain-list"><li><code>fork</code> refuses a step it cannot rebuild exactly (a stored copy missing, a command whose scan did not finish, a log that does not verify) and leaves nothing behind when it fails half-way.</li><li><code>compare</code> writes nothing; the command <code>--check</code> runs may write in the run it runs in.</li><li>Runs from different steps are not mixed.</li></ul></div>
 </div>
+<p class="small more">Every option, and how a fork works in a git repository, is on the <a href="docs/#fork">docs page</a>.</p>
 </div></section>
 
 <section class="sec" id="demo" aria-labelledby="h-demo"><div class="wrap">

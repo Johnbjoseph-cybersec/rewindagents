@@ -146,6 +146,12 @@ FORK_SENTENCES = ("A recorded step is a starting point", "`rewindagents fork 12 
                   "In a git repository it is a", "Run any agent there")
 COMPARE_SENTENCES = ("Back in the project, `rewindagents compare`", "`rewindagents compare --check",
                      "`rewindagents compare --diff proj try2`")
+# The landing page's short form of the two (John, 2026-11-13: at most two short sentences each; the README's full
+# sentences stay on the docs page, which the landing page links to). Every claim here is one the README makes.
+FORK_SHORT = ("`rewindagents fork 12 --name try2` makes a new directory holding the project as `rewind 12` would leave it.",
+              "Run any agent there, or edit by hand.")
+COMPARE_SHORT = ("`rewindagents compare` lines up the project and every run forked from the same step: files changed, "
+                 "lines added and removed.", "`--check` runs your own check in each run and reports pass or the exit code.")
 FORK_LIMIT_SENTENCES = ("`fork` refuses a step", "`compare` writes nothing", "Runs from different steps are not mixed")
 # README sections with a ```sh block that the docs page leaves out on purpose, each with the reason.
 # tests/test_site.py fails when any other section's commands are missing from a docs panel (R28).
@@ -730,10 +736,11 @@ def index_html(cfg, f, hero, open_all=False):
 <div class="cmdrow"><div><h3>Compare the runs</h3><p>%(compare_says)s</p></div>%(diff)s</div>
 <div class="cmdrow"><div><h3>What it will not do</h3></div><ul class="plain-list">%(limits)s</ul></div>
 </div>
+<p class="small more">Every option, and how a fork works in a git repository, is on the <a href="docs/#fork">docs page</a>.</p>
 </div></section>
 """ % {"label": label(1, "Fork and compare"), "lead": md_inline(f["fork_lead"]), "says0": md_inline(f["fork_says"][0]),
-       "fork_says": " ".join(md_inline(x) for x in f["fork_says"][1:]),
-       "compare_says": " ".join(md_inline(x) for x in f["compare_says"]),
+       "fork_says": " ".join(md_inline(x) for x in FORK_SHORT),
+       "compare_says": " ".join(md_inline(x) for x in COMPARE_SHORT),
        "limits": "".join("<li>%s</li>" % md_inline(x) for x in f["fork_limits"]),
        "block": code(f["fork"]), "diff": panel(runs_rows(runs, "diff"))}
 

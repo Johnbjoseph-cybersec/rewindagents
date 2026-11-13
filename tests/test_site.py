@@ -272,6 +272,28 @@ class TestSite(unittest.TestCase):
         self.assertIn('src="assets/%s.vtt"' % build.FILM, index)
         self.assertTrue(os.path.isfile(os.path.join(BRAND, "vsl", "vsl-90s-poster.jpg")))
 
+    def test_landing_fork_rows_are_short_and_link_the_docs(self):
+        """John, 2026-11-13: on the landing page "Fork any recorded step" and "Compare the runs" say at most two short
+        sentences each; the README's full sentences are on the docs page (checked above), and the section links there."""
+        build = load_build()
+        index = read("index.html")
+        sec = re.search(r'<section class="sec" id="fork".*?</section>', index, re.S).group(0)
+        for title, short in (("Fork any recorded step", build.FORK_SHORT), ("Compare the runs", build.COMPARE_SHORT)):
+            m = re.search(r"<h3>%s</h3><p>(.*?)</p>" % re.escape(title), sec)
+            self.assertIsNotNone(m, title)
+            said = unesc(re.sub(r"</?code>", "`", m.group(1)))
+            self.assertEqual(said, " ".join(short), title)
+            sentences = re.findall(r".+?\.(?=\s|$)", said)
+            self.assertLessEqual(len(sentences), 2, title)
+            for s in sentences:
+                self.assertLessEqual(len(s.split()), 20, "%s: %s" % (title, s))
+        self.assertIn('<a href="docs/#fork">', sec)
+        self.assertIn('<h2 id="fork">Fork and compare</h2>', read("docs/index.html"))
+        # the long form lives on the docs page, word for word from the README
+        docs = read("docs/index.html")
+        for start in build.FORK_SENTENCES + build.COMPARE_SENTENCES:
+            self.assertIn(build.md_inline(build.readme_sentence(read("README.md", ROOT), start)), docs, start)
+
     def test_film_poster_is_lazy_sized_and_never_fetched_at_load(self):
         """The poster is a lazy <picture> under the video, AVIF and WebP at POSTER_WIDTHS (a phone takes the 960 px
         one), not the video's poster attribute, which a browser fetches at once and at full size (go-live, 2026-11-13)."""
