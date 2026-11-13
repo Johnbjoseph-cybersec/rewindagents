@@ -226,8 +226,13 @@ measurement, and must be quoted as such.
    `git merge-file` on 300 seeded inputs (`tests/test_revert.py::TestMergeAgreesWithGit`), and refuses on a
    conflict. Done means: S09, S10, S16, S17 exact with one `revert` per step taken back, and
    `test_a_conflict_changes_nothing_and_exits_1` (no file, no log record, no stored copy changes, exit 1).
-   Limit found: as in git, changes on adjacent lines (no unchanged line between them) are a conflict, so
-   reverting a step that changed line 1 after a later step changed line 2 refuses rather than merges.
+   Limits found: as in git, changes on adjacent lines (no unchanged line between them) are a conflict, so
+   reverting a step that changed line 1 after a later step changed line 2 refuses rather than merges. In files
+   where one line repeats many times the pairing of lines can differ from git's: `python3
+   bench/merge_vs_git.py` (inputs built from three distinct lines, 3 x 1,000 cases, git 2.50.1) found the same
+   bytes in 71.9-74.3%, a conflict in both in 23.1-25.7%, a conflict only in rewindagents in 0.9-1.6%, only in
+   git in 1.0-1.1%, and different clean results in 0.1-0.4%. A side more than 2,000 lines away from base is a
+   conflict, not merged.
 4. **Symlinks (S12).** A deleted symlink is a silent miss. Done means: S12 exact, plus a test that a rewind
    never writes through a link that points outside the project.
 5. **Say so when a command wrote outside the project (S08)** or to a file over the size limit (S07 already

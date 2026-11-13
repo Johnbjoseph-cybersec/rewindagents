@@ -350,7 +350,9 @@ rewindagents branch 12 --name try2   # keep the current files, then rewind to st
   (base: the file right after step K, which the hook keeps a copy of; theirs: the file right before step K;
   ours: the file now), so step K's lines go back and the other lines stay. A file step K created is removed
   only if it is unchanged since; a file it deleted comes back only if nothing created it again. When a later
-  change touched the same lines as step K (or lines right next to them, as `git merge-file` counts it), or
+  change touched the same lines as step K (or lines right next to them, as `git merge-file` counts it; in a
+  file where the same line repeats many times the two can pair lines differently, measured by
+  `bench/merge_vs_git.py`), or
   changed a file step K created or deleted, that is a conflict: `revert` changes nothing, names each file,
   says how to see step K's change and how to put the file back by hand, and exits 1. `--dry-run` prints the
   plan, conflicts included. A revert is recorded as a step like a rewind, current bytes first, so `rewind

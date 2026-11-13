@@ -199,6 +199,10 @@ def plan(log_path: str | Path, k: int, session: str | None = None) -> dict:
             continue
         try:
             merged = merge.merge3(base, ours, theirs)
+        except merge.TooBig:
+            p["conflict"].append((path_s, f"more than {merge.MAX_EDITS} lines differ on one side (step {k}'s change "
+                                          f"or the changes since); too many to merge safely"))
+            continue
         except merge.Conflict as c:
             where = ", ".join(f"line {a}" if b <= a else f"lines {a}-{b}" for a, b in c.hunks)
             p["conflict"].append((path_s, f"step {k} and a later change both changed {where} (lines of the file "

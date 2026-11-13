@@ -317,6 +317,47 @@ class TestHookKeepsTheAfterCopy(Case):
         self.assertIn(hashlib.sha256((BAD + "# 2\n").encode()).hexdigest(), objs)
 
 
+class TestMergeRepeatedLines(unittest.TestCase):
+    """A longest-block diff (difflib, the first version here) pairs a repeated line with the wrong copy of itself:
+    it dropped a deletion in the first case and called the second a conflict. merge3 uses a shortest diff
+    (Myers, git's default) after trimming the common start and end, as git does."""
+
+    def test_a_deletion_among_identical_lines_is_kept(self):
+        from rewindagents.merge import merge3
+        self.assertEqual(merge3(b"c\nc\nc\n", b"c\np\nc\nc\n", b"c\nc\n"), b"c\np\nc\n")
+
+    def test_far_apart_changes_in_a_file_of_identical_lines_merge(self):
+        from rewindagents.merge import merge3
+        base = [b"x\n"] * 20000
+        ours, theirs = list(base), list(base)
+        ours[15000], theirs[10] = b"ours\n", b"theirs\n"
+        got = merge3(b"".join(base), b"".join(ours), b"".join(theirs))
+        want = list(base)
+        want[15000], want[10] = b"ours\n", b"theirs\n"
+        self.assertEqual(got, b"".join(want))
+
+    def test_too_many_changed_lines_is_a_conflict_and_revert_changes_nothing(self):
+        from rewindagents import merge
+        base = b"".join(b"line %d\n" % i for i in range(merge.MAX_EDITS + 10))
+        theirs = base.replace(b"line", b"LINE")           # every line differs
+        with self.assertRaises(merge.TooBig):
+            merge.merge3(base, base + b"tail\n", theirs)
+
+
+class TestTooBigRevert(Case):
+    def test_revert_reports_it_and_changes_nothing(self):
+        from rewindagents import merge
+        before = "".join("line %d\n" % i for i in range(merge.MAX_EDITS + 10))
+        self.put("big.txt", before)
+        self.a.write("big.txt", before.replace("line", "LINE"))           # step 1 rewrites every line
+        self.put("big.txt", self.f("big.txt") + "by hand\n")
+        now = self.f("big.txt")
+        code, out, err = cli("revert", "1")
+        self.assertEqual(code, 1)
+        self.assertIn("too many to merge safely", err)
+        self.assertEqual(self.f("big.txt"), now)
+
+
 @unittest.skipUnless(shutil.which("git"), "git is not installed")
 class TestMergeAgreesWithGit(unittest.TestCase):
     """merge.merge3 is our own (stdlib only, no git needed). On 300 seeded random three-way inputs it gives the
