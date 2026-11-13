@@ -149,8 +149,10 @@ def checkpoint(path: Path, objects: Path) -> dict:
     if not path.is_file():
         entry["sha256"] = None
         return entry
-    size = path.stat().st_size
+    st = path.stat()
+    size = st.st_size
     entry["size"] = size
+    entry["mode"] = st.st_mode & 0o777      # rewind puts the executable bit back with the bytes
     if size > MAX_CHECKPOINT_BYTES:
         entry["sha256"] = None
         entry["skipped"] = f"larger than {MAX_CHECKPOINT_BYTES} bytes"
