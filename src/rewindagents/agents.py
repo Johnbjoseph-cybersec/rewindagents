@@ -165,15 +165,21 @@ DEFAULT = "claude"
 
 
 def normalize(payload: dict) -> dict[str, Any]:
-    """The fields the hook needs, under one set of names, whichever agent sent the payload."""
-    raw = str(payload.get("hook_event_name") or "")
+    """The fields the hook needs, under one set of names, whichever agent sent the payload.
+
+    Never raises on a field of the wrong type: an event name that is not a string is "unknown", a cwd that is
+    not a string counts as missing (the hook then uses the directory it runs in, where the agents start it),
+    and a tool name or session id that is not a string is recorded as its JSON text."""
+    raw = payload.get("hook_event_name")
+    raw = raw if isinstance(raw, str) else ""
     event = {"pretooluse": "pre", "posttooluse": "post", "posttoolusefailure": "post",
              "beforetool": "pre", "aftertool": "post"}.get(
         raw.lower(), raw or "unknown")
     cwd = payload.get("cwd")
-    if not cwd:
+    if not (isinstance(cwd, str) and cwd):
         roots = payload.get("workspace_roots")
-        cwd = roots[0] if isinstance(roots, list) and roots and isinstance(roots[0], str) else os.getcwd()
+        cwd = roots[0] if isinstance(roots, list) and roots and isinstance(roots[0], str) and roots[0] \
+            else os.getcwd()
     if "tool_response" in payload:
         response = payload["tool_response"]
     elif "tool_result" in payload:                      # Copilot CLI, VS Code format
@@ -187,9 +193,15 @@ def normalize(payload: dict) -> dict[str, Any]:
                 response = json.loads(response)
             except ValueError:
                 pass
-    return {"event": event, "session": payload.get("session_id") or payload.get("conversation_id") or "unknown",
-            "cwd": Path(cwd), "tool": payload.get("tool_name", "?"), "input": payload.get("tool_input") or {},
+    return {"event": event, "session": _text(payload.get("session_id") or payload.get("conversation_id"), "unknown"),
+            "cwd": Path(cwd), "tool": _text(payload.get("tool_name"), "?"), "input": payload.get("tool_input") or {},
             "response": response}
+
+
+def _text(value: Any, default: str) -> str:
+    if value is None or value == "":
+        return default
+    return value if isinstance(value, str) else json.dumps(value, sort_keys=True, default=str)
 
 
 def scans(agent: Agent, tool: str) -> bool:

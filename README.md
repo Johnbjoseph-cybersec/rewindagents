@@ -113,7 +113,12 @@ Once the hook is in, in each project Claude Code works in:
 - `.rewindagents/` gets its own `.gitignore`, so the log and the copies stay out of your commits.
 
 The hook never blocks or changes a call. It prints nothing and always exits 0, even if its input is
-broken or it cannot write; any problem goes to stderr only.
+broken or it cannot write; any problem goes to stderr only. `tests/test_hook_hardening.py` runs the real
+hook process for all seven agents on empty, cut-off and non-object input, fields of the wrong type, bytes that
+are not UTF-8, a 10 MB tool response, a `cwd` that does not exist and a post with no pre: each exits 0, prints
+only that agent's reply, and leaves the log verifying. What it can read it records (bad text as U+FFFD, the
+response cut to its first 4,000 characters); for a `cwd` that does not exist it records nothing and creates
+nothing.
 
 Around every `Bash` call (for example `sed -i`, `rm`, `mv`, a code generator), the hook saves the
 project's files before the command, scans again after it, and checkpoints, in the `post` record, only the

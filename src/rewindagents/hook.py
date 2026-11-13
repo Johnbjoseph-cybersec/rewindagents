@@ -119,6 +119,8 @@ def handle(payload: dict, agent: str = agents.DEFAULT) -> dict:
     """Record one hook event from `agent` (a key of agents.AGENTS). Returns the record written."""
     ag = agents.AGENTS[agent]
     n = agents.normalize(payload)
+    if not n["cwd"].is_dir():  # never create a project directory the agent named but that is not there
+        raise FileNotFoundError(f"cwd is not a directory: {n['cwd']}")
     store = store_dir(n["cwd"])
     rec = Recorder(store / "log.jsonl")
     ignore = store / ".gitignore"
@@ -151,13 +153,41 @@ def _handle(payload: dict, ag, agent: str, n: dict, store: Path, rec: Recorder) 
     return rec.record(session, tool, {"input": tool_input, "agent": agent}, None, event=event)
 
 
+def _read(stdin=None) -> str:
+    """The hook input as text. Bytes that are not UTF-8 become U+FFFD, so a command line holding them is still
+    recorded (with that mark in their place) rather than lost."""
+    stream = stdin or sys.stdin
+    data = getattr(stream, "buffer", stream).read()
+    return data.decode("utf-8", "replace") if isinstance(data, bytes) else data
+
+
+def _clean(value: Any) -> Any:
+    """Replace lone surrogates (valid JSON escapes such as \\udc80, but not encodable as UTF-8) with U+FFFD, so
+    the record can be hashed and written. Walks the value only when it holds one."""
+    try:
+        json.dumps(value, ensure_ascii=False).encode("utf-8")
+        return value
+    except UnicodeEncodeError:
+        pass
+
+    def fix(v: Any) -> Any:
+        if isinstance(v, str):
+            return v.encode("utf-16", "surrogatepass").decode("utf-16", "replace")
+        if isinstance(v, list):
+            return [fix(x) for x in v]
+        if isinstance(v, dict):
+            return {fix(k): fix(x) for k, x in v.items()}
+        return v
+    return fix(value)
+
+
 def run(stdin=None, agent: str = agents.DEFAULT) -> int:
     """Hook entry point. Always returns 0. Writes nothing to stdout, except the agent's required reply
     (Cursor: `{"permission": "allow"}` before a call, `{}` after one; the same allow if the input could not
     be read, so a broken payload still never turns into a block. Gemini CLI: `{}` always)."""
     event = "unknown"
     try:
-        payload = json.load(stdin or sys.stdin)
+        payload = _clean(json.loads(_read(stdin)))
         if not isinstance(payload, dict):
             raise ValueError("hook input is not a JSON object")
         event = agents.normalize(payload)["event"]
