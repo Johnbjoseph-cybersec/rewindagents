@@ -23,6 +23,7 @@ import contextlib
 import hashlib
 import json
 import os
+import re
 import shlex
 import site
 import sys
@@ -31,7 +32,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from . import agents, filelock, project
+from . import agents, filelock, ospaths, project
 from .log import Recorder
 
 FILE_TOOLS = {"Write": "file_path", "Edit": "file_path", "MultiEdit": "file_path",
@@ -361,49 +362,112 @@ def ephemeral_message(kind: str) -> str:
             f"`uv tool install rewindagents` or `pipx install rewindagents`")
 
 
-def hook_command(agent: str = agents.DEFAULT) -> str:
+def source_dir() -> Path | None:
+    """The clone's src/ directory when this package runs from a clone (not installed), else None."""
+    return None if installed() else Path(__file__).resolve().parent.parent
+
+
+def hook_command(agent: str = agents.DEFAULT, python: str | None = None) -> str:
     """The command the agent will run for every hook event.
 
-    It names the interpreter by absolute path, so it works whether or not a virtualenv is active.
-    From a clone (not installed) it carries the PYTHONPATH that makes the package importable.
-    For every agent but Claude Code it carries `--agent`, so the hook reads their payload and answers their way.
-    For an agent where a non-zero exit counts as a deny (agents.Agent.fail_closed: Copilot CLI's preToolUse) it
-    ends in `|| true`, so not even a missing interpreter can turn into a block.
+    It names the interpreter (`python`, default this one) by absolute path, so it works whether or not a
+    virtualenv is active. For every agent but Claude Code it carries `--agent`, so the hook reads their payload
+    and answers their way. For an agent where a non-zero exit counts as a deny (agents.Agent.fail_closed:
+    Copilot CLI's preToolUse) it ends in a guard, so not even a missing interpreter can turn into a block.
+
+    POSIX form (`/usr/bin/python3`): `'<python>' -m rewindagents hook [--agent X] [|| true]`; from a clone it
+    carries the `PYTHONPATH=<src>` prefix that makes the package importable.
+
+    Windows form, chosen by the interpreter path's own shape (`C:\\...`, `C:/...`; the OS running this does not
+    decide): forward slashes; a path with nothing but letters, digits, `_ . / + -` is written bare, which Git
+    Bash, PowerShell and cmd.exe all run; any other path is double-quoted and, for an agent whose docs say it
+    runs hooks in PowerShell (agents.Agent.win_shell), preceded by `&`, since PowerShell prints a quoted string
+    that stands alone. No env-var prefix (bash-only syntax): from a clone the package is run by file path,
+    `<python> <src>/rewindagents/__main__.py hook ...`, which __main__.py supports. The fail-closed guard is
+    `; exit 0` under PowerShell (`|| true` is bash). Sources per agent: agents.py, read 2026-11-14.
     """
-    run = f"{shlex.quote(sys.executable)} -m rewindagents hook"
-    if agent != agents.DEFAULT:
-        run += f" --agent {agent}"
-    if not installed():
-        src = Path(__file__).resolve().parent.parent
+    python = python or sys.executable
+    ag = agents.AGENTS[agent]
+    tail = f" --agent {agent}" if agent != agents.DEFAULT else ""
+    src = source_dir()
+    if agents.windows_command(python):
+        return _windows_command(ag, python, src, tail)
+    run = f"{shlex.quote(python)} -m rewindagents hook{tail}"
+    if src is not None:
         run = f"PYTHONPATH={shlex.quote(str(src))} {run}"
-    return run + " || true" if agents.AGENTS[agent].fail_closed else run
+    return run + " || true" if ag.fail_closed else run
+
+
+_PLAIN_WIN = re.compile(r"^[A-Za-z]:/[A-Za-z0-9_./+-]*$")
+
+
+def _win_word(path: str | Path) -> str:
+    """A Windows path as one command word: forward slashes, bare when every shell reads it as one word, else
+    double-quoted (Git Bash and cmd.exe; PowerShell needs `&` in front, which the caller adds)."""
+    p = str(path).replace("\\", "/")
+    return p if _PLAIN_WIN.match(p) else f'"{p}"'
+
+
+def _windows_command(ag: agents.Agent, python: str, src: Path | None, tail: str) -> str:
+    words = [_win_word(python)]
+    if src is None:
+        words += ["-m", "rewindagents"]
+    else:
+        words.append(_win_word(f"{str(src).replace(chr(92), '/')}/rewindagents/__main__.py"))
+    cmd = " ".join(words) + " hook" + tail
+    if ag.win_shell == "powershell" and words[0].startswith('"'):
+        cmd = "& " + cmd
+    if ag.fail_closed:
+        cmd += "; exit 0" if ag.win_shell == "powershell" else " || true"
+    return cmd
+
+
+# `... -m rewindagents hook`, `rewindagents hook` (on PATH), or the clone-by-file form `.../rewindagents/__main__.py hook`
+# (a quote may close the path first).
+_OURS = re.compile(r"rewindagents(?:[/\\]__main__\.py)?\"?\s+hook\b")
 
 
 def ours(command: str) -> bool:
-    """True for a hook command that runs rewindagents' hook (any interpreter, any agent)."""
-    return "rewindagents hook" in command
+    """True for a hook command that runs rewindagents' hook (any interpreter, any agent, either OS form)."""
+    return bool(_OURS.search(command))
+
+
+def words(command: str) -> list[str]:
+    """The command's words with their quotes removed. POSIX rules, unless the command names a Windows path: then
+    backslashes are kept (shlex's POSIX mode reads `C:\\Users` as `C:Users`), surrounding double quotes are
+    stripped and a leading PowerShell `&` is dropped. Raises ValueError on an unbalanced quote, as shlex does."""
+    if not agents.windows_command(command):
+        return shlex.split(command)
+    out = []
+    for w in shlex.split(command, posix=False):
+        if w == "&" and not out:
+            continue
+        out.append(w[1:-1] if len(w) >= 2 and w[0] == w[-1] == '"' else w)
+    return out
 
 
 def stale(command: str) -> str | None:
     """Why this hook command can no longer run, or None when nothing it names is missing.
 
-    A hook names its interpreter by absolute path (and, from a clone, a PYTHONPATH directory). When that
-    venv is deleted, a uv/pipx cache is cleared or Python is upgraded, the agent still runs the command, it
-    fails, and nothing is recorded, with no message the user sees. Only absolute paths are judged: a bare
-    command name is looked up on PATH at run time and may well work.
+    A hook names its interpreter by absolute path (and, from a clone, a PYTHONPATH directory or the package's
+    __main__.py). When that venv is deleted, a uv/pipx cache is cleared or Python is upgraded, the agent still
+    runs the command, it fails, and nothing is recorded, with no message the user sees. Only absolute paths are
+    judged: a bare command name is looked up on PATH at run time and may well work.
     """
     try:
-        words = shlex.split(command)
+        ws = words(command)
     except ValueError:
         return None
     env = {}
-    while words and "=" in words[0] and words[0].split("=", 1)[0].isidentifier():
-        k, v = words.pop(0).split("=", 1)
+    while ws and "=" in ws[0] and ws[0].split("=", 1)[0].isidentifier():
+        k, v = ws.pop(0).split("=", 1)
         env[k] = v
-    if words and os.path.isabs(words[0]) and not Path(words[0]).exists():
-        return f"{words[0]} no longer exists"
+    if ws and ospaths.isabs(ws[0]) and not Path(ws[0]).exists():
+        return f"{ws[0]} no longer exists"
+    if len(ws) > 1 and ws[1].lower().endswith("__main__.py") and ospaths.isabs(ws[1]) and not Path(ws[1]).exists():
+        return f"{ws[1]} no longer exists"
     pp = env.get("PYTHONPATH")
-    if pp and os.path.isabs(pp) and not Path(pp).is_dir():
+    if pp and ospaths.isabs(pp) and not Path(pp).is_dir():
         return f"PYTHONPATH {pp} no longer exists"
     return None
 

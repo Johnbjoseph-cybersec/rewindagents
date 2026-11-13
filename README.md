@@ -95,7 +95,11 @@ rewindagents install --settings ~/.claude/settings.json   # or for every project
 
 `install` keeps everything already in the settings file and does nothing if the hook is already there. The
 hook command it writes names the Python that rewindagents was installed into by absolute path, so it runs
-whether or not a virtualenv is active; from an uninstalled clone it carries the `PYTHONPATH` instead.
+whether or not a virtualenv is active; from an uninstalled clone it carries the `PYTHONPATH` instead. For a
+Windows Python the command has no such prefix: a bare forward-slash path, which Git Bash, PowerShell and
+cmd.exe all run, or, when the path has a space, a quoted one in the form of the shell the agent's docs name
+(`src/rewindagents/agents.py` quotes them); from a clone it runs `src/rewindagents/__main__.py` by path. That
+form is produced and checked by the tests on Unix; it has not been run on Windows (see Recorder).
 
 If that Python goes away later (the venv is deleted, Python is upgraded, the clone is moved), the agent still
 runs the hook, the hook fails, and nothing is recorded. `status` checks for that:
@@ -246,7 +250,8 @@ are recorded but not scanned.
   `PostToolUse` and `PostToolUseFailure`, which select the payload with `hook_event_name`, `session_id`, `cwd`,
   `tool_name`, `tool_input` and `tool_result` (or `error` for a failed call). Tools: `bash`, `create`, `edit`.
   The hook prints nothing. Copilot's `preToolUse` is fail-closed: a non-zero exit denies the call. So the
-  command it writes ends in `|| true`, and even a missing Python exits 0. In Copilot's cloud agent the hook
+  command it writes ends in `|| true` (for a Windows Python: under Copilot's `powershell` key, ending in
+  `; exit 0`), and even a missing Python exits 0. In Copilot's cloud agent the hook
   file is read from the default branch, and this machine's Python is not there, so nothing is recorded and
   nothing is blocked. Not scanned: `view`, `grep`, `glob`, `web_fetch`.
 - Factory Droid sends `PreToolUse` and `PostToolUse` with `session_id`, `cwd`, `tool_name`, `tool_input` and
@@ -567,8 +572,8 @@ many it deleted and the bytes those files took on disk.
   record makes `verify` fail and name the first bad record.
 - Several processes can write to the same log at once; appends are locked, so the chain stays single.
 - Plain JSONL. No server, no database, no dependencies beyond the Python standard library.
-  Needs a Unix for now. The write lock also has a Windows path (`msvcrt`), but the test suite has
-  not run on Windows yet, so Windows is not supported.
+  Needs a Unix for now. The write lock has a Windows path (`msvcrt`) and the hook command has a Windows form,
+  but the test suite has not passed on Windows yet, so Windows is not supported.
 
 ## Use it
 

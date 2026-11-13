@@ -101,11 +101,39 @@ Warp and Replit document no tool hooks.
 What is and is not verified: the Codex, Cursor, Gemini CLI, Copilot CLI, Droid and Qwen Code payloads in
 tests/test_agents*.py are the documented ones, and the hook has not yet run inside a live session of any of
 them. The README says so.
+
+Windows, read on 2026-11-14: which shell runs the hook command string there, per vendor page (this decides the
+form hook.hook_command writes for a Windows interpreter path: Agent.win_shell and Agent.win_command_key). The
+hook has not run on Windows; the README keeps "Windows is not supported".
+
+- Claude Code (https://code.claude.com/docs/en/hooks): a command hook without `args` is in "shell form": "The
+  `command` string is passed to a shell: `sh -c` on macOS and Linux, Git Bash on Windows, or PowerShell when
+  Git Bash isn't installed." A `shell` field "Accepts `"bash"` or `"powershell"`. Defaults to `"bash"`, or to
+  `"powershell"` on Windows when Git Bash isn't installed." Without Git Bash, a quoted path alone is not run:
+  "A hook with this error ran in PowerShell, which prints a `command` that is only quoted strings"; the page's
+  fix is to "put `&` before the quoted path". win_shell = "bash" (the documented default).
+- Cursor (https://cursor.com/docs/agent/hooks): "On Windows, the desktop app runs hook commands through
+  PowerShell and pipes the JSON into the command". win_shell = "powershell".
+- Codex (https://learn.chatgpt.com/docs/hooks): the shell is not named; "`commandWindows` is an optional
+  Windows-only command override". win_shell unknown.
+- Gemini CLI (https://geminicli.com/docs/hooks/reference/): nothing about Windows or the shell. Unknown.
+- GitHub Copilot CLI (https://docs.github.com/en/copilot/reference/hooks-configuration): per-OS keys on a
+  command hook: `bash` is "Shell command for Unix.", `powershell` is "Shell command for Windows."; a `command`
+  key is "Copied to both `bash` and `powershell` when those fields are absent". So an entry holding only `bash`
+  never runs on Windows: a Windows command is written under `powershell` (win_command_key), and its fail-closed
+  guard is `; exit 0` there, since `|| true` is bash. win_shell = "powershell".
+- Factory Droid (https://docs.factory.com/reference/hooks-reference): nothing about Windows or the shell. Unknown.
+- Qwen Code (https://github.com/QwenLM/qwen-code/blob/main/docs/users/features/hooks.md): a per-hook `shell`
+  field, `"bash" | "powershell"`, "Shell to use"; no default is stated. Unknown.
+
+For an unknown shell the Windows form is the one Git Bash and cmd.exe share (a bare forward-slash path, or
+a double-quoted one); PowerShell would need `&` before a quoted path. The bare form runs in all three.
 """
 from __future__ import annotations
 
 import json
 import os
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -118,6 +146,7 @@ COPILOT_DOCS = "https://docs.github.com/en/copilot/reference/hooks-configuration
 DROID_DOCS = "https://docs.factory.com/reference/hooks-reference"
 QWEN_DOCS = "https://github.com/QwenLM/qwen-code/blob/main/docs/users/features/hooks.md"
 DOCS_READ_2 = "2026-11-12"
+DOCS_READ_3 = "2026-11-14"     # the Windows shell of each agent (module docstring)
 
 
 @dataclass(frozen=True)
@@ -137,15 +166,19 @@ class Agent:
     prefer: str = ""              # a config file used in place of `settings` when it exists (Droid)
     flat: frozenset = frozenset()  # file names whose top level IS the hooks object (Droid's hooks.json)
     also_post: tuple = ()         # more events that end a call (a failed call): installed, and read as "post"
+    win_shell: str = ""           # the shell that runs the command on Windows, as the docs name it: "bash" (Git
+                                  # Bash), "powershell", or "" when the docs do not say (module docstring)
+    win_command_key: str = ""     # "cursor" shape: the key a Windows command goes under (Copilot: "powershell")
 
 
 AGENTS: dict[str, Agent] = {
-    "claude": Agent("claude", ".claude/settings.json", ("PreToolUse", "PostToolUse"), "groups", file_tools=True),
+    "claude": Agent("claude", ".claude/settings.json", ("PreToolUse", "PostToolUse"), "groups", file_tools=True,
+                    win_shell="bash"),
     "codex": Agent("codex", ".codex/hooks.json", ("PreToolUse", "PostToolUse"), "groups",
                    read_only=frozenset({"update_plan"})),
     "cursor": Agent("cursor", ".cursor/hooks.json", ("preToolUse", "postToolUse"), "cursor",
                     reply={"pre": '{"permission": "allow"}', "post": "{}", "unknown": '{"permission": "allow"}'},
-                    read_only=frozenset({"Read", "Grep"})),
+                    read_only=frozenset({"Read", "Grep"}), win_shell="powershell"),
     "gemini": Agent("gemini", ".gemini/settings.json", ("BeforeTool", "AfterTool"), "groups",
                     reply={"pre": "{}", "post": "{}", "unknown": "{}"},
                     read_only=frozenset({"read_file", "read_many_files", "list_directory", "glob", "grep_search",
@@ -153,7 +186,7 @@ AGENTS: dict[str, Agent] = {
     "copilot": Agent("copilot", ".github/hooks/rewindagents.json", ("PreToolUse", "PostToolUse"), "cursor",
                      read_only=frozenset({"view", "grep", "glob", "web_fetch"}),
                      entry=(("type", "command"),), command_key="bash", fail_closed=True,
-                     also_post=("PostToolUseFailure",)),
+                     also_post=("PostToolUseFailure",), win_shell="powershell", win_command_key="powershell"),
     "droid": Agent("droid", ".factory/settings.json", ("PreToolUse", "PostToolUse"), "groups",
                    read_only=frozenset({"Read", "LS", "Glob", "Grep", "FetchUrl", "WebSearch"}),
                    prefer=".factory/hooks.json", flat=frozenset({"hooks.json"})),
@@ -162,6 +195,27 @@ AGENTS: dict[str, Agent] = {
                   also_post=("PostToolUseFailure",)),
 }
 DEFAULT = "claude"
+
+# A Windows path at the start of a word: C:/..., C:\..., \\server\share\... (after a quote, a space, `=` or `&`).
+_WIN_PATH = re.compile(r'(?:^|[\s"=])(?:[A-Za-z]:[\\/]|\\\\[^\\\s"]+\\)')
+
+
+def windows_command(command: str) -> bool:
+    """True when the command names a Windows path. A hook command always names its interpreter by absolute path,
+    so this tells a Windows hook command from a POSIX one by its own shape, whatever OS is reading it."""
+    return bool(_WIN_PATH.search(command))
+
+
+def command_key(agent: Agent, command: str) -> str:
+    """The key a "cursor"-shape entry holds this command under: `agent.win_command_key` for a Windows command when
+    the agent has one (Copilot: `powershell`, as its `bash` key is "Shell command for Unix."), else `agent.command_key`."""
+    if agent.win_command_key and windows_command(command):
+        return agent.win_command_key
+    return agent.command_key
+
+
+def _command_keys(agent: Agent) -> tuple[str, ...]:
+    return (agent.command_key, agent.win_command_key) if agent.win_command_key else (agent.command_key,)
 
 
 def normalize(payload: dict) -> dict[str, Any]:
@@ -251,10 +305,11 @@ def install(agent: Agent, settings_path: str | Path, command: str) -> bool:
         if settings.get("version") is None:
             settings = {"version": 1, **settings}
             changed = True
+        k = command_key(agent, command)
         for event in agent.events + agent.also_post:
             entries = hooks.setdefault(event, [])
-            if not any(isinstance(h, dict) and h.get(agent.command_key) == command for h in entries):
-                entries.append({**dict(agent.entry), agent.command_key: command})
+            if not any(isinstance(h, dict) and h.get(k) == command for h in entries):
+                entries.append({**dict(agent.entry), k: command})
                 changed = True
     else:
         for event in agent.events + agent.also_post:
@@ -289,6 +344,7 @@ def uninstall(agent: Agent, settings_path: str | Path, command: str) -> bool:
     if hooks is None:
         return False
     changed = False
+    k = command_key(agent, command)
     for event in agent.events + agent.also_post:
         entries = hooks.get(event)
         if not isinstance(entries, list):
@@ -296,7 +352,7 @@ def uninstall(agent: Agent, settings_path: str | Path, command: str) -> bool:
         kept = []
         for e in entries:
             if agent.shape == "cursor":
-                if isinstance(e, dict) and e.get(agent.command_key) == command:
+                if isinstance(e, dict) and e.get(k) == command:
                     changed = True
                     continue
             elif isinstance(e, dict) and isinstance(e.get("hooks"), list):
@@ -330,8 +386,7 @@ def commands_in(agent: Agent, settings_path: str | Path) -> dict[str, list[str]]
     for event in agent.events + agent.also_post:
         entries = hooks.get(event, [])
         if agent.shape == "cursor":
-            k = agent.command_key
-            out[event] = [h[k] for h in entries if isinstance(h, dict) and k in h]
+            out[event] = [h[k] for h in entries if isinstance(h, dict) for k in _command_keys(agent) if k in h]
         else:
             out[event] = [h["command"] for g in entries for h in g.get("hooks", [])]
     return out
