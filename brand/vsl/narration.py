@@ -7,6 +7,10 @@ no mix, no voice clips and no brand/vsl/voice/ directory. The only sound is rend
 
   .venv/bin/python brand/vsl/render.py    -> the three mp4s, captions, manifest
   python3 brand/vsl/narration.py web      -> brand/vsl/vsl-90s-web.mp4 + brand/vsl/vsl-90s-poster.jpg, manifest "web"
+  python3 brand/vsl/narration.py poster   -> only the poster's phone-to-desktop sizes (needs ImageMagick with AVIF)
+
+The poster also ships as AVIF and WebP at POSTER_WIDTHS (brand/vsl/vsl-90s-poster-<w>.avif/.webp), so a phone fetches
+a 960 px image after first paint instead of the 1920 px JPEG; the site lists them in a srcset and loads them lazily.
 
 web: a stream copy of brand/vsl-90s.mp4 (picture and sound unchanged) with the moov atom first (faststart) when the
 source is at most WEB_MAX_BYTES, else a re-encode of the picture at crf 23 with the sound copied. The poster is the
@@ -33,6 +37,8 @@ WEB_MAX_BYTES = 12 * 1024 * 1024
 BT709_BSF = "h264_metadata=colour_primaries=1:transfer_characteristics=1:matrix_coefficients=1:video_full_range_flag=0"
 POSTER_BEAT = "b14"       # "One command, and four files come back." - its last moment has every restore line lit
 POSTER_BEFORE_END_MS = 200
+POSTER_WIDTHS = (480, 960, 1440, 1920)
+POSTER_QUALITY = {"avif": 50, "webp": 72}
 
 
 def beat_start(video, beat_id):
@@ -84,10 +90,26 @@ def web(workdir):
     return {"mp4": os.path.relpath(WEB_MP4, BRAND), "sha256": sha256(WEB_MP4), "bytes": os.path.getsize(WEB_MP4),
             "from": how, "source_sha256": sha256(src), "voice": False,
             "poster": os.path.relpath(WEB_POSTER, BRAND), "poster_ms": poster_ms, "poster_beat": POSTER_BEAT,
-            "poster_sha256": sha256(WEB_POSTER), "poster_mean_luma": round(gray_mean(WEB_POSTER), 1)}
+            "poster_sha256": sha256(WEB_POSTER), "poster_mean_luma": round(gray_mean(WEB_POSTER), 1),
+            "poster_sizes": poster_variants()}
+
+
+def poster_variants():
+    """brand/vsl/vsl-90s-poster-<w>.avif and .webp at each POSTER_WIDTHS, from the poster JPEG."""
+    out = []
+    for w in POSTER_WIDTHS:
+        for fmt, q in sorted(POSTER_QUALITY.items()):
+            dst = WEB_POSTER[:-len(".jpg")] + "-%d.%s" % (w, fmt)
+            subprocess.run(["magick", WEB_POSTER, "-strip", "-resize", "%dx" % w, "-quality", str(q), dst], check=True)
+            out.append(os.path.relpath(dst, BRAND))
+    return out
 
 
 def main(argv):
+    if argv[:1] == ["poster"]:
+        for rel in poster_variants():
+            print("poster: %s %d bytes" % (rel, os.path.getsize(os.path.join(BRAND, rel))))
+        return 0
     if argv[:1] != ["web"]:
         print(__doc__)
         return 2

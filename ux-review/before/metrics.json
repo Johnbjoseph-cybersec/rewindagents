@@ -1,0 +1,619 @@
+{
+ "index-1440": {
+  "docW": 1440,
+  "vw": 1440,
+  "docH": 8369,
+  "over": [],
+  "clipped": [],
+  "heroText": {
+   "x": 184,
+   "y": 133,
+   "r": 607,
+   "b": 760,
+   "w": 423
+  },
+  "heroPanel": {
+   "x": 663,
+   "y": 133,
+   "r": 1256,
+   "b": 616,
+   "w": 593
+  },
+  "leftEdges": {
+   ".wrap": "160 / right 1280",
+   ".label": "184 / right 1256",
+   ".head h2": "184 / right 881",
+   ".lede": "184 / right 607,834",
+   ".ledger": "184 / right 1124",
+   ".cmdlist": "184 / right 1256",
+   ".plans": "184 / right 1256",
+   ".faq": "184 / right 1256",
+   ".steps": "184 / right 1256",
+   ".cols": "184 / right 1256",
+   ".session": "184 / right 1256",
+   ".clip": "184 / right 1256",
+   ".closegrid": "184 / right 1256"
+  },
+  "cmdrows": [
+   {
+    "text": 134,
+    "panel": 245
+   },
+   {
+    "text": 185,
+    "panel": 162
+   },
+   {
+    "text": 160,
+    "panel": 141
+   },
+   {
+    "text": 108,
+    "panel": 57
+   }
+  ],
+  "steps": [
+   285,
+   285,
+   285
+  ],
+  "plans": [
+   {
+    "h": 606,
+    "btn": 531
+   },
+   {
+    "h": 606,
+    "btn": 531
+   }
+  ],
+  "lines": 9,
+  "fontsize": {
+   "13px": 8,
+   "19px": 1,
+   "15px": 7,
+   "13.5px": 4,
+   "20px": 6,
+   "16px": 24,
+   "17px": 9,
+   "18px": 6
+  },
+  "links": [
+   "index.html",
+   "index.html#how",
+   "index.html#install",
+   "pricing.html",
+   "docs/",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents",
+   "#limits",
+   "#install",
+   "docs/",
+   "docs/",
+   "index.html#install",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents/issues/new?title=Cloud+waitlist&labels=waitlist&body=I+would+use+a+paid+tier+for%3A",
+   "pricing.html",
+   "#install",
+   "docs/",
+   "index.html",
+   "docs/",
+   "pricing.html",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE"
+  ],
+  "hidden": [],
+  "errors": []
+ },
+ "index-834": {
+  "docW": 834,
+  "vw": 834,
+  "docH": 10265,
+  "over": [],
+  "clipped": [],
+  "heroText": {
+   "x": 24,
+   "y": 133,
+   "r": 810,
+   "b": 548,
+   "w": 786
+  },
+  "heroPanel": {
+   "x": 24,
+   "y": 588,
+   "r": 810,
+   "b": 1052,
+   "w": 786
+  },
+  "leftEdges": {
+   ".wrap": "0 / right 834",
+   ".label": "24 / right 810",
+   ".head h2": "24 / right 512",
+   ".lede": "24 / right 641,674",
+   ".ledger": "24 / right 810",
+   ".cmdlist": "24 / right 810",
+   ".plans": "24 / right 810",
+   ".faq": "24 / right 810",
+   ".steps": "24 / right 810",
+   ".cols": "24 / right 810",
+   ".session": "24 / right 810",
+   ".clip": "24 / right 810",
+   ".closegrid": "24 / right 810"
+  },
+  "cmdrows": [
+   {
+    "text": 108,
+    "panel": 245
+   },
+   {
+    "text": 160,
+    "panel": 161
+   },
+   {
+    "text": 134,
+    "panel": 120
+   },
+   {
+    "text": 83,
+    "panel": 57
+   }
+  ],
+  "steps": [
+   207,
+   208,
+   208
+  ],
+  "plans": [
+   {
+    "h": 529,
+    "btn": 454
+   },
+   {
+    "h": 506,
+    "btn": 431
+   }
+  ],
+  "lines": 0,
+  "fontsize": {
+   "13px": 8,
+   "19px": 1,
+   "15px": 7,
+   "13.5px": 4,
+   "20px": 6,
+   "16px": 24,
+   "17px": 9,
+   "18px": 6
+  },
+  "links": [
+   "index.html",
+   "index.html#how",
+   "index.html#install",
+   "pricing.html",
+   "docs/",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents",
+   "#limits",
+   "#install",
+   "docs/",
+   "docs/",
+   "index.html#install",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents/issues/new?title=Cloud+waitlist&labels=waitlist&body=I+would+use+a+paid+tier+for%3A",
+   "pricing.html",
+   "#install",
+   "docs/",
+   "index.html",
+   "docs/",
+   "pricing.html",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE"
+  ],
+  "hidden": [],
+  "errors": []
+ },
+ "index-390": {
+  "docW": 390,
+  "vw": 390,
+  "docH": 11871,
+  "over": [],
+  "clipped": [],
+  "heroText": {
+   "x": 16,
+   "y": 149,
+   "r": 374,
+   "b": 686,
+   "w": 358
+  },
+  "heroPanel": {
+   "x": 16,
+   "y": 726,
+   "r": 374,
+   "b": 1373,
+   "w": 358
+  },
+  "leftEdges": {
+   ".wrap": "0 / right 390",
+   ".label": "16 / right 374",
+   ".head h2": "16 / right 374",
+   ".lede": "16 / right 374",
+   ".ledger": "16 / right 374",
+   ".cmdlist": "16 / right 374",
+   ".plans": "16 / right 374",
+   ".faq": "16 / right 374",
+   ".steps": "16 / right 374",
+   ".cols": "16 / right 374",
+   ".session": "16 / right 374",
+   ".clip": "0 / right 0",
+   ".closegrid": "16 / right 374"
+  },
+  "cmdrows": [
+   {
+    "text": 159,
+    "panel": 270
+   },
+   {
+    "text": 211,
+    "panel": 177
+   },
+   {
+    "text": 185,
+    "panel": 139
+   },
+   {
+    "text": 109,
+    "panel": 46
+   }
+  ],
+  "steps": [
+   259,
+   284,
+   259
+  ],
+  "plans": [
+   {
+    "h": 647,
+    "btn": 576
+   },
+   {
+    "h": 571,
+    "btn": 500
+   }
+  ],
+  "lines": 32,
+  "fontsize": {
+   "13px": 8,
+   "18px": 13,
+   "15px": 7,
+   "13.5px": 4,
+   "16px": 33
+  },
+  "links": [
+   "index.html",
+   "index.html#how",
+   "index.html#install",
+   "pricing.html",
+   "docs/",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents",
+   "#limits",
+   "#install",
+   "docs/",
+   "docs/",
+   "index.html#install",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents/issues/new?title=Cloud+waitlist&labels=waitlist&body=I+would+use+a+paid+tier+for%3A",
+   "pricing.html",
+   "#install",
+   "docs/",
+   "index.html",
+   "docs/",
+   "pricing.html",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE"
+  ],
+  "hidden": [
+   "clip"
+  ],
+  "errors": []
+ },
+ "pricing-1440": {
+  "docW": 1440,
+  "vw": 1440,
+  "docH": 2152,
+  "over": [],
+  "clipped": [],
+  "leftEdges": {
+   ".wrap": "160 / right 1280",
+   ".label": "184 / right 1256",
+   ".head h2": "184 / right 881",
+   ".head h1": "184 / right 1256",
+   ".lede": "184 / right 834",
+   ".plans": "184 / right 1256",
+   ".faq": "184 / right 1256"
+  },
+  "cmdrows": [],
+  "steps": [],
+  "plans": [
+   {
+    "h": 606,
+    "btn": 531
+   },
+   {
+    "h": 606,
+    "btn": 531
+   }
+  ],
+  "lines": 0,
+  "fontsize": {
+   "13px": 2,
+   "20px": 1,
+   "15px": 2,
+   "16px": 9,
+   "18px": 4,
+   "17px": 4
+  },
+  "links": [
+   "index.html",
+   "index.html#how",
+   "index.html#install",
+   "pricing.html",
+   "docs/",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents",
+   "index.html#install",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents/issues/new?title=Cloud+waitlist&labels=waitlist&body=I+would+use+a+paid+tier+for%3A",
+   "index.html",
+   "docs/",
+   "pricing.html",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE"
+  ],
+  "hidden": [],
+  "errors": []
+ },
+ "pricing-834": {
+  "docW": 834,
+  "vw": 834,
+  "docH": 2514,
+  "over": [],
+  "clipped": [],
+  "leftEdges": {
+   ".wrap": "0 / right 834",
+   ".label": "24 / right 810",
+   ".head h2": "24 / right 512",
+   ".head h1": "24 / right 810",
+   ".lede": "24 / right 674",
+   ".plans": "24 / right 810",
+   ".faq": "24 / right 810"
+  },
+  "cmdrows": [],
+  "steps": [],
+  "plans": [
+   {
+    "h": 528,
+    "btn": 453
+   },
+   {
+    "h": 507,
+    "btn": 432
+   }
+  ],
+  "lines": 0,
+  "fontsize": {
+   "13px": 2,
+   "20px": 1,
+   "15px": 2,
+   "16px": 9,
+   "18px": 4,
+   "17px": 4
+  },
+  "links": [
+   "index.html",
+   "index.html#how",
+   "index.html#install",
+   "pricing.html",
+   "docs/",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents",
+   "index.html#install",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents/issues/new?title=Cloud+waitlist&labels=waitlist&body=I+would+use+a+paid+tier+for%3A",
+   "index.html",
+   "docs/",
+   "pricing.html",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE"
+  ],
+  "hidden": [],
+  "errors": []
+ },
+ "pricing-390": {
+  "docW": 390,
+  "vw": 390,
+  "docH": 3052,
+  "over": [],
+  "clipped": [],
+  "leftEdges": {
+   ".wrap": "0 / right 390",
+   ".label": "16 / right 374",
+   ".head h2": "16 / right 374",
+   ".head h1": "16 / right 374",
+   ".lede": "16 / right 374",
+   ".plans": "16 / right 374",
+   ".faq": "16 / right 374"
+  },
+  "cmdrows": [],
+  "steps": [],
+  "plans": [
+   {
+    "h": 647,
+    "btn": 576
+   },
+   {
+    "h": 572,
+    "btn": 501
+   }
+  ],
+  "lines": 0,
+  "fontsize": {
+   "13px": 2,
+   "18px": 5,
+   "15px": 2,
+   "16px": 13
+  },
+  "links": [
+   "index.html",
+   "index.html#how",
+   "index.html#install",
+   "pricing.html",
+   "docs/",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents",
+   "index.html#install",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents/issues/new?title=Cloud+waitlist&labels=waitlist&body=I+would+use+a+paid+tier+for%3A",
+   "index.html",
+   "docs/",
+   "pricing.html",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE"
+  ],
+  "hidden": [],
+  "errors": []
+ },
+ "docs-1440": {
+  "docW": 1440,
+  "vw": 1440,
+  "docH": 7769,
+  "over": [],
+  "clipped": [],
+  "leftEdges": {
+   ".wrap": "160 / right 1280",
+   ".label": "184 / right 1256",
+   ".head h1": "184 / right 1256",
+   ".lede": "184 / right 834"
+  },
+  "cmdrows": [],
+  "steps": [],
+  "plans": [],
+  "lines": 0,
+  "fontsize": {
+   "13px": 1,
+   "20px": 1,
+   "17px": 36,
+   "16px": 4
+  },
+  "links": [
+   "../index.html",
+   "../index.html#how",
+   "../index.html#install",
+   "../pricing.html",
+   "../docs/",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents",
+   "#install",
+   "#hook",
+   "#first",
+   "#recorded",
+   "#replay",
+   "#branch",
+   "#export",
+   "#sessions",
+   "#verify",
+   "#limits",
+   "#remove",
+   "../index.html",
+   "../docs/",
+   "../pricing.html",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE"
+  ],
+  "hidden": [],
+  "errors": []
+ },
+ "docs-834": {
+  "docW": 834,
+  "vw": 834,
+  "docH": 7854,
+  "over": [],
+  "clipped": [],
+  "leftEdges": {
+   ".wrap": "0 / right 834",
+   ".label": "24 / right 810",
+   ".head h1": "24 / right 810",
+   ".lede": "24 / right 674"
+  },
+  "cmdrows": [],
+  "steps": [],
+  "plans": [],
+  "lines": 0,
+  "fontsize": {
+   "13px": 1,
+   "20px": 1,
+   "17px": 36,
+   "16px": 4
+  },
+  "links": [
+   "../index.html",
+   "../index.html#how",
+   "../index.html#install",
+   "../pricing.html",
+   "../docs/",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents",
+   "#install",
+   "#hook",
+   "#first",
+   "#recorded",
+   "#replay",
+   "#branch",
+   "#export",
+   "#sessions",
+   "#verify",
+   "#limits",
+   "#remove",
+   "../index.html",
+   "../docs/",
+   "../pricing.html",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE"
+  ],
+  "hidden": [],
+  "errors": []
+ },
+ "docs-390": {
+  "docW": 390,
+  "vw": 390,
+  "docH": 9949,
+  "over": [],
+  "clipped": [],
+  "leftEdges": {
+   ".wrap": "0 / right 390",
+   ".label": "16 / right 374",
+   ".head h1": "16 / right 374",
+   ".lede": "16 / right 374"
+  },
+  "cmdrows": [],
+  "steps": [],
+  "plans": [],
+  "lines": 28,
+  "fontsize": {
+   "13px": 1,
+   "18px": 1,
+   "16px": 40
+  },
+  "links": [
+   "../index.html",
+   "../index.html#how",
+   "../index.html#install",
+   "../pricing.html",
+   "../docs/",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents",
+   "#install",
+   "#hook",
+   "#first",
+   "#recorded",
+   "#replay",
+   "#branch",
+   "#export",
+   "#sessions",
+   "#verify",
+   "#limits",
+   "#remove",
+   "../index.html",
+   "../docs/",
+   "../pricing.html",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents",
+   "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE"
+  ],
+  "hidden": [],
+  "errors": []
+ }
+}

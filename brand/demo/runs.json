@@ -1,0 +1,50 @@
+{
+ "script": "ux-review/try-runs.sh",
+ "command": "rewindagents (installed)",
+ "version": "rewindagents 0.0.7",
+ "commands": {
+  "fork": "rewindagents fork 2 --name clamp",
+  "compare": "rewindagents compare --check \"python3 test_cart.py\"",
+  "diff": "rewindagents compare --diff shop clamp"
+ },
+ "output": {
+  "the recorded session": [
+   "    1  Write         cart.py  [1 checkpointed]",
+   "    2  Write         test_cart.py  [1 checkpointed]",
+   "    3  Write         cart.py  [1 checkpointed]"
+  ],
+  "fork step 2 into a second attempt": [
+   "run clamp: /private/var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/tmp.9fIYfjmXeq/shop-clamp",
+   "  2 files as they were right after step 2 of session demo-0001; git worktree on branch rewindagents/run/clamp",
+   "  no agent hook reaches it, so an agent's steps there will not be recorded: run `rewindagents init` in it (compare still compares the files)",
+   "  next: cd /private/var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/tmp.9fIYfjmXeq/shop-clamp and let any agent (or you) continue; then, back here: rewindagents compare"
+  ],
+  "compare, with the test file as the check": [
+   "runs from session demo-000 step 2 of shop (2 files at the start)",
+   "",
+   "  run       agents         steps  files  lines                 check",
+   "  shop      claude             1      1  +1 -1                 FAIL (exit 1)",
+   "  clamp     -                  0      1  +1 -1                 pass",
+   "",
+   "  file     shop         clamp",
+   "  cart.py  changed A    changed B",
+   "",
+   "  - = as at the start; the same letter in a row = the same bytes in those runs.",
+   "  shop:     assert total([10, 5], discount=20) >= 0, \"a total below zero\"",
+   "  shop:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+   "  shop: AssertionError: a total below zero",
+   "  how two runs differ: rewindagents compare --diff shop clamp"
+  ],
+  "how the second attempt differs": [
+   "# a/ = run shop (/private/var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/tmp.9fIYfjmXeq/shop), b/ = run clamp (/private/var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/tmp.9fIYfjmXeq/shop-clamp)",
+   "diff --git a/cart.py b/cart.py",
+   "--- a/cart.py",
+   "+++ b/cart.py",
+   "@@ -1,2 +1,2 @@",
+   " def total(prices, discount=0):",
+   "-    return sum(prices) - discount  # TODO clamp",
+   "+    return max(0, sum(prices) - discount)",
+   "(left in /var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/tmp.9fIYfjmXeq; delete it when done)"
+  ]
+ }
+}

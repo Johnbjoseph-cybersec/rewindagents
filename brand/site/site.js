@@ -1,10 +1,15 @@
-/* rewindagents site motion. Local only: GSAP 3.13 (vendor/), nothing fetched (CSP script-src/connect-src).
-   The page is complete without this file. Every block is isolated: one failure cannot cost the page another.
+/* rewindagents site motion. Local only: GSAP 3.13 (vendor/), nothing from another origin (CSP script-src 'self',
+   connect-src 'none'). The page is complete without this file, and the first screen paints without waiting for it.
+   GSAP is progressive enhancement: its three files are added after the load event, when the browser is idle (or at
+   the first scroll, touch or key), and only content still below the fold is animated, so nothing already on screen
+   moves or shifts. Every block is isolated: one failure cannot cost the page another.
    Signature move: scrolling back up fast "rewinds" the page (the tape at the top runs red, headings skew back). */
 (function () {
   "use strict";
   var root = document.documentElement;
-  var reduce = !root.classList.contains("js-motion");
+  var here = document.currentScript && document.currentScript.src;      // site.js's own URL: vendor/ sits beside it
+  var VENDOR = ["vendor/gsap.min.js", "vendor/ScrollTrigger.min.js", "vendor/SplitText.min.js"];
+  var reduce = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   function safe(name, fn) { try { fn(); } catch (err) { if (window.console) console.warn("site.js " + name + ":", err); } }
   function $(s, c) { return (c || document).querySelector(s); }
   function $$(s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); }
@@ -95,39 +100,50 @@
     window.addEventListener("scroll", on, { passive: true }); on();
   });
 
-  if (reduce || !window.gsap || !window.ScrollTrigger) { root.classList.add("motion-ready"); return; }
-  gsap.registerPlugin(ScrollTrigger); if (window.SplitText) gsap.registerPlugin(SplitText);
-  var fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
-  fontsReady.then(function () { motion(); });
+  /* ---- motion, after first paint: the vendor files in order, then motion() ----------------------------- */
+  if (reduce || !here) return;
+  var asked = false;
+  function loadMotion() {
+    if (asked) return;
+    asked = true;
+    var n = 0;
+    (function next() {
+      if (n === VENDOR.length) { safe("motion", start); return; }
+      var tag = document.createElement("script");
+      tag.src = new URL(VENDOR[n++], here).href;
+      tag.onload = next;
+      document.head.appendChild(tag);
+    })();
+  }
+  // both the load event and the first contentful paint, as the browser reports it: on a light page the load event
+  // comes before the first paint, so it alone is not "after first paint". Then the next idle moment.
+  var gates = 2;
+  function pass() { if (--gates === 0) (window.requestIdleCallback || function (fn) { setTimeout(fn, 300); })(loadMotion, { timeout: 2500 }); }
+  if (document.readyState === "complete") pass(); else window.addEventListener("load", pass, { once: true });
+  try {
+    var painted = false;
+    var po = new PerformanceObserver(function (list) {
+      if (!painted && list.getEntriesByName("first-contentful-paint").length) { painted = true; po.disconnect(); pass(); }
+    });
+    po.observe({ type: "paint", buffered: true });
+  } catch (err) { setTimeout(pass, 1000); }
+  ["scroll", "pointerdown", "keydown"].forEach(function (ev) { window.addEventListener(ev, loadMotion, { once: true, passive: true }); });
+
+  function start() {
+    if (!window.gsap || !window.ScrollTrigger) return;
+    gsap.registerPlugin(ScrollTrigger); if (window.SplitText) gsap.registerPlugin(SplitText);
+    var fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+    fontsReady.then(function () { motion(); ScrollTrigger.refresh(); });
+  }
+  // only what the reader has not reached yet: anything on screen, or scrolled past, stays exactly where it is
+  function below(el) { return el.getBoundingClientRect().top > window.innerHeight; }
+
   function motion() {
   var EASE = "expo.out", SNAP = "power4.inOut";
 
-  /* ---- 1. hero intro: the promise sets in line by line, then the terminal prints the real session ---- */
-  safe("hero", function () {
-    var hero = $(".hero"); if (!hero) return;
-    var tl = gsap.timeline({ paused: true, defaults: { ease: EASE } });
-    var h1 = $("h1", hero), lines = [h1];
-    if (window.SplitText) { lines = new SplitText(h1, { type: "lines,words", mask: "lines", linesClass: "h1-line" }).lines; }
-    root.classList.add("motion-ready");
-    tl.from($(".eyebrow", hero), { y: 16, opacity: 0, duration: 0.7 })
-      .from(lines, { yPercent: 110, duration: 1.1, stagger: 0.09 }, 0.1)
-      .from($(".lede", hero), { y: 24, opacity: 0, duration: 0.9 }, 0.55)
-      .from($$(".cta .btn", hero), { y: 18, opacity: 0, duration: 0.7, stagger: 0.08 }, 0.7)
-      .from($$(".agents .ag-label, .agents .ag", hero), { y: 14, opacity: 0, duration: 0.6, stagger: 0.07, clearProps: "transform" }, 0.95);
-    var panel = $(".hero-panel .panel", hero);
-    if (panel) {
-      var rows = $$(".l", panel);
-      tl.fromTo(panel, { clipPath: "inset(0 0 100% 0 round 6px)" }, { clipPath: "inset(0 0 0% 0 round 6px)", duration: 0.9, ease: SNAP }, 0.35)
-        .from(rows, { opacity: 0, x: -10, duration: 0.25, stagger: 0.07, ease: "power2.out" }, 0.9)
-        .add(function () { panel.classList.add("lit"); }, ">-0.1");
-    }
-    tl.from($$(".hero-panel .caption, .hero-panel .facts li", hero), { y: 12, opacity: 0, duration: 0.6, stagger: 0.05 }, 1.6);
-    tl.play();
-  });
-
   /* ---- 2. section heads: the ruler's playhead scrubs into place, the heading rises word by word ------- */
   safe("heads", function () {
-    $$(".sec .label").forEach(function (lab) {
+    $$(".sec .label").filter(below).forEach(function (lab) {
       var head = lab.nextElementSibling && lab.nextElementSibling.classList.contains("head") ? lab.nextElementSibling : null;
       var h2 = head && $("h2", head), lede = head && $(".lede", head);
       var playhead = $(".ruler path", lab);
@@ -147,7 +163,7 @@
   safe("rows", function () {
     var groups = [".trio > div", ".shot", ".session > div", ".cols > div", ".steps > li", ".ledger > li", ".cmdrow", ".plan", ".faq details", ".walk > li", ".doc > section"];
     groups.forEach(function (sel) {
-      var els = $$(sel); if (!els.length) return;
+      var els = $$(sel).filter(below); if (!els.length) return;
       gsap.set(els, { y: 46, opacity: 0 });
       ScrollTrigger.batch(els, {
         start: "top 90%", once: true,
@@ -155,7 +171,7 @@
       });
     });
     // the ledger's numbers count up from zero the first time they are seen
-    $$(".ledger .k").forEach(function (k) {
+    $$(".ledger .k").filter(below).forEach(function (k) {
       var m = k.textContent.match(/^([\d,]+)(.*)$/); if (!m) return;
       var end = parseInt(m[1].replace(/,/g, ""), 10), obj = { v: 0 };
       ScrollTrigger.create({ trigger: k, start: "top 90%", once: true, onEnter: function () {
@@ -166,7 +182,7 @@
 
   /* ---- 4. the film: grows from an inset card to the full width as it comes up the page --------------- */
   safe("film-scroll", function () {
-    var frame = $(".film-frame"); if (!frame) return;
+    var frame = $(".film-frame"); if (!frame || !below(frame)) return;
     gsap.fromTo(frame, { clipPath: "inset(0 8% round 24px)" }, {
       clipPath: "inset(0 0% round 0px)", ease: "none",
       scrollTrigger: { trigger: "#film", start: "top 95%", end: "top 20%", scrub: 0.6 }
@@ -177,7 +193,7 @@
 
   /* ---- 5. closing band: the headline slams in, the command types ------------------------------------- */
   safe("close", function () {
-    var c = $(".close"); if (!c) return;
+    var c = $(".close"); if (!c || !below(c)) return;
     var h = $("h2", c), chars = window.SplitText ? new SplitText(h, { type: "chars,words" }).chars : [h];
     var tl = gsap.timeline({ paused: true });
     tl.from(chars, { yPercent: 100, opacity: 0, duration: 0.8, stagger: 0.014, ease: "expo.out" })
@@ -210,6 +226,5 @@
     });
   });
 
-  window.addEventListener("load", function () { ScrollTrigger.refresh(); });
   }
 })();

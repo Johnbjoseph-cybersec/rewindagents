@@ -16,6 +16,8 @@ tests/test_site.py rebuilds the pages into a temp folder and fails if the commit
   python3 brand/site/build.py fonts      -> copies the brand WOFF2 files + licences from .brandcache into fonts/
   python3 brand/site/build.py open DIR   -> a copy of the site in DIR (outside brand/site, e.g. build/site-open) plus
                                             DIR/index-open.html with every answer open, for review renders only
+  python3 brand/site/build.py cards DIR  -> the share cards (og 1200x630, linkedin 1200x627, portrait 1080x1350) as
+                                            HTML in DIR; ux-review/tools/cards.mjs renders them to PNG
 """
 import html
 import importlib.util
@@ -23,6 +25,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -37,6 +40,10 @@ import scenario  # noqa: E402
 
 NAME = "rewindagents"
 PROMISE = "Ctrl+Z for AI coding agents: record, replay, rewind."
+# The course John chose on 2026-11-13: rewind is the verb that makes the proving ground possible. BRAND.md carries
+# it word for word (tests/test_site.py); the promise above stays the base it is built on.
+COURSE = "Rewind to any step. Let another agent take it from there."
+FORK = "Fork a step, compare the runs"      # the README section the fork-and-compare panels come from
 CREDIT = "made by John B Joseph"
 LICENCE = "Apache-2.0"
 PAGES = {"index.html": "", "pricing.html": "pricing.html", "docs/index.html": "docs/"}
@@ -44,14 +51,21 @@ PAGES = {"index.html": "", "pricing.html": "pricing.html", "docs/index.html": "d
 # workflow runs this build, so the published site carries the current clip and logo files).
 ASSETS = ["ui-timeline.png", "demo.gif", "logo-wordmark.svg", "logo-wordmark-reverse.svg", "logo-mark.svg", "favicon.svg",
           "favicon-32.png", "social-preview-1280x640.png"]
+# brand/site/og/ files, copied into assets/ next to the brand/ ones. The share card is rendered from this build's
+# own pages (`build.py cards DIR`, then ux-review/tools/cards.mjs), so it is committed as a PNG here.
+SITE_ASSETS = ["og-1200x630.png"]
+OG_ALT = ("rewindagents: Rewind to any step. Let another agent take it from there. A terminal shows rewindagents fork 2 "
+          "and rewindagents compare --check: the agent's run fails the check, the second try passes.")
 FONTS = {"bricolage-grotesque": (700, 800), "hanken-grotesk": (400, 600), "commit-mono": (400, 700)}
 C = {"Leader": "#F2F4F1", "Reel": "#121412", "Spool": "#1C201D", "Tape": "#55605A",
      "Record": "#B82A16", "Rewind": "#FF7A59", "Playhead": "#B9C2BB", "Rule": "#838C86"}
 # The paid tier, as BRAND.md puts it. Each phrase must appear in BRAND.md (tests/test_site.py).
-PLANNED = [("cloud sync", "Cloud sync of session history across your machines"),
-           ("shareable replay links", "Shareable replay links: the export page, hosted, for a code review or a bug report"),
-           ("long retention", "Long retention of sessions"),
-           ("session search", "Session search across all of them")]
+# The hosted layer from ux-review/ROADMAP.md (opt-in; the local tool never needs it). Planned, not built, not priced.
+PLANNED = [("a shared page per comparison", "A shared page per comparison, linkable from a pull request or a chat"),
+           ("parallel cloud sandboxes", "Saved starting points run in parallel cloud sandboxes, so ten attempts do not occupy a laptop"),
+           ("comparison history", "A team's comparison history across repos and people: which agent, model or prompt wins on which kind of task"),
+           ("scheduled re-runs", "Scheduled re-runs of a team's starting points when a model, prompt or CLAUDE.md changes, with a report of what got worse"),
+           ("retention, SSO, seats", "Retention, SSO, seats: the things an organisation buys")]
 
 e = html.escape
 
@@ -127,6 +141,18 @@ INIT_SENTENCES = ("`init` looks for the agents it supports", "It prints the plan
                   "`--yes` skips the question", "`--global` writes each agent's user config instead",
                   "Without `--yes` and without a terminal to ask on")
 MORE_AGENTS = "Gemini CLI, Copilot CLI, Droid and Qwen Code hooks"
+# The README's words for fork and compare, on the landing page and under "Fork and compare" on the docs page.
+FORK_SENTENCES = ("A recorded step is a starting point", "`rewindagents fork 12 --name try2` makes",
+                  "In a git repository it is a", "Run any agent there")
+COMPARE_SENTENCES = ("Back in the project, `rewindagents compare`", "`rewindagents compare --check",
+                     "`rewindagents compare --diff proj try2`")
+# The landing page's short form of the two (John, 2026-11-13: at most two short sentences each; the README's full
+# sentences stay on the docs page, which the landing page links to). Every claim here is one the README makes.
+FORK_SHORT = ("`rewindagents fork 12 --name try2` makes a new directory holding the project as `rewind 12` would leave it.",
+              "Run any agent there, or edit by hand.")
+COMPARE_SHORT = ("`rewindagents compare` lines up the project and every run forked from the same step: files changed, "
+                 "lines added and removed.", "`--check` runs your own check in each run and reports pass or the exit code.")
+FORK_LIMIT_SENTENCES = ("`fork` refuses a step", "`compare` writes nothing", "Runs from different steps are not mixed")
 # README sections with a ```sh block that the docs page leaves out on purpose, each with the reason.
 # tests/test_site.py fails when any other section's commands are missing from a docs panel (R28).
 NOT_ON_DOCS = {
@@ -178,6 +204,12 @@ def facts():
         "attach_says": [readme_sentence(readme, s) for s in ATTACH_SENTENCES],
         "action_says": [readme_sentence(readme, s) for s in ATTACH_ACTION_SENTENCES],
         "beats": demo["beats"],
+        "fork": readme_block(readme, FORK),
+        "fork_lead": readme_sentence(readme, "Rewind to any step, fork it"),
+        "fork_says": [readme_sentence(readme, s) for s in FORK_SENTENCES],
+        "compare_says": [readme_sentence(readme, s) for s in COMPARE_SENTENCES],
+        "fork_limits": [readme_sentence(readme, s) for s in FORK_LIMIT_SENTENCES],
+        "runs": json.loads(read("brand", "demo", "runs.json")),
         "gif": {k: demo["gif_facts"][k] for k in ("width", "height", "seconds", "frames")},
     }
 
@@ -206,9 +238,44 @@ def hero_rows(beats):
     return rows
 
 
-def nowrap_urls(text):
+RUNS_FORK, RUNS_COMPARE, RUNS_DIFF = ("fork step 2 into a second attempt", "compare, with the test file as the check",
+                                     "how the second attempt differs")
+
+
+def runs_rows(runs, part):
+    """Panels quoting brand/demo/runs.json, what ux-review/try-runs.sh printed against an installed build
+    (brand/demo/runs.py). Every cmd row is a command the script runs and every out/hit row a line it printed;
+    lines naming the script's temporary directory are left out, never rewritten. tests/test_runs_demo.py runs
+    the script again and fails if a quoted line changes. part: "hero" (fork + compare) or "diff"."""
+    o, c = runs["output"], runs["commands"]
+    tmp = [ln for ln in o[RUNS_FORK] if ln.startswith("run clamp: ")]
+    if not tmp:
+        raise SystemExit("brand/demo/runs.json: fork output changed shape; update runs_rows()")
+    if part == "diff":
+        body = [ln for ln in o[RUNS_DIFF] if not ln.startswith(("# a/ = run", "(left in "))]
+        return [("cmd", c["diff"])] + [("hit" if ln.startswith("+ ") or (ln.startswith("+") and not ln.startswith("+++")) else "out", ln)
+                                       for ln in body]
+    fork = [ln for ln in o[RUNS_FORK] if ln.strip().startswith("2 files as they were")]
+    cmp_ = o[RUNS_COMPARE]
+    table = cmp_[:cmp_.index("  - = as at the start; the same letter in a row = the same bytes in those runs.")]
+    rows = [("cmd", c["fork"])] + [("out", ln) for ln in fork] + [("cmd", c["compare"])]
+    for ln in table:      # the two tables keep their columns: "tab" rows never wrap (the panel scrolls instead)
+        if ln.endswith("  pass"):
+            rows.append(("tabhit", ln))
+        elif ln.startswith("  "):
+            rows.append(("tab", ln))
+        else:
+            rows.append(("out", ln))
+    while rows[-1] == ("out", ""):
+        rows.pop()
+    return rows
+
+
+def nowrap_urls(text, flags=False):
     """A URL on a phone may break only after a slash, never at a hyphen inside a name: each slash-delimited
-    piece is kept whole and a <wbr> sits between the pieces."""
+    piece is kept whole and a <wbr> sits between the pieces. With `flags` (command rows only), a `--flag` and
+    its value are kept whole too, so a wrap never falls between the two hyphens of `--settings` (UX audit F4).
+    The tags change no text: the README-block test strips them before it compares."""
     def url(w):
         pieces = re.split(r"(?<=/)(?!/)", w)
         return "<wbr>".join('<span class="nb">%s</span>' % e(p) for p in pieces if p)
@@ -218,41 +285,83 @@ def nowrap_urls(text):
         if "-" in w.strip("-") and len(w) > 2:         # your-project, --session-id: never split at the hyphen
             return '<span class="nb">%s</span>' % e(w)
         return e(w)
-    return " ".join(word(w) for w in text.split(" "))
+    words, out, i = text.split(" "), [], 0
+    while i < len(words):
+        w = words[i]
+        if flags and w.startswith("--") and len(w) > 2:
+            group = [w]
+            if i + 1 < len(words) and words[i + 1] and not words[i + 1].startswith(("-", "#")):
+                group.append(words[i + 1])
+                i += 1
+            out.append('<span class="nb">%s</span>' % e(" ".join(group)))
+        else:
+            out.append(word(w))
+        i += 1
+    return " ".join(out)
 
 
-def term(rows):
+def hang(text):
+    """Where a wrapped output row continues, in characters: under its last column when the row is a table
+    (`replay` lines continue under the command, `restore` lines under the path), else two past its own indent.
+    Without it a wrapped `-q` or `[1 checkpointed]` fell back to the panel's left edge (UX audit F4)."""
+    lead = len(text) - len(text.lstrip(" "))
+    cols = [m.end() for m in re.finditer(r"\S {2,}(?=\S)", text) if m.end() <= 24]
+    return min(cols[-1] if cols else lead + 2, HANG_MAX)
+
+
+HANG_MAX = 24   # site.css carries .l.i0 .. .l.i24 (the CSP allows no inline style, so the indent is a class)
+
+
+def term(rows, struck=()):
     """Rows of a terminal panel as HTML, one block per row (a wrapped row gets a hanging indent): the prompt and
-    comments in Playhead, hit rows in Rewind."""
+    comments in Playhead, hit rows in Rewind. Output rows carry their own indent in --i (see hang()).
+    A command's text sits in .sel, which selects whole on one click (user-select: all) and leaves the `$` out:
+    the scriptless copy (UX audit F2). Rows whose index is in `struck` get .x, a strike-through that marks
+    steps a rewind undid (the hero; UX audit F3): a mark on the CLI's own text, never a change to it."""
     out = []
-    for kind, text in rows:
-        t = nowrap_urls(text)
+    for i, (kind, text) in enumerate(rows):
+        t = nowrap_urls(text, flags=(kind == "cmd"))
+        x = " x" if i in struck else ""
         if kind == "cmd":
-            out.append('<span class="l"><span class="p">$ </span>%s</span>' % t)
+            out.append('<span class="l"><span class="p">$ </span><span class="sel">%s</span></span>' % t)
         elif kind in ("gap", "c"):
             out.append('<span class="l"><span class="c">%s</span></span>' % t)
+        elif kind in ("tab", "tabhit"):
+            body = '<span class="hit">%s</span>' % t if kind == "tabhit" else t
+            out.append('<span class="l t">%s</span>' % body)
         elif kind == "hit":
-            out.append('<span class="l"><span class="hit">%s</span></span>' % t)
+            out.append('<span class="l i%d"><span class="hit">%s</span></span>' % (hang(text), t))
+        elif x:     # the strike starts at the text, not at the row's leading spaces
+            lead = len(text) - len(text.lstrip(" "))
+            out.append('<span class="l i%d">%s<span class="x">%s</span></span>'
+                       % (hang(text), " " * lead, nowrap_urls(text[lead:])))
         else:
-            out.append('<span class="l">%s</span>' % t)
+            out.append('<span class="l i%d">%s</span>' % (hang(text), t))
     return "\n".join(out)
 
 
-def panel(rows, cls=""):
-    return '<pre class="term%s"><code>%s</code></pre>' % (" " + cls if cls else "", term(rows))
+def panel(rows, cls="", struck=()):
+    return '<pre class="term%s"><code>%s</code></pre>' % (" " + cls if cls else "", term(rows, struck))
+
+
+def split_comment(line):
+    """A README sh line as (command, trailing `# comment` or None), the split code() makes."""
+    m = re.match(r"^(.*?)(?:\s+(# .*))?$", line)
+    return m.group(1), m.group(2)
 
 
 def code(lines):
     """A README sh block as a terminal panel. A trailing `# comment` moves to its own line (the README aligns
     comments with spaces, which would force a wide block on a phone): before the command when it describes it,
-    after the command when it offers an alternative (`# or: ...`). Words are untouched."""
+    after the command when it offers an alternative command (`# or: ...`). `# or for every project` describes
+    its own line, so it goes before it (UX audit F5: after it, it read as the caption of the next block).
+    Words are untouched."""
     rows = []
     for line in lines:
         if not line.strip():
             continue
-        m = re.match(r"^(.*?)(?:\s+(# .*))?$", line)
-        body, comment = m.group(1), m.group(2)
-        if comment and comment.startswith("# or"):
+        body, comment = split_comment(line)
+        if comment and comment.startswith("# or:"):
             rows += [("cmd", body), ("c", comment)]
         elif comment:
             rows += [("c", comment), ("cmd", body)]
@@ -354,7 +463,8 @@ def film(cues):
                     (' data-title="%s"' % e(starts[i])) if i in starts else "") for i, (a, _, _) in enumerate(cues))
     return """<div class="film" id="film" data-total="%(total).2f">
 <div class="film-frame">
-<video class="film-video" controls preload="none" playsinline poster="assets/film-poster.jpg" aria-label="The rewindagents film, %(len)s, with captions">
+%(poster)s
+<video class="film-video" controls preload="none" playsinline aria-label="The rewindagents film, %(len)s, with captions">
 <source src="assets/%(name)s.mp4" type="video/mp4">
 <track kind="captions" src="assets/%(name)s.vtt" srclang="en" label="English" default>
 </video>
@@ -362,31 +472,52 @@ def film(cues):
 </div>
 <div class="wrap film-bar" hidden><div class="film-ruler" role="slider" tabindex="0" aria-label="Film position" aria-valuemin="0" aria-valuemax="%(totali)d" aria-valuenow="0"><span class="film-fill"></span>%(ticks)s</div><span class="film-time">0:00 / %(len)s</span><button class="film-fs" type="button" aria-label="Full screen">Full</button></div>
 <p class="wrap film-now" aria-live="off"></p>
-</div>""" % {"total": total, "totali": round(total), "len": length, "name": FILM, "ticks": ticks}
+</div>""" % {"total": total, "totali": round(total), "len": length, "name": FILM, "ticks": ticks, "poster": film_poster()}
 
 
-def ruler(at, n=7, w=84, h=18):
+# The film's poster at phone-to-desktop sizes, written by brand/vsl/narration.py (POSTER_WIDTHS there). A lazy <picture>
+# under the video instead of the video's poster attribute, which a browser fetches at once and at full size: on a phone
+# the 122 KB JPEG competed with the first screen (Lighthouse mobile, GATE.md pass 3). width/height keep CLS at 0.
+POSTER_WIDTHS = (480, 960, 1440, 1920)
+POSTER_SIZES = "(min-width: 1600px) 1600px, 100vw"
+
+
+def film_poster():
+    def srcset(fmt):
+        return ", ".join("assets/film-poster-%d.%s %dw" % (w, fmt, w) for w in POSTER_WIDTHS)
+    return ('<picture class="film-poster"><source type="image/avif" srcset="%s" sizes="%s">'
+            '<source type="image/webp" srcset="%s" sizes="%s">'
+            '<img src="assets/film-poster.jpg" alt="" width="1920" height="1080" loading="lazy" decoding="async"></picture>'
+            % (srcset("avif"), POSTER_SIZES, srcset("webp"), POSTER_SIZES))
+
+
+def ruler(at, n=8, w=84, h=18, dark=False):
     """The brand motif as a small inline SVG: n short ticks on a rule, the playhead on tick `at` (1-based) in
-    Record; ticks and rule after it in Rule grey (the rewound part). Decorative: aria-hidden."""
+    Record; ticks and rule after it in Rule grey (the rewound part). `dark` draws it for a Spool ground: Playhead
+    before the playhead, Tape after it. Decorative: aria-hidden."""
+    ink, after = (C["Playhead"], C["Tape"]) if dark else (C["Reel"], C["Rule"])
     pitch = (w - 4) / (n - 1)
     parts = []
     xs = [2 + i * pitch for i in range(n)]
     px = xs[at - 1]
-    parts.append('<rect x="0" y="%d" width="%.1f" height="1" fill="%s"/>' % (h - 2, px, C["Reel"]))
-    parts.append('<rect x="%.1f" y="%d" width="%.1f" height="1" fill="%s"/>' % (px, h - 2, w - px, C["Rule"]))
+    parts.append('<rect x="0" y="%d" width="%.1f" height="1" fill="%s"/>' % (h - 2, px, ink))
+    parts.append('<rect x="%.1f" y="%d" width="%.1f" height="1" fill="%s"/>' % (px, h - 2, w - px, after))
     for i, x in enumerate(xs, 1):
         if i == at:
             continue
         parts.append('<rect x="%.1f" y="%d" width="1" height="5" fill="%s"/>'
-                     % (x - 0.5, h - 6, C["Reel"] if i < at else C["Rule"]))
+                     % (x - 0.5, h - 6, ink if i < at else after))
     parts.append('<path d="M%.1f 1H%.1fV4L%.1f 6.5V%dH%.1fV6.5L%.1f 4Z" fill="%s"/>'
                  % (px - 3, px + 3, px + 1, h - 1, px - 1, px - 3, C["Record"]))
     return ('<svg class="ruler" width="%d" height="%d" viewBox="0 0 %d %d" aria-hidden="true">%s</svg>'
             % (w, h, w, h, "".join(parts)))
 
 
+SECTIONS = 10   # numbered sections on the landing page; the label ruler has one tick per section (UX audit F12)
+
+
 def label(n, text):
-    return '<p class="label">%s<span class="n">%02d</span><span>%s</span></p>' % (ruler(n, n=8), n, e(text))
+    return '<p class="label">%s<span class="n">%02d</span><span>%s</span></p>' % (ruler(n, n=SECTIONS), n, e(text))
 
 
 def page(cfg, path, title, description, body, current):
@@ -417,17 +548,23 @@ def page(cfg, path, title, description, body, current):
 <meta property="og:title" content="%(title)s">
 <meta property="og:description" content="%(desc)s">
 <meta property="og:url" content="%(url)s">
+<meta property="og:image" content="%(site)sassets/og-1200x630.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="%(og_alt)s">
 <meta property="og:image" content="%(site)sassets/social-preview-1280x640.png">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="640">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="%(site)sassets/og-1200x630.png">
+<meta name="twitter:image:alt" content="%(og_alt)s">
 <link rel="icon" href="%(rel)sassets/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="%(rel)sassets/favicon-32.png" sizes="32x32" type="image/png">
-<link rel="stylesheet" href="%(rel)ssite.css">
-<script src="%(rel)svendor/flag.js"></script>
-<script src="%(rel)svendor/gsap.min.js" defer></script>
-<script src="%(rel)svendor/ScrollTrigger.min.js" defer></script>
-<script src="%(rel)svendor/SplitText.min.js" defer></script>
+<link rel="preload" href="%(rel)sfonts/bricolage-grotesque-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="%(rel)sfonts/hanken-grotesk-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="%(rel)sfonts/hanken-grotesk-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="%(rel)sfonts/commit-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="%(rel)ssite.min.css">
 <script src="%(rel)ssite.js" defer></script>
 <script type="application/ld+json">%(ld)s</script>
 </head>
@@ -448,7 +585,7 @@ def page(cfg, path, title, description, body, current):
 </body>
 </html>
 """ % {"title": e(title), "desc": e(description), "url": e(url), "site": e(cfg["site_url"]), "name": NAME, "rel": rel,
-       "nav": nav, "body": body, "credit": CREDIT, "licence": LICENCE, "repo": e(cfg["repo_url"]),
+       "nav": nav, "body": body, "og_alt": e(OG_ALT), "credit": CREDIT, "licence": LICENCE, "repo": e(cfg["repo_url"]),
        "branch": e(cfg["branch"]), "ld": json.dumps(ld, sort_keys=True),
        "wm_w": svg_width("logo-wordmark.svg", 30), "wmr_w": svg_width("logo-wordmark-reverse.svg", 26)}
 
@@ -461,8 +598,11 @@ def svg_width(name, height):
 
 
 # ---- pages ------------------------------------------------------------------------------------------------
-def plans(cfg, rel):
-    has = [("has", "The recorder and the Claude Code hook: every tool call in a hash-chained log, every file saved before it changes"),
+def plans(cfg, rel, h="h3"):
+    """Both plan cards. `h` is the card heading level: h3 under the landing page's h2, h2 under the pricing
+    page's h1, so the outline never skips a level (Lighthouse heading-order)."""
+    has = [("has", "The recorder and hooks for %d coding agents: every tool call in a hash-chained log, every file saved before it changes" % len(agents.AGENTS)),
+           ("has", "<code>fork</code> any recorded step and <code>compare</code> the runs, with your own <code>--check</code>"),
            ("has", "<code>replay</code>, <code>rewind</code> and <code>branch</code>, and <code>verify</code> against a pinned head"),
            ("has", "<code>export</code>: one session as one HTML page, with the diff each step made"),
            ("has", "<code>sessions</code>: every session in the log, and search by command or path"),
@@ -472,15 +612,16 @@ def plans(cfg, rel):
         buy, status = '<a class="btn btn-primary" href="%s">Buy Cloud</a>' % e(cfg["checkout_url"]), "Checkout is open."
     else:
         buy = '<a class="btn btn-ghost" href="%s">Join the waitlist</a>' % e(cfg["waitlist_url"])
-        status = ("Not for sale yet. No price has been set, so none is shown. If you want it, open the waitlist issue "
+        status = ("Hosted and opt-in, for teams; the local tool never needs it. Not for sale yet. No price has been set, so none is shown. If you want it, open the waitlist issue "
                   "on GitHub and say what you would pay for.")
     return ('<div class="plans">'
-            '<section class="plan" aria-labelledby="plan-oss"><h3 id="plan-oss">Open source <span class="pill">%s</span></h3>'
-            '<div class="price">Free</div><p class="pricenote">Everything the tool does today.</p><ul>%s</ul>'
-            '<a class="btn btn-primary" href="%sindex.html#install">Install</a></section>'
-            '<section class="plan" aria-labelledby="plan-cloud"><h3 id="plan-cloud">Cloud <span class="pill pill-planned">planned</span></h3>'
-            '<div class="price">Not yet priced</div><p class="pricenote">%s</p><ul>%s</ul>%s</section></div>'
-            % (LICENCE, items(has), rel, e(status), items([("planned", e(t)) for _, t in PLANNED]), buy))
+            '<section class="plan" aria-labelledby="plan-oss"><%(h)s id="plan-oss">Open source <span class="pill">%(lic)s</span></%(h)s>'
+            '<div class="price">Free</div><p class="pricenote">Everything the tool does today.</p><ul>%(has)s</ul>'
+            '<a class="btn btn-primary" href="%(rel)sindex.html#install">Install</a></section>'
+            '<section class="plan" aria-labelledby="plan-cloud"><%(h)s id="plan-cloud">Cloud <span class="pill pill-planned">planned</span></%(h)s>'
+            '<div class="price">Not yet priced</div><p class="pricenote">%(status)s</p><ul>%(planned)s</ul>%(buy)s</section></div>'
+            % {"h": h, "lic": LICENCE, "has": items(has), "rel": rel, "status": e(status),
+               "planned": items([("planned", e(t)) for _, t in PLANNED]), "buy": buy})
 
 
 def faq_html(items, open_all=False):
@@ -488,29 +629,120 @@ def faq_html(items, open_all=False):
         '<details%s><summary>%s</summary><p>%s</p></details>' % (" open" if open_all else "", e(q), a) for q, a in items)
 
 
+def hero_install(b):
+    """The first screen's install block (UX audit F1): the README's install line with its `# or:` alternative,
+    then the README's hook line with its comment, in the rows code() would make. Words are the README's."""
+    pipx, alt = split_comment(b["install"][0])
+    hook_cmd, hook_c = split_comment(b["hook"][1])
+    if not (alt and alt.startswith("# or:") and hook_cmd == "rewindagents install" and hook_c):
+        raise SystemExit("README install/hook blocks changed shape: update hero_install()")
+    return panel([("cmd", pipx), ("c", alt), ("c", hook_c), ("cmd", hook_cmd)], "install")
+
+
+# Claims the landing page makes, each with the tests that check it (UX audit F4). Names are checked against
+# tests/ at build time, so a renamed or deleted test stops the build instead of leaving a dead citation.
+PROOF = [
+    ("Every line in the fork and compare panels is what <code>ux-review/try-runs.sh</code> printed.",
+     [("test_runs_demo.py", "test_every_quoted_line_is_what_the_script_prints")]),
+    ("<code>fork</code> rebuilds the step&#x27;s files and leaves the project, its <code>HEAD</code> and index alone.",
+     [("test_runs.py", "test_fork_holds_the_files_as_they_were_right_after_the_step_and_leaves_the_project_alone")]),
+    ("An agent in the run records into the run&#x27;s own log, not the project&#x27;s.",
+     [("test_runs.py", "test_an_agent_in_the_run_records_into_the_run_not_into_the_project")]),
+    ("<code>compare --check</code> runs your command in each run and reports its exit code.",
+     [("test_runs.py", "test_check_runs_in_each_run_and_reports_its_exit_code")]),
+    ("<code>compare --diff</code> is a diff <code>git apply</code> takes: the first run&#x27;s files become the second&#x27;s.",
+     [("test_runs.py", "test_diff_between_two_runs_applies_with_git")]),
+    ("A tampered log or a step that cannot be rebuilt exactly is refused, and nothing is left behind.",
+     [("test_runs.py", "test_a_tampered_log_is_refused"), ("test_runs.py", "test_a_step_that_cannot_be_rebuilt_exactly_is_refused"),
+      ("test_runs.py", "test_refusals_leave_nothing_behind")]),
+    ("Every terminal line on this page and in the clip is what the CLI printed.",
+     [("test_demo.py", "test_every_shown_command_replays_exactly"),
+      ("test_demo.py", "test_installed_binary_prints_the_rewind_the_clip_shows")]),
+    ("Editing, deleting or reordering a record makes <code>verify</code> fail.",
+     [("test_log.py", "test_edited_args_detected"), ("test_log.py", "test_deleted_middle_record_detected"),
+      ("test_log.py", "test_reordered_records_detected")]),
+    ("Records cut off the end are caught only against a pinned head.",
+     [("test_log.py", "test_truncated_tail_caught_only_with_pinned_head")]),
+    ("<code>rewind</code> refuses a tampered log and changes nothing.",
+     [("test_rewind.py", "test_tampered_log_is_refused_and_nothing_changes")]),
+    ("A rewind can itself be rewound.",
+     [("test_rewind.py", "test_rewind_can_itself_be_rewound")]),
+    ("A real <code>sed</code> and <code>rm</code>, run through the installed command, are put back.",
+     [("test_bashscan.py", "test_real_sed_and_rm_undone_through_the_installed_command_path")]),
+    ("The hook prints nothing and exits 0, even on garbage input or a store it cannot write.",
+     [("test_hook.py", "test_garbage_input_exits_zero_silently"), ("test_hook.py", "test_unwritable_store_exits_zero")]),
+    ("<code>branch</code> keeps the current files without touching <code>HEAD</code> or the index.",
+     [("test_rewind.py", "test_git_branch_keeps_the_current_files_without_touching_head_or_index")]),
+    ("A file outside the project is never touched.",
+     [("test_rewind.py", "test_file_outside_the_project_is_never_touched")]),
+]
+
+
+def proof_rows(cfg):
+    rows = []
+    for claim, tests in PROOF:
+        cites = []
+        for fname, test in tests:
+            if not re.search(r"^\s*def %s\(" % re.escape(test), read("tests", fname), re.M):
+                raise SystemExit("PROOF names tests/%s::%s, which does not exist" % (fname, test))
+            cites.append('<a href="%s/blob/%s/tests/%s"><span class="f">tests/%s</span> %s</a>'
+                         % (e(cfg["repo_url"]), e(cfg["branch"]), fname, fname, e(test).replace("_", "_<wbr>")))
+        rows.append('<li><span class="claim">%s</span><span class="cites">%s</span></li>' % (claim, "".join(cites)))
+    return "".join(rows)
+
+
 def index_html(cfg, f, hero, open_all=False):
     rel = ""
     b = f["blocks"]
     n, good = f["steps"], f["good_step"]
-    desc = ("Open-source recorder for coding agents. Every tool call goes into a tamper-evident, hash-chained log and "
-            "every file is saved before it changes. Replay a session step by step and rewind the working tree to any "
-            "step. Hooks for Claude Code, Codex and Cursor.")
+    desc = ("Rewind to any step of a coding agent's session, fork it, let another agent take it from there, and compare "
+            "the runs on what they changed and on your own check. Open source; every tool call goes into a hash-chained "
+            "log and every file is saved before it changes. Hooks for Claude Code, Codex, Cursor and more.")
+    replay = f["beats"][0]
+    wreck = {ln for i, ln in enumerate(replay["output"].rstrip("\n").split("\n")) if i in replay["accent_rows"]}
+    struck = {i for i, (k, t) in enumerate(hero) if k == "out" and t in wreck}
+    runs = f["runs"]
     hero_s = """
 <section class="hero" aria-labelledby="h1"><div class="wrap">
 <div class="hero-text">
 <p class="eyebrow"><b>v%(v)s</b> %(eyebrow)s</p>
-<h1 id="h1">%(promise)s</h1>
-<p class="lede">rewindagents records every tool call your coding agent makes and saves a copy of each file before the agent changes it. Replay the session step by step. Rewind the working tree to any step, or keep the current files as a branch and then rewind. The agent works at full speed, and every step it takes can be taken back, within the <a href="#limits">limits</a> below.</p>
-<div class="cta"><a class="btn btn-primary" href="#install">Install</a><a class="btn btn-ghost" href="docs/">Read the docs</a></div>
+<h1 id="h1">%(course)s</h1>
+<p class="lede">rewindagents records every step your coding agent takes and saves each file before it changes. Fork any recorded step, let another agent or a person continue from there, and compare the runs on what they changed and on your own check.</p>
+<p class="lede base">Undo is the base it stands on: rewind the working tree to any step, within the <a href="#limits">limits</a>.</p>
+<div class="cta"><a class="btn btn-primary" href="docs/#fork">Read the docs</a><a class="btn btn-ghost" href="%(repo)s">Source on GitHub</a></div>
 </div>
 <div class="hero-panel">
-<div class="panel"><div class="panel-head"><span>a session of %(n)d steps; the last %(wreck)d wrecked the repo</span></div>%(hero)s</div>
-<p class="caption">Lines from the session behind the clip below. The recorder, the four files and the step numbers are real; a test replays the session and fails if a line changes.</p>
+<div class="panel"><div class="panel-head"><span>a session, and a second try from step 2</span><span class="tl">%(tl)s<span>fork 2</span></span></div>%(hero)s</div>
+<p class="caption">What <code>ux-review/try-runs.sh</code> printed against an installed build, unedited; lines naming its temporary folder are left out. <code>shop</code> is the agent&#x27;s run, recorded through the real hook; <code>clamp</code> is a second attempt made by hand in the fork. A test runs the script again and fails if a line here changes; see <a href="#tested">Tested</a>.</p>
 <ul class="facts"><li>standard library only</li><li>no network, no account</li><li>never stops or changes a call</li><li>%(licence)s</li></ul>
+</div>
+<div class="hero-install">
+<p class="small"><b>Install.</b> Not on PyPI yet, so from GitHub; then add the hook in a project. One click on a command selects all of it, without the prompt.</p>
+%(install)s
 </div>
 %(agents)s
 </div></section>
-""" % {"v": e(f["version"]), "eyebrow": e(eyebrow(f)), "licence": LICENCE, "promise": PROMISE, "n": n, "wreck": f["wreck_steps"], "hero": panel(hero), "agents": agent_strip()}
+""" % {"v": e(f["version"]), "eyebrow": e(eyebrow(f)), "licence": LICENCE, "course": e(COURSE),
+       "tl": ruler(2, n=3, w=40, h=16, dark=True), "repo": e(cfg["repo_url"]),
+       "hero": panel(runs_rows(runs, "hero")), "install": hero_install(b), "agents": agent_strip()}
+
+    fork = """
+<section class="sec" id="fork" aria-labelledby="h-fork"><div class="wrap">
+%(label)s
+<div class="head"><h2 id="h-fork">Rewind to a step, fork it, compare.</h2>
+<p class="lede">%(lead)s %(says0)s</p></div>
+<div class="cmdlist">
+<div class="cmdrow"><div><h3>Fork any recorded step</h3><p>%(fork_says)s</p></div>%(block)s</div>
+<div class="cmdrow"><div><h3>Compare the runs</h3><p>%(compare_says)s</p></div>%(diff)s</div>
+<div class="cmdrow"><div><h3>What it will not do</h3></div><ul class="plain-list">%(limits)s</ul></div>
+</div>
+<p class="small more">Every option, and how a fork works in a git repository, is on the <a href="docs/#fork">docs page</a>.</p>
+</div></section>
+""" % {"label": label(1, "Fork and compare"), "lead": md_inline(f["fork_lead"]), "says0": md_inline(f["fork_says"][0]),
+       "fork_says": " ".join(md_inline(x) for x in FORK_SHORT),
+       "compare_says": " ".join(md_inline(x) for x in COMPARE_SHORT),
+       "limits": "".join("<li>%s</li>" % md_inline(x) for x in f["fork_limits"]),
+       "block": code(f["fork"]), "diff": panel(runs_rows(runs, "diff"))}
 
     right = beat_rows(f["beats"][1]) + beat_rows(f["beats"][2]) + beat_rows(f["beats"][3])
     demo = """
@@ -526,7 +758,7 @@ def index_html(cfg, f, hero, open_all=False):
 <div><p class="small">Then the damage, the rewind, and the project after it.</p>%(right)s</div>
 </div>
 </div></section>
-""" % {"film": film(srt_cues("brand/vsl/%s.srt" % FILM)), "label": label(1, "The film"), "n": n, "good": good, "s13": n - 1, "s14": n, "gw": f["gif"]["width"],
+""" % {"film": film(srt_cues("brand/vsl/%s.srt" % FILM)), "label": label(2, "Undo, the base"), "n": n, "good": good, "s13": n - 1, "s14": n, "gw": f["gif"]["width"],
        "gh": f["gif"]["height"], "secs": ("%.1f" % f["gif"]["seconds"]).rstrip("0").rstrip("."), "frames": f["gif"]["frames"],
        "left": panel(beat_rows(f["beats"][0], lit=False), "fill"), "right": panel(right, "fill")}
 
@@ -544,7 +776,7 @@ def index_html(cfg, f, hero, open_all=False):
 <div><h3>Take back exactly what you mean</h3><p>Preview a rewind as a diff, then take back the whole session or a single file. Every rewind is a new step, so it can be undone.</p>%(precise)s</div>
 </div>
 </div></section>
-""" % {"label": label(2, "The timeline"), "quick": code(b["quick"][:1]), "ui": code(b["ui"][:1]),
+""" % {"label": label(3, "The timeline"), "quick": code(b["quick"][:1]), "ui": code(b["ui"][:1]),
        "precise": code([ln for ln in f["quick_use"] if ln.lstrip().startswith(("rewindagents diff", "rewindagents rewind"))])}
 
     install = """
@@ -556,7 +788,7 @@ def index_html(cfg, f, hero, open_all=False):
 <div class="pair"><div><h3>Add the Claude Code hook</h3>%(hook)s</div><div><h3>Codex and Cursor hooks</h3>%(agents)s</div></div>
 <div class="pair-note"><p><code>install</code> keeps everything already in the file and does nothing if the hook is already there. For Codex the file is <code>%(codex)s</code> and for Cursor <code>%(cursor)s</code>; those two hooks are tested with the payloads in the vendors&#x27; documentation, not yet in a live session. <code>.rewindagents/</code> gets its own <code>.gitignore</code>, so the log and the copies stay out of your commits.</p></div>
 </div></section>
-""" % {"label": label(3, "Install"), "py": e(f["py_req"]), "tested": e(f["tested_on"]), "install": code(b["install"]), "hook": code(b["hook"]),
+""" % {"label": label(4, "Install"), "py": e(f["py_req"]), "tested": e(f["tested_on"]), "install": code(b["install"]), "hook": code(b["hook"]),
        "agents": code(b["agents"]), "codex": e(f["agents"]["codex"]["settings"]), "cursor": e(f["agents"]["cursor"]["settings"])}
 
     how = """
@@ -570,7 +802,17 @@ def index_html(cfg, f, hero, open_all=False):
 <li>%(r3)s<h3>Rewind</h3><p><code>rewind N</code> puts back every file a later step changed and deletes the files later steps created. It first checks the hash chain and the hash of every stored copy; if the chain is broken it changes nothing. A rewind saves the current files and records itself as a new step, so a rewind is undone with another rewind.</p></li>
 </ol>
 </div></section>
-""" % {"label": label(4, "How it works"), "r1": ruler(2, n=5, w=60, h=16), "r2": ruler(3, n=5, w=60, h=16), "r3": ruler(4, n=5, w=60, h=16)}
+""" % {"label": label(5, "How it works"), "r1": ruler(2, n=5, w=60, h=16), "r2": ruler(3, n=5, w=60, h=16), "r3": ruler(4, n=5, w=60, h=16)}
+
+    tested = """
+<section class="sec" id="tested" aria-labelledby="h-tested"><div class="wrap">
+%(label)s
+<div class="head"><h2 id="h-tested">The claims on this page are tests.</h2>
+<p class="lede">Each row is a claim made above and the test in the repository that checks it. The site build stops if a test named here no longer exists.</p></div>
+<ul class="ledger proof">%(rows)s</ul>
+<div class="cmdrow plain"><p class="small">Run every test from a clone, with the README&#x27;s command. The <a href="docs/#tests">docs</a> say which tests need the installed command.</p>%(run)s</div>
+</div></section>
+""" % {"label": label(6, "Tested"), "rows": proof_rows(cfg), "run": code(b["tests"])}
 
     limits = """
 <section class="sec" id="limits" aria-labelledby="h-limits"><div class="wrap">
@@ -586,7 +828,7 @@ def index_html(cfg, f, hero, open_all=False):
 <li><span class="k">the end of the log</span><span>A hash chain proves the records are unchanged relative to each other. It cannot tell that records were cut off the end or that the whole file was rewritten and re-hashed. Pin the head hash somewhere the agent cannot write and check against it with <code>verify --head</code>.</span></li>
 </ul>
 </div></section>
-""" % {"label": label(5, "Limits"), "chars": "{:,}".format(f["result_chars"]), "mb": f["file_mb"],
+""" % {"label": label(7, "Limits"), "chars": "{:,}".format(f["result_chars"]), "mb": f["file_mb"],
        "files": "{:,}".format(f["scan_files"]), "skip": ", ".join("<code>%s</code>" % e(d) for d in f["skip_dirs"])}
 
     commands = """
@@ -601,7 +843,7 @@ def index_html(cfg, f, hero, open_all=False):
 <div class="cmdrow"><div><h3>Verify the chain</h3><p>Checks every record against the one before it and names the first bad one. With <code>--head</code>, also catches records cut from the end.</p></div>%(verify)s</div>
 </div>
 </div></section>
-""" % {"label": label(6, "Commands"), "replay": code(b["replay"]), "export": code(b["export"]), "sessions": code(b["sessions"]),
+""" % {"label": label(8, "Commands"), "replay": code(b["replay"]), "export": code(b["export"]), "sessions": code(b["sessions"]),
        "verify": code(b["verify"]), "kb": f["diff_kb"], "lines": f["diff_lines"]}
 
     pricing = """
@@ -612,7 +854,7 @@ def index_html(cfg, f, hero, open_all=False):
 %(plans)s
 <p class="small more">Details on the <a href="pricing.html">pricing page</a>.</p>
 </div></section>
-""" % {"label": label(7, "Pricing"), "licence": LICENCE, "plans": plans(cfg, rel)}
+""" % {"label": label(9, "Pricing"), "licence": LICENCE, "plans": plans(cfg, rel)}
 
     faq_items = [
         ("Does it stop or change what the agent does?",
@@ -634,7 +876,7 @@ def index_html(cfg, f, hero, open_all=False):
 <div class="head"><h2 id="h-faq">Questions.</h2></div>
 %(items)s
 </div></section>
-""" % {"label": label(8, "Questions"), "items": faq_html(faq_items, open_all)}
+""" % {"label": label(10, "Questions"), "items": faq_html(faq_items, open_all)}
 
     closing = """
 <section class="sec close" aria-labelledby="h-close"><div class="wrap">
@@ -644,18 +886,19 @@ def index_html(cfg, f, hero, open_all=False):
 </div></section>
 """ % {"install": code(b["install"][:1])}
 
-    body = hero_s + demo + timeline + install + how + limits + commands + pricing + faq + closing
-    return page(cfg, "index.html", "%s: %s" % (NAME, PROMISE.rstrip(".")), desc, body, "home")
+    body = hero_s + fork + demo + timeline + install + how + tested + limits + commands + pricing + faq + closing
+    return page(cfg, "index.html", "%s: %s" % (NAME, COURSE.rstrip(".")), desc, body, "home")
 
 
 def pricing_html(cfg, f):
     rel = ""
-    desc = "rewindagents is free under %s. A Cloud tier is planned and not yet priced; the waitlist is a GitHub issue." % LICENCE
+    desc = ("rewindagents is free under %s, fork and compare included. A hosted Cloud tier for teams is planned and not yet "
+            "priced; the waitlist is a GitHub issue." % LICENCE)
     items = [
         ("Will the open-source tool stay free?",
-         "The code you have is %s, and that licence cannot be withdrawn from it. Nothing that exists today is behind a paywall: the recorder, the hook, replay, rewind, branch, export and sessions are all in the open-source tier." % LICENCE),
+         "The code you have is %s, and that licence cannot be withdrawn from it. Nothing that exists today is behind a paywall: the recorder, the hooks, replay, rewind, branch, fork, compare, export and sessions are all in the open-source tier, and what an individual developer needs stays there." % LICENCE),
         ("What would Cloud add?",
-         "Things that need a service rather than a command: the same session history on every machine you use, the export page hosted at a link you can hand to a reviewer, sessions kept for longer than a laptop keeps them, and search across all of them. None of it is built yet. <code>export</code> and <code>sessions</code> are the local halves and are free."),
+         "Things that need a service rather than a command, for a team: a shared page per comparison you can link from a pull request, saved starting points run in parallel sandboxes instead of on a laptop, a history of which agent, model or prompt did best on which kind of task, and re-runs when a model or prompt changes. It is opt-in: the local tool never needs it and still makes no network connection. None of it is built yet. <code>fork</code> and <code>compare</code> are the local halves and are free."),
         ("How does the waitlist work?",
          "It is a GitHub issue on the repository with the label <code>waitlist</code>, as the README says. Say what you would pay for. There is no form, no email list and no tracking on this site."),
         ("Can my company get an invoice or a quote today?",
@@ -673,7 +916,7 @@ def pricing_html(cfg, f):
 <div class="head"><h2 id="h-q">Before you ask.</h2></div>
 %(faq)s
 </div></section>
-""" % {"label": label(1, "Pricing"), "plans": plans(cfg, rel), "label2": label(2, "Questions about paying"),
+""" % {"label": label(1, "Pricing"), "plans": plans(cfg, rel, h="h2"), "label2": label(2, "Questions about paying"),
        "faq": faq_html(items, open_all=True)}
     return page(cfg, "pricing.html", "Pricing: %s" % NAME, desc, body, "pricing")
 
@@ -681,9 +924,9 @@ def pricing_html(cfg, f):
 def docs_html(cfg, f):
     rel = "../"
     b = f["blocks"]
-    desc = "Getting started with rewindagents: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, export, find a session, verify the log."
+    desc = "Getting started with rewindagents: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, fork a step and compare the runs, export, find a session, verify the log."
     toc = [("install", "Install"), ("hook", "Add the hook"), ("first", "A first session"), ("recorded", "What gets recorded"),
-           ("replay", "Replay and rewind"), ("branch", "Branch"), ("ui", "Timeline in a browser"), ("export", "Export"),
+           ("replay", "Replay and rewind"), ("branch", "Branch"), ("fork", "Fork and compare"), ("ui", "Timeline in a browser"), ("export", "Export"),
            ("sessions", "Find a session"), ("bundle", "Move a session"), ("attach", "Attach to a PR"),
            ("verify", "Verify"), ("status", "Is it recording?"), ("gc", "Free space"),
            ("overhead", "Overhead"), ("limits", "Limits"),
@@ -741,6 +984,15 @@ def docs_html(cfg, f):
 
 <h2 id="branch">Branch</h2>
 <p><code>branch N --name X</code> does what <code>rewind N</code> does and, in a git repository, first commits the whole current working tree to the branch <code>rewindagents/X</code>. It does this through a temporary index, so your <code>HEAD</code>, index and current branch stay as they were. Outside git, the current files are kept in the log only.</p>
+
+<h2 id="fork">Fork and compare</h2>
+%(fork)s
+<p>%(fork_says)s</p>
+<p>%(compare_says)s</p>
+<p>From <code>ux-review/try-runs.sh</code>, against an installed build: the agent&#x27;s run <code>shop</code> fails the check, a second attempt <code>clamp</code> made in the fork passes, and this is how the two differ.</p>
+%(runs)s
+%(diff)s
+<ul>%(fork_limits)s</ul>
 
 <h2 id="ui">Timeline in a browser</h2>
 %(ui)s
@@ -813,6 +1065,10 @@ def docs_html(cfg, f):
        "status": code(f["status"]), "status_says": " ".join(md_inline(s) for s in f["status_says"]),
        "bundle": code(f["bundle"]), "bundle_says": " ".join(md_inline(s) for s in f["bundle_says"]),
        "gc": code(f["gc"]), "gc_says": " ".join(md_inline(s) for s in f["gc_says"]),
+       "fork": code(f["fork"]), "fork_says": " ".join(md_inline(x) for x in [f["fork_lead"]] + f["fork_says"]),
+       "compare_says": " ".join(md_inline(x) for x in f["compare_says"]),
+       "fork_limits": "".join("<li>%s</li>" % md_inline(x) for x in f["fork_limits"]),
+       "runs": panel(runs_rows(f["runs"], "hero")), "diff": panel(runs_rows(f["runs"], "diff")),
        "ui": code(b["ui"]), "ui_says": " ".join(md_inline(s) for s in f["ui_says"]),
        "attach": code(f["attach"]), "attach_says": " ".join(md_inline(s) for s in f["attach_says"]),
        "attach_yaml": plain(f["attach_yaml"]), "action_says": " ".join(md_inline(s) for s in f["action_says"]),
@@ -853,6 +1109,17 @@ def overhead_html():
             % (r["results"][0]["tools"]["Read"]["runs"], e(bench.where(r)), ms(r["startup"]["median_ms"]), rows))
 
 
+def min_css(src):
+    """site.css without comments and spare whitespace; the pages link this copy (13 KB fewer bytes before a phone's
+    first screen). Quoted strings are kept exactly as written."""
+    src = re.sub(r"/\*.*?\*/", "", src, flags=re.S)
+    parts = re.split(r'("(?:[^"\\\n]|\\.)*")', src)
+    for i in range(0, len(parts), 2):
+        p = re.sub(r"\s+", " ", parts[i])
+        parts[i] = re.sub(r"\s*([{};,>])\s*", r"\1", p)
+    return "".join(parts).strip() + "\n"
+
+
 # ---- build ------------------------------------------------------------------------------------------------
 def build(out=None, cfg=None, open_variant=False):
     out = out or HERE
@@ -871,6 +1138,10 @@ def build(out=None, cfg=None, open_variant=False):
     os.makedirs(assets, exist_ok=True)
     for name in ASSETS:
         shutil.copyfile(os.path.join(BRAND, name), os.path.join(assets, name))
+    for name in SITE_ASSETS:
+        shutil.copyfile(os.path.join(HERE, "og", name), os.path.join(assets, name))
+    with open(os.path.join(out, "site.min.css"), "w", encoding="utf-8") as fh:
+        fh.write(min_css(read("brand", "site", "site.css")))
     if os.path.abspath(out) != HERE:        # a build elsewhere needs the static files beside the pages too
         shutil.copyfile(os.path.join(HERE, "site.css"), os.path.join(out, "site.css"))
         shutil.copyfile(os.path.join(HERE, "site.js"), os.path.join(out, "site.js"))
@@ -881,10 +1152,15 @@ def build(out=None, cfg=None, open_variant=False):
     # included once the narration exists); the captions are the VSL's own .srt
     shutil.copyfile(os.path.join(BRAND, "vsl", FILM + "-web.mp4"), os.path.join(assets, FILM + ".mp4"))
     shutil.copyfile(os.path.join(BRAND, "vsl", FILM + "-poster.jpg"), os.path.join(assets, "film-poster.jpg"))
+    for w in POSTER_WIDTHS:
+        for fmt in ("avif", "webp"):
+            shutil.copyfile(os.path.join(BRAND, "vsl", "%s-poster-%d.%s" % (FILM, w, fmt)),
+                            os.path.join(assets, "film-poster-%d.%s" % (w, fmt)))
     with open(os.path.join(assets, FILM + ".vtt"), "w", encoding="utf-8") as fh:
         fh.write(vtt(srt_cues("brand/vsl/%s.srt" % FILM)))
     manifest = {"pages": sorted(p for p in pages if p in PAGES), "facts": {k: v for k, v in f.items() if k != "beats"},
-                "hero": [list(r) for r in hero], "assets": ASSETS, "credit": CREDIT, "promise": PROMISE,
+                "hero": [list(r) for r in runs_rows(f["runs"], "hero")], "rewind_rows": [list(r) for r in hero],
+                "assets": ASSETS + SITE_ASSETS, "credit": CREDIT, "promise": PROMISE, "course": COURSE,
                 "planned": [p for p, _ in PLANNED], "site_url_key": "site_url", "checkout": bool(cfg.get("checkout_url"))}
     with open(os.path.join(out, "manifest.json"), "w", encoding="utf-8") as fh:
         json.dump(manifest, fh, indent=1, sort_keys=True)
@@ -892,8 +1168,91 @@ def build(out=None, cfg=None, open_variant=False):
     return pages
 
 
+CARD_CSS = """
+html, body { margin: 0; background: var(--leader); }
+.card { box-sizing: border-box; overflow: hidden; background: var(--leader); color: var(--reel); position: relative; }
+.card .mark { height: 34px; width: auto; align-self: flex-start; }
+.card h1 { font-family: var(--display); font-weight: 800; letter-spacing: -0.03em; line-height: 1.02; margin: 0; text-wrap: balance; }
+.card .sub { font-family: var(--body); color: var(--tape); margin: 0; max-width: none; text-wrap: balance; }
+.card .meta { font-family: var(--mono); color: var(--tape); letter-spacing: 0.04em; margin: 0; max-width: none; }
+.card .meta b { color: var(--reel); }
+.card .panel-head { font-size: inherit; }
+.card pre.term { font-size: inherit; padding: 18px 20px; }
+.card pre.term .l { white-space: pre; padding-left: 0; text-indent: 0; }
+.card .host { font-family: var(--mono); font-weight: 700; color: var(--reel); }
+.card .credit { font-family: var(--mono); color: var(--reel); }
+.wide { width: %(w)dpx; height: %(h)dpx; padding: 52px 60px 50px; display: grid; grid-template-columns: 410px minmax(0, 1fr); gap: 0 44px; align-items: center; }
+.wide .left { display: flex; flex-direction: column; height: 100%%; justify-content: space-between; }
+.wide h1 { font-size: 50px; margin-top: 28px; }
+.wide .sub { font-size: 18px; line-height: 1.45; margin-top: 16px; }
+.wide .meta { font-size: 14px; line-height: 1.65; }
+.wide .panel { font-size: 12.6px; }
+.tall { width: 1080px; height: 1350px; padding: 76px 72px 72px; display: flex; flex-direction: column; gap: 40px; }
+.tall h1 { font-size: 88px; max-width: 12ch; }
+.tall .sub { font-size: 27px; line-height: 1.4; margin-top: -12px; }
+.tall .panel { font-size: 17.5px; }
+.tall .meta { font-size: 19px; line-height: 1.6; }
+.tall .install { font-size: 17px; }
+.tall .foot2 { margin-top: auto; display: flex; justify-content: space-between; align-items: end; gap: 24px; }
+"""
+
+
+def cards(out):
+    """Share images as HTML pages built from this site's CSS and the real runs (UX audit F5; course 2026-11-13):
+    og (1200x630), linkedin (1200x627) and portrait (1080x1350). ux-review/tools/cards.mjs screenshots them; the og
+    PNG is committed as brand/site/og/og-1200x630.png. The text is the page's own: the course line, the README
+    install line, and lines from brand/demo/runs.json, which tests/test_runs_demo.py checks against a fresh run of
+    ux-review/try-runs.sh. Every card carries the credit line. No full-bleed strip at the edge: the ruler is the
+    one in the panel head (a strip there cropped to a stray tick on LinkedIn's 627 px)."""
+    cfg, f = config(), facts()
+    os.makedirs(out, exist_ok=True)
+    shutil.copyfile(os.path.join(HERE, "site.css"), os.path.join(out, "site.css"))
+    shutil.copytree(os.path.join(HERE, "fonts"), os.path.join(out, "fonts"), dirs_exist_ok=True)
+    shutil.copyfile(os.path.join(BRAND, "logo-wordmark.svg"), os.path.join(out, "logo-wordmark.svg"))
+    rows = runs_rows(f["runs"], "hero")
+    host = cfg["site_url"].split("//", 1)[1].rstrip("/")
+    head = ('<div class="panel-head"><span>a session, and a second try from step 2</span>'
+            '<span class="tl">%s<span>fork 2</span></span></div>' % ruler(2, n=3, w=40, h=16, dark=True))
+    # the wide cards keep the commands and the two tables; the long fork line and the header line are left out
+    short = [r for r in rows if r[0] in ("cmd", "tab", "tabhit") or r == ("out", "")]
+    pipx, _ = split_comment(f["blocks"]["install"][0])
+    meta = '<b>v%s</b> &middot; open source, %s<br>%s' % (e(f["version"]), e(LICENCE), e(eyebrow(f)))
+    sub = "Fork any recorded step, let another agent try, compare the runs. Built on rewind."
+    def doc(body, w, h):
+        return ('<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="site.css">'
+                '<style>%s</style></head><body>%s</body></html>' % (CARD_CSS % {"w": w, "h": h}, body))
+    for name, (w, h) in {"og": (1200, 630), "linkedin": (1200, 627)}.items():
+        body = ('<div class="card wide"><div class="left"><img class="mark" src="logo-wordmark.svg" alt="">'
+                '<div><h1>%s</h1><p class="sub">%s</p></div>'
+                '<p class="meta">%s<br><span class="host">%s</span> &middot; <span class="credit">%s</span></p></div>'
+                '<div class="panel">%s%s</div></div>'
+                % (e(COURSE), e(sub), meta, e(host), e(CREDIT), head, panel(short)))
+        with open(os.path.join(out, name + ".html"), "w", encoding="utf-8") as fh:
+            fh.write(doc(body, w, h))
+    body = ('<div class="card tall"><img class="mark" src="logo-wordmark.svg" alt="" style="height:44px">'
+            '<h1>%s</h1><p class="sub">%s</p><div class="panel">%s%s</div>'
+            '<div class="install">%s</div>'
+            '<div class="foot2"><p class="meta">%s</p><p class="meta" style="text-align:right">'
+            '<span class="host" style="font-size:24px">%s</span><br><span class="credit">%s</span></p></div></div>'
+            % (e(COURSE), e(sub), head, panel(short), panel([("cmd", pipx)]), meta, e(host), e(CREDIT)))
+    with open(os.path.join(out, "portrait.html"), "w", encoding="utf-8") as fh:
+        fh.write(doc(body, 1080, 1350))
+    return ["og.html", "linkedin.html", "portrait.html"]
+
+
+# @fontsource/commit-mono's "latin" files hold the whole font (1,175 code points, Cyrillic and Greek included, 48 KB
+# each); the other two families' latin files hold fontsource's latin range. `fonts` cuts Commit Mono to that same range
+# with every OpenType feature kept, so Latin text renders the same at 21 KB a weight (a phone fetched 54 KB less before
+# its first screen: GATE.md pass 4). Needs fontTools (`pip install fonttools brotli`), like the npm cache, by hand.
+LATIN = ("U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,"
+         "U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD")
+SUBSET = {"commit-mono"}
+FONT_MAX_BYTES = 25000
+
+
 def fonts(cache=os.path.join(ROOT, ".brandcache")):
-    """Copy the WOFF2 files the CSS declares, plus each family's OFL licence, into brand/site/fonts/."""
+    """Copy the WOFF2 files the CSS declares, plus each family's OFL licence, into brand/site/fonts/; families in
+    SUBSET are cut to LATIN (OFL 1.1 allows a subset; the font keeps its name, no Reserved Font Name is declared)."""
     out = os.path.join(HERE, "fonts")
     os.makedirs(out, exist_ok=True)
     for pkg, weights in FONTS.items():
@@ -903,8 +1262,14 @@ def fonts(cache=os.path.join(ROOT, ".brandcache")):
         shutil.copyfile(os.path.join(src, "LICENSE"), os.path.join(out, "LICENSE-%s.txt" % pkg))
         for w in weights:
             name = "%s-latin-%d-normal.woff2" % (pkg, w)
-            shutil.copyfile(os.path.join(src, "files", name), os.path.join(out, name))
-            print("copied", name)
+            if pkg in SUBSET:
+                subprocess.run(["pyftsubset", os.path.join(src, "files", name), "--unicodes=" + LATIN,
+                                "--layout-features=*", "--name-IDs=*", "--notdef-outline", "--flavor=woff2",
+                                "--output-file=" + os.path.join(out, name)], check=True)
+                print("subset", name, os.path.getsize(os.path.join(out, name)), "bytes")
+            else:
+                shutil.copyfile(os.path.join(src, "files", name), os.path.join(out, name))
+                print("copied", name)
 
 
 if __name__ == "__main__":
@@ -912,6 +1277,10 @@ if __name__ == "__main__":
     if cmd == "build":
         pages = build()
         print("built %s in %s: %s" % (", ".join(sorted(pages)), HERE, config()["site_url"]))
+    elif cmd == "cards":
+        if os.path.abspath(sys.argv[2]).startswith(HERE):
+            raise SystemExit("cards: pick a directory outside brand/site (the card pages are never published)")
+        print("cards %s in %s" % (", ".join(cards(sys.argv[2])), sys.argv[2]))
     elif cmd == "fonts":
         fonts(*sys.argv[2:3])
     elif cmd == "open":
@@ -919,4 +1288,4 @@ if __name__ == "__main__":
             raise SystemExit("open: pick a directory outside brand/site (the open variant is never published)")
         print("built %s in %s" % (", ".join(sorted(build(out=sys.argv[2], open_variant=True))), sys.argv[2]))
     else:
-        raise SystemExit("usage: build.py [build|fonts [cache]|open DIR]")
+        raise SystemExit("usage: build.py [build|fonts [cache]|open DIR|cards DIR]")

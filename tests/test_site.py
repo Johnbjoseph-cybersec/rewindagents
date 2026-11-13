@@ -155,7 +155,7 @@ class TestSite(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             with redirect_stdout(io.StringIO()):
                 build.build(out=d)
-            for rel in PAGES + ["manifest.json"]:
+            for rel in PAGES + ["manifest.json", "site.min.css"]:
                 self.assertEqual(read(rel, d), read(rel), "%s drifted: run python3 brand/site/build.py" % rel)
 
     def test_pages_are_well_formed_and_self_contained(self):
@@ -169,13 +169,16 @@ class TestSite(unittest.TestCase):
                 self.assertEqual(doc.errors, [], p)
                 self.assertEqual(doc.stack, [], "%s: unclosed %s" % (p, doc.stack))
                 self.assertEqual(doc.h1, 1, "%s: one h1" % p)
-                # scripts: the JSON-LD block, and local files only (vendor/ + site.js); nothing inline runs, the CSP says so
+                # scripts: the JSON-LD block and site.js, deferred; nothing inline runs (the CSP says so) and nothing
+                # runs before first paint. GSAP is not on the page: site.js adds it after first paint (go-live, 2026-11-13).
                 raw = read(p, d)
                 srcs = re.findall(r'<script src="([^"]+)"', raw)
                 self.assertEqual(doc.scripts.count("application/ld+json"), 1, p)
                 self.assertEqual(len(doc.scripts), len(srcs) + 1, "%s: every other script has a src" % p)
-                for src in srcs:
-                    self.assertRegex(src, r"^(\.\./)?(vendor/[\w.]+\.js|site\.js)$", "%s: script %s" % (p, src))
+                self.assertEqual([re.sub(r"^\.\./", "", x) for x in srcs], ["site.js"], "%s: scripts %s" % (p, srcs))
+                self.assertRegex(raw, r'<script src="(\.\./)?site\.js" defer></script>', p)
+                self.assertNotIn("vendor/gsap", raw, p)
+                self.assertRegex(raw, r'<link rel="stylesheet" href="(\.\./)?site\.min\.css">', p)
                 self.assertIn("content=\"default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self'; "
                               "font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'\"", raw, p)
                 self.assertNotRegex(raw, r' style="| on[a-z]+="', "%s: inline style/handler would be blocked by the CSP" % p)
@@ -206,14 +209,50 @@ class TestSite(unittest.TestCase):
                 for href in re.findall(r' href="#([^"]+)"', html):
                     self.assertIn(href, ids, "%s: #%s" % (p, href))
 
-    def test_site_js_loads_and_injects_nothing(self):
+    def test_site_js_adds_only_the_motion_files_and_only_after_first_paint(self):
+        """The contract since go-live (John, 2026-11-13): site.js may add exactly three scripts, GSAP 3.13 from vendor/
+        beside it, and only after both the load event and the browser's first contentful paint (or at the first
+        scroll, touch or key). Everything else is as before: nothing fetched or parsed, no other origin, no inline
+        style on the pages, and motion only for content still below the fold, so nothing on screen shifts."""
         js = read("site.js")
-        self.assertNotRegex(js, r"\bfetch\(|XMLHttpRequest|WebSocket|\beval\(|new Function|innerHTML|outerHTML|insertAdjacentHTML|document\.write|import\(",
-                            "site.js only animates what is on the page; it loads and parses nothing")
-        for name in ("gsap.min.js", "ScrollTrigger.min.js", "SplitText.min.js"):
-            head = read(os.path.join("vendor", name))[:200]
-            self.assertIn("3.13.0", head, name)
-            self.assertNotIn("sourceMappingURL", read(os.path.join("vendor", name)), name)
+        self.assertNotRegex(js, r"\bfetch\(|XMLHttpRequest|WebSocket|sendBeacon|\beval\(|new Function|innerHTML|outerHTML|"
+                                r"insertAdjacentHTML|document\.write|import\(|new Worker|importScripts",
+                            "site.js only animates what is on the page; it fetches and parses nothing")
+        self.assertNotRegex(js, r"https?:|//[\w-]+\.[\w.-]+/", "no URL to another origin in site.js")
+        vendor = re.search(r"var VENDOR = \[([^\]]*)\];", js)
+        self.assertIsNotNone(vendor, "the files site.js may add are one literal list")
+        files = re.findall(r'"([^"]+)"', vendor.group(1))
+        self.assertEqual(files, ["vendor/gsap.min.js", "vendor/ScrollTrigger.min.js", "vendor/SplitText.min.js"])
+        for rel in files:
+            body = read(rel)
+            self.assertIn("3.13.0", body[:200], rel)
+            self.assertNotIn("sourceMappingURL", body, rel)
+        # one place makes a script element, and its src is a VENDOR entry resolved against site.js's own URL
+        self.assertEqual(len(re.findall(r'createElement\("script"\)', js)), 1)
+        self.assertEqual(len(re.findall(r"\.src = ", js)), 1)
+        self.assertIn("tag.src = new URL(VENDOR[n++], here).href;", js)
+        self.assertIn("var here = document.currentScript && document.currentScript.src;", js)
+        self.assertEqual(sorted(set(re.findall(r'createElement\("(\w+)"\)', js))), ["button", "div", "script", "span"],
+                         "copy buttons, the tape, and the one script tag; nothing else is made")
+        # after first paint: the load event and the first-contentful-paint entry both, then an idle moment
+        self.assertIn('getEntriesByName("first-contentful-paint")', js)
+        self.assertIn('window.addEventListener("load", pass', js)
+        self.assertIn("var gates = 2;", js)
+        self.assertIn("requestIdleCallback", js)
+        self.assertIn('if (reduce || !here) return;', js)
+        # GSAP runs only on what is still below the fold: no tween is set up on anything already on screen
+        self.assertIn("function below(el) { return el.getBoundingClientRect().top > window.innerHeight; }", js)
+        self.assertNotIn('safe("hero"', js, "the hero's intro is CSS; GSAP never re-hides the first screen")
+        for sel in ('$$(".sec .label").filter(below)', "$$(sel).filter(below)", '$$(".ledger .k").filter(below)',
+                    "!below(frame)", "!below(c)"):
+            self.assertIn(sel, js)
+        # no CLS from the first screen: nothing is hidden waiting for a script, and the intro moves without fading
+        css = read("site.css")
+        self.assertNotRegex(css, r"js-motion|motion-ready|failsafe", "no class a script must add before the hero shows")
+        rise = re.search(r"@keyframes rise \{(.*?)\}\s*\}", css, re.S)
+        self.assertIsNotNone(rise)
+        self.assertNotIn("opacity", rise.group(1), "the hero is painted from the first frame")
+        self.assertFalse(os.path.exists(os.path.join(SITE, "vendor", "flag.js")), "no script runs before first paint")
 
     def test_agent_strip_shows_only_agents_with_a_hook(self):
         index = read("index.html")
@@ -231,32 +270,97 @@ class TestSite(unittest.TestCase):
         self.assertEqual(len(re.findall(r'class="ft(?: ch)?"', index)), len(cues), "one ruler tick per caption line")
         self.assertEqual(len(re.findall(r'class="ft ch"', index)), len(build.CHAPTERS), "every chapter is on the ruler")
         self.assertIn('src="assets/%s.vtt"' % build.FILM, index)
-        self.assertIn('poster="assets/film-poster.jpg"', index)
         self.assertTrue(os.path.isfile(os.path.join(BRAND, "vsl", "vsl-90s-poster.jpg")))
 
-    def test_hero_panel_shows_lines_the_session_printed(self):
-        # tests/test_demo.py proves brand/demo/manifest.json is what the CLI prints today; the hero must quote it.
-        m = manifest()
-        demo = json.loads(read(os.path.join("demo", "manifest.json"), BRAND))
-        commands = [b["command"] for b in demo["beats"]]
-        outputs = {ln for b in demo["beats"] for ln in b["output"].rstrip("\n").split("\n")}
-        kinds = [k for k, _ in m["hero"]]
-        self.assertEqual([k for k in kinds if k == "cmd"], ["cmd", "cmd"])
-        for kind, text in m["hero"]:
-            if kind == "cmd":
-                self.assertIn(text, commands, text)
-            elif kind in ("out", "hit"):
-                self.assertIn(text, outputs, text)
-            else:
-                self.assertEqual((kind, text.strip()), ("gap", "..."))
-        hits = [t for k, t in m["hero"] if k == "hit"]
-        self.assertEqual(len(hits), 4)
-        self.assertTrue(all(t.startswith("  restore") for t in hits), hits)
-        self.assertTrue(any("undo it with: rewindagents rewind" in t for _, t in m["hero"]))
+    def test_landing_fork_rows_are_short_and_link_the_docs(self):
+        """John, 2026-11-13: on the landing page "Fork any recorded step" and "Compare the runs" say at most two short
+        sentences each; the README's full sentences are on the docs page (checked above), and the section links there."""
+        build = load_build()
         index = read("index.html")
+        sec = re.search(r'<section class="sec" id="fork".*?</section>', index, re.S).group(0)
+        for title, short in (("Fork any recorded step", build.FORK_SHORT), ("Compare the runs", build.COMPARE_SHORT)):
+            m = re.search(r"<h3>%s</h3><p>(.*?)</p>" % re.escape(title), sec)
+            self.assertIsNotNone(m, title)
+            said = unesc(re.sub(r"</?code>", "`", m.group(1)))
+            self.assertEqual(said, " ".join(short), title)
+            sentences = re.findall(r".+?\.(?=\s|$)", said)
+            self.assertLessEqual(len(sentences), 2, title)
+            for s in sentences:
+                self.assertLessEqual(len(s.split()), 20, "%s: %s" % (title, s))
+        self.assertIn('<a href="docs/#fork">', sec)
+        self.assertIn('<h2 id="fork">Fork and compare</h2>', read("docs/index.html"))
+        # the long form lives on the docs page, word for word from the README
+        docs = read("docs/index.html")
+        for start in build.FORK_SENTENCES + build.COMPARE_SENTENCES:
+            self.assertIn(build.md_inline(build.readme_sentence(read("README.md", ROOT), start)), docs, start)
+
+    def test_film_poster_is_lazy_sized_and_never_fetched_at_load(self):
+        """The poster is a lazy <picture> under the video, AVIF and WebP at POSTER_WIDTHS (a phone takes the 960 px
+        one), not the video's poster attribute, which a browser fetches at once and at full size (go-live, 2026-11-13)."""
+        build = load_build()
+        index = read("index.html")
+        video = re.search(r"<video [^>]*>", index).group(0)
+        self.assertNotIn("poster=", video)
+        self.assertIn('preload="none"', video)
+        pic = re.search(r'<picture class="film-poster">(.*?)</picture>', index, re.S)
+        self.assertIsNotNone(pic)
+        self.assertLess(index.index('<picture class="film-poster">'), index.index("<video "), "under the video")
+        img = re.search(r"<img [^>]*>", pic.group(1)).group(0)
+        for attr in ('src="assets/film-poster.jpg"', 'alt=""', 'width="1920"', 'height="1080"', 'loading="lazy"',
+                     'decoding="async"'):
+            self.assertIn(attr, img)
+        narration = read(os.path.join("vsl", "narration.py"), BRAND)
+        self.assertIn("POSTER_WIDTHS = %r" % (build.POSTER_WIDTHS,), narration, "one list of sizes, two places")
+        for fmt in ("avif", "webp"):
+            srcset = re.search(r'<source type="image/%s" srcset="([^"]+)" sizes="([^"]+)">' % fmt, pic.group(1))
+            self.assertIsNotNone(srcset, fmt)
+            self.assertEqual(srcset.group(1), ", ".join("assets/film-poster-%d.%s %dw" % (w, fmt, w) for w in build.POSTER_WIDTHS))
+            for w in build.POSTER_WIDTHS:
+                src = os.path.join(BRAND, "vsl", "%s-poster-%d.%s" % (build.FILM, w, fmt))
+                self.assertTrue(os.path.isfile(src), src)
+                if w <= 960:        # what a phone fetches: small, after first paint
+                    self.assertLess(os.path.getsize(src), 25000, src)
+        css = read("site.css")
+        self.assertIn(".film-poster img { position: absolute; inset: 0;", css, "no layout of its own: CLS stays 0")
+
+    def test_fonts_before_first_paint_are_latin_only(self):
+        """Commit Mono ships whole in fontsource's latin file (48 KB a weight); `build.py fonts` cuts it to the
+        latin range (go-live, 2026-11-13). A re-copy of the whole font fails here."""
+        build = load_build()
+        for w in build.FONTS["commit-mono"]:
+            path = os.path.join(SITE, "fonts", "commit-mono-latin-%d-normal.woff2" % w)
+            self.assertLess(os.path.getsize(path), build.FONT_MAX_BYTES, path)
+        for p in PAGES:
+            for ch in text_of(p):
+                self.assertTrue(ord(ch) <= 0xFF or 0x2000 <= ord(ch) <= 0x206F or ch in "\u20ac\u2122\u2191\u2193\u2212\u2215\ufeff\ufffd",
+                                "%s: %r is outside the fonts' latin range" % (p, ch))
+
+    def test_hero_panel_shows_lines_the_session_printed(self):
+        # The hero leads with the course (John, 2026-11-13): fork and compare, quoted from brand/demo/runs.json, which
+        # tests/test_runs_demo.py proves try-runs.sh still prints. The rewind session stays on the page as the base:
+        # tests/test_demo.py proves brand/demo/manifest.json is what the CLI prints today, and the page quotes it all.
+        m = manifest()
+        build = load_build()
+        self.assertEqual(m["course"], build.COURSE)
+        self.assertIn(build.COURSE, read("BRAND.md", BRAND))
+        self.assertIn('<h1 id="h1">%s</h1>' % build.COURSE, read("index.html"))
+        runs = json.loads(read(os.path.join("demo", "runs.json"), BRAND))
+        printed = {ln for lines in runs["output"].values() for ln in lines}
+        kinds = [k for k, _ in m["hero"]]
+        self.assertEqual([t for k, t in m["hero"] if k == "cmd"], [runs["commands"]["fork"], runs["commands"]["compare"]])
+        for kind, text in m["hero"]:
+            if kind in ("out", "hit", "tab", "tabhit"):
+                self.assertIn(text, printed, text)
+        hits = [t for k, t in m["hero"] if k in ("hit", "tabhit")]
+        self.assertEqual(len(hits), 1)
+        self.assertTrue(hits[0].strip().startswith("clamp") and hits[0].endswith("pass"), hits)
+        self.assertIn("cmd", kinds)
+        index = read("index.html")
+        shown = unesc(re.sub(r"<[^>]+>", "", index))
         for _, text in m["hero"]:
-            self.assertIn(text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"), index, text)
+            self.assertIn(text, shown, text)
         # the clip's four commands and every line they printed are on the page as text too
+        demo = json.loads(read(os.path.join("demo", "manifest.json"), BRAND))
         for b in demo["beats"]:
             self.assertIn(b["command"], index)
             for ln in b["output"].rstrip("\n").split("\n"):
@@ -291,13 +395,15 @@ class TestSite(unittest.TestCase):
         for p in PAGES:
             html = read(p)
             beat_commands = {b["command"] for b in json.loads(read(os.path.join("demo", "manifest.json"), BRAND))["beats"]}
+            # the fork-and-compare panels quote ux-review/try-runs.sh (tests/test_runs_demo.py checks them there)
+            run_commands = set(json.loads(read(os.path.join("demo", "runs.json"), BRAND))["commands"].values())
             for block in re.findall(r'<pre class="term[^"]*"><code>(.*?)</code></pre>', html, re.S):
                 rows = block.split("\n")
                 for i, row in enumerate(rows):
                     if not row.startswith('<span class="l"><span class="p">$ </span>'):
                         continue
                     cmd = unesc(re.sub(r"<[^>]+>", "", row)[2:])
-                    if cmd in beat_commands or cmd == "rewindagents --version":
+                    if cmd in beat_commands or cmd in run_commands or cmd == "rewindagents --version":
                         continue
                     # the README's trailing comment sits on the row before (describes) or after (alternative)
                     near = [unesc(re.sub(r"<[^>]+>", "", rows[j])) for j in (i - 1, i + 1)

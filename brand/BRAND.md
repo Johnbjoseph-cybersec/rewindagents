@@ -27,6 +27,21 @@ We write for the person at the terminal, not for a buyer.
 A paid tier may come later (cloud sync, shareable replay links, long retention, session search). Nothing
 in the identity depends on it, and nothing is sold before it exists.
 
+## Course (John, 2026-11-13)
+
+Rewind to any step. Let another agent take it from there.
+
+rewindagents becomes the neutral proving ground for coding agents: rewind to any step, fork it, let another
+agent take it from there, compare. Rewind is the verb that makes it possible, so the name and the domain stay
+and no copy implies a rename. The one-line promise above stays the base it is built on.
+
+The hosted layer (`ux-review/ROADMAP.md`) is planned, opt-in and for teams:
+- a shared page per comparison
+- parallel cloud sandboxes
+- comparison history
+- scheduled re-runs
+- retention, SSO, seats
+
 ## Voice
 
 Plain, exact, a little dry. We say what exists and what does not.

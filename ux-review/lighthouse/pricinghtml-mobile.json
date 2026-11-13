@@ -1,0 +1,15 @@
+{
+ "url": "http://127.0.0.1:8791/pricing.html",
+ "fetchTime": "2026-11-13T10:08:44.412Z",
+ "lighthouseVersion": "12.2.1",
+ "formFactor": "mobile",
+ "scores": {
+  "performance": 0.98,
+  "accessibility": 1,
+  "best-practices": 1,
+  "seo": 1
+ },
+ "LCP": "2.2\u00a0s",
+ "CLS": "0",
+ "TBT": "0\u00a0ms"
+}

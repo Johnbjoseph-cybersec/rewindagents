@@ -5,27 +5,33 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self'; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
-<title>rewindagents: Ctrl+Z for AI coding agents: record, replay, rewind</title>
-<meta name="description" content="Open-source recorder for coding agents. Every tool call goes into a tamper-evident, hash-chained log and every file is saved before it changes. Replay a session step by step and rewind the working tree to any step. Hooks for Claude Code, Codex and Cursor.">
+<title>rewindagents: Rewind to any step. Let another agent take it from there</title>
+<meta name="description" content="Rewind to any step of a coding agent&#x27;s session, fork it, let another agent take it from there, and compare the runs on what they changed and on your own check. Open source; every tool call goes into a hash-chained log and every file is saved before it changes. Hooks for Claude Code, Codex, Cursor and more.">
 <link rel="canonical" href="https://rewindagents.com/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="rewindagents">
-<meta property="og:title" content="rewindagents: Ctrl+Z for AI coding agents: record, replay, rewind">
-<meta property="og:description" content="Open-source recorder for coding agents. Every tool call goes into a tamper-evident, hash-chained log and every file is saved before it changes. Replay a session step by step and rewind the working tree to any step. Hooks for Claude Code, Codex and Cursor.">
+<meta property="og:title" content="rewindagents: Rewind to any step. Let another agent take it from there">
+<meta property="og:description" content="Rewind to any step of a coding agent&#x27;s session, fork it, let another agent take it from there, and compare the runs on what they changed and on your own check. Open source; every tool call goes into a hash-chained log and every file is saved before it changes. Hooks for Claude Code, Codex, Cursor and more.">
 <meta property="og:url" content="https://rewindagents.com/">
+<meta property="og:image" content="https://rewindagents.com/assets/og-1200x630.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="rewindagents: Rewind to any step. Let another agent take it from there. A terminal shows rewindagents fork 2 and rewindagents compare --check: the agent&#x27;s run fails the check, the second try passes.">
 <meta property="og:image" content="https://rewindagents.com/assets/social-preview-1280x640.png">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="640">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://rewindagents.com/assets/og-1200x630.png">
+<meta name="twitter:image:alt" content="rewindagents: Rewind to any step. Let another agent take it from there. A terminal shows rewindagents fork 2 and rewindagents compare --check: the agent&#x27;s run fails the check, the second try passes.">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
-<link rel="stylesheet" href="site.css">
-<script src="vendor/flag.js"></script>
-<script src="vendor/gsap.min.js" defer></script>
-<script src="vendor/ScrollTrigger.min.js" defer></script>
-<script src="vendor/SplitText.min.js" defer></script>
+<link rel="preload" href="fonts/bricolage-grotesque-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/hanken-grotesk-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/hanken-grotesk-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/commit-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="site.min.css">
 <script src="site.js" defer></script>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "applicationCategory": "DeveloperApplication", "author": {"@type": "Person", "name": "John B Joseph"}, "codeRepository": "https://github.com/Johnbjoseph-cybersec/rewindagents", "description": "Open-source recorder for coding agents. Every tool call goes into a tamper-evident, hash-chained log and every file is saved before it changes. Replay a session step by step and rewind the working tree to any step. Hooks for Claude Code, Codex and Cursor.", "license": "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE", "name": "rewindagents", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "operatingSystem": "macOS, Linux", "softwareVersion": "0.0.7", "url": "https://rewindagents.com/"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "applicationCategory": "DeveloperApplication", "author": {"@type": "Person", "name": "John B Joseph"}, "codeRepository": "https://github.com/Johnbjoseph-cybersec/rewindagents", "description": "Rewind to any step of a coding agent's session, fork it, let another agent take it from there, and compare the runs on what they changed and on your own check. Open source; every tool call goes into a hash-chained log and every file is saved before it changes. Hooks for Claude Code, Codex, Cursor and more.", "license": "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE", "name": "rewindagents", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "operatingSystem": "macOS, Linux", "softwareVersion": "0.0.7", "url": "https://rewindagents.com/"}</script>
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -37,38 +43,72 @@
 <section class="hero" aria-labelledby="h1"><div class="wrap">
 <div class="hero-text">
 <p class="eyebrow"><b>v0.0.7</b> hooks for 7 coding agents</p>
-<h1 id="h1">Ctrl+Z for AI coding agents: record, replay, rewind.</h1>
-<p class="lede">rewindagents records every tool call your coding agent makes and saves a copy of each file before the agent changes it. Replay the session step by step. Rewind the working tree to any step, or keep the current files as a branch and then rewind. The agent works at full speed, and every step it takes can be taken back, within the <a href="#limits">limits</a> below.</p>
-<div class="cta"><a class="btn btn-primary" href="#install">Install</a><a class="btn btn-ghost" href="docs/">Read the docs</a></div>
+<h1 id="h1">Rewind to any step. Let another agent take it from there.</h1>
+<p class="lede">rewindagents records every step your coding agent takes and saves each file before it changes. Fork any recorded step, let another agent or a person continue from there, and compare the runs on what they changed and on your own check.</p>
+<p class="lede base">Undo is the base it stands on: rewind the working tree to any step, within the <a href="#limits">limits</a>.</p>
+<div class="cta"><a class="btn btn-primary" href="docs/#fork">Read the docs</a><a class="btn btn-ghost" href="https://github.com/Johnbjoseph-cybersec/rewindagents">Source on GitHub</a></div>
 </div>
 <div class="hero-panel">
-<div class="panel"><div class="panel-head"><span>a session of 14 steps; the last 2 wrecked the repo</span></div><pre class="term"><code><span class="l"><span class="p">$ </span>rewindagents replay</span>
-<span class="l"><span class="c">    ...</span></span>
-<span class="l">   11  Bash          git status --short</span>
-<span class="l">   12  Read          tests/test_server.py</span>
-<span class="l">   13  Bash          rm -rf tests  [3 checkpointed]</span>
-<span class="l">   14  Write         app/config.py  [1 checkpointed]</span>
-<span class="l"><span class="p">$ </span>rewindagents rewind 12</span>
-<span class="l">session demo: rewind to step 12 of 14 (did change 4 files)</span>
-<span class="l"><span class="hit">  restore  tests/test_config.py</span></span>
-<span class="l"><span class="hit">  restore  tests/test_server.py</span></span>
-<span class="l"><span class="hit">  restore  tests/test_timeout.py</span></span>
-<span class="l"><span class="hit">  restore  app/config.py</span></span>
-<span class="l">  this rewind is step 15; undo it with: rewindagents rewind 14 --session demo</span></code></pre></div>
-<p class="caption">Lines from the session behind the clip below. The recorder, the four files and the step numbers are real; a test replays the session and fails if a line changes.</p>
+<div class="panel"><div class="panel-head"><span>a session, and a second try from step 2</span><span class="tl"><svg class="ruler" width="40" height="16" viewBox="0 0 40 16" aria-hidden="true"><rect x="0" y="14" width="20.0" height="1" fill="#B9C2BB"/><rect x="20.0" y="14" width="20.0" height="1" fill="#55605A"/><rect x="1.5" y="10" width="1" height="5" fill="#B9C2BB"/><rect x="37.5" y="10" width="1" height="5" fill="#55605A"/><path d="M17.0 1H23.0V4L21.0 6.5V15H19.0V6.5L17.0 4Z" fill="#B82A16"/></svg><span>fork 2</span></span></div><pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">rewindagents fork 2 <span class="nb">--name clamp</span></span></span>
+<span class="l i4">  2 files as they were right after step 2 of session <span class="nb">demo-0001;</span> git worktree on branch rewindagents/run/clamp</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents compare <span class="nb">--check &quot;python3</span> test_cart.py&quot;</span></span>
+<span class="l i2">runs from session <span class="nb">demo-000</span> step 2 of shop (2 files at the start)</span>
+<span class="l i2"></span>
+<span class="l t">  run       agents         steps  files  lines                 check</span>
+<span class="l t">  shop      claude             1      1  +1 -1                 FAIL (exit 1)</span>
+<span class="l t"><span class="hit">  clamp     -                  0      1  +1 -1                 pass</span></span>
+<span class="l i2"></span>
+<span class="l t">  file     shop         clamp</span>
+<span class="l t">  cart.py  changed A    changed B</span></code></pre></div>
+<p class="caption">What <code>ux-review/try-runs.sh</code> printed against an installed build, unedited; lines naming its temporary folder are left out. <code>shop</code> is the agent&#x27;s run, recorded through the real hook; <code>clamp</code> is a second attempt made by hand in the fork. A test runs the script again and fails if a line here changes; see <a href="#tested">Tested</a>.</p>
 <ul class="facts"><li>standard library only</li><li>no network, no account</li><li>never stops or changes a call</li><li>Apache-2.0</li></ul>
+</div>
+<div class="hero-install">
+<p class="small"><b>Install.</b> Not on PyPI yet, so from GitHub; then add the hook in a project. One click on a command selects all of it, without the prompt.</p>
+<pre class="term install"><code><span class="l"><span class="p">$ </span><span class="sel">pipx install <span class="nb">git+https://</span><wbr><span class="nb">github.com/</span><wbr><span class="nb">Johnbjoseph-cybersec/</span><wbr><span class="nb">rewindagents</span></span></span>
+<span class="l"><span class="c"># or: pip install <span class="nb">git+https://</span><wbr><span class="nb">...</span></span></span>
+<span class="l"><span class="c"># adds the hook to .claude/settings.json in this project</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents install</span></span></code></pre>
 </div>
 <div class="agents"><span class="ag-label">Hooks for</span><ul><li class="ag"><img src="vendor/logos/claude-code.svg" alt="" width="22" height="22"><span>Claude Code</span></li><li class="ag"><span class="ag-glyph" aria-hidden="true">&gt;_</span><span>Codex</span></li><li class="ag"><img src="vendor/logos/cursor.svg" alt="" width="22" height="22"><span>Cursor</span></li><li class="ag"><img src="vendor/logos/gemini.svg" alt="" width="22" height="22"><span>Gemini CLI</span></li><li class="ag"><img src="vendor/logos/github-copilot.svg" alt="" width="22" height="22"><span>GitHub Copilot</span></li><li class="ag"><span class="ag-glyph" aria-hidden="true">&gt;_</span><span>Factory Droid</span></li><li class="ag"><img src="vendor/logos/qwen.svg" alt="" width="22" height="22"><span>Qwen Code</span></li></ul></div>
 </div></section>
 
+<section class="sec" id="fork" aria-labelledby="h-fork"><div class="wrap">
+<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="2.0" height="1" fill="#121412"/><rect x="2.0" y="16" width="82.0" height="1" fill="#838C86"/><rect x="10.4" y="12" width="1" height="5" fill="#838C86"/><rect x="19.3" y="12" width="1" height="5" fill="#838C86"/><rect x="28.2" y="12" width="1" height="5" fill="#838C86"/><rect x="37.1" y="12" width="1" height="5" fill="#838C86"/><rect x="45.9" y="12" width="1" height="5" fill="#838C86"/><rect x="54.8" y="12" width="1" height="5" fill="#838C86"/><rect x="63.7" y="12" width="1" height="5" fill="#838C86"/><rect x="72.6" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M-1.0 1H5.0V4L3.0 6.5V17H1.0V6.5L-1.0 4Z" fill="#B82A16"/></svg><span class="n">01</span><span>Fork and compare</span></p>
+<div class="head"><h2 id="h-fork">Rewind to a step, fork it, compare.</h2>
+<p class="lede">Rewind to any step, fork it, let another agent take it from there, compare. A recorded step is a starting point you can hand to another agent, another model, another prompt or a person, and the runs that follow can be compared on what they actually did to the files and on your own check.</p></div>
+<div class="cmdlist">
+<div class="cmdrow"><div><h3>Fork any recorded step</h3><p><code>rewindagents fork 12 --name try2</code> makes a new directory holding the project as <code>rewind 12</code> would leave it. Run any agent there, or edit by hand.</p></div><pre class="term"><code><span class="l"><span class="c"># pick the step to start from, say 12</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents replay</span></span>
+<span class="l"><span class="c"># <span class="nb">../&lt;project&gt;-try2</span> with step 12&#x27;s files</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents fork 12 <span class="nb">--name try2</span></span></span>
+<span class="l"><span class="c"># run any agent with a hook here, or edit by hand</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">cd <span class="nb">../your-project-try2</span></span></span>
+<span class="l"><span class="p">$ </span><span class="sel">cd - &amp;&amp; rewindagents compare <span class="nb">--check &quot;python3</span> -m pytest -q&quot;</span></span>
+<span class="l"><span class="c"># how two runs differ, as a git diff</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents compare <span class="nb">--diff your-project</span> try2</span></span></code></pre></div>
+<div class="cmdrow"><div><h3>Compare the runs</h3><p><code>rewindagents compare</code> lines up the project and every run forked from the same step: files changed, lines added and removed. <code>--check</code> runs your own check in each run and reports pass or the exit code.</p></div><pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">rewindagents compare <span class="nb">--diff shop</span> clamp</span></span>
+<span class="l i2">diff --git a/cart.py b/cart.py</span>
+<span class="l i2">--- a/cart.py</span>
+<span class="l i2">+++ b/cart.py</span>
+<span class="l i2">@@ -1,2 +1,2 @@</span>
+<span class="l i3"> def total(prices, discount=0):</span>
+<span class="l i5">-    return sum(prices) - discount  # TODO clamp</span>
+<span class="l i5"><span class="hit">+    return max(0, sum(prices) - discount)</span></span></code></pre></div>
+<div class="cmdrow"><div><h3>What it will not do</h3></div><ul class="plain-list"><li><code>fork</code> refuses a step it cannot rebuild exactly (a stored copy missing, a command whose scan did not finish, a log that does not verify) and leaves nothing behind when it fails half-way.</li><li><code>compare</code> writes nothing; the command <code>--check</code> runs may write in the run it runs in.</li><li>Runs from different steps are not mixed.</li></ul></div>
+</div>
+<p class="small more">Every option, and how a fork works in a git repository, is on the <a href="docs/#fork">docs page</a>.</p>
+</div></section>
+
 <section class="sec" id="demo" aria-labelledby="h-demo"><div class="wrap">
-<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="2.0" height="1" fill="#121412"/><rect x="2.0" y="16" width="82.0" height="1" fill="#838C86"/><rect x="12.9" y="12" width="1" height="5" fill="#838C86"/><rect x="24.4" y="12" width="1" height="5" fill="#838C86"/><rect x="35.8" y="12" width="1" height="5" fill="#838C86"/><rect x="47.2" y="12" width="1" height="5" fill="#838C86"/><rect x="58.6" y="12" width="1" height="5" fill="#838C86"/><rect x="70.1" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M-1.0 1H5.0V4L3.0 6.5V17H1.0V6.5L-1.0 4Z" fill="#B82A16"/></svg><span class="n">01</span><span>The film</span></p>
+<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="10.9" height="1" fill="#121412"/><rect x="10.9" y="16" width="73.1" height="1" fill="#838C86"/><rect x="1.5" y="12" width="1" height="5" fill="#121412"/><rect x="19.3" y="12" width="1" height="5" fill="#838C86"/><rect x="28.2" y="12" width="1" height="5" fill="#838C86"/><rect x="37.1" y="12" width="1" height="5" fill="#838C86"/><rect x="45.9" y="12" width="1" height="5" fill="#838C86"/><rect x="54.8" y="12" width="1" height="5" fill="#838C86"/><rect x="63.7" y="12" width="1" height="5" fill="#838C86"/><rect x="72.6" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M7.9 1H13.9V4L11.9 6.5V17H9.9V6.5L7.9 4Z" fill="#B82A16"/></svg><span class="n">02</span><span>Undo, the base</span></p>
 <div class="head"><h2 id="h-demo">A wrecked repo, put back in one command.</h2>
 <p class="lede">An agent works in a small project for 14 steps. Steps 13 and 14 delete the tests and overwrite the config. <code>rewindagents rewind 12</code> puts the files back the way they were right after step 12. The first 12 steps stay.</p></div>
 </div>
 <div class="film" id="film" data-total="90.00">
 <div class="film-frame">
-<video class="film-video" controls preload="none" playsinline poster="assets/film-poster.jpg" aria-label="The rewindagents film, 1:30, with captions">
+<picture class="film-poster"><source type="image/avif" srcset="assets/film-poster-480.avif 480w, assets/film-poster-960.avif 960w, assets/film-poster-1440.avif 1440w, assets/film-poster-1920.avif 1920w" sizes="(min-width: 1600px) 1600px, 100vw"><source type="image/webp" srcset="assets/film-poster-480.webp 480w, assets/film-poster-960.webp 960w, assets/film-poster-1440.webp 1440w, assets/film-poster-1920.webp 1920w" sizes="(min-width: 1600px) 1600px, 100vw"><img src="assets/film-poster.jpg" alt="" width="1920" height="1080" loading="lazy" decoding="async"></picture>
+<video class="film-video" controls preload="none" playsinline aria-label="The rewindagents film, 1:30, with captions">
 <source src="assets/vsl-90s.mp4" type="video/mp4">
 <track kind="captions" src="assets/vsl-90s.vtt" srclang="en" label="English" default>
 </video>
@@ -80,84 +120,84 @@
 <div class="wrap">
 <div class="session">
 <div><p class="small">The session as text. First, every step the agent took.</p><pre class="term fill"><code><span class="l"><span class="c"># a coding agent has been working in this repo; rewindagents recorded every step</span></span>
-<span class="l"><span class="p">$ </span>rewindagents replay</span>
-<span class="l">    1  Read          README.md</span>
-<span class="l">    2  Read          app/config.py</span>
-<span class="l">    3  Edit          app/config.py  [1 checkpointed]</span>
-<span class="l">    4  Read          app/server.py</span>
-<span class="l">    5  Edit          app/server.py  [1 checkpointed]</span>
-<span class="l">    6  Write         tests/test_timeout.py  [1 checkpointed]</span>
-<span class="l">    7  Bash          python3 -m unittest discover -s tests -t . -q</span>
-<span class="l">    8  Edit          app/server.py  [1 checkpointed]</span>
-<span class="l">    9  Bash          python3 -m unittest discover -s tests -t . -q</span>
-<span class="l">   10  Edit          README.md  [1 checkpointed]</span>
-<span class="l">   11  Bash          git status --short</span>
-<span class="l">   12  Read          tests/test_server.py</span>
-<span class="l">   13  Bash          rm -rf tests  [3 checkpointed]</span>
-<span class="l">   14  Write         app/config.py  [1 checkpointed]</span></code></pre></div>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents replay</span></span>
+<span class="l i21">    1  Read          README.md</span>
+<span class="l i21">    2  Read          app/config.py</span>
+<span class="l i21">    3  Edit          app/config.py  [1 checkpointed]</span>
+<span class="l i21">    4  Read          app/server.py</span>
+<span class="l i21">    5  Edit          app/server.py  [1 checkpointed]</span>
+<span class="l i21">    6  Write         tests/test_timeout.py  [1 checkpointed]</span>
+<span class="l i21">    7  Bash          python3 -m unittest discover -s tests -t . -q</span>
+<span class="l i21">    8  Edit          app/server.py  [1 checkpointed]</span>
+<span class="l i21">    9  Bash          python3 -m unittest discover -s tests -t . -q</span>
+<span class="l i21">   10  Edit          README.md  [1 checkpointed]</span>
+<span class="l i21">   11  Bash          git status --short</span>
+<span class="l i21">   12  Read          tests/test_server.py</span>
+<span class="l i21">   13  Bash          rm -rf tests  [3 checkpointed]</span>
+<span class="l i21">   14  Write         app/config.py  [1 checkpointed]</span></code></pre></div>
 <div><p class="small">Then the damage, the rewind, and the project after it.</p><pre class="term fill"><code><span class="l"><span class="c"># its last two steps deleted the tests and overwrote the config</span></span>
-<span class="l"><span class="p">$ </span>git status --short</span>
-<span class="l"> M README.md</span>
-<span class="l"> M app/config.py</span>
-<span class="l"> M app/server.py</span>
-<span class="l"> D tests/test_config.py</span>
-<span class="l"> D tests/test_server.py</span>
+<span class="l"><span class="p">$ </span><span class="sel">git status <span class="nb">--short</span></span></span>
+<span class="l i3"> M README.md</span>
+<span class="l i3"> M app/config.py</span>
+<span class="l i3"> M app/server.py</span>
+<span class="l i3"> D tests/test_config.py</span>
+<span class="l i3"> D tests/test_server.py</span>
 <span class="l"><span class="c"># put the files back the way they were right after step 12</span></span>
-<span class="l"><span class="p">$ </span>rewindagents rewind 12</span>
-<span class="l">session demo: rewind to step 12 of 14 (did change 4 files)</span>
-<span class="l"><span class="hit">  restore  tests/test_config.py</span></span>
-<span class="l"><span class="hit">  restore  tests/test_server.py</span></span>
-<span class="l"><span class="hit">  restore  tests/test_timeout.py</span></span>
-<span class="l"><span class="hit">  restore  app/config.py</span></span>
-<span class="l">  this rewind is step 15; undo it with: rewindagents rewind 14 --session demo</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents rewind 12</span></span>
+<span class="l i2">session demo: rewind to step 12 of 14 (did change 4 files)</span>
+<span class="l i11"><span class="hit">  restore  tests/test_config.py</span></span>
+<span class="l i11"><span class="hit">  restore  tests/test_server.py</span></span>
+<span class="l i11"><span class="hit">  restore  tests/test_timeout.py</span></span>
+<span class="l i11"><span class="hit">  restore  app/config.py</span></span>
+<span class="l i4">  this rewind is step 15; undo it with: rewindagents rewind 14 --session demo</span>
 <span class="l"><span class="c"># the tests are back; the first 12 steps stay</span></span>
-<span class="l"><span class="p">$ </span>git status --short</span>
-<span class="l"> M README.md</span>
-<span class="l"> M app/config.py</span>
-<span class="l"> M app/server.py</span>
-<span class="l">?? tests/test_timeout.py</span></code></pre></div>
+<span class="l"><span class="p">$ </span><span class="sel">git status <span class="nb">--short</span></span></span>
+<span class="l i3"> M README.md</span>
+<span class="l i3"> M app/config.py</span>
+<span class="l i3"> M app/server.py</span>
+<span class="l i2">?? tests/test_timeout.py</span></code></pre></div>
 </div>
 </div></section>
 
 <section class="sec" id="timeline" aria-labelledby="h-timeline"><div class="wrap">
-<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="13.4" height="1" fill="#121412"/><rect x="13.4" y="16" width="70.6" height="1" fill="#838C86"/><rect x="1.5" y="12" width="1" height="5" fill="#121412"/><rect x="24.4" y="12" width="1" height="5" fill="#838C86"/><rect x="35.8" y="12" width="1" height="5" fill="#838C86"/><rect x="47.2" y="12" width="1" height="5" fill="#838C86"/><rect x="58.6" y="12" width="1" height="5" fill="#838C86"/><rect x="70.1" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M10.4 1H16.4V4L14.4 6.5V17H12.4V6.5L10.4 4Z" fill="#B82A16"/></svg><span class="n">02</span><span>The timeline</span></p>
+<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="19.8" height="1" fill="#121412"/><rect x="19.8" y="16" width="64.2" height="1" fill="#838C86"/><rect x="1.5" y="12" width="1" height="5" fill="#121412"/><rect x="10.4" y="12" width="1" height="5" fill="#121412"/><rect x="28.2" y="12" width="1" height="5" fill="#838C86"/><rect x="37.1" y="12" width="1" height="5" fill="#838C86"/><rect x="45.9" y="12" width="1" height="5" fill="#838C86"/><rect x="54.8" y="12" width="1" height="5" fill="#838C86"/><rect x="63.7" y="12" width="1" height="5" fill="#838C86"/><rect x="72.6" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M16.8 1H22.8V4L20.8 6.5V17H18.8V6.5L16.8 4Z" fill="#B82A16"/></svg><span class="n">03</span><span>The timeline</span></p>
 <div class="head" data-reveal><h2 id="h-timeline">The flight recorder for your coding agent.</h2>
 <p class="lede">See exactly what your agent did, step by step, with the diff each step made. Take back the whole session, one step, or one file, and preview the change before you make it.</p></div>
 <figure class="shot"><img src="assets/ui-timeline.png" alt="rewindagents ui: the demo session as a timeline. Steps 13 and 14 are struck through as rewound by step 15; the right panel shows the diff step 15 restored, with Preview rewind to here and Rewind to here buttons" width="1440" height="900" loading="lazy">
 <figcaption><code>rewindagents ui</code> on the demo session: steps 13 and 14 struck through, rewound by step 15. Local only, on 127.0.0.1, behind a one-time token.</figcaption></figure>
 <div class="trio">
-<div><h3>One command to set up</h3><p><code>init</code> finds the agents you have and adds the hook to each one, keeping every hook already there.</p><pre class="term"><code><span class="l"><span class="p">$ </span>pipx install <span class="nb">git+https://</span><wbr><span class="nb">github.com/</span><wbr><span class="nb">Johnbjoseph-cybersec/</span><wbr><span class="nb">rewindagents</span> &amp;&amp; cd <span class="nb">your-project</span> &amp;&amp; rewindagents init</span></code></pre></div>
+<div><h3>One command to set up</h3><p><code>init</code> finds the agents you have and adds the hook to each one, keeping every hook already there.</p><pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">pipx install <span class="nb">git+https://</span><wbr><span class="nb">github.com/</span><wbr><span class="nb">Johnbjoseph-cybersec/</span><wbr><span class="nb">rewindagents</span> &amp;&amp; cd <span class="nb">your-project</span> &amp;&amp; rewindagents init</span></span></code></pre></div>
 <div><h3>See it</h3><p>The timeline in your browser: every step, every file, every diff. <kbd>j</kbd> <kbd>k</kbd> to move, <kbd>r</kbd> to rewind.</p><pre class="term"><code><span class="l"><span class="c"># opens the timeline in your browser; Ctrl+C stops it</span></span>
-<span class="l"><span class="p">$ </span>rewindagents ui</span></code></pre></div>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents ui</span></span></code></pre></div>
 <div><h3>Take back exactly what you mean</h3><p>Preview a rewind as a diff, then take back the whole session or a single file. Every rewind is a new step, so it can be undone.</p><pre class="term"><code><span class="l"><span class="c"># what taking it back to step 12 would change</span></span>
-<span class="l"><span class="p">$ </span>rewindagents diff 12</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents diff 12</span></span>
 <span class="l"><span class="c"># take back just that file</span></span>
-<span class="l"><span class="p">$ </span>rewindagents rewind 12 --only src/db.py</span></code></pre></div>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents rewind 12 <span class="nb">--only src/db.py</span></span></span></code></pre></div>
 </div>
 </div></section>
 
 <section class="sec" id="install" aria-labelledby="h-install"><div class="wrap">
-<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="24.9" height="1" fill="#121412"/><rect x="24.9" y="16" width="59.1" height="1" fill="#838C86"/><rect x="1.5" y="12" width="1" height="5" fill="#121412"/><rect x="12.9" y="12" width="1" height="5" fill="#121412"/><rect x="35.8" y="12" width="1" height="5" fill="#838C86"/><rect x="47.2" y="12" width="1" height="5" fill="#838C86"/><rect x="58.6" y="12" width="1" height="5" fill="#838C86"/><rect x="70.1" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M21.9 1H27.9V4L25.9 6.5V17H23.9V6.5L21.9 4Z" fill="#B82A16"/></svg><span class="n">03</span><span>Install</span></p>
+<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="28.7" height="1" fill="#121412"/><rect x="28.7" y="16" width="55.3" height="1" fill="#838C86"/><rect x="1.5" y="12" width="1" height="5" fill="#121412"/><rect x="10.4" y="12" width="1" height="5" fill="#121412"/><rect x="19.3" y="12" width="1" height="5" fill="#121412"/><rect x="37.1" y="12" width="1" height="5" fill="#838C86"/><rect x="45.9" y="12" width="1" height="5" fill="#838C86"/><rect x="54.8" y="12" width="1" height="5" fill="#838C86"/><rect x="63.7" y="12" width="1" height="5" fill="#838C86"/><rect x="72.6" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M25.7 1H31.7V4L29.7 6.5V17H27.7V6.5L25.7 4Z" fill="#B82A16"/></svg><span class="n">04</span><span>Install</span></p>
 <div class="head"><h2 id="h-install">Install, then add the hook to a project.</h2>
 <p class="lede">Python &gt;=3.10. No dependencies beyond the standard library. Tested on Python 3.15 on macOS. Not on PyPI yet, so install from the repository. The <a href="docs/">docs</a> walk through a first session.</p></div>
-<div class="install-row"><div><h3>Get the command</h3><p><code>pipx</code> installs it from the repository, as in the panel. From a clone, <code>pip install .</code> works too; without installing, <code>PYTHONPATH=src python3 -m rewindagents</code> runs the same CLI.</p></div><pre class="term"><code><span class="l"><span class="p">$ </span>pipx install <span class="nb">git+https://</span><wbr><span class="nb">github.com/</span><wbr><span class="nb">Johnbjoseph-cybersec/</span><wbr><span class="nb">rewindagents</span></span>
+<div class="install-row"><div><h3>Get the command</h3><p><code>pipx</code> installs it from the repository, as in the panel. From a clone, <code>pip install .</code> works too; without installing, <code>PYTHONPATH=src python3 -m rewindagents</code> runs the same CLI.</p></div><pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">pipx install <span class="nb">git+https://</span><wbr><span class="nb">github.com/</span><wbr><span class="nb">Johnbjoseph-cybersec/</span><wbr><span class="nb">rewindagents</span></span></span>
 <span class="l"><span class="c"># or: pip install <span class="nb">git+https://</span><wbr><span class="nb">...</span></span></span>
-<span class="l"><span class="p">$ </span>rewindagents --version</span></code></pre></div>
-<div class="pair"><div><h3>Add the Claude Code hook</h3><pre class="term"><code><span class="l"><span class="p">$ </span>cd /path/to/your/project</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents <span class="nb">--version</span></span></span></code></pre></div>
+<div class="pair"><div><h3>Add the Claude Code hook</h3><pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">cd /path/to/your/project</span></span>
 <span class="l"><span class="c"># adds the hook to .claude/settings.json in this project</span></span>
-<span class="l"><span class="p">$ </span>rewindagents install</span>
-<span class="l"><span class="p">$ </span>rewindagents install --settings ~/.claude/settings.json</span>
-<span class="l"><span class="c"># or for every project</span></span></code></pre></div><div><h3>Codex and Cursor hooks</h3><pre class="term"><code><span class="l"><span class="c"># adds the hook to .codex/hooks.json in this project</span></span>
-<span class="l"><span class="p">$ </span>rewindagents install --agent codex</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents install</span></span>
+<span class="l"><span class="c"># or for every project</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents install <span class="nb">--settings ~/.claude/settings.json</span></span></span></code></pre></div><div><h3>Codex and Cursor hooks</h3><pre class="term"><code><span class="l"><span class="c"># adds the hook to .codex/hooks.json in this project</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents install <span class="nb">--agent codex</span></span></span>
 <span class="l"><span class="c"># adds the hook to .cursor/hooks.json in this project</span></span>
-<span class="l"><span class="p">$ </span>rewindagents install --agent cursor</span>
-<span class="l"><span class="p">$ </span>rewindagents install --agent cursor --settings ~/.cursor/hooks.json</span>
-<span class="l"><span class="c"># or for every project</span></span></code></pre></div></div>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents install <span class="nb">--agent cursor</span></span></span>
+<span class="l"><span class="c"># or for every project</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents install <span class="nb">--agent cursor</span> <span class="nb">--settings ~/.cursor/hooks.json</span></span></span></code></pre></div></div>
 <div class="pair-note"><p><code>install</code> keeps everything already in the file and does nothing if the hook is already there. For Codex the file is <code>.codex/hooks.json</code> and for Cursor <code>.cursor/hooks.json</code>; those two hooks are tested with the payloads in the vendors&#x27; documentation, not yet in a live session. <code>.rewindagents/</code> gets its own <code>.gitignore</code>, so the log and the copies stay out of your commits.</p></div>
 </div></section>
 
 <section class="sec" id="how" aria-labelledby="h-how"><div class="wrap">
-<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="36.3" height="1" fill="#121412"/><rect x="36.3" y="16" width="47.7" height="1" fill="#838C86"/><rect x="1.5" y="12" width="1" height="5" fill="#121412"/><rect x="12.9" y="12" width="1" height="5" fill="#121412"/><rect x="24.4" y="12" width="1" height="5" fill="#121412"/><rect x="47.2" y="12" width="1" height="5" fill="#838C86"/><rect x="58.6" y="12" width="1" height="5" fill="#838C86"/><rect x="70.1" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M33.3 1H39.3V4L37.3 6.5V17H35.3V6.5L33.3 4Z" fill="#B82A16"/></svg><span class="n">04</span><span>How it works</span></p>
+<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="37.6" height="1" fill="#121412"/><rect x="37.6" y="16" width="46.4" height="1" fill="#838C86"/><rect x="1.5" y="12" width="1" height="5" fill="#121412"/><rect x="10.4" y="12" width="1" height="5" fill="#121412"/><rect x="19.3" y="12" width="1" height="5" fill="#121412"/><rect x="28.2" y="12" width="1" height="5" fill="#121412"/><rect x="45.9" y="12" width="1" height="5" fill="#838C86"/><rect x="54.8" y="12" width="1" height="5" fill="#838C86"/><rect x="63.7" y="12" width="1" height="5" fill="#838C86"/><rect x="72.6" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M34.6 1H40.6V4L38.6 6.5V17H36.6V6.5L34.6 4Z" fill="#B82A16"/></svg><span class="n">05</span><span>How it works</span></p>
 <div class="head"><h2 id="h-how">Record. Checkpoint. Rewind.</h2>
 <p class="lede">A hook runs before and after every tool call the agent makes. It never stops a call and never changes one: it always exits 0, even when its own input is broken or the disk is full, and prints nothing but the one answer Cursor requires from a permission hook.</p></div>
 <ol class="steps">
@@ -167,8 +207,16 @@
 </ol>
 </div></section>
 
+<section class="sec" id="tested" aria-labelledby="h-tested"><div class="wrap">
+<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="46.4" height="1" fill="#121412"/><rect x="46.4" y="16" width="37.6" height="1" fill="#838C86"/><rect x="1.5" y="12" width="1" height="5" fill="#121412"/><rect x="10.4" y="12" width="1" height="5" fill="#121412"/><rect x="19.3" y="12" width="1" height="5" fill="#121412"/><rect x="28.2" y="12" width="1" height="5" fill="#121412"/><rect x="37.1" y="12" width="1" height="5" fill="#121412"/><rect x="54.8" y="12" width="1" height="5" fill="#838C86"/><rect x="63.7" y="12" width="1" height="5" fill="#838C86"/><rect x="72.6" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M43.4 1H49.4V4L47.4 6.5V17H45.4V6.5L43.4 4Z" fill="#B82A16"/></svg><span class="n">06</span><span>Tested</span></p>
+<div class="head"><h2 id="h-tested">The claims on this page are tests.</h2>
+<p class="lede">Each row is a claim made above and the test in the repository that checks it. The site build stops if a test named here no longer exists.</p></div>
+<ul class="ledger proof"><li><span class="claim">Every line in the fork and compare panels is what <code>ux-review/try-runs.sh</code> printed.</span><span class="cites"><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/tests/test_runs_demo.py"><span class="f">tests/test_runs_demo.py</span> test_<wbr>every_<wbr>quoted_<wbr>line_<wbr>is_<wbr>what_<wbr>the_<wbr>script_<wbr>prints</a></span></li><li><span class="claim"><code>fork</code> rebuilds the step&#x27;s files and leaves the project, its <code>HEAD</code> and index alone.</span><span class="cites"><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/tests/test_runs.py"><span class="f">tests/test_runs.py</span> test_<wbr>fork_<wbr>holds_<wbr>the_<wbr>files_<wbr>as_<wbr>they_<wbr>were_<wbr>right_<wbr>after_<wbr>the_<wbr>step_<wbr>and_<wbr>leaves_<wbr>the_<wbr>project_<wbr>alone</a></span></li><li><span class="claim">An agent in the run records into the run&#x27;s own log, not the project&#x27;s.</span><span class="cites"><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/tests/test_runs.py"><span class="f">tests/test_runs.py</span> test_<wbr>an_<wbr>agent_<wbr>in_<wbr>the_<wbr>run_<wbr>records_<wbr>into_<wbr>the_<wbr>run_<wbr>not_<wbr>into_<wbr>the_<wbr>project</a></span></li><li><span class="claim"><code>compare --check</code> runs your command in each run and reports its exit code.</span><span class="cites"><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/tests/test_runs.py"><span class="f">tests/test_runs.py</span> test_<wbr>check_<wbr>runs_<wbr>in_<wbr>each_<wbr>run_<wbr>and_<wbr>reports_<wbr>its_<wbr>exit_<wbr>code</a></span></li><li><span class="claim"><code>compare --diff</code> is a diff <code>git apply</code> takes: the first run&#x27;s files become the second&#x27;s.</span><span class="cites"><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/tests/test_runs.py"><span class="f">tests/test_runs.py</span> test_<wbr>diff_<wbr>between_<wbr>two_<wbr>runs_<wbr>applies_<wbr>with_<wbr>git</a></span></li><li><span class="claim">A tampered log or a step that cannot be rebuilt exactly is refused, and nothing is left behind.</span><span class="cites"><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/tests/test_runs.py"><span class="f">tests/test_runs.py</span> test_<wbr>a_<wbr>tampered_<wbr>log_<wbr>is_<wbr>refused</a><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/tests/test_runs.py"><span class="f">tests/test_runs.py</span> test_<wbr>a_<wbr>step_<wbr>that_<wbr>cannot_<wbr>be_<wbr>rebuilt_<wbr>exactly_<wbr>is_<wbr>refused</a><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/tests/test_runs.py"><span class="f">tests/test_runs.py</span> test_<wbr>refusals_<wbr>leave_<wbr>nothing_<wbr>behind</a></span></li><li><span class="claim">Every terminal line on this page and in the clip is what the CLI printed.</span><span class="cites"><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/tests/test_demo.py"><span class="f">tests/test_demo.py</span> test_<wbr>every_<wbr>shown_<wbr>command_<wbr>replays_<wbr>exactly</a><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/tests/test_demo.py"><span class="f">tests/test_demo.py</span> test_<wbr>installed_<wbr>binary_<wbr>prints_<wbr>the_<wbr>rewind_<wbr>the_<wbr>clip_<wbr>shows</a></span></li><li><span class="claim">Editing, deleting or reordering a record makes <code>verify</code> fail.</span><span class="cites"><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/tests/test_log.py"><span class="f">tests/test_log.py</span> test_<wbr>edited_<wbr>args_<wbr>detected</a><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/tests/test_log.py"><span class="f">tests/test_log.py</span> test_<wbr>deleted_<wbr>middle_<wbr>record_<wbr>detected</a><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/tests/test_log.py"><span class="f">tests/test_log.py</span> test_<wbr>reordered_<wbr>records_<wbr>detected</a></span></li><li><span class="claim">Records cut off the end are caught only against a pinned head.</span><span class="cites"><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/tests/test_log.py"><span class="f">tests/test_log.py</span> test_<wbr>truncated_<wbr>tail_<wbr>caught_<wbr>only_<wbr>with_<wbr>pinned_<wbr>head</a></span></li><li><span class="claim"><code>rewind</code> refuses a tampered log and changes nothing.</span><span class="cites"><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/tests/test_rewind.py"><span class="f">tests/test_rewind.py</span> test_<wbr>tampered_<wbr>log_<wbr>is_<wbr>refused_<wbr>and_<wbr>nothing_<wbr>changes</a></span></li><li><span class="claim">A rewind can itself be rewound.</span><span class="cites"><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/tests/test_rewind.py"><span class="f">tests/test_rewind.py</span> test_<wbr>rewind_<wbr>can_<wbr>itself_<wbr>be_<wbr>rewound</a></span></li><li><span class="claim">A real <code>sed</code> and <code>rm</code>, run through the installed command, are put back.</span><span class="cites"><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/tests/test_bashscan.py"><span class="f">tests/test_bashscan.py</span> test_<wbr>real_<wbr>sed_<wbr>and_<wbr>rm_<wbr>undone_<wbr>through_<wbr>the_<wbr>installed_<wbr>command_<wbr>path</a></span></li><li><span class="claim">The hook prints nothing and exits 0, even on garbage input or a store it cannot write.</span><span class="cites"><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/tests/test_hook.py"><span class="f">tests/test_hook.py</span> test_<wbr>garbage_<wbr>input_<wbr>exits_<wbr>zero_<wbr>silently</a><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/tests/test_hook.py"><span class="f">tests/test_hook.py</span> test_<wbr>unwritable_<wbr>store_<wbr>exits_<wbr>zero</a></span></li><li><span class="claim"><code>branch</code> keeps the current files without touching <code>HEAD</code> or the index.</span><span class="cites"><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/tests/test_rewind.py"><span class="f">tests/test_rewind.py</span> test_<wbr>git_<wbr>branch_<wbr>keeps_<wbr>the_<wbr>current_<wbr>files_<wbr>without_<wbr>touching_<wbr>head_<wbr>or_<wbr>index</a></span></li><li><span class="claim">A file outside the project is never touched.</span><span class="cites"><a href="https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/tests/test_rewind.py"><span class="f">tests/test_rewind.py</span> test_<wbr>file_<wbr>outside_<wbr>the_<wbr>project_<wbr>is_<wbr>never_<wbr>touched</a></span></li></ul>
+<div class="cmdrow plain"><p class="small">Run every test from a clone, with the README&#x27;s command. The <a href="docs/#tests">docs</a> say which tests need the installed command.</p><pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">python3 -m unittest discover -s tests -v</span></span></code></pre></div>
+</div></section>
+
 <section class="sec" id="limits" aria-labelledby="h-limits"><div class="wrap">
-<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="47.7" height="1" fill="#121412"/><rect x="47.7" y="16" width="36.3" height="1" fill="#838C86"/><rect x="1.5" y="12" width="1" height="5" fill="#121412"/><rect x="12.9" y="12" width="1" height="5" fill="#121412"/><rect x="24.4" y="12" width="1" height="5" fill="#121412"/><rect x="35.8" y="12" width="1" height="5" fill="#121412"/><rect x="58.6" y="12" width="1" height="5" fill="#838C86"/><rect x="70.1" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M44.7 1H50.7V4L48.7 6.5V17H46.7V6.5L44.7 4Z" fill="#B82A16"/></svg><span class="n">05</span><span>Limits</span></p>
+<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="55.3" height="1" fill="#121412"/><rect x="55.3" y="16" width="28.7" height="1" fill="#838C86"/><rect x="1.5" y="12" width="1" height="5" fill="#121412"/><rect x="10.4" y="12" width="1" height="5" fill="#121412"/><rect x="19.3" y="12" width="1" height="5" fill="#121412"/><rect x="28.2" y="12" width="1" height="5" fill="#121412"/><rect x="37.1" y="12" width="1" height="5" fill="#121412"/><rect x="45.9" y="12" width="1" height="5" fill="#121412"/><rect x="63.7" y="12" width="1" height="5" fill="#838C86"/><rect x="72.6" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M52.3 1H58.3V4L56.3 6.5V17H54.3V6.5L52.3 4Z" fill="#B82A16"/></svg><span class="n">07</span><span>Limits</span></p>
 <div class="head"><h2 id="h-limits">What it records, and where it stops.</h2>
 <p class="lede">The real behaviour and the real limit, from the code. <code>rewind</code> reports every file it could not put back and exits 1 if there was one.</p></div>
 <ul class="ledger">
@@ -182,52 +230,52 @@
 </div></section>
 
 <section class="sec" id="commands" aria-labelledby="h-cmd"><div class="wrap">
-<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="59.1" height="1" fill="#121412"/><rect x="59.1" y="16" width="24.9" height="1" fill="#838C86"/><rect x="1.5" y="12" width="1" height="5" fill="#121412"/><rect x="12.9" y="12" width="1" height="5" fill="#121412"/><rect x="24.4" y="12" width="1" height="5" fill="#121412"/><rect x="35.8" y="12" width="1" height="5" fill="#121412"/><rect x="47.2" y="12" width="1" height="5" fill="#121412"/><rect x="70.1" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M56.1 1H62.1V4L60.1 6.5V17H58.1V6.5L56.1 4Z" fill="#B82A16"/></svg><span class="n">06</span><span>Commands</span></p>
+<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="64.2" height="1" fill="#121412"/><rect x="64.2" y="16" width="19.8" height="1" fill="#838C86"/><rect x="1.5" y="12" width="1" height="5" fill="#121412"/><rect x="10.4" y="12" width="1" height="5" fill="#121412"/><rect x="19.3" y="12" width="1" height="5" fill="#121412"/><rect x="28.2" y="12" width="1" height="5" fill="#121412"/><rect x="37.1" y="12" width="1" height="5" fill="#121412"/><rect x="45.9" y="12" width="1" height="5" fill="#121412"/><rect x="54.8" y="12" width="1" height="5" fill="#121412"/><rect x="72.6" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M61.2 1H67.2V4L65.2 6.5V17H63.2V6.5L61.2 4Z" fill="#B82A16"/></svg><span class="n">08</span><span>Commands</span></p>
 <div class="head"><h2 id="h-cmd">Six commands. All of them local.</h2>
 <p class="lede">Run them from the project directory, the one holding <code>.rewindagents/</code>. They work on the latest session unless you pass <code>--session ID</code>.</p></div>
 <div class="cmdlist">
 <div class="cmdrow"><div><h3>Replay, rewind, branch</h3><p><code>branch N --name X</code> keeps the current files and, in a git repository, commits the whole working tree to <code>rewindagents/X</code> through a temporary index, so your <code>HEAD</code>, index and current branch stay as they were.</p></div><pre class="term"><code><span class="l"><span class="c"># one line per step: number, tool, file or command</span></span>
-<span class="l"><span class="p">$ </span>rewindagents replay</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents replay</span></span>
 <span class="l"><span class="c"># step 12 in full: input, checkpoints, result</span></span>
-<span class="l"><span class="p">$ </span>rewindagents replay --step 12</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents replay <span class="nb">--step 12</span></span></span>
 <span class="l"><span class="c"># what would change</span></span>
-<span class="l"><span class="p">$ </span>rewindagents rewind 12 <span class="nb">--dry-run</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents rewind 12 <span class="nb">--dry-run</span></span></span>
 <span class="l"><span class="c"># the same files, as a unified diff: now -&gt; step 12</span></span>
-<span class="l"><span class="p">$ </span>rewindagents diff 12</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents diff 12</span></span>
 <span class="l"><span class="c"># only that file (a directory means every file under it)</span></span>
-<span class="l"><span class="p">$ </span>rewindagents diff 12 src/db.py</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents diff 12 src/db.py</span></span>
 <span class="l"><span class="c"># files back to how they were right after step 12</span></span>
-<span class="l"><span class="p">$ </span>rewindagents rewind 12</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents rewind 12</span></span>
 <span class="l"><span class="c"># put back only these</span></span>
-<span class="l"><span class="p">$ </span>rewindagents rewind 12 --only src/db.py --only tests/</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents rewind 12 <span class="nb">--only src/db.py</span> <span class="nb">--only tests/</span></span></span>
 <span class="l"><span class="c"># keep the current files, then rewind to step 12</span></span>
-<span class="l"><span class="p">$ </span>rewindagents branch 12 --name try2</span></code></pre></div>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents branch 12 <span class="nb">--name try2</span></span></span></code></pre></div>
 <div class="cmdrow"><div><h3>Export a replay</h3><p>One HTML file with every step, its input and result, and for every file a step touched, the change that step made as a unified diff. Inline CSS only, no scripts, nothing fetched, the project&#x27;s path not in the page. A file over 256 KB is described, not diffed; a diff longer than 400 lines is cut, with the count left out.</p></div><pre class="term"><code><span class="l"><span class="c"># writes <span class="nb">.rewindagents/replay-&lt;session&gt;.html</span></span></span>
-<span class="l"><span class="p">$ </span>rewindagents export</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents export</span></span>
 <span class="l"><span class="c"># a given session, to a given file</span></span>
-<span class="l"><span class="p">$ </span>rewindagents export --session abc --out replay.html</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents export <span class="nb">--session abc</span> <span class="nb">--out replay.html</span></span></span>
 <span class="l"><span class="c"># steps, tools and paths only: no inputs, results or diffs</span></span>
-<span class="l"><span class="p">$ </span>rewindagents export <span class="nb">--no-contents</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents export <span class="nb">--no-contents</span></span></span>
 <span class="l"><span class="c"># keep secrets as recorded (they are replaced by default)</span></span>
-<span class="l"><span class="p">$ </span>rewindagents export <span class="nb">--no-redact</span></span></code></pre></div>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents export <span class="nb">--no-redact</span></span></span></code></pre></div>
 <div class="cmdrow"><div><h3>Find a session</h3><p>One line per session: id, first and last time, steps (with how many are rewinds), files touched. The latest session is marked. <code>--grep</code> keeps the sessions with a step whose command, file or input mentions the text, and lists those steps with their numbers.</p></div><pre class="term"><code><span class="l"><span class="c"># every session in the log: id, first and last time, steps, files touched</span></span>
-<span class="l"><span class="p">$ </span>rewindagents sessions</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents sessions</span></span>
 <span class="l"><span class="c"># only sessions with a step that mentions it, and those steps</span></span>
-<span class="l"><span class="p">$ </span>rewindagents sessions --grep config.py</span></code></pre></div>
-<div class="cmdrow"><div><h3>Verify the chain</h3><p>Checks every record against the one before it and names the first bad one. With <code>--head</code>, also catches records cut from the end.</p></div><pre class="term"><code><span class="l"><span class="p">$ </span>rewindagents verify --head <span class="nb">&lt;pinned-hash&gt;</span></span></code></pre></div>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents sessions <span class="nb">--grep config.py</span></span></span></code></pre></div>
+<div class="cmdrow"><div><h3>Verify the chain</h3><p>Checks every record against the one before it and names the first bad one. With <code>--head</code>, also catches records cut from the end.</p></div><pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">rewindagents verify <span class="nb">--head &lt;pinned-hash&gt;</span></span></span></code></pre></div>
 </div>
 </div></section>
 
 <section class="sec" id="pricing" aria-labelledby="h-pricing"><div class="wrap">
-<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="70.6" height="1" fill="#121412"/><rect x="70.6" y="16" width="13.4" height="1" fill="#838C86"/><rect x="1.5" y="12" width="1" height="5" fill="#121412"/><rect x="12.9" y="12" width="1" height="5" fill="#121412"/><rect x="24.4" y="12" width="1" height="5" fill="#121412"/><rect x="35.8" y="12" width="1" height="5" fill="#121412"/><rect x="47.2" y="12" width="1" height="5" fill="#121412"/><rect x="58.6" y="12" width="1" height="5" fill="#121412"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M67.6 1H73.6V4L71.6 6.5V17H69.6V6.5L67.6 4Z" fill="#B82A16"/></svg><span class="n">07</span><span>Pricing</span></p>
+<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="73.1" height="1" fill="#121412"/><rect x="73.1" y="16" width="10.9" height="1" fill="#838C86"/><rect x="1.5" y="12" width="1" height="5" fill="#121412"/><rect x="10.4" y="12" width="1" height="5" fill="#121412"/><rect x="19.3" y="12" width="1" height="5" fill="#121412"/><rect x="28.2" y="12" width="1" height="5" fill="#121412"/><rect x="37.1" y="12" width="1" height="5" fill="#121412"/><rect x="45.9" y="12" width="1" height="5" fill="#121412"/><rect x="54.8" y="12" width="1" height="5" fill="#121412"/><rect x="63.7" y="12" width="1" height="5" fill="#121412"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M70.1 1H76.1V4L74.1 6.5V17H72.1V6.5L70.1 4Z" fill="#B82A16"/></svg><span class="n">09</span><span>Pricing</span></p>
 <div class="head"><h2 id="h-pricing">The tool is free. Cloud is planned.</h2>
 <p class="lede">Everything that exists is open source under Apache-2.0. A paid tier may come later; nothing is sold before it exists.</p></div>
-<div class="plans"><section class="plan" aria-labelledby="plan-oss"><h3 id="plan-oss">Open source <span class="pill">Apache-2.0</span></h3><div class="price">Free</div><p class="pricenote">Everything the tool does today.</p><ul><li class="has"><span>The recorder and the Claude Code hook: every tool call in a hash-chained log, every file saved before it changes</span></li><li class="has"><span><code>replay</code>, <code>rewind</code> and <code>branch</code>, and <code>verify</code> against a pinned head</span></li><li class="has"><span><code>export</code>: one session as one HTML page, with the diff each step made</span></li><li class="has"><span><code>sessions</code>: every session in the log, and search by command or path</span></li><li class="has"><span>Runs on your machine. Standard library only. No account.</span></li></ul><a class="btn btn-primary" href="index.html#install">Install</a></section><section class="plan" aria-labelledby="plan-cloud"><h3 id="plan-cloud">Cloud <span class="pill pill-planned">planned</span></h3><div class="price">Not yet priced</div><p class="pricenote">Not for sale yet. No price has been set, so none is shown. If you want it, open the waitlist issue on GitHub and say what you would pay for.</p><ul><li class="planned"><span>Cloud sync of session history across your machines</span></li><li class="planned"><span>Shareable replay links: the export page, hosted, for a code review or a bug report</span></li><li class="planned"><span>Long retention of sessions</span></li><li class="planned"><span>Session search across all of them</span></li></ul><a class="btn btn-ghost" href="https://github.com/Johnbjoseph-cybersec/rewindagents/issues/new?title=Cloud+waitlist&amp;labels=waitlist&amp;body=I+would+use+a+paid+tier+for%3A">Join the waitlist</a></section></div>
+<div class="plans"><section class="plan" aria-labelledby="plan-oss"><h3 id="plan-oss">Open source <span class="pill">Apache-2.0</span></h3><div class="price">Free</div><p class="pricenote">Everything the tool does today.</p><ul><li class="has"><span>The recorder and hooks for 7 coding agents: every tool call in a hash-chained log, every file saved before it changes</span></li><li class="has"><span><code>fork</code> any recorded step and <code>compare</code> the runs, with your own <code>--check</code></span></li><li class="has"><span><code>replay</code>, <code>rewind</code> and <code>branch</code>, and <code>verify</code> against a pinned head</span></li><li class="has"><span><code>export</code>: one session as one HTML page, with the diff each step made</span></li><li class="has"><span><code>sessions</code>: every session in the log, and search by command or path</span></li><li class="has"><span>Runs on your machine. Standard library only. No account.</span></li></ul><a class="btn btn-primary" href="index.html#install">Install</a></section><section class="plan" aria-labelledby="plan-cloud"><h3 id="plan-cloud">Cloud <span class="pill pill-planned">planned</span></h3><div class="price">Not yet priced</div><p class="pricenote">Hosted and opt-in, for teams; the local tool never needs it. Not for sale yet. No price has been set, so none is shown. If you want it, open the waitlist issue on GitHub and say what you would pay for.</p><ul><li class="planned"><span>A shared page per comparison, linkable from a pull request or a chat</span></li><li class="planned"><span>Saved starting points run in parallel cloud sandboxes, so ten attempts do not occupy a laptop</span></li><li class="planned"><span>A team&#x27;s comparison history across repos and people: which agent, model or prompt wins on which kind of task</span></li><li class="planned"><span>Scheduled re-runs of a team&#x27;s starting points when a model, prompt or CLAUDE.md changes, with a report of what got worse</span></li><li class="planned"><span>Retention, SSO, seats: the things an organisation buys</span></li></ul><a class="btn btn-ghost" href="https://github.com/Johnbjoseph-cybersec/rewindagents/issues/new?title=Cloud+waitlist&amp;labels=waitlist&amp;body=I+would+use+a+paid+tier+for%3A">Join the waitlist</a></section></div>
 <p class="small more">Details on the <a href="pricing.html">pricing page</a>.</p>
 </div></section>
 
 <section class="sec" id="faq" aria-labelledby="h-faq"><div class="wrap">
-<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="82.0" height="1" fill="#121412"/><rect x="82.0" y="16" width="2.0" height="1" fill="#838C86"/><rect x="1.5" y="12" width="1" height="5" fill="#121412"/><rect x="12.9" y="12" width="1" height="5" fill="#121412"/><rect x="24.4" y="12" width="1" height="5" fill="#121412"/><rect x="35.8" y="12" width="1" height="5" fill="#121412"/><rect x="47.2" y="12" width="1" height="5" fill="#121412"/><rect x="58.6" y="12" width="1" height="5" fill="#121412"/><rect x="70.1" y="12" width="1" height="5" fill="#121412"/><path d="M79.0 1H85.0V4L83.0 6.5V17H81.0V6.5L79.0 4Z" fill="#B82A16"/></svg><span class="n">08</span><span>Questions</span></p>
+<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="82.0" height="1" fill="#121412"/><rect x="82.0" y="16" width="2.0" height="1" fill="#838C86"/><rect x="1.5" y="12" width="1" height="5" fill="#121412"/><rect x="10.4" y="12" width="1" height="5" fill="#121412"/><rect x="19.3" y="12" width="1" height="5" fill="#121412"/><rect x="28.2" y="12" width="1" height="5" fill="#121412"/><rect x="37.1" y="12" width="1" height="5" fill="#121412"/><rect x="45.9" y="12" width="1" height="5" fill="#121412"/><rect x="54.8" y="12" width="1" height="5" fill="#121412"/><rect x="63.7" y="12" width="1" height="5" fill="#121412"/><rect x="72.6" y="12" width="1" height="5" fill="#121412"/><path d="M79.0 1H85.0V4L83.0 6.5V17H81.0V6.5L79.0 4Z" fill="#B82A16"/></svg><span class="n">10</span><span>Questions</span></p>
 <div class="head"><h2 id="h-faq">Questions.</h2></div>
 <div class="faq"><details><summary>Does it stop or change what the agent does?</summary><p>No. The hook records and checkpoints, then exits 0. It has no opinion about any call. The agent runs exactly as it would without the hook; the difference is that afterwards every step is on record and every file change can be put back.</p></details><details><summary>Does anything leave my machine?</summary><p>No. rewindagents makes no outbound network connections: a test checks that no module under <code>src/</code> imports <code>socket</code>, <code>http</code> or <code>urllib</code>, except the timeline UI, which serves <code>rewindagents ui</code> on 127.0.0.1 only and checks a one-time token on every request. The log and the file copies live in <code>.rewindagents/</code> inside your project, and nothing reads them but you.</p></details><details><summary>Which agents does it work with?</summary><p>Claude Code, through its <code>PreToolUse</code> and <code>PostToolUse</code> hooks; Codex, through the same hook file shape in <code>.codex/hooks.json</code>; Cursor, through <code>.cursor/hooks.json</code>. The Claude Code hook has run in real sessions. The Codex and Cursor hooks are built from the vendors&#x27; hook documentation and tested with the documented payloads, not yet in a live session; the README says the same.</p></details><details><summary>Does it need git?</summary><p>No. Recording, replay and rewind work in any directory. Git changes two things: around <code>Bash</code> commands the scan follows <code>git ls-files</code>, so git-ignored files are left alone, and <code>branch</code> commits the current files to a git branch. Outside git, <code>branch</code> keeps them in the log only.</p></details><details><summary>What happens if the log is tampered with?</summary><p><code>verify</code> names the first record that does not match the one before it, <code>rewind</code> changes nothing, and <code>export</code> still writes the page, with a notice naming the bad record, and exits 1. Records cut off the end are only caught against a pinned head hash.</p></details><details><summary>Is it free?</summary><p>Yes, under Apache-2.0: the recorder, the hook, replay, rewind, branch, export and sessions. A paid Cloud tier is planned and nothing is sold before it exists.</p></details></div>
 </div></section>
@@ -235,7 +283,7 @@
 <section class="sec close" aria-labelledby="h-close"><div class="wrap">
 <div class="closegrid"><div><h2 id="h-close">Install it, add the hook, carry on.</h2>
 <div class="cta"><a class="btn btn-primary" href="#install">Install</a><a class="btn btn-ghost" href="docs/">Read the docs</a></div></div>
-<pre class="term"><code><span class="l"><span class="p">$ </span>pipx install <span class="nb">git+https://</span><wbr><span class="nb">github.com/</span><wbr><span class="nb">Johnbjoseph-cybersec/</span><wbr><span class="nb">rewindagents</span></span>
+<pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">pipx install <span class="nb">git+https://</span><wbr><span class="nb">github.com/</span><wbr><span class="nb">Johnbjoseph-cybersec/</span><wbr><span class="nb">rewindagents</span></span></span>
 <span class="l"><span class="c"># or: pip install <span class="nb">git+https://</span><wbr><span class="nb">...</span></span></span></code></pre></div>
 </div></section>
 
