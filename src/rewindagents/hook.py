@@ -26,6 +26,7 @@ import os
 import shlex
 import site
 import sys
+import threading
 import time
 from pathlib import Path
 from typing import Any
@@ -46,47 +47,100 @@ def store_dir(cwd: str | Path) -> Path:
     return Path(cwd) / ".rewindagents"
 
 
+# Store locks this process holds: lock path -> [holders, open file]. A shared request for a lock the process
+# already holds joins that hold instead of opening a second handle: on Windows (no shared lock in msvcrt) a
+# second handle would wait for the first forever (CI run 43437432241). The OS lock goes when the last leaves.
+_HELD: dict[str, list] = {}
+_HELD_GUARD = threading.Lock()
+
+
 @contextlib.contextmanager
 def store_lock(store: Path, exclusive: bool = False, timeout: float = 30.0):
     """Lock on .rewindagents/lock. Everything that saves a stored copy and then writes the record naming it
     (the hook, rewind, branch, import) holds it shared from the copy to the record; `gc` holds it exclusive,
     so it never sees a copy whose record is not written yet. Several shared holders run at once.
 
-    Shared: if the lock file cannot be opened or locked, carry on unlocked (recording matters more).
-    Exclusive: wait up to `timeout` seconds, then raise TimeoutError."""
-    try:
-        store.mkdir(parents=True, exist_ok=True)
-        fh = (store / "lock").open("a+")
-    except OSError:
-        if exclusive:
-            raise
-        yield
-        return
-    locked = False
-    try:
-        if exclusive:
+    Shared: if the lock file cannot be opened or locked, carry on unlocked (recording matters more). Inside a
+    hold of the same store in this process, a shared request joins that hold.
+    Exclusive: wait up to `timeout` seconds, then raise TimeoutError. It never joins: inside a hold of its own
+    process it times out, as it would against another process."""
+    key = os.path.abspath(store / "lock")
+    fh = None
+    if exclusive or not _join(key):
+        try:
+            store.mkdir(parents=True, exist_ok=True)
+            fh = (store / "lock").open("a+")
+        except OSError:
+            if exclusive:
+                raise
+            yield
+            return
+    if fh is not None:
+        locked = joined = False
+        try:
             deadline = time.monotonic() + timeout
             while True:
+                if not exclusive and _join(key):   # another thread of this process took it meanwhile: share it
+                    joined = True
+                    break
                 try:
-                    filelock.acquire(fh, exclusive=True, blocking=False)
+                    filelock.acquire(fh, exclusive=exclusive, blocking=False)
                     locked = True
                     break
                 except BlockingIOError:
-                    if time.monotonic() > deadline:
+                    if exclusive and time.monotonic() > deadline:
                         raise TimeoutError(f"the store was still in use after {timeout:g} s")
                     time.sleep(0.05)
+                except OSError:
+                    if exclusive:
+                        raise
+                    break                          # shared: carry on unlocked
+        except BaseException:
+            fh.close()
+            raise
+        if locked:
+            with _HELD_GUARD:
+                held = _HELD.get(key)
+                if held:                           # a thread here locked it at the same moment: share that one
+                    held[0] += 1
+                else:
+                    _HELD[key] = [1, fh]
+            if held:
+                with contextlib.suppress(OSError):
+                    filelock.release(fh)
+                fh.close()
         else:
-            try:
-                filelock.acquire(fh, exclusive=False)
-                locked = True
-            except OSError:
-                pass
+            fh.close()
+            if not joined:                         # shared and unlocked: carry on, as before
+                yield
+                return
+    try:
         yield
     finally:
-        if locked:
-            with contextlib.suppress(OSError):
-                filelock.release(fh)   # Windows wants an explicit unlock before close
-        fh.close()
+        _leave(key)
+
+
+def _join(key: str) -> bool:
+    """Join this process's hold of the store lock at `key`, if there is one."""
+    with _HELD_GUARD:
+        held = _HELD.get(key)
+        if held:
+            held[0] += 1
+        return bool(held)
+
+
+def _leave(key: str) -> None:
+    """One holder of a store lock this process holds is done; the last one unlocks and closes the file."""
+    with _HELD_GUARD:
+        held = _HELD[key]
+        held[0] -= 1
+        if held[0]:
+            return
+        del _HELD[key]
+    fh = held[1]
+    with contextlib.suppress(OSError):
+        filelock.release(fh)   # Windows wants an explicit unlock before close
+    fh.close()
 
 
 def checkpoint(path: Path, objects: Path) -> dict:

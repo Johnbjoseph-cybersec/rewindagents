@@ -4,8 +4,9 @@ acquire(fh, exclusive=..., blocking=...) and release(fh) take an open file objec
 acquire that finds the lock held raises BlockingIOError on both platforms.
 
 Windows has no shared lock in msvcrt, so a shared request takes the exclusive one there: holders that
-could run side by side on Unix (several hooks at once) take turns instead. Nothing in the package holds
-two locks on the same file in one process, so this cannot deadlock. The Windows lock covers byte 0 of
+could run side by side on Unix (several hooks at once) take turns instead. A second handle in the same
+process would wait for the first forever, so hook.store_lock joins a hold its process already has instead of
+locking again, and log.py never nests its lock. The Windows lock covers byte 0 of
 the file (locking past the end is allowed), so the file's contents never matter.
 """
 from __future__ import annotations

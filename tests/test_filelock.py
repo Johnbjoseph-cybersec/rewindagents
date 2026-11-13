@@ -155,6 +155,106 @@ class TestWindowsPath(unittest.TestCase):
                 pass
         self.assertEqual(self.ms.table, {}, "a lock outlived its with-block")
 
+    def bounded(self, fn, seconds=5.0):
+        """Run fn in a thread; fail (instead of hanging the suite, as Windows CI did for 20 min) if it is not done."""
+        out = []
+        t = threading.Thread(target=lambda: out.append(fn()), daemon=True)
+        t.start()
+        t.join(seconds)
+        self.assertFalse(t.is_alive(), f"still waiting after {seconds:g} s: the nested acquire spins on its own lock")
+        return out[0]
+
+    def test_nested_shared_store_lock_in_one_process_does_not_wait_on_itself(self):
+        # CI run 43437432241: a shared hold, then a step recorded in the same process (a second shared hold).
+        # msvcrt has no shared lock, so the second handle waited for the first forever.
+        store = self.root / ".rewindagents"
+
+        def nest():
+            with hook.store_lock(store):
+                with hook.store_lock(store):
+                    with hook.store_lock(store):
+                        return dict(self.ms.table)
+        with mock.patch.object(filelock, "_backend", self.ms):
+            held = self.bounded(nest)
+        self.assertEqual(len(held), 1, "one OS lock for the whole nest")
+        self.assertEqual(self.ms.table, {}, "a lock outlived its with-block")
+
+    def test_a_step_recorded_inside_a_held_store_lock_on_the_windows_path(self):
+        # test_gc.test_hooks_share_the_lock_with_each_other, through the stand-in: the real hook.handle, in-process
+        root = self.root / "proj"
+        root.mkdir()
+        f = root / "f.txt"
+
+        def step():
+            with hook.store_lock(root / ".rewindagents"):
+                for event in ("PreToolUse", "PostToolUse"):
+                    hook.handle({"session_id": "s1", "hook_event_name": event, "tool_name": "Write", "cwd": str(root),
+                                 "tool_input": {"file_path": str(f), "content": "1"}, "tool_response": {"ok": True}})
+                    f.write_text("1")
+            return log.verify(root / ".rewindagents" / "log.jsonl")
+        with mock.patch.object(filelock, "_backend", self.ms):
+            ok, n, msg = self.bounded(step)
+        self.assertEqual((ok, n), (True, 2), msg)
+        self.assertEqual(self.ms.table, {})
+
+    def test_a_nested_hold_still_keeps_gc_out_until_the_outermost_ends(self):
+        store = self.root / ".rewindagents"
+        with mock.patch.object(filelock, "_backend", self.ms):
+            def check():
+                with hook.store_lock(store):
+                    with hook.store_lock(store):
+                        pass                                   # inner hold ended; the outer one still holds
+                    with self.assertRaises(TimeoutError):
+                        with hook.store_lock(store, exclusive=True, timeout=0.2):
+                            pass
+                with hook.store_lock(store, exclusive=True, timeout=0.2):
+                    return True
+            self.assertTrue(self.bounded(check))
+        self.assertEqual(self.ms.table, {})
+
+    def test_threads_sharing_a_hold_release_it_once_the_last_one_leaves(self):
+        store = self.root / ".rewindagents"
+        inside, go = threading.Barrier(5), threading.Event()
+
+        def holder():
+            with hook.store_lock(store):
+                inside.wait(5)
+                go.wait(5)
+        with mock.patch.object(filelock, "_backend", self.ms):
+            ts = [threading.Thread(target=holder, daemon=True) for _ in range(4)]  # daemon: old code spins forever
+            for t in ts:
+                t.start()
+            inside.wait(5)                                     # all 4 inside at once: they share one hold
+            self.assertEqual(len(self.ms.table), 1)
+            with self.assertRaises(TimeoutError):
+                with hook.store_lock(store, exclusive=True, timeout=0.2):
+                    pass
+            go.set()
+            for t in ts:
+                t.join(5)
+            with hook.store_lock(store, exclusive=True, timeout=0.2):
+                pass
+        self.assertEqual(self.ms.table, {})
+
+
+class TestStoreLockUnix(unittest.TestCase):
+    def test_nested_hold_keeps_another_process_out_until_the_outermost_ends(self):
+        with tempfile.TemporaryDirectory() as d:
+            store = Path(d, ".rewindagents")
+            probe = ("import sys; sys.path.insert(0, sys.argv[1]); from pathlib import Path; from rewindagents import hook\n"
+                     "try:\n    with hook.store_lock(Path(sys.argv[2]), exclusive=True, timeout=0.2): print('got')\n"
+                     "except TimeoutError: print('busy')")
+
+            def other():
+                import subprocess
+                return subprocess.run([sys.executable, "-c", probe, str(SRC.parent), str(store)], capture_output=True,
+                                      text=True, timeout=60).stdout.strip()
+            with hook.store_lock(store):
+                with hook.store_lock(store):
+                    pass
+                self.assertEqual(other(), "busy")
+            self.assertEqual(other(), "got")
+
 
 class TestOneLockModule(unittest.TestCase):
     def test_only_filelock_imports_a_platform_lock(self):
