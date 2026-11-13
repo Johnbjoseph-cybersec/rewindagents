@@ -6,11 +6,13 @@ counted with the measured numbers.
 
 ## The headline these numbers support
 
-> On takeback-bench's 15 destructive-agent scenarios, rewindagents put back the exact bytes in 11 and
-> destroyed later work in none. Per-step git commits got 11 of the 14 they could run (one needs a git
-> repository) and destroyed later work once; a stash snapshot got 1 of 14 and destroyed later work in 12.
-> rewindagents was the only one of the three to bring back a deleted git-ignored `.env` and to work without
-> a git repository; git won on a symlink and on a file over 20 MB.
+> On takeback-bench's 17 destructive-agent scenarios, rewindagents undoing with `revert` (one command per step
+> taken back) put back the exact bytes in 14 and destroyed later work in none, and every one it did not put
+> back it reported with exit 1. Per-step git commits got 12 of the 16 they could run (one needs a git
+> repository) and destroyed later work once; a stash snapshot got 1 of 16 and destroyed later work in 14.
+> rewindagents was the only one to bring back a deleted git-ignored `.env`, to work without a git repository,
+> and to take back one bad step while keeping a later hand edit to the same file (S09, S16); git won on a
+> symlink and on a file over 20 MB.
 
 What they do **not** support, and must not be said: that rewindagents "broke a benchmark record" (this is a
 new benchmark we wrote; there is no record), that it beats git overall (it ties on exact restores and wins
@@ -18,8 +20,13 @@ or loses on different scenarios), that it beats Claude Code's checkpointing (not
 table), or any speed multiplier for agents (the efficiency pilot below found none near 4x).
 
 A fair one-liner: "We published an open benchmark for undoing what a coding agent did. rewindagents
-restored 11 of 15 scenarios exactly and never destroyed later work; here is every scenario, including the
-four it misses."
+restored 14 of 17 scenarios exactly with `revert`, never destroyed later work and said so every time it could
+not; here is every scenario, including the three it misses."
+
+Two scenarios (S16, S17) were added on 2026-11-14 with `revert`, so the counts are not comparable with the
+earlier 15-scenario run (11 of 15 for `rewind`); both tables below were measured on all 17. The `rewind` column's
+"undo only step K" recipe (`rewind K-1 --only <files step K changed>`) destroys a later agent edit to the same
+file in S17 and exits 0; that is the workaround `revert` replaces.
 
 ## Is there an existing benchmark? (searched 2026-11-14)
 
@@ -60,57 +67,61 @@ Reproduce:
 
 ```sh
 cd <a clone of this repository, on branch bench/undo-bench>
-python3 bench/takeback/takeback.py            # about 20 s, prints both tables
-git checkout 6e08a05 -- src && python3 bench/takeback/takeback.py && git checkout HEAD -- src   # the baseline
+python3 bench/takeback/takeback.py            # 34 s here with four tools, prints both tables
+git checkout 6e08a05 -- src && python3 bench/takeback/takeback.py --tool rewindagents --tool "git commit per step" --tool "git stash snapshot" && git checkout HEAD -- src   # the baseline (no revert there)
 ```
 
-## Measured: current code (branch, after the two fixes)
+## Measured: current code (branch feat/revert: the two fixes and `revert`)
 
 <!-- takeback:current:start -->
-Measured on macOS 27.0.1, arm64, 12 CPUs, Python 3.15.2, git version 2.50.1 (Apple Git-155), on 2026-11-14 at commit de05532.
+Measured on macOS 27.0.1, arm64, 12 CPUs, Python 3.15.2, git version 2.50.1 (Apple Git-155), on 2026-11-14 at commit d09e453.
 
-| Scenario | rewindagents | git commit per step | git stash snapshot |
-|---|---|---|---|
-| S01 Bash `rm -rf tests` deletes the test suite | exact | exact | DESTROYED app.py (exit 0: silent) |
-| S02 Bash `sed -i` rewrites config.yaml | exact | exact | DESTROYED app.py (exit 0: silent) |
-| S03 Write tool overwrites app.py with a stub | exact | exact | DESTROYED README.md (exit 0: silent) |
-| S04 agent creates helper.py (never committed), then breaks it | exact | exact | missed helper.py (exit 0: silent) |
-| S05 Bash overwrites a binary file (logo.png) | exact | exact | DESTROYED app.py (exit 0: silent) |
-| S06 Bash `rm .env` deletes a git-ignored file | exact | missed .env (exit 0: silent) | DESTROYED app.py; missed .env (exit 0: silent) |
-| S07 Bash truncates a tracked file over 20 MB | refused; missed data/fixtures.bin (exit 1) | exact | DESTROYED app.py (exit 0: silent) |
-| S08 Bash appends to a file outside the project (../outside/notes.txt) | missed ../outside/notes.txt (exit 0: silent) | missed ../outside/notes.txt (exit 0: silent) | DESTROYED app.py; missed ../outside/notes.txt (exit 0: silent) |
-| S09 bad Edit to config.yaml, then the user edits the same file by hand | refused; missed config.yaml (exit 1) | DESTROYED config.yaml; missed config.yaml (exit 0: silent) | DESTROYED app.py, config.yaml; missed config.yaml (exit 0: silent) |
-| S10 undo only the bad step (`rm -rf tests`), keep the agent's later work | exact | exact | DESTROYED CHANGELOG.md, app.py (exit 0: silent) |
-| S11 Bash `rm -rf scripts` deletes an executable script | exact | exact | DESTROYED app.py (exit 0: silent) |
-| S12 Bash `rm` deletes a symlink in the project | missed config.local.yaml (exit 0: silent) | exact | DESTROYED app.py (exit 0: silent) |
-| S13 project is not a git repository; Bash `rm -rf tests` | exact | n/a (needs a git repository) | n/a (needs a git repository) |
-| S14 five-step session (Write, Edit, mv, sed -i, new file), back to step 2 | exact | exact | DESTROYED pricing.py; missed app.py (exit 0: silent) |
-| S15 undo the whole session over uncommitted work from before it | exact | exact | exact |
-| **exact, of scenarios run** | **11 / 15** | **11 / 14** (1 n/a) | **1 / 14** (1 n/a) |
-| **runs that destroyed later work** | 0 | 1 | 12 |
+| Scenario | rewindagents | rewindagents revert | git commit per step | git stash snapshot |
+|---|---|---|---|---|
+| S01 Bash `rm -rf tests` deletes the test suite | exact | exact | exact | DESTROYED app.py (exit 0: silent) |
+| S02 Bash `sed -i` rewrites config.yaml | exact | exact | exact | DESTROYED app.py (exit 0: silent) |
+| S03 Write tool overwrites app.py with a stub | exact | exact | exact | DESTROYED README.md (exit 0: silent) |
+| S04 agent creates helper.py (never committed), then breaks it | exact | exact | exact | missed helper.py (exit 0: silent) |
+| S05 Bash overwrites a binary file (logo.png) | exact | exact | exact | DESTROYED app.py (exit 0: silent) |
+| S06 Bash `rm .env` deletes a git-ignored file | exact | exact | missed .env (exit 0: silent) | DESTROYED app.py; missed .env (exit 0: silent) |
+| S07 Bash truncates a tracked file over 20 MB | refused; missed data/fixtures.bin (exit 1) | refused; missed data/fixtures.bin (exit 1) | exact | DESTROYED app.py (exit 0: silent) |
+| S08 Bash appends to a file outside the project (../outside/notes.txt) | missed ../outside/notes.txt (exit 0: silent) | refused; missed ../outside/notes.txt (exit 1) | missed ../outside/notes.txt (exit 0: silent) | DESTROYED app.py; missed ../outside/notes.txt (exit 0: silent) |
+| S09 bad Edit to config.yaml, then the user edits the same file by hand | refused; missed config.yaml (exit 1) | exact | DESTROYED config.yaml; missed config.yaml (exit 0: silent) | DESTROYED app.py, config.yaml; missed config.yaml (exit 0: silent) |
+| S10 undo only the bad step (`rm -rf tests`), keep the agent's later work | exact | exact | exact | DESTROYED CHANGELOG.md, app.py (exit 0: silent) |
+| S11 Bash `rm -rf scripts` deletes an executable script | exact | exact | exact | DESTROYED app.py (exit 0: silent) |
+| S12 Bash `rm` deletes a symlink in the project | missed config.local.yaml (exit 0: silent) | refused; missed config.local.yaml (exit 1) | exact | DESTROYED app.py (exit 0: silent) |
+| S13 project is not a git repository; Bash `rm -rf tests` | exact | exact | n/a (needs a git repository) | n/a (needs a git repository) |
+| S14 five-step session (Write, Edit, mv, sed -i, new file), back to step 2 | exact | exact | exact | DESTROYED pricing.py; missed app.py (exit 0: silent) |
+| S15 undo the whole session over uncommitted work from before it | exact | exact | exact | exact |
+| S16 undo only the bad Edit to config.yaml; the user then edited another line of it by hand | refused; missed config.yaml (exit 1) | exact | refused; missed config.yaml (exit 128) | DESTROYED CHANGELOG.md, config.yaml; missed config.yaml (exit 0: silent) |
+| S17 undo only the bad `sed -i` on config.yaml; a later agent Edit changed another line of it | DESTROYED config.yaml; missed config.yaml (exit 0: silent) | exact | exact | DESTROYED config.yaml; missed config.yaml (exit 0: silent) |
+| **exact, of scenarios run** | **11 / 17** | **14 / 17** | **12 / 16** (1 n/a) | **1 / 16** (1 n/a) |
+| **runs that destroyed later work** | 1 | 0 | 1 | 14 |
 
 Undo time / time the tool added while the session ran (one run each, wall-clock):
 
-| Scenario | rewindagents undo / record | git commit per step undo / record | git stash snapshot undo / record |
-|---|---|---|---|
-| S01 | 64 / 350 ms | 31 / 188 ms | 38 / 50 ms |
-| S02 | 69 / 303 ms | 45 / 249 ms | 44 / 79 ms |
-| S03 | 63 / 257 ms | 36 / 233 ms | 37 / 56 ms |
-| S04 | 58 / 281 ms | 31 / 193 ms | 45 / 56 ms |
-| S05 | 69 / 299 ms | 46 / 181 ms | 35 / 47 ms |
-| S06 | 59 / 394 ms | 37 / 196 ms | 36 / 52 ms |
-| S07 | 56 / 345 ms | 55 / 359 ms | 56 / 89 ms |
-| S08 | 66 / 323 ms | 39 / 220 ms | 51 / 81 ms |
-| S09 | 53 / 262 ms | 40 / 204 ms | 51 / 68 ms |
-| S10 | 70 / 530 ms | 23 / 238 ms | 37 / 49 ms |
-| S11 | 74 / 313 ms | 34 / 194 ms | 48 / 58 ms |
-| S12 | 75 / 334 ms | 32 / 171 ms | 47 / 53 ms |
-| S13 | 68 / 297 ms | n/a | n/a |
-| S14 | 67 / 784 ms | 42 / 412 ms | 35 / 53 ms |
-| S15 | 65 / 310 ms | 38 / 179 ms | 71 / 119 ms |
+| Scenario | rewindagents undo / record | rewindagents revert undo / record | git commit per step undo / record | git stash snapshot undo / record |
+|---|---|---|---|---|
+| S01 | 97 / 631 ms | 83 / 430 ms | 46 / 274 ms | 51 / 103 ms |
+| S02 | 82 / 459 ms | 125 / 501 ms | 46 / 370 ms | 49 / 59 ms |
+| S03 | 72 / 316 ms | 146 / 554 ms | 47 / 362 ms | 48 / 61 ms |
+| S04 | 96 / 456 ms | 105 / 545 ms | 52 / 280 ms | 77 / 88 ms |
+| S05 | 183 / 554 ms | 88 / 566 ms | 52 / 240 ms | 65 / 65 ms |
+| S06 | 98 / 883 ms | 98 / 494 ms | 61 / 243 ms | 54 / 71 ms |
+| S07 | 86 / 542 ms | 97 / 669 ms | 59 / 462 ms | 134 / 112 ms |
+| S08 | 91 / 392 ms | 102 / 375 ms | 71 / 268 ms | 42 / 68 ms |
+| S09 | 81 / 336 ms | 139 / 306 ms | 51 / 299 ms | 38 / 63 ms |
+| S10 | 94 / 638 ms | 87 / 735 ms | 24 / 265 ms | 38 / 73 ms |
+| S11 | 91 / 575 ms | 79 / 441 ms | 78 / 260 ms | 50 / 81 ms |
+| S12 | 93 / 449 ms | 78 / 419 ms | 53 / 264 ms | 39 / 85 ms |
+| S13 | 77 / 394 ms | 86 / 356 ms | n/a | n/a |
+| S14 | 87 / 1,045 ms | 284 / 1,268 ms | 44 / 686 ms | 52 / 56 ms |
+| S15 | 102 / 413 ms | 170 / 439 ms | 44 / 230 ms | 76 / 186 ms |
+| S16 | 102 / 325 ms | 107 / 539 ms | 24 / 213 ms | 43 / 53 ms |
+| S17 | 77 / 547 ms | 69 / 433 ms | 22 / 226 ms | 36 / 44 ms |
 <!-- takeback:current:end -->
 
-## Measured: baseline (before this branch's fixes)
+## Measured: baseline (before this branch's fixes; `revert` did not exist)
 
 <!-- takeback:baseline:start -->
 Measured on macOS 27.0.1, arm64, 12 CPUs, Python 3.15.2, git version 2.50.1 (Apple Git-155), on 2026-11-14 at commit 6e08a05.
@@ -132,28 +143,32 @@ Measured on macOS 27.0.1, arm64, 12 CPUs, Python 3.15.2, git version 2.50.1 (App
 | S13 project is not a git repository; Bash `rm -rf tests` | exact | n/a (needs a git repository) | n/a (needs a git repository) |
 | S14 five-step session (Write, Edit, mv, sed -i, new file), back to step 2 | exact | exact | DESTROYED pricing.py; missed app.py (exit 0: silent) |
 | S15 undo the whole session over uncommitted work from before it | exact | exact | exact |
-| **exact, of scenarios run** | **9 / 15** | **11 / 14** (1 n/a) | **1 / 14** (1 n/a) |
-| **runs that destroyed later work** | 0 | 1 | 12 |
+| S16 undo only the bad Edit to config.yaml; the user then edited another line of it by hand | refused; missed config.yaml (exit 1) | refused; missed config.yaml (exit 128) | DESTROYED CHANGELOG.md, config.yaml; missed config.yaml (exit 0: silent) |
+| S17 undo only the bad `sed -i` on config.yaml; a later agent Edit changed another line of it | DESTROYED config.yaml; missed config.yaml (exit 0: silent) | exact | DESTROYED config.yaml; missed config.yaml (exit 0: silent) |
+| **exact, of scenarios run** | **9 / 17** | **12 / 16** (1 n/a) | **1 / 16** (1 n/a) |
+| **runs that destroyed later work** | 1 | 1 | 14 |
 
 Undo time / time the tool added while the session ran (one run each, wall-clock):
 
 | Scenario | rewindagents undo / record | git commit per step undo / record | git stash snapshot undo / record |
 |---|---|---|---|
-| S01 | 81 / 303 ms | 42 / 215 ms | 37 / 47 ms |
-| S02 | 64 / 333 ms | 34 / 186 ms | 36 / 48 ms |
-| S03 | 78 / 261 ms | 37 / 182 ms | 45 / 56 ms |
-| S04 | 69 / 276 ms | 40 / 203 ms | 37 / 51 ms |
-| S05 | 66 / 333 ms | 36 / 170 ms | 36 / 56 ms |
-| S06 | 65 / 294 ms | 34 / 170 ms | 35 / 46 ms |
-| S07 | 63 / 315 ms | 57 / 171 ms | 63 / 90 ms |
-| S08 | 72 / 342 ms | 35 / 176 ms | 37 / 47 ms |
-| S09 | 70 / 283 ms | 42 / 212 ms | 40 / 52 ms |
-| S10 | 70 / 453 ms | 22 / 226 ms | 36 / 53 ms |
-| S11 | 66 / 311 ms | 35 / 174 ms | 35 / 47 ms |
-| S12 | 67 / 307 ms | 43 / 191 ms | 36 / 47 ms |
-| S13 | 68 / 320 ms | n/a | n/a |
-| S14 | 67 / 752 ms | 37 / 352 ms | 33 / 59 ms |
-| S15 | 82 / 298 ms | 35 / 181 ms | 72 / 136 ms |
+| S01 | 76 / 395 ms | 82 / 209 ms | 35 / 80 ms |
+| S02 | 83 / 332 ms | 41 / 225 ms | 42 / 67 ms |
+| S03 | 74 / 335 ms | 43 / 214 ms | 37 / 53 ms |
+| S04 | 105 / 322 ms | 51 / 188 ms | 37 / 50 ms |
+| S05 | 97 / 359 ms | 56 / 190 ms | 37 / 61 ms |
+| S06 | 95 / 382 ms | 34 / 205 ms | 44 / 69 ms |
+| S07 | 96 / 415 ms | 53 / 402 ms | 75 / 105 ms |
+| S08 | 76 / 367 ms | 45 / 225 ms | 45 / 54 ms |
+| S09 | 82 / 288 ms | 45 / 196 ms | 67 / 53 ms |
+| S10 | 83 / 490 ms | 62 / 269 ms | 49 / 69 ms |
+| S11 | 95 / 339 ms | 37 / 183 ms | 59 / 52 ms |
+| S12 | 90 / 350 ms | 43 / 224 ms | 42 / 63 ms |
+| S13 | 68 / 380 ms | n/a | n/a |
+| S14 | 106 / 886 ms | 38 / 366 ms | 39 / 63 ms |
+| S15 | 70 / 389 ms | 51 / 226 ms | 92 / 173 ms |
+| S16 | 65 / 336 ms | 20 / 210 ms | 38 / 49 ms |
+| S17 | 66 / 378 ms | 32 / 215 ms | 40 / 49 ms |
 <!-- takeback:baseline:end -->
 
 ## Documented, not measured: Claude Code checkpointing
@@ -188,9 +203,11 @@ documentation ([code.claude.com/docs/en/checkpointing](https://code.claude.com/d
 | S13 no git, Bash `rm -rf tests` | not restored | (b) |
 | S14 Write, Edit, `mv`, `sed -i`, Write; back to step 2 | partly: the `sed -i` on app.py (already edited by Claude) and the Writes yes, the `mv` of README.md no | (a), (b) |
 | S15 whole session: Edit, then Bash `rm README.md` | partly: the Edit yes, README.md no | (a), (b) |
+| S16 undo only a bad Edit, keep a later hand edit to the same file | not documented | (a) restores to the start of a prompt, not one call; (d) as for S09 |
+| S17 undo only a `sed -i`, keep a later Edit to the same file | not restored | (b): the `sed -i` came before Claude's first edit of the file |
 
 So by its own documentation, Claude Code's checkpointing would put back the exact state in at most 2 of the
-15 (S03, S04, and only when the bad call began its own prompt). This is a reading of documentation, not a
+17 (S03, S04, and only when the bad call began its own prompt). This is a reading of documentation, not a
 measurement, and must be quoted as such.
 
 ## Product gaps the bench exposes, ranked by value in daily work
@@ -203,11 +220,14 @@ measurement, and must be quoted as such.
 2. **Executable bit (S11): built.** A deleted script came back with the right bytes, not executable, exit 0.
    Done means: S11 exact, and `test_a_deleted_script_comes_back_executable` (also a `chmod` alone) and
    `test_a_file_the_write_tool_replaced_gets_its_mode_back`. Failed before de05532, pass after.
-3. **Undo one step and keep later work, including a hand edit to the same file (S09, S10): next.** Today
-   S10 needs `rewind K-1 --only <files>` and S09 is refused (safe, but the user is left to merge by hand).
-   A `rewindagents revert K` that three-way merges step K's inverse into the current file (git's
-   `merge-file` when available) and refuses on a conflict. Done means: S09 and S10 exact with one command,
-   and a conflict test that changes nothing and exits 1.
+3. **Undo one step and keep later work, including a hand edit to the same file (S09, S10, S16, S17): built.**
+   `rewindagents revert K` three-way merges each file step K changed (base: the file right after step K, which
+   the hook now keeps a copy of; theirs: before step K; ours: now) with its own stdlib diff3, which agrees with
+   `git merge-file` on 300 seeded inputs (`tests/test_revert.py::TestMergeAgreesWithGit`), and refuses on a
+   conflict. Done means: S09, S10, S16, S17 exact with one `revert` per step taken back, and
+   `test_a_conflict_changes_nothing_and_exits_1` (no file, no log record, no stored copy changes, exit 1).
+   Limit found: as in git, changes on adjacent lines (no unchanged line between them) are a conflict, so
+   reverting a step that changed line 1 after a later step changed line 2 refuses rather than merges.
 4. **Symlinks (S12).** A deleted symlink is a silent miss. Done means: S12 exact, plus a test that a rewind
    never writes through a link that points outside the project.
 5. **Say so when a command wrote outside the project (S08)** or to a file over the size limit (S07 already

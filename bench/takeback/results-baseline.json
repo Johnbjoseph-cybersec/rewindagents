@@ -137,6 +137,22 @@
     "to",
     0
    ]
+  },
+  {
+   "id": "S16",
+   "title": "undo only the bad Edit to config.yaml; the user then edited another line of it by hand",
+   "goal": [
+    "only",
+    1
+   ]
+  },
+  {
+   "id": "S17",
+   "title": "undo only the bad `sed -i` on config.yaml; a later agent Edit changed another line of it",
+   "goal": [
+    "only",
+    1
+   ]
   }
  ],
  "results": [
@@ -151,8 +167,8 @@
    "tool": "rewindagents",
    "applies": true,
    "exit": 0,
-   "undo_ms": 80.8,
-   "record_ms": 303.3,
+   "undo_ms": 76.0,
+   "record_ms": 395.2,
    "output": "session bench: rewind to step 1 of 2 (did change 2 files)\n  restore  tests/test_app.py\n  restore  tests/test_util.py\n  this rewind is step 3; undo it with: python3 -m rewindagents rewind 2 --session bench"
   },
   {
@@ -166,8 +182,8 @@
    "tool": "git commit per step",
    "applies": true,
    "exit": 0,
-   "undo_ms": 42.4,
-   "record_ms": 214.9,
+   "undo_ms": 82.5,
+   "record_ms": 209.0,
    "output": ""
   },
   {
@@ -185,8 +201,8 @@
    "tool": "git stash snapshot",
    "applies": true,
    "exit": 0,
-   "undo_ms": 37.4,
-   "record_ms": 47.2,
+   "undo_ms": 34.8,
+   "record_ms": 79.9,
    "output": ""
   },
   {
@@ -200,8 +216,8 @@
    "tool": "rewindagents",
    "applies": true,
    "exit": 0,
-   "undo_ms": 63.7,
-   "record_ms": 333.2,
+   "undo_ms": 82.8,
+   "record_ms": 332.2,
    "output": "session bench: rewind to step 1 of 2 (did change 1 files)\n  restore  config.yaml\n  this rewind is step 3; undo it with: python3 -m rewindagents rewind 2 --session bench"
   },
   {
@@ -215,8 +231,8 @@
    "tool": "git commit per step",
    "applies": true,
    "exit": 0,
-   "undo_ms": 34.0,
-   "record_ms": 185.5,
+   "undo_ms": 40.8,
+   "record_ms": 224.8,
    "output": ""
   },
   {
@@ -234,8 +250,8 @@
    "tool": "git stash snapshot",
    "applies": true,
    "exit": 0,
-   "undo_ms": 36.4,
-   "record_ms": 47.5,
+   "undo_ms": 41.5,
+   "record_ms": 66.7,
    "output": ""
   },
   {
@@ -249,8 +265,8 @@
    "tool": "rewindagents",
    "applies": true,
    "exit": 0,
-   "undo_ms": 78.0,
-   "record_ms": 261.0,
+   "undo_ms": 73.9,
+   "record_ms": 335.0,
    "output": "session bench: rewind to step 1 of 2 (did change 1 files)\n  restore  app.py\n  this rewind is step 3; undo it with: python3 -m rewindagents rewind 2 --session bench"
   },
   {
@@ -264,8 +280,8 @@
    "tool": "git commit per step",
    "applies": true,
    "exit": 0,
-   "undo_ms": 37.2,
-   "record_ms": 181.5,
+   "undo_ms": 42.7,
+   "record_ms": 213.8,
    "output": ""
   },
   {
@@ -283,8 +299,8 @@
    "tool": "git stash snapshot",
    "applies": true,
    "exit": 0,
-   "undo_ms": 45.1,
-   "record_ms": 55.9,
+   "undo_ms": 36.8,
+   "record_ms": 53.2,
    "output": ""
   },
   {
@@ -298,8 +314,8 @@
    "tool": "rewindagents",
    "applies": true,
    "exit": 0,
-   "undo_ms": 68.8,
-   "record_ms": 276.5,
+   "undo_ms": 105.0,
+   "record_ms": 321.6,
    "output": "session bench: rewind to step 1 of 2 (did change 1 files)\n  restore  helper.py\n  this rewind is step 3; undo it with: python3 -m rewindagents rewind 2 --session bench"
   },
   {
@@ -313,8 +329,8 @@
    "tool": "git commit per step",
    "applies": true,
    "exit": 0,
-   "undo_ms": 40.4,
-   "record_ms": 202.9,
+   "undo_ms": 51.1,
+   "record_ms": 188.4,
    "output": ""
   },
   {
@@ -332,8 +348,8 @@
    "tool": "git stash snapshot",
    "applies": true,
    "exit": 0,
-   "undo_ms": 36.8,
-   "record_ms": 51.1,
+   "undo_ms": 37.3,
+   "record_ms": 50.4,
    "output": ""
   },
   {
@@ -347,8 +363,8 @@
    "tool": "rewindagents",
    "applies": true,
    "exit": 0,
-   "undo_ms": 65.6,
-   "record_ms": 332.7,
+   "undo_ms": 97.0,
+   "record_ms": 359.3,
    "output": "session bench: rewind to step 1 of 2 (did change 1 files)\n  restore  logo.png\n  this rewind is step 3; undo it with: python3 -m rewindagents rewind 2 --session bench"
   },
   {
@@ -362,8 +378,8 @@
    "tool": "git commit per step",
    "applies": true,
    "exit": 0,
-   "undo_ms": 35.7,
-   "record_ms": 169.6,
+   "undo_ms": 56.3,
+   "record_ms": 190.0,
    "output": ""
   },
   {
@@ -381,8 +397,8 @@
    "tool": "git stash snapshot",
    "applies": true,
    "exit": 0,
-   "undo_ms": 36.3,
-   "record_ms": 56.5,
+   "undo_ms": 37.2,
+   "record_ms": 61.2,
    "output": ""
   },
   {
@@ -400,8 +416,8 @@
    "tool": "rewindagents",
    "applies": true,
    "exit": 0,
-   "undo_ms": 65.2,
-   "record_ms": 294.3,
+   "undo_ms": 95.4,
+   "record_ms": 382.5,
    "output": "session bench: rewind to step 1 of 2 (did change 0 files)\n  this rewind is step 3; undo it with: python3 -m rewindagents rewind 2 --session bench"
   },
   {
@@ -419,8 +435,8 @@
    "tool": "git commit per step",
    "applies": true,
    "exit": 0,
-   "undo_ms": 33.9,
-   "record_ms": 170.2,
+   "undo_ms": 34.5,
+   "record_ms": 205.4,
    "output": ""
   },
   {
@@ -441,8 +457,8 @@
    "tool": "git stash snapshot",
    "applies": true,
    "exit": 0,
-   "undo_ms": 34.7,
-   "record_ms": 46.5,
+   "undo_ms": 44.1,
+   "record_ms": 68.9,
    "output": ""
   },
   {
@@ -460,8 +476,8 @@
    "tool": "rewindagents",
    "applies": true,
    "exit": 1,
-   "undo_ms": 62.8,
-   "record_ms": 314.7,
+   "undo_ms": 95.6,
+   "record_ms": 415.2,
    "output": "session bench: rewind to step 1 of 2 (did change 0 files)\n  CANNOT   data/fixtures.bin: not checkpointed (larger than 20971520 bytes)\n  this rewind is step 3; undo it with: python3 -m rewindagents rewind 2 --session bench"
   },
   {
@@ -475,8 +491,8 @@
    "tool": "git commit per step",
    "applies": true,
    "exit": 0,
-   "undo_ms": 57.0,
-   "record_ms": 171.1,
+   "undo_ms": 52.8,
+   "record_ms": 401.8,
    "output": ""
   },
   {
@@ -494,8 +510,8 @@
    "tool": "git stash snapshot",
    "applies": true,
    "exit": 0,
-   "undo_ms": 63.3,
-   "record_ms": 89.7,
+   "undo_ms": 75.4,
+   "record_ms": 105.0,
    "output": ""
   },
   {
@@ -513,8 +529,8 @@
    "tool": "rewindagents",
    "applies": true,
    "exit": 0,
-   "undo_ms": 71.8,
-   "record_ms": 342.1,
+   "undo_ms": 75.5,
+   "record_ms": 367.4,
    "output": "session bench: rewind to step 1 of 2 (did change 0 files)\n  this rewind is step 3; undo it with: python3 -m rewindagents rewind 2 --session bench"
   },
   {
@@ -532,8 +548,8 @@
    "tool": "git commit per step",
    "applies": true,
    "exit": 0,
-   "undo_ms": 35.1,
-   "record_ms": 176.5,
+   "undo_ms": 44.9,
+   "record_ms": 225.3,
    "output": ""
   },
   {
@@ -554,8 +570,8 @@
    "tool": "git stash snapshot",
    "applies": true,
    "exit": 0,
-   "undo_ms": 36.7,
-   "record_ms": 47.2,
+   "undo_ms": 44.6,
+   "record_ms": 54.1,
    "output": ""
   },
   {
@@ -573,8 +589,8 @@
    "tool": "rewindagents",
    "applies": true,
    "exit": 1,
-   "undo_ms": 70.1,
-   "record_ms": 283.4,
+   "undo_ms": 81.9,
+   "record_ms": 287.5,
    "output": "rewindagents: rewind refused, nothing changed: 1 file changed after the steps it takes back, and it would overwrite that change:\n  config.yaml: changed outside any recorded step (by hand, or by a tool with no hook)\n  see exactly what would be lost: python3 -m rewindagents diff 1 --session bench\n  rewind anyway with --force: the current bytes are kept as a step, so it can be undone with `python3 -m rewindagents rewind 2 --session bench`"
   },
   {
@@ -594,8 +610,8 @@
    "tool": "git commit per step",
    "applies": true,
    "exit": 0,
-   "undo_ms": 41.5,
-   "record_ms": 211.9,
+   "undo_ms": 44.6,
+   "record_ms": 196.4,
    "output": ""
   },
   {
@@ -617,8 +633,8 @@
    "tool": "git stash snapshot",
    "applies": true,
    "exit": 0,
-   "undo_ms": 40.5,
-   "record_ms": 52.0,
+   "undo_ms": 67.0,
+   "record_ms": 52.9,
    "output": ""
   },
   {
@@ -632,8 +648,8 @@
    "tool": "rewindagents",
    "applies": true,
    "exit": 0,
-   "undo_ms": 69.5,
-   "record_ms": 453.0,
+   "undo_ms": 83.3,
+   "record_ms": 490.1,
    "output": "session bench: rewind to step 1 of 3 (did change 2 files)\n  restore  tests/test_app.py\n  restore  tests/test_util.py\n  this rewind is step 4; undo it with: python3 -m rewindagents rewind 3 --session bench"
   },
   {
@@ -647,9 +663,9 @@
    "tool": "git commit per step",
    "applies": true,
    "exit": 0,
-   "undo_ms": 21.7,
-   "record_ms": 225.6,
-   "output": "[main 93416b6] Revert \"step 2\"\n Date: Sat Nov 14 01:47:41 2026 +0530\n 2 files changed, 7 insertions(+)\n create mode 100644 tests/test_app.py\n create mode 100644 tests/test_util.py"
+   "undo_ms": 61.8,
+   "record_ms": 268.7,
+   "output": "[main d2929e3] Revert \"step 2\"\n Date: Sat Nov 14 02:32:57 2026 +0530\n 2 files changed, 7 insertions(+)\n create mode 100644 tests/test_app.py\n create mode 100644 tests/test_util.py"
   },
   {
    "exact": false,
@@ -668,8 +684,8 @@
    "tool": "git stash snapshot",
    "applies": true,
    "exit": 0,
-   "undo_ms": 35.8,
-   "record_ms": 53.0,
+   "undo_ms": 48.6,
+   "record_ms": 69.1,
    "output": ""
   },
   {
@@ -689,8 +705,8 @@
    "tool": "rewindagents",
    "applies": true,
    "exit": 0,
-   "undo_ms": 65.9,
-   "record_ms": 311.1,
+   "undo_ms": 95.3,
+   "record_ms": 339.1,
    "output": "session bench: rewind to step 1 of 2 (did change 1 files)\n  restore  scripts/run.sh\n  this rewind is step 3; undo it with: python3 -m rewindagents rewind 2 --session bench"
   },
   {
@@ -704,8 +720,8 @@
    "tool": "git commit per step",
    "applies": true,
    "exit": 0,
-   "undo_ms": 35.1,
-   "record_ms": 173.8,
+   "undo_ms": 37.3,
+   "record_ms": 182.9,
    "output": ""
   },
   {
@@ -723,8 +739,8 @@
    "tool": "git stash snapshot",
    "applies": true,
    "exit": 0,
-   "undo_ms": 35.0,
-   "record_ms": 46.9,
+   "undo_ms": 59.2,
+   "record_ms": 52.3,
    "output": ""
   },
   {
@@ -742,8 +758,8 @@
    "tool": "rewindagents",
    "applies": true,
    "exit": 0,
-   "undo_ms": 67.3,
-   "record_ms": 307.1,
+   "undo_ms": 90.2,
+   "record_ms": 349.6,
    "output": "session bench: rewind to step 1 of 2 (did change 0 files)\n  this rewind is step 3; undo it with: python3 -m rewindagents rewind 2 --session bench"
   },
   {
@@ -757,8 +773,8 @@
    "tool": "git commit per step",
    "applies": true,
    "exit": 0,
-   "undo_ms": 42.7,
-   "record_ms": 191.1,
+   "undo_ms": 43.3,
+   "record_ms": 224.4,
    "output": ""
   },
   {
@@ -776,8 +792,8 @@
    "tool": "git stash snapshot",
    "applies": true,
    "exit": 0,
-   "undo_ms": 36.1,
-   "record_ms": 47.0,
+   "undo_ms": 42.2,
+   "record_ms": 62.8,
    "output": ""
   },
   {
@@ -791,8 +807,8 @@
    "tool": "rewindagents",
    "applies": true,
    "exit": 0,
-   "undo_ms": 67.6,
-   "record_ms": 319.7,
+   "undo_ms": 68.4,
+   "record_ms": 379.9,
    "output": "session bench: rewind to step 1 of 2 (did change 2 files)\n  restore  tests/test_app.py\n  restore  tests/test_util.py\n  this rewind is step 3; undo it with: python3 -m rewindagents rewind 2 --session bench"
   },
   {
@@ -818,8 +834,8 @@
    "tool": "rewindagents",
    "applies": true,
    "exit": 0,
-   "undo_ms": 66.8,
-   "record_ms": 752.3,
+   "undo_ms": 105.5,
+   "record_ms": 885.7,
    "output": "session bench: rewind to step 2 of 5 (did change 4 files)\n  restore  README.md\n  restore  app.py\n  delete   docs/README.md\n  delete   notes.txt\n  this rewind is step 6; undo it with: python3 -m rewindagents rewind 5 --session bench"
   },
   {
@@ -833,8 +849,8 @@
    "tool": "git commit per step",
    "applies": true,
    "exit": 0,
-   "undo_ms": 37.3,
-   "record_ms": 352.1,
+   "undo_ms": 38.1,
+   "record_ms": 365.6,
    "output": ""
   },
   {
@@ -855,8 +871,8 @@
    "tool": "git stash snapshot",
    "applies": true,
    "exit": 0,
-   "undo_ms": 32.6,
-   "record_ms": 59.1,
+   "undo_ms": 39.0,
+   "record_ms": 62.9,
    "output": ""
   },
   {
@@ -870,8 +886,8 @@
    "tool": "rewindagents",
    "applies": true,
    "exit": 0,
-   "undo_ms": 82.0,
-   "record_ms": 297.8,
+   "undo_ms": 69.5,
+   "record_ms": 388.6,
    "output": "session bench: rewind to step 0 of 2 (did change 2 files)\n  restore  app.py\n  restore  README.md\n  this rewind is step 3; undo it with: python3 -m rewindagents rewind 2 --session bench"
   },
   {
@@ -885,8 +901,8 @@
    "tool": "git commit per step",
    "applies": true,
    "exit": 0,
-   "undo_ms": 35.3,
-   "record_ms": 181.0,
+   "undo_ms": 51.4,
+   "record_ms": 225.9,
    "output": ""
   },
   {
@@ -900,8 +916,126 @@
    "tool": "git stash snapshot",
    "applies": true,
    "exit": 0,
-   "undo_ms": 72.4,
-   "record_ms": 136.5,
+   "undo_ms": 92.4,
+   "record_ms": 173.4,
+   "output": ""
+  },
+  {
+   "exact": false,
+   "missed": [
+    "config.yaml"
+   ],
+   "destroyed": [],
+   "wrong": [
+    "config.yaml"
+   ],
+   "mode_only": [],
+   "untouched": true,
+   "scenario": "S16",
+   "tool": "rewindagents",
+   "applies": true,
+   "exit": 1,
+   "undo_ms": 64.7,
+   "record_ms": 336.1,
+   "output": "rewindagents: rewind refused, nothing changed: 1 file changed after the steps it takes back, and it would overwrite that change:\n  config.yaml: changed outside any recorded step (by hand, or by a tool with no hook)\n  see exactly what would be lost: python3 -m rewindagents diff 0 --session bench\n  rewind anyway with --force: the current bytes are kept as a step, so it can be undone with `python3 -m rewindagents rewind 2 --session bench`"
+  },
+  {
+   "exact": false,
+   "missed": [
+    "config.yaml"
+   ],
+   "destroyed": [],
+   "wrong": [
+    "config.yaml"
+   ],
+   "mode_only": [],
+   "untouched": true,
+   "scenario": "S16",
+   "tool": "git commit per step",
+   "applies": true,
+   "exit": 128,
+   "undo_ms": 19.6,
+   "record_ms": 209.6,
+   "output": "error: Your local changes to the following files would be overwritten by merge:\n\tconfig.yaml\nPlease commit your changes or stash them before you merge.\nAborting\nfatal: revert failed"
+  },
+  {
+   "exact": false,
+   "missed": [
+    "config.yaml"
+   ],
+   "destroyed": [
+    "CHANGELOG.md",
+    "config.yaml"
+   ],
+   "wrong": [
+    "CHANGELOG.md",
+    "config.yaml"
+   ],
+   "mode_only": [],
+   "untouched": false,
+   "scenario": "S16",
+   "tool": "git stash snapshot",
+   "applies": true,
+   "exit": 0,
+   "undo_ms": 37.5,
+   "record_ms": 48.9,
+   "output": ""
+  },
+  {
+   "exact": false,
+   "missed": [
+    "config.yaml"
+   ],
+   "destroyed": [
+    "config.yaml"
+   ],
+   "wrong": [
+    "config.yaml"
+   ],
+   "mode_only": [],
+   "untouched": false,
+   "scenario": "S17",
+   "tool": "rewindagents",
+   "applies": true,
+   "exit": 0,
+   "undo_ms": 66.1,
+   "record_ms": 377.9,
+   "output": "session bench: rewind to step 0 of 2 (did change 1 files)\n  restore  config.yaml\n  this rewind is step 3; undo it with: python3 -m rewindagents rewind 2 --session bench"
+  },
+  {
+   "exact": true,
+   "missed": [],
+   "destroyed": [],
+   "wrong": [],
+   "mode_only": [],
+   "untouched": false,
+   "scenario": "S17",
+   "tool": "git commit per step",
+   "applies": true,
+   "exit": 0,
+   "undo_ms": 32.4,
+   "record_ms": 215.1,
+   "output": "Auto-merging config.yaml\n[main 251a938] Revert \"step 1\"\n Date: Sat Nov 14 02:33:06 2026 +0530\n 1 file changed, 1 insertion(+), 1 deletion(-)"
+  },
+  {
+   "exact": false,
+   "missed": [
+    "config.yaml"
+   ],
+   "destroyed": [
+    "config.yaml"
+   ],
+   "wrong": [
+    "config.yaml"
+   ],
+   "mode_only": [],
+   "untouched": false,
+   "scenario": "S17",
+   "tool": "git stash snapshot",
+   "applies": true,
+   "exit": 0,
+   "undo_ms": 39.8,
+   "record_ms": 49.2,
    "output": ""
   }
  ]
