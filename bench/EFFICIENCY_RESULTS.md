@@ -71,8 +71,12 @@ instead of starting over.
 
 - One machine, one evening, one model, one Claude Code version (2.1.294).
 - The tasks are small single-module repositories written for this study, SWE-bench-Lite-shaped but not from
-  SWE-bench; hidden tests are mine. The agent's file tools could in principle read outside its directory; there
-  is no sign it did, but this was not enforced.
+  SWE-bench; hidden tests are mine. The agent's file tools were not confined to its directory, and this did
+  happen: after the runs, two files were found in the system temp directory, `eff200-checks/check.py` (03:05)
+  and `eff200-scratch/check.py` (03:41), both small scripts that call `envfile.parse` on probe strings,
+  written by agents on T03 with the Write tool (they could not run them: Bash was limited to
+  `python3 -m unittest`). They were deleted. Nothing shows an agent reading the hidden tests, but reads
+  outside the directory were not logged, so this cannot be ruled out.
 - The sequential and race arms are bootstrap resamples of 5 solo runs and 4 races per task.
 - The wall clock includes Claude Code start-up and the rewindagents hook (installed in every arm).
 
