@@ -80,12 +80,12 @@ def readme_block(readme, heading):
     return m.group(1).rstrip("\n").split("\n")
 
 
-def readme_blocks(readme, heading):
-    """Every ```sh block in the section under a README heading (up to the next ## heading), as lists of lines."""
+def readme_blocks(readme, heading, lang="sh"):
+    """Every ```<lang> block in the section under a README heading (up to the next ## heading), as lists of lines."""
     m = re.search(r"^## %s\n(.*?)(?=^## |\Z)" % re.escape(heading), readme, re.S | re.M)
     if not m:
         raise SystemExit("README has no section '## %s'" % heading)
-    return [blk.rstrip("\n").split("\n") for blk in re.findall(r"```sh\n(.*?)```", m.group(1), re.S)]
+    return [blk.rstrip("\n").split("\n") for blk in re.findall(r"```%s\n(.*?)```" % lang, m.group(1), re.S)]
 
 
 def readme_sentence(readme, start):
@@ -112,6 +112,16 @@ MOVE_SENTENCES = ("Then `replay`, `rewind` and `branch` work on that session",
 GC_SENTENCES = ("`gc` deletes every stored copy that no", "Every step of every session in the log can still be rewound",
                 "It refuses to run when the log does not verify", "A scan whose after-scan never ran",
                 "Scans younger than 1 day are never dropped")
+# Under "Timeline in a browser" and "Attach to a PR" (R27). Sentences with **bold** labels are left out
+# (md_inline renders code spans only). "It has not run on GitHub yet" must stay while the action has not run (R18b).
+UI_SENTENCES = ("A local page over the log", "Click a step, or move with", "It listens on 127.0.0.1 only",
+                "The link it prints carries a random token", "Rewinds are POST only",
+                "No fonts, scripts or images are fetched")
+ATTACH_SENTENCES = ("The `.rewindagents/` store is git-ignored",)
+ATTACH_ACTION_SENTENCES = ("The action in `attach/` imports the bundle", "A later push updates that comment",
+                           "Secrets are always replaced in the page", "It installs `rewindagents` from the same commit",
+                           "The token is handed to the comment step only", "If the log does not verify, the page is uploaded",
+                           "It has not run on GitHub yet")
 
 
 def facts():
@@ -149,6 +159,12 @@ def facts():
         "bundle_says": [readme_sentence(readme, s) for s in MOVE_SENTENCES],
         "gc": next(blk for blk in readme_blocks(readme, "Clean up stored copies") if blk[0].startswith("rewindagents gc")),
         "gc_says": [readme_sentence(readme, s) for s in GC_SENTENCES],
+        "ui_says": [readme_sentence(readme, s) for s in UI_SENTENCES],
+        "attach": next(blk for blk in readme_blocks(readme, "Attach a replay to a pull request")
+                       if blk[0].startswith("rewindagents bundle")),
+        "attach_yaml": readme_blocks(readme, "Attach a replay to a pull request", "yaml")[0],
+        "attach_says": [readme_sentence(readme, s) for s in ATTACH_SENTENCES],
+        "action_says": [readme_sentence(readme, s) for s in ATTACH_ACTION_SENTENCES],
         "beats": demo["beats"],
         "gif": {k: demo["gif_facts"][k] for k in ("width", "height", "seconds", "frames")},
     }
@@ -231,6 +247,12 @@ def code(lines):
         else:
             rows.append(("cmd", body))
     return panel(rows)
+
+
+def plain(lines):
+    """A README block that is not shell (the attach workflow's yaml) as a panel: every line as written, no prompt,
+    comment lines in Playhead."""
+    return panel([("c" if ln.lstrip().startswith("#") else "out", ln) for ln in lines])
 
 
 def beat_rows(b, lit=True):
@@ -652,8 +674,9 @@ def docs_html(cfg, f):
     b = f["blocks"]
     desc = "Getting started with rewindagents: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, export, find a session, verify the log."
     toc = [("install", "Install"), ("hook", "Add the hook"), ("first", "A first session"), ("recorded", "What gets recorded"),
-           ("replay", "Replay and rewind"), ("branch", "Branch"), ("export", "Export"), ("sessions", "Find a session"),
-           ("bundle", "Move a session"), ("verify", "Verify"), ("status", "Is it recording?"), ("gc", "Free space"),
+           ("replay", "Replay and rewind"), ("branch", "Branch"), ("ui", "Timeline in a browser"), ("export", "Export"),
+           ("sessions", "Find a session"), ("bundle", "Move a session"), ("attach", "Attach to a PR"),
+           ("verify", "Verify"), ("status", "Is it recording?"), ("gc", "Free space"),
            ("overhead", "Overhead"), ("limits", "Limits"),
            ("remove", "Remove it")]
     first = "".join('<li><p>%s</p>%s</li>' % (text, panel(beat_rows(bt, lit=(i == 2)))) for i, (text, bt) in enumerate(zip((
@@ -707,6 +730,10 @@ def docs_html(cfg, f):
 <h2 id="branch">Branch</h2>
 <p><code>branch N --name X</code> does what <code>rewind N</code> does and, in a git repository, first commits the whole current working tree to the branch <code>rewindagents/X</code>. It does this through a temporary index, so your <code>HEAD</code>, index and current branch stay as they were. Outside git, the current files are kept in the log only.</p>
 
+<h2 id="ui">Timeline in a browser</h2>
+%(ui)s
+<p>%(ui_says)s</p>
+
 <h2 id="export">Export</h2>
 %(export)s
 <p>One HTML file with the whole session: every step with its tool, input and result, and for every file a step checkpointed, the change that step made as a unified diff (the file before the step against the file after it: its next checkpoint in the session, or the file as it is now). Inline CSS only, no scripts, nothing fetched. Paths are shown relative to the project; where the project lives on disk is not in the page.</p>
@@ -724,6 +751,12 @@ def docs_html(cfg, f):
 <h2 id="bundle">Move a session</h2>
 %(bundle)s
 <p>%(bundle_says)s</p>
+
+<h2 id="attach">Attach to a PR</h2>
+%(attach)s
+<p>%(attach_says)s</p>
+%(attach_yaml)s
+<p>%(action_says)s</p>
 
 <h2 id="verify">Verify</h2>
 %(verify)s
@@ -768,6 +801,9 @@ def docs_html(cfg, f):
        "status": code(f["status"]), "status_says": " ".join(md_inline(s) for s in f["status_says"]),
        "bundle": code(f["bundle"]), "bundle_says": " ".join(md_inline(s) for s in f["bundle_says"]),
        "gc": code(f["gc"]), "gc_says": " ".join(md_inline(s) for s in f["gc_says"]),
+       "ui": code(b["ui"]), "ui_says": " ".join(md_inline(s) for s in f["ui_says"]),
+       "attach": code(f["attach"]), "attach_says": " ".join(md_inline(s) for s in f["attach_says"]),
+       "attach_yaml": plain(f["attach_yaml"]), "action_says": " ".join(md_inline(s) for s in f["action_says"]),
        "codex": e(f["agents"]["codex"]["settings"]),
        "cursor": e(f["agents"]["cursor"]["settings"]),
        "more_agents": more_agents_html(),

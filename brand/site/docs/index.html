@@ -39,7 +39,7 @@
 <div class="head"><h1 id="h1" class="h1-small">Getting started.</h1>
 <p class="lede">Install, add the hook to one project, let the agent work, then look at the session and step back when you need to. Every command here is the README&#x27;s, and a test checks that each one is a real subcommand.</p></div>
 <div class="docs">
-<nav class="toc" aria-label="On this page"><a href="#install">Install</a><a href="#hook">Add the hook</a><a href="#first">A first session</a><a href="#recorded">What gets recorded</a><a href="#replay">Replay and rewind</a><a href="#branch">Branch</a><a href="#export">Export</a><a href="#sessions">Find a session</a><a href="#bundle">Move a session</a><a href="#verify">Verify</a><a href="#status">Is it recording?</a><a href="#gc">Free space</a><a href="#overhead">Overhead</a><a href="#limits">Limits</a><a href="#remove">Remove it</a></nav>
+<nav class="toc" aria-label="On this page"><a href="#install">Install</a><a href="#hook">Add the hook</a><a href="#first">A first session</a><a href="#recorded">What gets recorded</a><a href="#replay">Replay and rewind</a><a href="#branch">Branch</a><a href="#ui">Timeline in a browser</a><a href="#export">Export</a><a href="#sessions">Find a session</a><a href="#bundle">Move a session</a><a href="#attach">Attach to a PR</a><a href="#verify">Verify</a><a href="#status">Is it recording?</a><a href="#gc">Free space</a><a href="#overhead">Overhead</a><a href="#limits">Limits</a><a href="#remove">Remove it</a></nav>
 <article class="doc">
 <h2 id="install">Install</h2>
 <p>Python &gt;=3.10, standard library only. Tested on Python 3.15 on macOS. Not on PyPI yet, so install from the repository:</p>
@@ -139,6 +139,12 @@
 <h2 id="branch">Branch</h2>
 <p><code>branch N --name X</code> does what <code>rewind N</code> does and, in a git repository, first commits the whole current working tree to the branch <code>rewindagents/X</code>. It does this through a temporary index, so your <code>HEAD</code>, index and current branch stay as they were. Outside git, the current files are kept in the log only.</p>
 
+<h2 id="ui">Timeline in a browser</h2>
+<pre class="term"><code><span class="l"><span class="c"># opens the timeline in your browser; Ctrl+C stops it</span></span>
+<span class="l"><span class="p">$ </span>rewindagents ui</span>
+<span class="l"><span class="p">$ </span>rewindagents ui --session abc <span class="nb">--no-open</span> --port 8765</span></code></pre>
+<p>A local page over the log. Click a step, or move with <code>j</code> / <code>k</code>, to see each file&#x27;s diff and the step&#x27;s input and result (<code>d</code> hides or shows the diffs). It listens on 127.0.0.1 only, on a free port unless you pass <code>--port</code>. The link it prints carries a random token made for this run; every request without it gets a 403, and so does any request whose Host header is not 127.0.0.1 or localhost on that port. Rewinds are POST only and must come from the page itself. No fonts, scripts or images are fetched from anywhere, so it works offline.</p>
+
 <h2 id="export">Export</h2>
 <pre class="term"><code><span class="l"><span class="c"># writes <span class="nb">.rewindagents/replay-&lt;session&gt;.html</span></span></span>
 <span class="l"><span class="p">$ </span>rewindagents export</span>
@@ -173,6 +179,28 @@
 <span class="l"><span class="c"># in another clone: check the file, then add the session to its log</span></span>
 <span class="l"><span class="p">$ </span>rewindagents import s1.bundle</span></code></pre>
 <p>Then <code>replay</code>, <code>rewind</code> and <code>branch</code> work on that session in the other clone, with <code>--session &lt;id&gt;</code>. By default, secrets are replaced in the records and the stored copies, as <code>export</code> replaces them. <code>import</code> writes nothing until everything checks out: the file&#x27;s own SHA-256, every record&#x27;s hash, that every record belongs to the session and is in log order, every stored copy against its SHA-256, that no copy a record names is missing, that this project&#x27;s log verifies, and that it does not already hold the session. Nothing goes over a network; carry the file however you like.</p>
+
+<h2 id="attach">Attach to a PR</h2>
+<pre class="term"><code><span class="l"><span class="c"># the session behind this change, secrets replaced</span></span>
+<span class="l"><span class="p">$ </span>rewindagents bundle --out <span class="nb">.rewindagents-pr.bundle</span></span>
+<span class="l"><span class="p">$ </span>git add <span class="nb">.rewindagents-pr.bundle</span></span></code></pre>
+<p>The <code>.rewindagents/</code> store is git-ignored, so the checkout holds no log of its own; commit a bundle.</p>
+<pre class="term"><code><span class="l"><span class="c"># .github/workflows/replay.yml</span></span>
+<span class="l">on: pull_request</span>
+<span class="l">permissions:</span>
+<span class="l">  contents: read</span>
+<span class="l">  <span class="nb">pull-requests:</span> write   # for the one comment; nothing else writes</span>
+<span class="l">jobs:</span>
+<span class="l">  replay:</span>
+<span class="l">    <span class="nb">runs-on:</span> <span class="nb">ubuntu-latest</span></span>
+<span class="l">    steps:</span>
+<span class="l">      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2</span>
+<span class="l">        with:</span>
+<span class="l">          <span class="nb">persist-credentials:</span> false</span>
+<span class="l">      - uses: <span class="nb">Johnbjoseph-cybersec/rewindagents/attach@&lt;commit</span> sha&gt;</span>
+<span class="l">        with:</span>
+<span class="l">          bundle: <span class="nb">.rewindagents-pr.bundle</span></span></code></pre>
+<p>The action in <code>attach/</code> imports the bundle, checks the log&#x27;s hash chain (against <code>head:</code> too, if you pin one), writes the session&#x27;s export page and uploads it as a workflow artifact, then posts one comment on the pull request with the chain result, the number of secrets replaced and the download link. A later push updates that comment instead of adding another. Secrets are always replaced in the page; the action has no input to turn that off. It installs <code>rewindagents</code> from the same commit as the action, so pinning the action&#x27;s SHA pins the tool. The token is handed to the comment step only. If the log does not verify, the page is uploaded with its notice, and then the job fails. It has not run on GitHub yet: this repository is not public.</p>
 
 <h2 id="verify">Verify</h2>
 <pre class="term"><code><span class="l"><span class="p">$ </span>rewindagents verify --head <span class="nb">&lt;pinned-hash&gt;</span></span></code></pre>

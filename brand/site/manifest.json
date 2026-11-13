@@ -12,6 +12,15 @@
  "checkout": false,
  "credit": "made by John B Joseph",
  "facts": {
+  "action_says": [
+   "The action in `attach/` imports the bundle, checks the log's hash chain (against `head:` too, if you pin one), writes the session's export page and uploads it as a workflow artifact, then posts one comment on the pull request with the chain result, the number of secrets replaced and the download link.",
+   "A later push updates that comment instead of adding another.",
+   "Secrets are always replaced in the page; the action has no input to turn that off.",
+   "It installs `rewindagents` from the same commit as the action, so pinning the action's SHA pins the tool.",
+   "The token is handed to the comment step only.",
+   "If the log does not verify, the page is uploaded with its notice, and then the job fails.",
+   "It has not run on GitHub yet: this repository is not public."
+  ],
   "agents": {
    "claude": {
     "read_only": [],
@@ -73,6 +82,30 @@
     "settings": ".qwen/settings.json"
    }
   },
+  "attach": [
+   "rewindagents bundle --out .rewindagents-pr.bundle   # the session behind this change, secrets replaced",
+   "git add .rewindagents-pr.bundle"
+  ],
+  "attach_says": [
+   "The `.rewindagents/` store is git-ignored, so the checkout holds no log of its own; commit a bundle."
+  ],
+  "attach_yaml": [
+   "# .github/workflows/replay.yml",
+   "on: pull_request",
+   "permissions:",
+   "  contents: read",
+   "  pull-requests: write   # for the one comment; nothing else writes",
+   "jobs:",
+   "  replay:",
+   "    runs-on: ubuntu-latest",
+   "    steps:",
+   "      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2",
+   "        with:",
+   "          persist-credentials: false",
+   "      - uses: Johnbjoseph-cybersec/rewindagents/attach@<commit sha>",
+   "        with:",
+   "          bundle: .rewindagents-pr.bundle"
+  ],
   "blocks": {
    "agents": [
     "rewindagents install --agent codex      # adds the hook to .codex/hooks.json in this project",
@@ -195,6 +228,14 @@
   ],
   "steps": 14,
   "tested_on": "Python 3.15 on macOS",
+  "ui_says": [
+   "A local page over the log.",
+   "Click a step, or move with `j` / `k`, to see each file's diff and the step's input and result (`d` hides or shows the diffs).",
+   "It listens on 127.0.0.1 only, on a free port unless you pass `--port`.",
+   "The link it prints carries a random token made for this run; every request without it gets a 403, and so does any request whose Host header is not 127.0.0.1 or localhost on that port.",
+   "Rewinds are POST only and must come from the page itself.",
+   "No fonts, scripts or images are fetched from anywhere, so it works offline."
+  ],
   "uninstall": [
    "rewindagents uninstall          # removes the hook from .claude/settings.json in this project",
    "rewindagents uninstall --agent cursor --settings ~/.cursor/hooks.json   # same flags as install"

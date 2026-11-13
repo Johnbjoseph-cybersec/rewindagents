@@ -353,6 +353,38 @@ class TestSite(unittest.TestCase):
         self.assertEqual(toc, [h for h in heads if h in toc])
         self.assertLess(toc.index("sessions"), toc.index("bundle"))
 
+    def test_docs_timeline_and_attach_are_the_readme_blocks_and_words(self):
+        build = load_build()
+        cmds = self.check_docs_answer("ui", "Timeline in a browser", "Timeline UI", "rewindagents ui", build.UI_SENTENCES)
+        self.assertEqual(cmds[0], "rewindagents ui")
+        cmds = self.check_docs_answer("attach", "Attach to a PR", "Attach a replay to a pull request",
+                                      "rewindagents bundle", build.ATTACH_SENTENCES)
+        self.assertEqual(cmds[0], "rewindagents bundle --out .rewindagents-pr.bundle")
+        # after the first answer: the README's yaml block as a plain panel, then the README's words about the action
+        readme = read("README.md", ROOT)
+        html = read("docs/index.html")
+        m = re.search(r'<h2 id="attach">.*?</p>\n(<pre class="term"><code>.*?</code></pre>)\n<p>(.*?)</p>', html, re.S)
+        self.assertIsNotNone(m)
+        yaml = build.readme_blocks(readme, "Attach a replay to a pull request", "yaml")[0]
+        self.assertEqual(m.group(1), build.plain(yaml))
+        shown = [unesc(re.sub(r"<[^>]+>", "", r)) for r in m.group(1)[len('<pre class="term"><code>'):-len("</code></pre>")].split("\n")]
+        self.assertEqual(shown, yaml)          # every line as written, nothing typed
+        self.assertNotIn('class="p"', m.group(1))
+        prose = " ".join(readme.split())
+        said = unesc(re.sub(r"</?code>", "`", m.group(2)))
+        sentences = re.findall(r".+?\.(?=\s|$)", said)
+        self.assertEqual(len(sentences), len(build.ATTACH_ACTION_SENTENCES))
+        for s, start in zip(sentences, build.ATTACH_ACTION_SENTENCES):
+            self.assertTrue(s.strip().startswith(start), s)
+            self.assertIn(s.strip(), prose)
+        # the action has not run on GitHub (R18b): the page says so while the README does
+        if "It has not run on GitHub yet" in prose:
+            self.assertIn("It has not run on GitHub yet: this repository is not public.", said)
+        html_toc = re.search(r'<nav class="toc".*?</nav>', html, re.S).group(0)
+        toc = re.findall(r'<a href="#([a-z]+)">', html_toc)
+        self.assertLess(toc.index("branch"), toc.index("ui"))
+        self.assertEqual(toc.index("bundle") + 1, toc.index("attach"))
+
     def test_planned_items_are_brand_md_phrases_and_nothing_is_for_sale(self):
         build = load_build()
         brand_md = read("BRAND.md", BRAND)
