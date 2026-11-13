@@ -757,7 +757,7 @@ html, body { margin: 0; background: var(--leader); }
 .card { box-sizing: border-box; overflow: hidden; background: var(--leader); color: var(--reel); position: relative; }
 .card .mark { height: 34px; width: auto; align-self: flex-start; }
 .card h1 { font-family: var(--display); font-weight: 800; letter-spacing: -0.03em; line-height: 1.0; margin: 0; text-wrap: balance; }
-.card .meta { font-family: var(--mono); color: var(--tape); letter-spacing: 0.04em; }
+.card .meta { font-family: var(--mono); color: var(--tape); letter-spacing: 0.04em; margin: 0; }
 .card .meta b { color: var(--reel); }
 .card .panel-head { font-size: inherit; }
 .card pre.term { font-size: inherit; padding: 18px 22px; }
