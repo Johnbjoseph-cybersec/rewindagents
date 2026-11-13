@@ -49,6 +49,15 @@ class OracleTest(unittest.TestCase):
         want = tb.expected(scn([A, A, H], ("to", 1), merge={"a": "m"}), snaps, [0, 1, 2])
         self.assertEqual(want, {"a": tb.text_state("m")})
 
+    def test_only_needs_stated_merge_when_step_k_and_a_later_change_share_a_path(self):
+        """S16, S17: step 1 changed a, and a later step (or a hand edit) changed a again; undoing step 1 alone
+        must keep the later change, so the bytes cannot come from any snapshot."""
+        snaps = [{"a": "1"}, {"a": "2"}, {"a": "3"}]
+        with self.assertRaises(ValueError):
+            tb.expected(scn([A, H], ("only", 1)), snaps, [0, 1])
+        self.assertEqual(tb.expected(scn([A, H], ("only", 1), merge={"a": "m"}), snaps, [0, 1]),
+                         {"a": tb.text_state("m")})
+
 
 class JudgeTest(unittest.TestCase):
     def j(self, want, pre, post):
