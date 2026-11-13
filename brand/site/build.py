@@ -16,6 +16,8 @@ tests/test_site.py rebuilds the pages into a temp folder and fails if the commit
   python3 brand/site/build.py fonts      -> copies the brand WOFF2 files + licences from .brandcache into fonts/
   python3 brand/site/build.py open DIR   -> a copy of the site in DIR (outside brand/site, e.g. build/site-open) plus
                                             DIR/index-open.html with every answer open, for review renders only
+  python3 brand/site/build.py cards DIR  -> the share cards (og 1200x630, linkedin 1200x627, portrait 1080x1350) as
+                                            HTML in DIR; ux-review/tools/cards.mjs renders them to PNG
 """
 import html
 import json
@@ -43,6 +45,10 @@ PAGES = {"index.html": "", "pricing.html": "pricing.html", "docs/index.html": "d
 # workflow runs this build, so the published site carries the current clip and logo files).
 ASSETS = ["demo.gif", "logo-wordmark.svg", "logo-wordmark-reverse.svg", "logo-mark.svg", "favicon.svg",
           "favicon-32.png", "social-preview-1280x640.png"]
+# brand/site/og/ files, copied into assets/ next to the brand/ ones. The share card is rendered from this build's
+# own pages (`build.py cards DIR`, then ux-review/tools/cards.mjs), so it is committed as a PNG here.
+SITE_ASSETS = ["og-1200x630.png"]
+OG_ALT = "rewindagents: Ctrl+Z for AI coding agents. A terminal shows rewindagents rewind 12 restoring four files."
 FONTS = {"bricolage-grotesque": (700, 800), "hanken-grotesk": (400, 600), "commit-mono": (400, 700)}
 C = {"Leader": "#F2F4F1", "Reel": "#121412", "Spool": "#1C201D", "Tape": "#55605A",
      "Record": "#B82A16", "Rewind": "#FF7A59", "Playhead": "#B9C2BB", "Rule": "#838C86"}
@@ -167,25 +173,39 @@ def hang(text):
     return cols[-1] if cols else lead + 2
 
 
-def term(rows):
+def term(rows, struck=()):
     """Rows of a terminal panel as HTML, one block per row (a wrapped row gets a hanging indent): the prompt and
-    comments in Playhead, hit rows in Rewind. Output rows carry their own indent in --i (see hang())."""
+    comments in Playhead, hit rows in Rewind. Output rows carry their own indent in --i (see hang()).
+    A command's text sits in .sel, which selects whole on one click (user-select: all) and leaves the `$` out:
+    the scriptless copy (UX audit F2). Rows whose index is in `struck` get .x, a strike-through that marks
+    steps a rewind undid (the hero; UX audit F3): a mark on the CLI's own text, never a change to it."""
     out = []
-    for kind, text in rows:
+    for i, (kind, text) in enumerate(rows):
         t = nowrap_urls(text, flags=(kind == "cmd"))
+        x = " x" if i in struck else ""
         if kind == "cmd":
-            out.append('<span class="l"><span class="p">$ </span>%s</span>' % t)
+            out.append('<span class="l"><span class="p">$ </span><span class="sel">%s</span></span>' % t)
         elif kind in ("gap", "c"):
             out.append('<span class="l"><span class="c">%s</span></span>' % t)
         elif kind == "hit":
             out.append('<span class="l" style="--i:%dch"><span class="hit">%s</span></span>' % (hang(text), t))
+        elif x:     # the strike starts at the text, not at the row's leading spaces
+            lead = len(text) - len(text.lstrip(" "))
+            out.append('<span class="l" style="--i:%dch">%s<span class="x">%s</span></span>'
+                       % (hang(text), " " * lead, nowrap_urls(text[lead:])))
         else:
             out.append('<span class="l" style="--i:%dch">%s</span>' % (hang(text), t))
     return "\n".join(out)
 
 
-def panel(rows, cls=""):
-    return '<pre class="term%s"><code>%s</code></pre>' % (" " + cls if cls else "", term(rows))
+def panel(rows, cls="", struck=()):
+    return '<pre class="term%s"><code>%s</code></pre>' % (" " + cls if cls else "", term(rows, struck))
+
+
+def split_comment(line):
+    """A README sh line as (command, trailing `# comment` or None), the split code() makes."""
+    m = re.match(r"^(.*?)(?:\s+(# .*))?$", line)
+    return m.group(1), m.group(2)
 
 
 def code(lines):
@@ -198,8 +218,7 @@ def code(lines):
     for line in lines:
         if not line.strip():
             continue
-        m = re.match(r"^(.*?)(?:\s+(# .*))?$", line)
-        body, comment = m.group(1), m.group(2)
+        body, comment = split_comment(line)
         if comment and comment.startswith("# or:"):
             rows += [("cmd", body), ("c", comment)]
         elif comment:
@@ -217,28 +236,33 @@ def beat_rows(b, lit=True):
     return rows
 
 
-def ruler(at, n=7, w=84, h=18):
+def ruler(at, n=8, w=84, h=18, dark=False):
     """The brand motif as a small inline SVG: n short ticks on a rule, the playhead on tick `at` (1-based) in
-    Record; ticks and rule after it in Rule grey (the rewound part). Decorative: aria-hidden."""
+    Record; ticks and rule after it in Rule grey (the rewound part). `dark` draws it for a Spool ground: Playhead
+    before the playhead, Tape after it. Decorative: aria-hidden."""
+    ink, after = (C["Playhead"], C["Tape"]) if dark else (C["Reel"], C["Rule"])
     pitch = (w - 4) / (n - 1)
     parts = []
     xs = [2 + i * pitch for i in range(n)]
     px = xs[at - 1]
-    parts.append('<rect x="0" y="%d" width="%.1f" height="1" fill="%s"/>' % (h - 2, px, C["Reel"]))
-    parts.append('<rect x="%.1f" y="%d" width="%.1f" height="1" fill="%s"/>' % (px, h - 2, w - px, C["Rule"]))
+    parts.append('<rect x="0" y="%d" width="%.1f" height="1" fill="%s"/>' % (h - 2, px, ink))
+    parts.append('<rect x="%.1f" y="%d" width="%.1f" height="1" fill="%s"/>' % (px, h - 2, w - px, after))
     for i, x in enumerate(xs, 1):
         if i == at:
             continue
         parts.append('<rect x="%.1f" y="%d" width="1" height="5" fill="%s"/>'
-                     % (x - 0.5, h - 6, C["Reel"] if i < at else C["Rule"]))
+                     % (x - 0.5, h - 6, ink if i < at else after))
     parts.append('<path d="M%.1f 1H%.1fV4L%.1f 6.5V%dH%.1fV6.5L%.1f 4Z" fill="%s"/>'
                  % (px - 3, px + 3, px + 1, h - 1, px - 1, px - 3, C["Record"]))
     return ('<svg class="ruler" width="%d" height="%d" viewBox="0 0 %d %d" aria-hidden="true">%s</svg>'
             % (w, h, w, h, "".join(parts)))
 
 
+SECTIONS = 8   # numbered sections on the landing page; the label ruler has one tick per section (UX audit F12)
+
+
 def label(n, text):
-    return '<p class="label">%s<span class="n">%02d</span><span>%s</span></p>' % (ruler(n), n, e(text))
+    return '<p class="label">%s<span class="n">%02d</span><span>%s</span></p>' % (ruler(n, n=SECTIONS), n, e(text))
 
 
 def page(cfg, path, title, description, body, current):
@@ -267,10 +291,16 @@ def page(cfg, path, title, description, body, current):
 <meta property="og:title" content="%(title)s">
 <meta property="og:description" content="%(desc)s">
 <meta property="og:url" content="%(url)s">
+<meta property="og:image" content="%(site)sassets/og-1200x630.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="%(og_alt)s">
 <meta property="og:image" content="%(site)sassets/social-preview-1280x640.png">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="640">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="%(site)sassets/og-1200x630.png">
+<meta name="twitter:image:alt" content="%(og_alt)s">
 <link rel="icon" href="%(rel)sassets/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="%(rel)sassets/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="stylesheet" href="%(rel)ssite.css">
@@ -293,7 +323,7 @@ def page(cfg, path, title, description, body, current):
 </body>
 </html>
 """ % {"title": e(title), "desc": e(description), "url": e(url), "site": e(cfg["site_url"]), "name": NAME, "rel": rel,
-       "nav": nav, "body": body, "credit": CREDIT, "licence": LICENCE, "repo": e(cfg["repo_url"]),
+       "nav": nav, "body": body, "og_alt": e(OG_ALT), "credit": CREDIT, "licence": LICENCE, "repo": e(cfg["repo_url"]),
        "branch": e(cfg["branch"]), "ld": json.dumps(ld, sort_keys=True),
        "wm_w": svg_width("logo-wordmark.svg", 30), "wmr_w": svg_width("logo-wordmark-reverse.svg", 26)}
 
@@ -333,6 +363,55 @@ def faq_html(items, open_all=False):
         '<details%s><summary>%s</summary><p>%s</p></details>' % (" open" if open_all else "", e(q), a) for q, a in items)
 
 
+def hero_install(b):
+    """The first screen's install block (UX audit F1): the README's install line with its `# or:` alternative,
+    then the README's hook line with its comment, in the rows code() would make. Words are the README's."""
+    pipx, alt = split_comment(b["install"][0])
+    hook_cmd, hook_c = split_comment(b["hook"][1])
+    if not (alt and alt.startswith("# or:") and hook_cmd == "rewindagents install" and hook_c):
+        raise SystemExit("README install/hook blocks changed shape: update hero_install()")
+    return panel([("cmd", pipx), ("c", alt), ("c", hook_c), ("cmd", hook_cmd)], "install")
+
+
+# Claims the landing page makes, each with the tests that check it (UX audit F4). Names are checked against
+# tests/ at build time, so a renamed or deleted test stops the build instead of leaving a dead citation.
+PROOF = [
+    ("Every terminal line on this page and in the clip is what the CLI printed.",
+     [("test_demo.py", "test_every_shown_command_replays_exactly"),
+      ("test_demo.py", "test_installed_binary_prints_the_rewind_the_clip_shows")]),
+    ("Editing, deleting or reordering a record makes <code>verify</code> fail.",
+     [("test_log.py", "test_edited_args_detected"), ("test_log.py", "test_deleted_middle_record_detected"),
+      ("test_log.py", "test_reordered_records_detected")]),
+    ("Records cut off the end are caught only against a pinned head.",
+     [("test_log.py", "test_truncated_tail_caught_only_with_pinned_head")]),
+    ("<code>rewind</code> refuses a tampered log and changes nothing.",
+     [("test_rewind.py", "test_tampered_log_is_refused_and_nothing_changes")]),
+    ("A rewind can itself be rewound.",
+     [("test_rewind.py", "test_rewind_can_itself_be_rewound")]),
+    ("A real <code>sed</code> and <code>rm</code>, run through the installed command, are put back.",
+     [("test_bashscan.py", "test_real_sed_and_rm_undone_through_the_installed_command_path")]),
+    ("The hook prints nothing and exits 0, even on garbage input or a store it cannot write.",
+     [("test_hook.py", "test_garbage_input_exits_zero_silently"), ("test_hook.py", "test_unwritable_store_exits_zero")]),
+    ("<code>branch</code> keeps the current files without touching <code>HEAD</code> or the index.",
+     [("test_rewind.py", "test_git_branch_keeps_the_current_files_without_touching_head_or_index")]),
+    ("A file outside the project is never touched.",
+     [("test_rewind.py", "test_file_outside_the_project_is_never_touched")]),
+]
+
+
+def proof_rows(cfg):
+    rows = []
+    for claim, tests in PROOF:
+        cites = []
+        for fname, test in tests:
+            if not re.search(r"^\s*def %s\(" % re.escape(test), read("tests", fname), re.M):
+                raise SystemExit("PROOF names tests/%s::%s, which does not exist" % (fname, test))
+            cites.append('<a href="%s/blob/%s/tests/%s"><span class="f">tests/%s</span> %s</a>'
+                         % (e(cfg["repo_url"]), e(cfg["branch"]), fname, fname, e(test).replace("_", "_<wbr>")))
+        rows.append('<li><span class="claim">%s</span><span class="cites">%s</span></li>' % (claim, "".join(cites)))
+    return "".join(rows)
+
+
 def index_html(cfg, f, hero, open_all=False):
     rel = ""
     b = f["blocks"]
@@ -340,21 +419,30 @@ def index_html(cfg, f, hero, open_all=False):
     desc = ("Open-source recorder for coding agents. Every tool call goes into a tamper-evident, hash-chained log and "
             "every file is saved before it changes. Replay a session step by step and rewind the working tree to any "
             "step. Hooks for Claude Code, Codex and Cursor.")
+    replay = f["beats"][0]
+    wreck = {ln for i, ln in enumerate(replay["output"].rstrip("\n").split("\n")) if i in replay["accent_rows"]}
+    struck = {i for i, (k, t) in enumerate(hero) if k == "out" and t in wreck}
     hero_s = """
 <section class="hero" aria-labelledby="h1"><div class="wrap">
 <div class="hero-text">
 <p class="eyebrow"><b>v%(v)s</b> &middot; %(eyebrow)s</p>
 <h1 id="h1">%(promise)s</h1>
-<p class="lede">rewindagents records every tool call your coding agent makes and saves a copy of each file before the agent changes it. Replay the session step by step. Rewind the working tree to any step, or keep the current files as a branch and then rewind. The agent works at full speed, and every step it takes can be taken back, within the <a href="#limits">limits</a> below.</p>
-<div class="cta"><a class="btn btn-primary" href="#install">Install</a><a class="btn btn-ghost" href="docs/">Read the docs</a></div>
+<p class="lede">rewindagents records every tool call your coding agent makes and saves each file before it changes. Replay the session step by step. Rewind the working tree to any step, within the <a href="#limits">limits</a>.</p>
+<div class="cta"><a class="btn btn-primary" href="docs/">Read the docs</a><a class="btn btn-ghost" href="%(repo)s">Source on GitHub</a></div>
 </div>
 <div class="hero-panel">
-<div class="panel"><div class="panel-head"><span>a session of %(n)d steps; the last %(wreck)d wrecked the repo</span></div>%(hero)s</div>
-<p class="caption">Lines from the session behind the clip below. The recorder, the four files and the step numbers are real; a test replays the session and fails if a line changes.</p>
+<div class="panel"><div class="panel-head"><span>a session of %(n)d steps; the last %(wreck)d wrecked the repo</span><span class="tl">%(tl)s<span>rewind %(good)d</span></span></div>%(hero)s</div>
+<p class="caption">Lines the session behind the clip printed, unedited. The strike-through is ours: it marks the two steps the rewind undid. A test replays the session and fails if a line changes; see <a href="#tested">Tested</a>.</p>
 <ul class="facts"><li>standard library only</li><li>no network, no account</li><li>never stops or changes a call</li><li>%(licence)s</li></ul>
 </div>
+<div class="hero-install">
+<p class="small"><b>Install.</b> Not on PyPI yet, so from GitHub; then add the hook in a project. One click on a command selects all of it, without the prompt.</p>
+%(install)s
+</div>
 </div></section>
-""" % {"v": e(f["version"]), "eyebrow": e(eyebrow(f)), "licence": LICENCE, "promise": PROMISE, "n": n, "wreck": f["wreck_steps"], "hero": panel(hero)}
+""" % {"v": e(f["version"]), "eyebrow": e(eyebrow(f)), "licence": LICENCE, "promise": PROMISE, "n": n, "wreck": f["wreck_steps"],
+       "good": good, "tl": ruler(good, n=n, w=4 + 6 * (n - 1), h=16, dark=True), "repo": e(cfg["repo_url"]),
+       "hero": panel(hero, struck=struck), "install": hero_install(b)}
 
     right = beat_rows(f["beats"][1]) + beat_rows(f["beats"][2]) + beat_rows(f["beats"][3])
     demo = """
@@ -399,6 +487,16 @@ def index_html(cfg, f, hero, open_all=False):
 </div></section>
 """ % {"label": label(3, "How it works"), "r1": ruler(2, n=5, w=60, h=16), "r2": ruler(3, n=5, w=60, h=16), "r3": ruler(4, n=5, w=60, h=16)}
 
+    tested = """
+<section class="sec" id="tested" aria-labelledby="h-tested"><div class="wrap">
+%(label)s
+<div class="head"><h2 id="h-tested">The claims on this page are tests.</h2>
+<p class="lede">Each row is a claim made above and the test in the repository that checks it. The site build stops if a test named here no longer exists.</p></div>
+<ul class="ledger proof">%(rows)s</ul>
+<div class="cmdrow plain"><p class="small">Run every test from a clone, with the README&#x27;s command. The <a href="docs/#tests">docs</a> say which tests need the installed command.</p>%(run)s</div>
+</div></section>
+""" % {"label": label(4, "Tested"), "rows": proof_rows(cfg), "run": code(b["tests"])}
+
     limits = """
 <section class="sec" id="limits" aria-labelledby="h-limits"><div class="wrap">
 %(label)s
@@ -413,7 +511,7 @@ def index_html(cfg, f, hero, open_all=False):
 <li><span class="k">the end of the log</span><span>A hash chain proves the records are unchanged relative to each other. It cannot tell that records were cut off the end or that the whole file was rewritten and re-hashed. Pin the head hash somewhere the agent cannot write and check against it with <code>verify --head</code>.</span></li>
 </ul>
 </div></section>
-""" % {"label": label(4, "Limits"), "chars": "{:,}".format(f["result_chars"]), "mb": f["file_mb"],
+""" % {"label": label(5, "Limits"), "chars": "{:,}".format(f["result_chars"]), "mb": f["file_mb"],
        "files": "{:,}".format(f["scan_files"]), "skip": ", ".join("<code>%s</code>" % e(d) for d in f["skip_dirs"])}
 
     commands = """
@@ -428,7 +526,7 @@ def index_html(cfg, f, hero, open_all=False):
 <div class="cmdrow"><div><h3>Verify the chain</h3><p>Checks every record against the one before it and names the first bad one. With <code>--head</code>, also catches records cut from the end.</p></div>%(verify)s</div>
 </div>
 </div></section>
-""" % {"label": label(5, "Commands"), "replay": code(b["replay"]), "export": code(b["export"]), "sessions": code(b["sessions"]),
+""" % {"label": label(6, "Commands"), "replay": code(b["replay"]), "export": code(b["export"]), "sessions": code(b["sessions"]),
        "verify": code(b["verify"]), "kb": f["diff_kb"], "lines": f["diff_lines"]}
 
     pricing = """
@@ -439,7 +537,7 @@ def index_html(cfg, f, hero, open_all=False):
 %(plans)s
 <p class="small" style="margin-top:22px">Details on the <a href="pricing.html">pricing page</a>.</p>
 </div></section>
-""" % {"label": label(6, "Pricing"), "licence": LICENCE, "plans": plans(cfg, rel)}
+""" % {"label": label(7, "Pricing"), "licence": LICENCE, "plans": plans(cfg, rel)}
 
     faq_items = [
         ("Does it stop or change what the agent does?",
@@ -461,7 +559,7 @@ def index_html(cfg, f, hero, open_all=False):
 <div class="head"><h2 id="h-faq">Questions.</h2></div>
 %(items)s
 </div></section>
-""" % {"label": label(7, "Questions"), "items": faq_html(faq_items, open_all)}
+""" % {"label": label(8, "Questions"), "items": faq_html(faq_items, open_all)}
 
     closing = """
 <section class="sec close" aria-labelledby="h-close"><div class="wrap">
@@ -471,7 +569,7 @@ def index_html(cfg, f, hero, open_all=False):
 </div></section>
 """ % {"install": code(b["install"][:1])}
 
-    body = hero_s + demo + install + how + limits + commands + pricing + faq + closing
+    body = hero_s + demo + install + how + tested + limits + commands + pricing + faq + closing
     return page(cfg, "index.html", "%s: %s" % (NAME, PROMISE.rstrip(".")), desc, body, "home")
 
 
@@ -634,16 +732,91 @@ def build(out=None, cfg=None, open_variant=False):
     os.makedirs(assets, exist_ok=True)
     for name in ASSETS:
         shutil.copyfile(os.path.join(BRAND, name), os.path.join(assets, name))
+    for name in SITE_ASSETS:
+        shutil.copyfile(os.path.join(HERE, "og", name), os.path.join(assets, name))
     if os.path.abspath(out) != HERE:        # a build elsewhere needs the static files beside the pages too
         shutil.copyfile(os.path.join(HERE, "site.css"), os.path.join(out, "site.css"))
         shutil.copytree(os.path.join(HERE, "fonts"), os.path.join(out, "fonts"), dirs_exist_ok=True)
     manifest = {"pages": sorted(p for p in pages if p in PAGES), "facts": {k: v for k, v in f.items() if k != "beats"},
-                "hero": [list(r) for r in hero], "assets": ASSETS, "credit": CREDIT, "promise": PROMISE,
+                "hero": [list(r) for r in hero], "assets": ASSETS + SITE_ASSETS, "credit": CREDIT, "promise": PROMISE,
                 "planned": [p for p, _ in PLANNED], "site_url_key": "site_url", "checkout": bool(cfg.get("checkout_url"))}
     with open(os.path.join(out, "manifest.json"), "w", encoding="utf-8") as fh:
         json.dump(manifest, fh, indent=1, sort_keys=True)
         fh.write("\n")
     return pages
+
+
+CARD_CSS = """
+html, body { margin: 0; background: var(--leader); }
+.card { box-sizing: border-box; overflow: hidden; background: var(--leader); color: var(--reel); position: relative; }
+.card .mark { height: 34px; width: auto; align-self: flex-start; }
+.card h1 { font-family: var(--display); font-weight: 800; letter-spacing: -0.03em; line-height: 1.0; margin: 0; text-wrap: balance; }
+.card .meta { font-family: var(--mono); color: var(--tape); letter-spacing: 0.04em; }
+.card .meta b { color: var(--reel); }
+.card .panel-head { font-size: inherit; }
+.card pre.term { font-size: inherit; padding: 18px 22px; }
+.card pre.term .l { white-space: pre; }
+.card .host { font-family: var(--mono); font-weight: 700; color: var(--reel); }
+.card .rule { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: var(--reel); }
+.card .rule i { position: absolute; top: -6px; width: 6px; height: 12px; background: var(--record); }
+.wide { width: %(w)dpx; height: %(h)dpx; padding: 56px 64px 62px; display: grid; grid-template-columns: 470px minmax(0, 1fr); gap: 0 52px; align-items: end; }
+.wide .left { display: flex; flex-direction: column; height: 100%%; justify-content: space-between; }
+.wide h1 { font-size: 56px; margin-top: 40px; }
+.wide .meta { font-size: 15px; line-height: 1.6; }
+.wide .panel { font-size: 14.5px; }
+.tall { width: 1080px; height: 1350px; padding: 80px 72px 86px; display: flex; flex-direction: column; gap: 44px; }
+.tall h1 { font-size: 92px; max-width: 11ch; }
+.tall .panel { font-size: 18.5px; }
+.tall .meta { font-size: 20px; }
+.tall .install { font-size: 19px; }
+.tall .foot2 { margin-top: auto; display: flex; justify-content: space-between; align-items: end; gap: 24px; }
+"""
+
+
+def cards(out):
+    """Share images as HTML pages built from this site's CSS and the real session (UX audit F5): og (1200x630),
+    linkedin (1200x627) and portrait (1080x1350). ux-review/tools/cards.mjs screenshots them; the og PNG is
+    committed as brand/site/og/og-1200x630.png. The text is the page's own: the promise, the eyebrow, the
+    README install line and lines from brand/demo/manifest.json, which tests/test_demo.py replays."""
+    cfg, f = config(), facts()
+    os.makedirs(out, exist_ok=True)
+    shutil.copyfile(os.path.join(HERE, "site.css"), os.path.join(out, "site.css"))
+    shutil.copytree(os.path.join(HERE, "fonts"), os.path.join(out, "fonts"), dirs_exist_ok=True)
+    shutil.copyfile(os.path.join(BRAND, "logo-wordmark.svg"), os.path.join(out, "logo-wordmark.svg"))
+    hero = hero_rows(f["beats"])
+    replay = f["beats"][0]
+    wreck = {ln for i, ln in enumerate(replay["output"].rstrip("\n").split("\n")) if i in replay["accent_rows"]}
+    host = cfg["site_url"].split("//", 1)[1].rstrip("/")
+    n, good = f["steps"], f["good_step"]
+    tl = ruler(good, n=n, w=4 + 6 * (n - 1), h=16, dark=True)
+    head = ('<div class="panel-head"><span>a session of %d steps; the last %d wrecked the repo</span>'
+            '<span class="tl">%s<span>rewind %d</span></span></div>' % (n, f["wreck_steps"], tl, good))
+    short = [r for r in hero if not (r[0] == "out" and r[1].startswith(("   11", "   12")) or "undo it with" in r[1])]
+    pipx, _ = split_comment(f["blocks"]["install"][0])
+    meta = '<b>v%s</b> &middot; open source, %s' % (e(f["version"]), e(LICENCE))
+    agents_line = e(eyebrow(f))
+    def doc(body, w, h):
+        return ('<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="site.css">'
+                '<style>%s</style></head><body>%s</body></html>' % (CARD_CSS % {"w": w, "h": h}, body))
+    def struck(rows):
+        return {i for i, (k, t) in enumerate(rows) if k == "out" and t in wreck}
+    for name, (w, h) in {"og": (1200, 630), "linkedin": (1200, 627)}.items():
+        body = ('<div class="card wide"><div class="left"><img class="mark" src="logo-wordmark.svg" alt="">'
+                '<h1>%s</h1><p class="meta">%s<br>%s<br><span class="host">%s</span></p></div>'
+                '<div class="panel">%s%s</div><div class="rule"><i style="left:%d%%"></i></div></div>'
+                % (e(PROMISE), meta, agents_line, e(host), head, panel(short, struck=struck(short)), round(100 * good / n)))
+        with open(os.path.join(out, name + ".html"), "w", encoding="utf-8") as fh:
+            fh.write(doc(body, w, h))
+    body = ('<div class="card tall"><img class="mark" src="logo-wordmark.svg" alt="" style="height:44px">'
+            '<h1>%s</h1><div class="panel">%s%s</div>'
+            '<div class="install">%s</div>'
+            '<div class="foot2"><p class="meta" style="margin:0">%s<br>%s</p><span class="host" style="font-size:24px">%s</span></div>'
+            '<div class="rule"><i style="left:%d%%"></i></div></div>'
+            % (e(PROMISE), head, panel(hero, struck=struck(hero)), panel([("cmd", pipx)]), meta, agents_line, e(host),
+               round(100 * good / n)))
+    with open(os.path.join(out, "portrait.html"), "w", encoding="utf-8") as fh:
+        fh.write(doc(body, 1080, 1350))
+    return ["og.html", "linkedin.html", "portrait.html"]
 
 
 def fonts(cache=os.path.join(ROOT, ".brandcache")):
@@ -666,6 +839,10 @@ if __name__ == "__main__":
     if cmd == "build":
         pages = build()
         print("built %s in %s: %s" % (", ".join(sorted(pages)), HERE, config()["site_url"]))
+    elif cmd == "cards":
+        if os.path.abspath(sys.argv[2]).startswith(HERE):
+            raise SystemExit("cards: pick a directory outside brand/site (the card pages are never published)")
+        print("cards %s in %s" % (", ".join(cards(sys.argv[2])), sys.argv[2]))
     elif cmd == "fonts":
         fonts(*sys.argv[2:3])
     elif cmd == "open":
@@ -673,4 +850,4 @@ if __name__ == "__main__":
             raise SystemExit("open: pick a directory outside brand/site (the open variant is never published)")
         print("built %s in %s" % (", ".join(sorted(build(out=sys.argv[2], open_variant=True))), sys.argv[2]))
     else:
-        raise SystemExit("usage: build.py [build|fonts [cache]|open DIR]")
+        raise SystemExit("usage: build.py [build|fonts [cache]|open DIR|cards DIR]")

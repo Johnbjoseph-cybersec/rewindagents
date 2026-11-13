@@ -11,10 +11,16 @@
 <meta property="og:title" content="Getting started: rewindagents">
 <meta property="og:description" content="Getting started with rewindagents: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, export, find a session, verify the log.">
 <meta property="og:url" content="https://rewindagents.com/docs/">
+<meta property="og:image" content="https://rewindagents.com/assets/og-1200x630.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="rewindagents: Ctrl+Z for AI coding agents. A terminal shows rewindagents rewind 12 restoring four files.">
 <meta property="og:image" content="https://rewindagents.com/assets/social-preview-1280x640.png">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="640">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://rewindagents.com/assets/og-1200x630.png">
+<meta name="twitter:image:alt" content="rewindagents: Ctrl+Z for AI coding agents. A terminal shows rewindagents rewind 12 restoring four files.">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="../assets/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="stylesheet" href="../site.css">
@@ -28,7 +34,7 @@
 <main>
 
 <section class="sec first" aria-labelledby="h1"><div class="wrap">
-<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="2.0" height="1" fill="#121412"/><rect x="2.0" y="16" width="82.0" height="1" fill="#838C86"/><rect x="14.8" y="12" width="1" height="5" fill="#838C86"/><rect x="28.2" y="12" width="1" height="5" fill="#838C86"/><rect x="41.5" y="12" width="1" height="5" fill="#838C86"/><rect x="54.8" y="12" width="1" height="5" fill="#838C86"/><rect x="68.2" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M-1.0 1H5.0V4L3.0 6.5V17H1.0V6.5L-1.0 4Z" fill="#B82A16"/></svg><span class="n">01</span><span>Docs</span></p>
+<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="2.0" height="1" fill="#121412"/><rect x="2.0" y="16" width="82.0" height="1" fill="#838C86"/><rect x="12.9" y="12" width="1" height="5" fill="#838C86"/><rect x="24.4" y="12" width="1" height="5" fill="#838C86"/><rect x="35.8" y="12" width="1" height="5" fill="#838C86"/><rect x="47.2" y="12" width="1" height="5" fill="#838C86"/><rect x="58.6" y="12" width="1" height="5" fill="#838C86"/><rect x="70.1" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M-1.0 1H5.0V4L3.0 6.5V17H1.0V6.5L-1.0 4Z" fill="#B82A16"/></svg><span class="n">01</span><span>Docs</span></p>
 <div class="head"><h1 id="h1" class="h1-small">Getting started.</h1>
 <p class="lede">Install, add the hook to one project, let the agent work, then look at the session and step back when you need to. Every command here is the README&#x27;s, and a test checks that each one is a real subcommand.</p></div>
 <div class="docs">
@@ -36,33 +42,33 @@
 <article class="doc">
 <h2 id="install">Install</h2>
 <p>Python &gt;=3.10, standard library only. Tested on Python 3.15 on macOS. Not on PyPI yet, so install from the repository:</p>
-<pre class="term"><code><span class="l"><span class="p">$ </span>pipx install <span class="nb">git+https://</span><wbr><span class="nb">github.com/</span><wbr><span class="nb">Johnbjoseph-cybersec/</span><wbr><span class="nb">rewindagents</span></span>
+<pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">pipx install <span class="nb">git+https://</span><wbr><span class="nb">github.com/</span><wbr><span class="nb">Johnbjoseph-cybersec/</span><wbr><span class="nb">rewindagents</span></span></span>
 <span class="l"><span class="c"># or: pip install <span class="nb">git+https://</span><wbr><span class="nb">...</span></span></span>
-<span class="l"><span class="p">$ </span>rewindagents <span class="nb">--version</span></span></code></pre>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents <span class="nb">--version</span></span></span></code></pre>
 <p>The last command prints the version it installed:</p>
-<pre class="term"><code><span class="l"><span class="p">$ </span>rewindagents <span class="nb">--version</span></span>
+<pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">rewindagents <span class="nb">--version</span></span></span>
 <span class="l" style="--i:2ch">rewindagents 0.0.7</span></code></pre>
 <p>Or from a clone, <code>pip install .</code>. Without installing, <code>PYTHONPATH=src python3 -m rewindagents</code> runs the same CLI from a clone; then the undo hint says <code>python3 -m rewindagents</code> instead of <code>rewindagents</code>.</p>
 
 <h2 id="hook">Add the hook</h2>
-<pre class="term"><code><span class="l"><span class="p">$ </span>cd /path/to/your/project</span>
+<pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">cd /path/to/your/project</span></span>
 <span class="l"><span class="c"># adds the hook to .claude/settings.json in this project</span></span>
-<span class="l"><span class="p">$ </span>rewindagents install</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents install</span></span>
 <span class="l"><span class="c"># or for every project</span></span>
-<span class="l"><span class="p">$ </span>rewindagents install <span class="nb">--settings ~/.claude/settings.json</span></span></code></pre>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents install <span class="nb">--settings ~/.claude/settings.json</span></span></span></code></pre>
 <p><code>install</code> adds a <code>PreToolUse</code> and a <code>PostToolUse</code> hook to the settings file, keeps everything already in it, and does nothing if the hook is already there. The command it writes names the Python that rewindagents was installed into by absolute path, so it runs whether or not a virtualenv is active. To remove the hook, delete those two entries from the settings file.</p>
 <pre class="term"><code><span class="l"><span class="c"># adds the hook to .codex/hooks.json in this project</span></span>
-<span class="l"><span class="p">$ </span>rewindagents install <span class="nb">--agent codex</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents install <span class="nb">--agent codex</span></span></span>
 <span class="l"><span class="c"># adds the hook to .cursor/hooks.json in this project</span></span>
-<span class="l"><span class="p">$ </span>rewindagents install <span class="nb">--agent cursor</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents install <span class="nb">--agent cursor</span></span></span>
 <span class="l"><span class="c"># or for every project</span></span>
-<span class="l"><span class="p">$ </span>rewindagents install <span class="nb">--agent cursor</span> <span class="nb">--settings ~/.cursor/hooks.json</span></span></code></pre>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents install <span class="nb">--agent cursor</span> <span class="nb">--settings ~/.cursor/hooks.json</span></span></span></code></pre>
 <p>For Codex the file is <code>.codex/hooks.json</code>, in the same shape as Claude Code&#x27;s settings; Codex asks you to trust the hook once (<code>/hooks</code>) and remembers the trust by the hook&#x27;s hash. For Cursor the file is <code>.cursor/hooks.json</code> with a <code>preToolUse</code> and a <code>postToolUse</code> entry; because Cursor&#x27;s <code>preToolUse</code> is a permission hook that treats an empty answer as a failure, the hook prints <code>{"permission": "allow"}</code> before a call and <code>{}</code> after one, which changes nothing (a deny from another hook still wins). The Codex and Cursor hooks are tested with the payloads in the vendors&#x27; documentation and through the installed command, not yet in a live session.</p>
 
 <h2 id="first">A first session</h2>
 <p>The session behind the clip on the front page, as it ran. Every line below is what the command printed; <code>tests/test_demo.py</code> runs the same session and fails if a line changes.</p>
 <ol class="walk"><li><p>Ask Claude Code for anything in a project with the hook installed; here, 12 steps that add a timeout to a small service, then two steps that delete the tests and overwrite the config. <code>replay</code> lists every step with its number.</p><pre class="term"><code><span class="l"><span class="c"># a coding agent has been working in this repo; rewindagents recorded every step</span></span>
-<span class="l"><span class="p">$ </span>rewindagents replay</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents replay</span></span>
 <span class="l" style="--i:21ch">    1  Read          README.md</span>
 <span class="l" style="--i:21ch">    2  Read          app/config.py</span>
 <span class="l" style="--i:21ch">    3  Edit          app/config.py  [1 checkpointed]</span>
@@ -77,20 +83,20 @@
 <span class="l" style="--i:21ch">   12  Read          tests/test_server.py</span>
 <span class="l" style="--i:21ch">   13  Bash          rm -rf tests  [3 checkpointed]</span>
 <span class="l" style="--i:21ch">   14  Write         app/config.py  [1 checkpointed]</span></code></pre></li><li><p>git shows the damage: three files changed, two deleted.</p><pre class="term"><code><span class="l"><span class="c"># its last two steps deleted the tests and overwrote the config</span></span>
-<span class="l"><span class="p">$ </span>git status <span class="nb">--short</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">git status <span class="nb">--short</span></span></span>
 <span class="l" style="--i:3ch"> M README.md</span>
 <span class="l" style="--i:3ch"> M app/config.py</span>
 <span class="l" style="--i:3ch"> M app/server.py</span>
 <span class="l" style="--i:3ch"> D tests/test_config.py</span>
 <span class="l" style="--i:3ch"> D tests/test_server.py</span></code></pre></li><li><p>Rewind to the last good step. Every restored file is named, and the rewind is itself a step, so the last line says how to undo it.</p><pre class="term"><code><span class="l"><span class="c"># put the files back the way they were right after step 12</span></span>
-<span class="l"><span class="p">$ </span>rewindagents rewind 12</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents rewind 12</span></span>
 <span class="l" style="--i:2ch">session demo: rewind to step 12 of 14 (did change 4 files)</span>
 <span class="l" style="--i:11ch"><span class="hit">  restore  tests/test_config.py</span></span>
 <span class="l" style="--i:11ch"><span class="hit">  restore  tests/test_server.py</span></span>
 <span class="l" style="--i:11ch"><span class="hit">  restore  tests/test_timeout.py</span></span>
 <span class="l" style="--i:11ch"><span class="hit">  restore  app/config.py</span></span>
 <span class="l" style="--i:4ch">  this rewind is step 15; undo it with: rewindagents rewind 14 --session demo</span></code></pre></li><li><p>git shows the first 12 steps kept and the tests back.</p><pre class="term"><code><span class="l"><span class="c"># the tests are back; the first 12 steps stay</span></span>
-<span class="l"><span class="p">$ </span>git status <span class="nb">--short</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">git status <span class="nb">--short</span></span></span>
 <span class="l" style="--i:3ch"> M README.md</span>
 <span class="l" style="--i:3ch"> M app/config.py</span>
 <span class="l" style="--i:3ch"> M app/server.py</span>
@@ -110,15 +116,15 @@
 <h2 id="replay">Replay and rewind</h2>
 <p>Run these from the project directory. They work on the latest session unless you pass <code>--session ID</code>.</p>
 <pre class="term"><code><span class="l"><span class="c"># one line per step: number, tool, file or command</span></span>
-<span class="l"><span class="p">$ </span>rewindagents replay</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents replay</span></span>
 <span class="l"><span class="c"># step 12 in full: input, checkpoints, result</span></span>
-<span class="l"><span class="p">$ </span>rewindagents replay <span class="nb">--step 12</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents replay <span class="nb">--step 12</span></span></span>
 <span class="l"><span class="c"># what would change</span></span>
-<span class="l"><span class="p">$ </span>rewindagents rewind 12 <span class="nb">--dry-run</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents rewind 12 <span class="nb">--dry-run</span></span></span>
 <span class="l"><span class="c"># files back to how they were right after step 12</span></span>
-<span class="l"><span class="p">$ </span>rewindagents rewind 12</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents rewind 12</span></span>
 <span class="l"><span class="c"># keep the current files, then rewind to step 12</span></span>
-<span class="l"><span class="p">$ </span>rewindagents branch 12 <span class="nb">--name try2</span></span></code></pre>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents branch 12 <span class="nb">--name try2</span></span></span></code></pre>
 <p><code>replay</code> prints one line per step: number, tool, file or command, and how many files the step checkpointed. <code>replay --step N</code> shows one step in full. <code>rewind N</code> puts back every file that a step after N changed and deletes the files those steps created; <code>rewind 0</code> undoes the whole session. Before writing anything it checks the hash chain and the SHA-256 of every stored copy: if the chain is broken it changes nothing, and a copy that no longer matches is reported and left as it is.</p>
 <p>A rewind is undoable. It first saves the current bytes of every file it will change and records itself as a new step, then prints <code>undo it with: rewindagents rewind &lt;step&gt; --session &lt;id&gt;</code>. In the session above, the rewind to step 12 of 14 became step 15, and undoing it is <code>rewind 14</code>.</p>
 
@@ -127,11 +133,11 @@
 
 <h2 id="export">Export</h2>
 <pre class="term"><code><span class="l"><span class="c"># writes .rewindagents/replay-&lt;session&gt;.html</span></span>
-<span class="l"><span class="p">$ </span>rewindagents export</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents export</span></span>
 <span class="l"><span class="c"># a given session, to a given file</span></span>
-<span class="l"><span class="p">$ </span>rewindagents export <span class="nb">--session abc</span> <span class="nb">--out replay.html</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents export <span class="nb">--session abc</span> <span class="nb">--out replay.html</span></span></span>
 <span class="l"><span class="c"># steps, tools and paths only: no inputs, results or diffs</span></span>
-<span class="l"><span class="p">$ </span>rewindagents export <span class="nb">--no-contents</span></span></code></pre>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents export <span class="nb">--no-contents</span></span></span></code></pre>
 <p>One HTML file with the whole session: every step with its tool, input and result, and for every file a step checkpointed, the change that step made as a unified diff (the file before the step against the file after it: its next checkpoint in the session, or the file as it is now). Inline CSS only, no scripts, nothing fetched. Paths are shown relative to the project; where the project lives on disk is not in the page.</p>
 <ul>
 <li>A file over 256 KB on either side is described, not diffed. A diff longer than 400 lines is cut, with the count of lines left out. Binary files show their size before and after.</li>
@@ -141,23 +147,23 @@
 
 <h2 id="sessions">Find a session</h2>
 <pre class="term"><code><span class="l"><span class="c"># every session in the log: id, first and last time, steps, files touched</span></span>
-<span class="l"><span class="p">$ </span>rewindagents sessions</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents sessions</span></span>
 <span class="l"><span class="c"># only sessions with a step that mentions it, and those steps</span></span>
-<span class="l"><span class="p">$ </span>rewindagents sessions <span class="nb">--grep config.py</span></span></code></pre>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents sessions <span class="nb">--grep config.py</span></span></span></code></pre>
 <p>One line per session, in the order the sessions first wrote to the log: the session id, the local time of its first and last record, the number of steps (with how many of them are rewinds or branches) and the files it touched; a second line names the first 5 files and counts the rest. The session that wrote the last record is marked <code>(latest)</code>.</p>
 <p><code>--grep TEXT</code> keeps the sessions with a step whose <code>replay</code> line or checkpointed path contains TEXT, in any case, and lists those steps with their numbers. Exit code 1 if no session matches.</p>
 
 <h2 id="verify">Verify</h2>
-<pre class="term"><code><span class="l"><span class="p">$ </span>rewindagents verify <span class="nb">--head &lt;pinned-hash&gt;</span></span></code></pre>
+<pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">rewindagents verify <span class="nb">--head &lt;pinned-hash&gt;</span></span></span></code></pre>
 <p><code>verify</code> checks every record against the one before it and names the first bad record. A hash chain cannot tell on its own that records were cut off the end or that the whole file was rewritten and re-hashed; <code>rewindagents head</code> prints the current head hash, and <code>verify --head</code> checks against a copy you pinned somewhere the agent cannot write.</p>
 <p>The recorder also works on its own, without the hook:</p>
-<pre class="term"><code><span class="l"><span class="p">$ </span>echo &#x27;{&quot;tool&quot;: &quot;Bash&quot;, &quot;args&quot;: {&quot;command&quot;: &quot;ls&quot;}}&#x27; | rewindagents record <span class="nb">--session s1</span></span>
+<pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">echo &#x27;{&quot;tool&quot;: &quot;Bash&quot;, &quot;args&quot;: {&quot;command&quot;: &quot;ls&quot;}}&#x27; | rewindagents record <span class="nb">--session s1</span></span></span>
 <span class="l"><span class="c"># OK: 1 records, chain intact</span></span>
-<span class="l"><span class="p">$ </span>rewindagents verify</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents verify</span></span>
 <span class="l"><span class="c"># list recorded calls</span></span>
-<span class="l"><span class="p">$ </span>rewindagents show</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents show</span></span>
 <span class="l"><span class="c"># current head hash</span></span>
-<span class="l"><span class="p">$ </span>rewindagents head</span></code></pre>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents head</span></span></code></pre>
 
 <h2 id="limits">Limits</h2>
 <ul>
@@ -172,7 +178,7 @@
 <p>Delete the two hook entries from the file you installed into, delete <code>.rewindagents/</code> in the project, and uninstall the package (<code>pipx uninstall rewindagents</code> or <code>pip uninstall rewindagents</code>). Nothing else was created.</p>
 
 <h2 id="tests">Tests</h2>
-<pre class="term"><code><span class="l"><span class="p">$ </span>python3 -m unittest discover -s tests -v</span></code></pre>
+<pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">python3 -m unittest discover -s tests -v</span></span></code></pre>
 <p>That runs against the source tree and skips the tests of the installed command. <code>.fire-test-cmd</code> in the repository holds the full command: it builds a venv, installs the package into it and runs every test, including the ones that drive the installed <code>rewindagents</code> binary, replay the session above, and rebuild this site byte for byte.</p>
 </article>
 </div>
