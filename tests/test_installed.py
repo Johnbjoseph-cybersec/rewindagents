@@ -226,9 +226,9 @@ class InstalledCommandTest(unittest.TestCase):
 
     def test_import_through_the_binary_into_a_torn_log_exits_1_and_rewinds(self):
         with TemporaryDirectory() as src, TemporaryDirectory() as dst, TemporaryDirectory() as carry:
-            shell = "sed -i.bak s/1/2/ app.py && rm app.py.bak"
-            for proj, session in ((src, "moved"), (dst, "here")):
-                Path(proj, "app.py").write_text("x = 1\n")
+            for proj, session, name in ((src, "moved", "app.py"), (dst, "here", "own.py")):
+                shell = f"sed -i.bak s/1/2/ {name} && rm {name}.bak"
+                Path(proj, name).write_text("x = 1\n")
                 self.assertEqual(self._run("install", cwd=proj).returncode, 0)
                 cmd = json.loads(Path(proj, ".claude", "settings.json").read_text())["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
                 for event in ("PreToolUse", "PostToolUse"):
@@ -254,10 +254,12 @@ class InstalledCommandTest(unittest.TestCase):
             r = self._run("verify", cwd=dst)
             self.assertEqual(r.returncode, 1)
             self.assertIn("the 2 records after it chain on intact", r.stdout + r.stderr)
-            Path(dst, "app.py").write_text("x = 9\n")
+            self.assertFalse(Path(dst, "app.py").exists())
             r = self._run("rewind", "0", "--session", "moved", cwd=dst)
             self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
-            self.assertEqual(Path(dst, "app.py").read_text(), "x = 1\n")
+            self.assertIn("torn write", r.stdout + r.stderr)
+            self.assertEqual(Path(dst, "app.py").read_text(), "x = 1\n")       # put back in this clone
+            self.assertEqual(Path(dst, "own.py").read_text(), "x = 2\n")       # its own session left alone
 
     def test_install_for_codex_and_cursor_writes_commands_their_payloads_drive(self):
         """`install --agent codex|cursor` through the binary; then the command from the written file, run as the
