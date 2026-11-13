@@ -119,6 +119,8 @@ def steps_from(recs: list[dict]) -> list[dict]:
             s["only"] = args["only"]
         if args.get("branch"):
             s["branch"] = args["branch"]
+        if args.get("revert") is not None:
+            s["reverted"] = args["revert"]
         if r.get("event") != "pre" and isinstance(args.get("after"), list):
             s["after"] = args["after"]                        # a rewind's own record: what it left
         if isinstance(args.get("bash_scan"), dict) and "skipped" in args["bash_scan"]:
@@ -144,6 +146,8 @@ def summary(step: dict, width: int = 80, root: Path | None = None) -> str:
     inp = step.get("input")
     if step["event"] == "fork" and isinstance(inp, dict):
         text = f"run {inp.get('fork')} starts here: the files as they were right after step {inp.get('from_step')}"
+    elif step["event"] == "revert":
+        text = f"reverted step {step.get('reverted')}, keeping the steps after it"
     elif step["event"] in ("rewind", "branch"):
         text = f"rewound to step {step.get('to_step')}"
         if step.get("only"):
@@ -299,7 +303,7 @@ def plan(log_path: str | Path, n: int, session: str | None = None,
         first = kept
         unmatched = [str(q) for i, q in enumerate(only) if i not in matched]
     p: dict[str, Any] = {"session": session, "to_step": n, "steps": len(all_steps),
-                         "restore": [], "delete": [], "cannot": [],
+                         "restore": [], "delete": [], "cannot": [], "modes": {},
                          # steps whose before/after scan did not finish: Bash, or any Codex/Cursor call that
                          # was scanned (see agents.scans), without a "changed" count from the post event
                          "bash_uncovered": sum(1 for s in all_steps[n:] if (s["tool"] == "Bash" or s.get("scanned"))
@@ -322,8 +326,11 @@ def plan(log_path: str | Path, n: int, session: str | None = None,
             obj = objects / cp["sha256"]
             if not obj.is_file() or hashlib.sha256(obj.read_bytes()).hexdigest() != cp["sha256"]:
                 p["cannot"].append((path_s, "stored copy missing or altered"))
-            elif not path.is_file() or path.read_bytes() != obj.read_bytes():
+            elif (not path.is_file() or path.read_bytes() != obj.read_bytes()
+                  or ("mode" in cp and path.stat().st_mode & 0o777 != cp["mode"])):
                 p["restore"].append((path_s, cp["sha256"]))
+                if "mode" in cp:            # recorded since takeback-bench S11; older records hold no mode
+                    p["modes"][path_s] = cp["mode"]
     # only a file that is there now can lose bytes: restoring a file that is absent overwrites nothing
     touched = {path_s for path_s, _ in p["restore"] if Path(path_s).is_file()} | set(p["delete"])
     p["drift"] = drift(log_path, session, {q: first_seq[q] for q in first_seq if q in touched})
@@ -350,6 +357,8 @@ def _apply(log_path: str | Path, p: dict, event: str, extra: dict | None = None)
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_name(f".{path.name}.rewindagents.tmp")
         tmp.write_bytes((objects / sha).read_bytes())
+        if path_s in p.get("modes", {}):
+            os.chmod(tmp, p["modes"][path_s])
         os.replace(tmp, path)
     for path_s in p["delete"]:
         Path(path_s).unlink()

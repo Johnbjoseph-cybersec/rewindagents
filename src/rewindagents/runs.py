@@ -396,7 +396,7 @@ def compare(cwd: str | Path, names: list[str] | None = None, check: str | None =
             known = (rel not in start_sha or old_b is not None) and (after is None or new_b is not None)
             changes[rel] = {"kind": kind, "sha256": after, "lines": _plus_minus(old_b, new_b) if known else None}
         steps = [s for s in _run_steps(d, root, origin, forked_at, is_source) if s["event"] not in
-                 ("rewind", "branch", "fork")]       # the agents' own tool calls; rewinds are yours
+                 ("rewind", "branch", "fork", "revert")]       # the agents' own tool calls; rewinds are yours
         run_agents = sorted({s.get("agent") or "claude" for s in steps})
         plus = sum(c["lines"][0] for c in changes.values() if c["lines"])
         minus = sum(c["lines"][1] for c in changes.values() if c["lines"])

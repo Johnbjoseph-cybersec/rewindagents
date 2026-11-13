@@ -150,6 +150,10 @@
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents rewind 12</span></span>
 <span class="l"><span class="c"># put back only these</span></span>
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents rewind 12 <span class="nb">--only src/db.py</span> <span class="nb">--only tests/</span></span></span>
+<span class="l"><span class="c"># what taking back step 12 alone would change</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents revert 12 <span class="nb">--dry-run</span></span></span>
+<span class="l"><span class="c"># take back step 12 alone, keep every later step and hand edit</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents revert 12</span></span>
 <span class="l"><span class="c"># keep the current files, then rewind to step 12</span></span>
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents branch 12 <span class="nb">--name try2</span></span></span></code></pre>
 <p><code>replay</code> prints one line per step: number, tool, file or command, and how many files the step checkpointed. <code>replay --step N</code> shows one step in full. <code>rewind N</code> puts back every file that a step after N changed and deletes the files those steps created; <code>rewind 0</code> undoes the whole session. Before writing anything it checks the hash chain and the SHA-256 of every stored copy: if the chain is broken it changes nothing, and a copy that no longer matches is reported and left as it is.</p>
@@ -289,8 +293,8 @@
 <h2 id="limits">Limits</h2>
 <ul>
 <li>Only the project directory is scanned, saved and restored. A command that changes files elsewhere is recorded, not saved, and files outside the project are reported and left alone.</li>
-<li>In a git repository the scan follows <code>git ls-files --cached --others --exclude-standard</code>, so git-ignored files are not saved. Outside git, every file under the project except under <code>.git</code>, <code>.rewindagents</code>, <code>.venv</code>, <code>__pycache__</code>, <code>node_modules</code>, <code>venv</code>.</li>
-<li>Symlinks are not saved. Files over 20 MB are not copied. A project with more than 20,000 files is not scanned around <code>Bash</code> commands; the call is still recorded and <code>rewind</code> reports the step as not scanned.</li>
+<li>In a git repository the scan follows <code>git ls-files --cached --others --exclude-standard</code>, plus the files git ignores one by one (<code>.env</code>, <code>*.log</code>), so a <code>rm .env</code> can be rewound; directories git ignores as a whole (<code>node_modules/</code>, <code>build/</code>) are not saved. Outside git, every file under the project except under <code>.git</code>, <code>.rewindagents</code>, <code>.venv</code>, <code>__pycache__</code>, <code>node_modules</code>, <code>venv</code>.</li>
+<li>Symlinks are not saved. File permissions are: a deleted script comes back executable. Files over 20 MB are not copied. A project with more than 20,000 files is not scanned around <code>Bash</code> commands; the call is still recorded and <code>rewind</code> reports the step as not scanned.</li>
 <li>Directories created by later steps stay, empty, after a rewind. If anything could not be restored, <code>rewind</code> lists it and exits 1.</li>
 <li>Needs a Unix for now: the log lock has a Windows path (<code>msvcrt</code>), but the tests have not run on Windows yet. The Claude Code hook has run in real sessions; the Codex and Cursor hooks are tested with the documented payloads, not yet in a live session.</li>
 </ul>

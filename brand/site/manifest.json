@@ -146,6 +146,8 @@
     "rewindagents diff 12 src/db.py   # only that file (a directory means every file under it)",
     "rewindagents rewind 12           # files back to how they were right after step 12",
     "rewindagents rewind 12 --only src/db.py --only tests/   # put back only these",
+    "rewindagents revert 12 --dry-run # what taking back step 12 alone would change",
+    "rewindagents revert 12           # take back step 12 alone, keep every later step and hand edit",
     "rewindagents branch 12 --name try2   # keep the current files, then rewind to step 12"
    ],
    "sessions": [

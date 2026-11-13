@@ -57,7 +57,7 @@ def sessions(log_path: str | Path, grep: str | None = None) -> list[dict]:
         if grep and not hits:
             continue
         out.append({"session": sid, "first": srecs[0]["ts"], "last": srecs[-1]["ts"], "steps": len(steps),
-                    "rewinds": sum(1 for s in steps if s["event"] in ("rewind", "branch")),
+                    "rewinds": sum(1 for s in steps if s["event"] in ("rewind", "branch", "revert")),
                     "files": touched(steps, root), "hits": hits, "latest": sid == last_writer})
     return out
 

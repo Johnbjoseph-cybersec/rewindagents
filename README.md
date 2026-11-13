@@ -14,7 +14,7 @@ agent, model, prompt or person, and compare the runs on what they did to the fil
 ![rewindagents fork and compare: a recorded session, a second try forked from step 2, compare --check shows FAIL for the first run and pass for the second, compare --diff shows how they differ](brand/readme/fork-and-compare-800.gif)
 
 rewindagents rewinds what your coding agent changed, step by step, from one verifiable log, including the files
-only a shell command touched. What it cannot put back (files the scan skips because git ignores them, files over
+only a shell command touched. What it cannot put back (files under a directory git ignores as a whole, symlinks, files over
 20 MB, changes outside the project, steps in a project of more than 20,000 files) is listed under
 [Claude Code hook](#claude-code-hook), [Codex and Cursor hooks](#codex-and-cursor-hooks) and
 [Replay, rewind, branch](#replay-rewind-branch).
@@ -154,12 +154,15 @@ project's files before the command, scans again after it, and checkpoints, in th
 files that were changed, deleted or created. Details and limits:
 
 - "The project's files" means, in a git repo, what `git ls-files --cached --others --exclude-standard`
-  lists: tracked and untracked files, but not git-ignored ones. Outside git, every file under the project
+  lists (tracked and untracked files), plus the files git ignores one by one, such as `.env` or `*.log`, so
+  `rm .env` can be rewound; a directory git ignores as a whole (`node_modules/`, `build/`) is not scanned.
+  `bench/takeback` (scenario S06) measures this. Outside git, every file under the project
   directory except `.git`, `.rewindagents`, `node_modules`, `.venv`, `venv` and `__pycache__`.
 - Only the project directory is scanned. A command that changes files elsewhere is recorded, not saved.
-- Symlinks are not saved. Files over 20 MB are noted and not copied.
+- Symlinks are not saved. Files over 20 MB are noted and not copied. Permission bits are saved with each
+  copy, so a deleted script comes back executable (takeback-bench S11).
 - Copies are stored by SHA-256, so an unchanged file is stored once. A stat cache
-  (`.rewindagents/index.json`) means only files whose size or modification time changed are read again.
+  (`.rewindagents/index.json`) means only files whose size, modification time or mode changed are read again.
 - A project with more than 20,000 files is not scanned; the call is still recorded and `rewind` reports it.
 - A Bash call with `run_in_background: true`: Claude Code's hooks reference documents no hook event for a
   background shell finishing, so the after-scan may run while the command is still going. Files it changes
@@ -190,6 +193,19 @@ Measured by `bench/hook_overhead.py` on macOS 27.0.1, Apple M6, 12 CPUs, Python 
 
 Other machines, disks and projects will differ; run `python3 bench/hook_overhead.py` to measure yours.
 <!-- overhead:end -->
+
+## Undo benchmark
+
+`python3 bench/takeback/takeback.py` runs takeback-bench: 17 scripted sessions in which an agent wrecks
+something (`rm -rf tests`, `sed -i`, an overwritten file, a binary, a git-ignored `.env`, a file over 20 MB, a
+file outside the project, a hand edit made after the bad step, an executable script, a symlink, a project
+without git, ...), then each tool's own undo. Every file is compared by SHA-256, executable bit and symlink
+target with the state the goal asks for, and any later work the undo destroyed is counted. rewindagents runs
+through its real hook; git with a commit after every step and git with a stash snapshot run as baselines.
+On 2026-11-14 rewindagents undoing with `revert` restored 14 of the 17 exactly, destroyed later work in none,
+and exited 1 on each of the other three; commit-per-step git restored 12 of the 16 it could run and destroyed
+later work once. rewindagents misses a deleted symlink, a file over 20 MB and a file outside the project.
+Every scenario, the baselines, the method and the sources are in `bench/RESULTS.md`.
 
 ## Codex and Cursor hooks
 
@@ -312,6 +328,8 @@ rewindagents diff 12             # the same files, as a unified diff: now -> ste
 rewindagents diff 12 src/db.py   # only that file (a directory means every file under it)
 rewindagents rewind 12           # files back to how they were right after step 12
 rewindagents rewind 12 --only src/db.py --only tests/   # put back only these
+rewindagents revert 12 --dry-run # what taking back step 12 alone would change
+rewindagents revert 12           # take back step 12 alone, keep every later step and hand edit
 rewindagents branch 12 --name try2   # keep the current files, then rewind to step 12
 ```
 
@@ -331,6 +349,22 @@ rewindagents branch 12 --name try2   # keep the current files, then rewind to st
   agent's other changes as they are. Same hash-chain and stored-copy checks, and it is recorded as a step
   like any rewind, so it can be undone. A path no step after N changed is reported as `skip`; if none of
   the paths was changed, nothing is written and the exit code is 1.
+
+- `revert K` takes back step K alone and keeps everything after it: later agent steps, later sessions and
+  hand edits, in other files and in the same file. For each file step K changed it does a three-way merge
+  (base: the file right after step K, which the hook keeps a copy of; theirs: the file right before step K;
+  ours: the file now), so step K's lines go back and the other lines stay. A file step K created is removed
+  only if it is unchanged since; a file it deleted comes back only if nothing created it again. When a later
+  change touched the same lines as step K (or lines right next to them, as `git merge-file` counts it; in a
+  file where the same line repeats many times the two can pair lines differently, measured by
+  `bench/merge_vs_git.py`), or
+  changed a file step K created or deleted, that is a conflict: `revert` changes nothing, names each file,
+  says how to see step K's change and how to put the file back by hand, and exits 1. `--dry-run` prints the
+  plan, conflicts included. A revert is recorded as a step like a rewind, current bytes first, so `rewind
+  <step before it>` undoes it. It has the same limits as `rewind` (files outside the project, over 20 MB or
+  not checkpointed are reported, exit 1). Steps recorded by an older version kept only the hash of the file
+  after the step, so for them `revert` needs those bytes from somewhere else: the file now, or a later
+  step's copy of it; otherwise that file is reported, not guessed.
 
 - `rewind N` puts back every file that a step after N changed with `Write`, `Edit`, `MultiEdit`,
   `NotebookEdit` or a `Bash` command, and deletes the files those steps created. `rewind 0` undoes the

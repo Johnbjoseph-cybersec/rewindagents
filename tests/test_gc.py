@@ -25,7 +25,9 @@ def sha(text):
 
 def project(d):
     """Step 1 creates keep.txt (v1), step 2 overwrites it (v2: names the v1 copy), then two files appear and
-    step 3 is a Bash `ls` that changes nothing: its scan saves copies of all three files and names none."""
+    step 3 is a Bash `ls` that changes nothing: its scan saves copies of all three files and names none. Since
+    `revert` (feat/revert) each step's post record also names the copy of the bytes it left (v1, then v2), so
+    v2 is kept too: `revert 2` merges from it."""
     a = Agent(d)
     a.write("keep.txt", "v1\n")
     a.write("keep.txt", "v2\n")
@@ -42,10 +44,10 @@ class TestGc(unittest.TestCase):
             self.assertEqual(objects(d), sorted([sha("v1\n"), sha("v2\n"), sha("x" * 100), sha("y" * 50)]))
             log_before = a.log.read_bytes()
             got = gc.gc(a.log)
-            self.assertEqual(sorted(got["deleted"]), sorted([sha("v2\n"), sha("x" * 100), sha("y" * 50)]))
-            self.assertEqual(got["bytes"], 3 + 100 + 50)        # the sizes of the deleted files
-            self.assertEqual((got["kept"], got["pending"]), (1, 0))
-            self.assertEqual(objects(d), [sha("v1\n")])
+            self.assertEqual(sorted(got["deleted"]), sorted([sha("x" * 100), sha("y" * 50)]))
+            self.assertEqual(got["bytes"], 100 + 50)            # the sizes of the deleted files
+            self.assertEqual((got["kept"], got["pending"]), (2, 0))
+            self.assertEqual(objects(d), sorted([sha("v1\n"), sha("v2\n")]))
             self.assertEqual(a.log.read_bytes(), log_before)   # the log is never written
             self.assertEqual(verify(a.log)[0], True)
             rewind.rewind(a.log, 1)
@@ -57,10 +59,10 @@ class TestGc(unittest.TestCase):
             a = project(d)
             before = objects(d)
             got = gc.gc(a.log, dry_run=True)
-            self.assertEqual((len(got["deleted"]), got["bytes"], got["kept"]), (3, 153, 1))
+            self.assertEqual((len(got["deleted"]), got["bytes"], got["kept"]), (2, 150, 2))
             self.assertEqual(objects(d), before)
-            self.assertEqual(gc.lines(got), ["would delete 3 stored copies (153 bytes); "
-                                             "kept 1 that the log or a pending scan names"])
+            self.assertEqual(gc.lines(got), ["would delete 2 stored copies (150 bytes); "
+                                             "kept 2 that the log or a pending scan names"])
 
     def test_a_pending_scan_keeps_its_copies_until_the_command_finishes(self):
         with TemporaryDirectory() as d:
@@ -73,8 +75,8 @@ class TestGc(unittest.TestCase):
             self.assertIn("1 pending scan(s)", "\n".join(gc.lines(got)))
             Path(d, "app.py").write_text("x = 2\n")
             hook.handle(a._p("PostToolUse", "Bash", {"command": "sed -i s/1/2/ app.py"}, {"stdout": ""}))
-            got = gc.gc(a.log)                                   # now only app.py's before-copy is named
-            self.assertEqual((got["deleted"], got["kept"], got["pending"]), ([sha("o\n")], 1, 0))
+            got = gc.gc(a.log)                                   # now only app.py's before and after copies
+            self.assertEqual((got["deleted"], got["kept"], got["pending"]), ([sha("o\n")], 2, 0))
             rewind.rewind(a.log, 0)
             self.assertEqual(Path(d, "app.py").read_text(), "x = 1\n")
 
@@ -128,7 +130,7 @@ class TestGc(unittest.TestCase):
                 with self.assertRaisesRegex(gc.GcError, "still in use"):
                     gc.gc(a.log, timeout=0.2)
             self.assertEqual(objects(d), before)
-            self.assertEqual(len(gc.gc(a.log)["deleted"]), 3)    # free again
+            self.assertEqual(len(gc.gc(a.log)["deleted"]), 2)    # free again
 
     def test_lists_each_pending_scan_with_its_age_and_command(self):
         with TemporaryDirectory() as d:
@@ -232,9 +234,9 @@ class TestGcCli(unittest.TestCase):
             a = project(d)
             code, out, err = cli("--log", str(a.log), "gc", "--dry-run")
             self.assertEqual((code, err), (0, ""))
-            self.assertEqual(out, "would delete 3 stored copies (153 bytes); kept 1 that the log or a pending scan names\n")
+            self.assertEqual(out, "would delete 2 stored copies (150 bytes); kept 2 that the log or a pending scan names\n")
             code, out, _ = cli("--log", str(a.log), "gc")
-            self.assertEqual((code, out), (0, "deleted 3 stored copies (153 bytes freed); kept 1 that the log or a "
+            self.assertEqual((code, out), (0, "deleted 2 stored copies (150 bytes freed); kept 2 that the log or a "
                                               "pending scan names\n"))
             a.log.write_text(a.log.read_text().replace("keep.txt", "kept.txt", 1))
             code, _, err = cli("--log", str(a.log), "gc")
