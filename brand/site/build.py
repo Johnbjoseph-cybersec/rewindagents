@@ -117,7 +117,7 @@ def md_inline(s):
 
 # The README's own words for what `status` reports, quoted on the docs page under "Is it recording?" (R25).
 # "exits 1." goes last so a wrap never starts a line with "1." (it read as a list item at 1440).
-STATUS_SENTENCES = ("The last line of `status` is this project's log", "`status` writes nothing",
+STATUS_SENTENCES = ("After the hooks come this project's log", "Each hook that is in place is also run once",
                     "A hook is stale when")
 # The README's words under "Move a session" and "Free space" on the docs page (R26); none ends on a number.
 MOVE_SENTENCES = ("Then `replay`, `rewind` and `branch` work on that session",
@@ -139,8 +139,13 @@ ATTACH_ACTION_SENTENCES = ("The action in `attach/` imports the bundle", "A late
 # The README's words about `init`, under "Add the hook" on the docs page (R28).
 INIT_SENTENCES = ("`init` looks for the agents it supports", "It prints the plan, asks", "It never adds a second copy",
                   "`--yes` skips the question", "`--global` writes each agent's user config instead",
-                  "Without `--yes` and without a terminal to ask on")
+                  "Without `--yes` and without a terminal to ask on", "`--agent claude` sets up only that agent",
+                  "In a git repository the config files `init`", "`rewindagents init --undo` takes it all out again")
 MORE_AGENTS = "Gemini CLI, Copilot CLI, Droid and Qwen Code hooks"
+# The three commands after a bad run, under "After a bad run" on the docs page, with the README's words.
+RESCUE = "After a bad run"
+RESCUE_SENTENCES = ("Three commands, in the order you need them", "`rewind` and `revert` refuse, change nothing",
+                    "Every rewind is itself a step")
 # The README's words for fork and compare, on the landing page and under "Fork and compare" on the docs page.
 FORK_SENTENCES = ("A recorded step is a starting point", "`rewindagents fork 12 --name try2` makes",
                   "In a git repository it is a", "Run any agent there")
@@ -188,6 +193,8 @@ def facts():
             ("export", "Export a replay"), ("sessions", "Find a session"), ("verify", "What the chain does not catch"),
             ("record", "Use it"), ("tests", "Tests"), ("quick", "Quick start"), ("ui", "Timeline UI"))},
         "quick_use": readme_blocks(readme, "Quick start")[1],
+        "rescue": readme_block(readme, RESCUE),
+        "rescue_says": [readme_sentence(readme, s) for s in RESCUE_SENTENCES],
         "init_says": [readme_sentence(readme, s) for s in INIT_SENTENCES],
         "more_agents": readme_blocks(readme, MORE_AGENTS)[0],
         "uninstall": next(blk for blk in readme_blocks(readme, "Claude Code hook") if blk[0].startswith("rewindagents uninstall")),
@@ -925,7 +932,7 @@ def docs_html(cfg, f):
     rel = "../"
     b = f["blocks"]
     desc = "Getting started with rewindagents: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, fork a step and compare the runs, export, find a session, verify the log."
-    toc = [("install", "Install"), ("hook", "Add the hook"), ("first", "A first session"), ("recorded", "What gets recorded"),
+    toc = [("install", "Install"), ("hook", "Add the hook"), ("after", "After a bad run"), ("first", "A first session"), ("recorded", "What gets recorded"),
            ("replay", "Replay and rewind"), ("branch", "Branch"), ("fork", "Fork and compare"), ("ui", "Timeline in a browser"), ("export", "Export"),
            ("sessions", "Find a session"), ("bundle", "Move a session"), ("attach", "Attach to a PR"),
            ("verify", "Verify"), ("status", "Is it recording?"), ("gc", "Free space"),
@@ -956,10 +963,16 @@ def docs_html(cfg, f):
 <p>%(init_says)s</p>
 <p>Or add it to one agent at a time:</p>
 %(hook)s
-<p><code>install</code> adds a <code>PreToolUse</code> and a <code>PostToolUse</code> hook to the settings file, keeps everything already in it, and does nothing if the hook is already there. The command it writes names the Python that rewindagents was installed into by absolute path, so it runs whether or not a virtualenv is active. To remove the hook, run <code>rewindagents uninstall</code> (see <a href="#remove">Remove it</a>).</p>
+<p><code>install</code> adds a <code>PreToolUse</code>, a <code>PostToolUse</code> and a <code>PostToolUseFailure</code> hook (a command that fails is checkpointed too) to the settings file, keeps everything already in it, and does nothing if the hook is already there. The command it writes names the Python that rewindagents was installed into by absolute path, so it runs whether or not a virtualenv is active. To remove the hook, run <code>rewindagents uninstall</code> (see <a href="#remove">Remove it</a>).</p>
 %(agents)s
 <p>For Codex the file is <code>%(codex)s</code>, in the same shape as Claude Code&#x27;s settings; Codex asks you to trust the hook once (<code>/hooks</code>) and remembers the trust by the hook&#x27;s hash. For Cursor the file is <code>%(cursor)s</code> with a <code>preToolUse</code> and a <code>postToolUse</code> entry; because Cursor&#x27;s <code>preToolUse</code> is a permission hook that treats an empty answer as a failure, the hook prints <code>{"permission": "allow"}</code> before a call and <code>{}</code> after one, which changes nothing (a deny from another hook still wins). The Codex and Cursor hooks are tested with the payloads in the vendors&#x27; documentation and through the installed command, not yet in a live session.</p>
 %(more_agents)s
+<p>Then use your agent as usual and:</p>
+%(quick_use)s
+
+<h2 id="after">After a bad run</h2>
+%(rescue)s
+<p>%(rescue_says)s</p>
 
 <h2 id="first">A first session</h2>
 <p>The session behind the clip on the front page, as it ran. Every line below is what the command printed; <code>tests/test_demo.py</code> runs the same session and fails if a line changes.</p>
@@ -1050,7 +1063,7 @@ def docs_html(cfg, f):
 
 <h2 id="remove">Remove it</h2>
 %(uninstall)s
-<p><code>uninstall</code> removes only the hook entries <code>install</code> wrote, so every other hook and setting stays, and it never touches <code>.rewindagents/</code>: recorded sessions can still be replayed and rewound. To remove everything, also delete <code>.rewindagents/</code> in the project and uninstall the package (<code>pipx uninstall rewindagents</code> or <code>pip uninstall rewindagents</code>). Nothing else was created.</p>
+<p><code>rewindagents init --undo</code> removes the hook from every agent <code>init</code> set up, deletes a config file that held nothing else, and keeps what was recorded. <code>uninstall</code> removes only the hook entries <code>install</code> wrote, so every other hook and setting stays, and it never touches <code>.rewindagents/</code>: recorded sessions can still be replayed and rewound. To remove everything, also delete <code>.rewindagents/</code> in the project and uninstall the package (<code>pipx uninstall rewindagents</code> or <code>pip uninstall rewindagents</code>). Nothing else was created.</p>
 
 <h2 id="tests">Tests</h2>
 %(tests)s
@@ -1076,6 +1089,8 @@ def docs_html(cfg, f):
        "cursor": e(f["agents"]["cursor"]["settings"]),
        "more_agents": more_agents_html(f["more_agents"]),
        "init": code(b["quick"]), "init_says": " ".join(md_inline(s) for s in f["init_says"]),
+       "quick_use": code(f["quick_use"]), "rescue": code(f["rescue"]),
+       "rescue_says": " ".join(md_inline(s) for s in f["rescue_says"]),
        "cursor_ro": ", ".join("<code>%s</code>" % e(t) for t in f["agents"]["cursor"]["read_only"]),
        "codex_ro": ", ".join("<code>%s</code>" % e(t) for t in f["agents"]["codex"]["read_only"]),
        "first": first, "chars": "{:,}".format(f["result_chars"]),

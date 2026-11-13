@@ -235,7 +235,10 @@
    "It never adds a second copy and keeps every hook already in the file.",
    "`--yes` skips the question.",
    "`--global` writes each agent's user config instead, so every project is recorded.",
-   "Without `--yes` and without a terminal to ask on, it only prints the plan."
+   "Without `--yes` and without a terminal to ask on, it only prints the plan.",
+   "`--agent claude` sets up only that agent (repeat it for more).",
+   "In a git repository the config files `init` creates are listed in `.git/info/exclude`, this clone's own ignore list, because they name this machine's Python and would not run on a teammate's; a file git already tracks is changed and named instead.",
+   "`rewindagents init --undo` takes it all out again and keeps what was recorded."
   ],
   "more_agents": [
    "rewindagents install --agent gemini     # adds the hook to .gemini/settings.json in this project",
@@ -246,9 +249,20 @@
   ],
   "py_req": ">=3.10",
   "quick_use": [
+   "rewindagents summary                   # what it changed: each file, lines added and removed, which steps",
    "rewindagents replay                    # what it did, one line per step",
    "rewindagents diff 12                   # what taking it back to step 12 would change",
    "rewindagents rewind 12 --only src/db.py   # take back just that file"
+  ],
+  "rescue": [
+   "rewindagents summary          # which files are different now, by how much, and which steps did it",
+   "rewindagents revert 7         # take back step 7 alone, keep every later step and hand edit",
+   "rewindagents rewind 0         # put every file back as it was before the session's first step"
+  ],
+  "rescue_says": [
+   "Three commands, in the order you need them.",
+   "`rewind` and `revert` refuse, change nothing and exit 1 when they would overwrite a change made after the agent's step (your own edit, for example); the message names the file and the command that shows what would be lost.",
+   "Every rewind is itself a step, so it can be undone, and it prints the command that undoes it."
   ],
   "result_chars": 4000,
   "runs": {
@@ -312,11 +326,11 @@
    "venv"
   ],
   "status": [
-   "rewindagents status             # per agent config file: ok, STALE, partial or no hook; then the log: records, last write, chain"
+   "rewindagents status             # per agent config file: ok, STALE, FAILING, partial or no hook; then the log and the store"
   ],
   "status_says": [
-   "The last line of `status` is this project's log: how many records it holds, when the last one was written, and whether the chain verifies.",
-   "`status` writes nothing.",
+   "After the hooks come this project's log: how many records it holds, when the last one was written, and whether the chain verifies; then the store: how much disk `.rewindagents/` takes.",
+   "Each hook that is in place is also run once, the way the agent runs it, in a new temporary folder, and must write a record there: one that runs but records nothing (a broken install the stale check cannot see) is `FAILING`, with the hook's own error message, and `status` exits 1.",
    "A hook is stale when its interpreter path or its `PYTHONPATH` directory no longer exists; `status` then exits 1."
   ],
   "steps": 14,
@@ -333,7 +347,7 @@
    "rewindagents uninstall          # removes the hook from .claude/settings.json in this project",
    "rewindagents uninstall --agent cursor --settings ~/.cursor/hooks.json   # same flags as install"
   ],
-  "version": "0.0.7",
+  "version": "0.0.8",
   "wreck_steps": 2
  },
  "hero": [

@@ -5,13 +5,14 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "rewindagents"
 dynamic = ["version"]
-description = "Ctrl+Z for AI coding agents: record, replay and rewind every tool call."
+description = "Undo for AI coding agents: record every tool call, see what changed, take back a step, a file or a whole session."
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 requires-python = ">=3.10"
 dependencies = []
-keywords = ["claude-code", "coding-agent", "undo", "checkpoint", "hash-chain", "replay"]
+keywords = ["claude-code", "codex", "cursor", "coding-agent", "ai-agents", "undo", "rewind", "checkpoint",
+            "hash-chain", "replay"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
@@ -19,11 +20,21 @@ classifiers = [
     "Operating System :: MacOS",
     "Operating System :: POSIX",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Topic :: Software Development",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Utilities",
 ]
 
 [project.urls]
 Source = "https://github.com/Johnbjoseph-cybersec/rewindagents"
+Issues = "https://github.com/Johnbjoseph-cybersec/rewindagents/issues"
 
 [project.scripts]
 rewindagents = "rewindagents.cli:main"

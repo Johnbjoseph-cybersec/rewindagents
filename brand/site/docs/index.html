@@ -31,7 +31,7 @@
 <link rel="preload" href="../fonts/commit-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../site.min.css">
 <script src="../site.js" defer></script>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "applicationCategory": "DeveloperApplication", "author": {"@type": "Person", "name": "John B Joseph"}, "codeRepository": "https://github.com/Johnbjoseph-cybersec/rewindagents", "description": "Getting started with rewindagents: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, fork a step and compare the runs, export, find a session, verify the log.", "license": "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE", "name": "rewindagents", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "operatingSystem": "macOS, Linux", "softwareVersion": "0.0.7", "url": "https://rewindagents.com/docs/"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "applicationCategory": "DeveloperApplication", "author": {"@type": "Person", "name": "John B Joseph"}, "codeRepository": "https://github.com/Johnbjoseph-cybersec/rewindagents", "description": "Getting started with rewindagents: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, fork a step and compare the runs, export, find a session, verify the log.", "license": "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE", "name": "rewindagents", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "operatingSystem": "macOS, Linux", "softwareVersion": "0.0.8", "url": "https://rewindagents.com/docs/"}</script>
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -45,7 +45,7 @@
 <div class="head"><h1 id="h1" class="h1-small">Getting started.</h1>
 <p class="lede">Install, add the hook to one project, let the agent work, then look at the session and step back when you need to. Every command here is the README&#x27;s, and a test checks that each one is a real subcommand.</p></div>
 <div class="docs">
-<nav class="toc" aria-label="On this page"><a href="#install">Install</a><a href="#hook">Add the hook</a><a href="#first">A first session</a><a href="#recorded">What gets recorded</a><a href="#replay">Replay and rewind</a><a href="#branch">Branch</a><a href="#fork">Fork and compare</a><a href="#ui">Timeline in a browser</a><a href="#export">Export</a><a href="#sessions">Find a session</a><a href="#bundle">Move a session</a><a href="#attach">Attach to a PR</a><a href="#verify">Verify</a><a href="#status">Is it recording?</a><a href="#gc">Free space</a><a href="#overhead">Overhead</a><a href="#limits">Limits</a><a href="#remove">Remove it</a></nav>
+<nav class="toc" aria-label="On this page"><a href="#install">Install</a><a href="#hook">Add the hook</a><a href="#after">After a bad run</a><a href="#first">A first session</a><a href="#recorded">What gets recorded</a><a href="#replay">Replay and rewind</a><a href="#branch">Branch</a><a href="#fork">Fork and compare</a><a href="#ui">Timeline in a browser</a><a href="#export">Export</a><a href="#sessions">Find a session</a><a href="#bundle">Move a session</a><a href="#attach">Attach to a PR</a><a href="#verify">Verify</a><a href="#status">Is it recording?</a><a href="#gc">Free space</a><a href="#overhead">Overhead</a><a href="#limits">Limits</a><a href="#remove">Remove it</a></nav>
 <article class="doc">
 <h2 id="install">Install</h2>
 <p>Python &gt;=3.10, standard library only. Tested on Python 3.15 on macOS. Not on PyPI yet, so install from the repository:</p>
@@ -54,19 +54,19 @@
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents <span class="nb">--version</span></span></span></code></pre>
 <p>The last command prints the version it installed:</p>
 <pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">rewindagents <span class="nb">--version</span></span></span>
-<span class="l i2">rewindagents 0.0.7</span></code></pre>
+<span class="l i2">rewindagents 0.0.8</span></code></pre>
 <p>Or from a clone, <code>pip install .</code>. Without installing, <code>PYTHONPATH=src python3 -m rewindagents</code> runs the same CLI from a clone; then the undo hint says <code>python3 -m rewindagents</code> instead of <code>rewindagents</code>.</p>
 
 <h2 id="hook">Add the hook</h2>
 <pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">pipx install <span class="nb">git+https://</span><wbr><span class="nb">github.com/</span><wbr><span class="nb">Johnbjoseph-cybersec/</span><wbr><span class="nb">rewindagents</span> &amp;&amp; cd <span class="nb">your-project</span> &amp;&amp; rewindagents init</span></span></code></pre>
-<p><code>init</code> looks for the agents it supports (Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen Code): their config directory in the project or your home directory, or their command on <code>PATH</code>. It prints the plan, asks <code>[y/N]</code>, and adds the hook to each one it found, one line per agent: <code>installed</code>, <code>already there</code>, <code>replaced</code> or <code>not found</code>. It never adds a second copy and keeps every hook already in the file. <code>--yes</code> skips the question. <code>--global</code> writes each agent&#x27;s user config instead, so every project is recorded. Without <code>--yes</code> and without a terminal to ask on, it only prints the plan.</p>
+<p><code>init</code> looks for the agents it supports (Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen Code): their config directory in the project or your home directory, or their command on <code>PATH</code>. It prints the plan, asks <code>[y/N]</code>, and adds the hook to each one it found, one line per agent: <code>installed</code>, <code>already there</code>, <code>replaced</code> or <code>not found</code>. It never adds a second copy and keeps every hook already in the file. <code>--yes</code> skips the question. <code>--global</code> writes each agent&#x27;s user config instead, so every project is recorded. Without <code>--yes</code> and without a terminal to ask on, it only prints the plan. <code>--agent claude</code> sets up only that agent (repeat it for more). In a git repository the config files <code>init</code> creates are listed in <code>.git/info/exclude</code>, this clone&#x27;s own ignore list, because they name this machine&#x27;s Python and would not run on a teammate&#x27;s; a file git already tracks is changed and named instead. <code>rewindagents init --undo</code> takes it all out again and keeps what was recorded.</p>
 <p>Or add it to one agent at a time:</p>
 <pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">cd /path/to/your/project</span></span>
 <span class="l"><span class="c"># adds the hook to .claude/settings.json in this project</span></span>
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents install</span></span>
 <span class="l"><span class="c"># or for every project</span></span>
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents install <span class="nb">--settings ~/.claude/settings.json</span></span></span></code></pre>
-<p><code>install</code> adds a <code>PreToolUse</code> and a <code>PostToolUse</code> hook to the settings file, keeps everything already in it, and does nothing if the hook is already there. The command it writes names the Python that rewindagents was installed into by absolute path, so it runs whether or not a virtualenv is active. To remove the hook, run <code>rewindagents uninstall</code> (see <a href="#remove">Remove it</a>).</p>
+<p><code>install</code> adds a <code>PreToolUse</code>, a <code>PostToolUse</code> and a <code>PostToolUseFailure</code> hook (a command that fails is checkpointed too) to the settings file, keeps everything already in it, and does nothing if the hook is already there. The command it writes names the Python that rewindagents was installed into by absolute path, so it runs whether or not a virtualenv is active. To remove the hook, run <code>rewindagents uninstall</code> (see <a href="#remove">Remove it</a>).</p>
 <pre class="term"><code><span class="l"><span class="c"># adds the hook to .codex/hooks.json in this project</span></span>
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents install <span class="nb">--agent codex</span></span></span>
 <span class="l"><span class="c"># adds the hook to .cursor/hooks.json in this project</span></span>
@@ -85,6 +85,24 @@
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents install <span class="nb">--agent qwen</span></span></span>
 <span class="l"><span class="c"># same flags as install, for every agent</span></span>
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents uninstall <span class="nb">--agent qwen</span></span></span></code></pre>
+<p>Then use your agent as usual and:</p>
+<pre class="term"><code><span class="l"><span class="c"># what it changed: each file, lines added and removed, which steps</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents summary</span></span>
+<span class="l"><span class="c"># what it did, one line per step</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents replay</span></span>
+<span class="l"><span class="c"># what taking it back to step 12 would change</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents diff 12</span></span>
+<span class="l"><span class="c"># take back just that file</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents rewind 12 <span class="nb">--only src/db.py</span></span></span></code></pre>
+
+<h2 id="after">After a bad run</h2>
+<pre class="term"><code><span class="l"><span class="c"># which files are different now, by how much, and which steps did it</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents summary</span></span>
+<span class="l"><span class="c"># take back step 7 alone, keep every later step and hand edit</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents revert 7</span></span>
+<span class="l"><span class="c"># put every file back as it was before the session&#x27;s first step</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents rewind 0</span></span></code></pre>
+<p>Three commands, in the order you need them. <code>rewind</code> and <code>revert</code> refuse, change nothing and exit 1 when they would overwrite a change made after the agent&#x27;s step (your own edit, for example); the message names the file and the command that shows what would be lost. Every rewind is itself a step, so it can be undone, and it prints the command that undoes it.</p>
 
 <h2 id="first">A first session</h2>
 <p>The session behind the clip on the front page, as it ran. Every line below is what the command printed; <code>tests/test_demo.py</code> runs the same session and fails if a line changes.</p>
@@ -272,9 +290,9 @@
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents head</span></span></code></pre>
 
 <h2 id="status">Is it recording?</h2>
-<pre class="term"><code><span class="l"><span class="c"># per agent config file: ok, STALE, partial or no hook; then the log: records, last write, chain</span></span>
+<pre class="term"><code><span class="l"><span class="c"># per agent config file: ok, STALE, FAILING, partial or no hook; then the log and the store</span></span>
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents status</span></span></code></pre>
-<p>The last line of <code>status</code> is this project&#x27;s log: how many records it holds, when the last one was written, and whether the chain verifies. <code>status</code> writes nothing. A hook is stale when its interpreter path or its <code>PYTHONPATH</code> directory no longer exists; <code>status</code> then exits 1.</p>
+<p>After the hooks come this project&#x27;s log: how many records it holds, when the last one was written, and whether the chain verifies; then the store: how much disk <code>.rewindagents/</code> takes. Each hook that is in place is also run once, the way the agent runs it, in a new temporary folder, and must write a record there: one that runs but records nothing (a broken install the stale check cannot see) is <code>FAILING</code>, with the hook&#x27;s own error message, and <code>status</code> exits 1. A hook is stale when its interpreter path or its <code>PYTHONPATH</code> directory no longer exists; <code>status</code> then exits 1.</p>
 
 <h2 id="gc">Free space</h2>
 <pre class="term"><code><span class="l"><span class="c"># what would be deleted, and how many bytes</span></span>
@@ -304,7 +322,7 @@
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents uninstall</span></span>
 <span class="l"><span class="c"># same flags as install</span></span>
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents uninstall <span class="nb">--agent cursor</span> <span class="nb">--settings ~/.cursor/hooks.json</span></span></span></code></pre>
-<p><code>uninstall</code> removes only the hook entries <code>install</code> wrote, so every other hook and setting stays, and it never touches <code>.rewindagents/</code>: recorded sessions can still be replayed and rewound. To remove everything, also delete <code>.rewindagents/</code> in the project and uninstall the package (<code>pipx uninstall rewindagents</code> or <code>pip uninstall rewindagents</code>). Nothing else was created.</p>
+<p><code>rewindagents init --undo</code> removes the hook from every agent <code>init</code> set up, deletes a config file that held nothing else, and keeps what was recorded. <code>uninstall</code> removes only the hook entries <code>install</code> wrote, so every other hook and setting stays, and it never touches <code>.rewindagents/</code>: recorded sessions can still be replayed and rewound. To remove everything, also delete <code>.rewindagents/</code> in the project and uninstall the package (<code>pipx uninstall rewindagents</code> or <code>pip uninstall rewindagents</code>). Nothing else was created.</p>
 
 <h2 id="tests">Tests</h2>
 <pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">python3 -m unittest discover -s tests -v</span></span></code></pre>

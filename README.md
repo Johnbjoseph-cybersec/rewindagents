@@ -5,43 +5,10 @@
   <img src="brand/logo-wordmark.svg" alt="rewindagents" height="40">
 </picture>
 
-![Rewind to any step. Let another agent take it from there. rewindagents fork 2 and rewindagents compare --check: the first run fails its check, the second try from step 2 passes](brand/readme/launch-1200x630.png)
-
-**Rewind to any step. Let another agent take it from there.** Fork any recorded step, hand it to another
-agent, model, prompt or person, and compare the runs on what they did to the files and on your own check
-([Fork a step, compare the runs](#fork-a-step-compare-the-runs)).
-
-![rewindagents fork and compare: a recorded session, a second try forked from step 2, compare --check shows FAIL for the first run and pass for the second, compare --diff shows how they differ](brand/readme/fork-and-compare-800.gif)
-
-rewindagents rewinds what your coding agent changed, step by step, from one verifiable log, including the files
-only a shell command touched. What it cannot put back (files under a directory git ignores as a whole, symlinks, files over
-20 MB, changes outside the project, steps in a project of more than 20,000 files) is listed under
-[Claude Code hook](#claude-code-hook), [Codex and Cursor hooks](#codex-and-cursor-hooks) and
-[Replay, rewind, branch](#replay-rewind-branch).
-
-Claude Code's own [checkpointing docs](https://code.claude.com/docs/en/checkpointing) (read 2026-11-12) name
-that gap: "A file that only Bash commands changed isn't tracked and stays as it is." (its `/rewind` does undo Bash
-changes to a file Claude had already edited), and, of subagents, "Claude Code usually doesn't capture those edits
-in your session's checkpoints." rewindagents copies the project's files before every shell command and scans
-them after, so a `sed -i` or an `rm` is one more step you can rewind. Claude Code runs the same hooks for a
-subagent's tool calls ([hooks docs](https://code.claude.com/docs/en/hooks)), so those go into the same log;
-`tests/test_subagent.py` drives the hook with payloads shaped the way that page describes and rewinds them, but
-no live subagent session has been recorded yet. Every tool call goes into a tamper-evident, hash-chained log you
-can verify later.
-
-**Status: v0.0.7, pre-release.** Built and tested today: the recorder and its CLI, hooks for seven coding
-agents (Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen Code) that record every call and checkpoint the files a step changes, `replay`, `rewind` and
-`branch`, `export` (a session as one HTML page), `sessions` (list and search the sessions in a log),
-`bundle` and `import` (carry a session to another machine or clone as one file), `gc` (delete stored file
-copies nothing names any more), and a pip-installable package with a `rewindagents` command. Not on PyPI yet. The Claude Code hook has run in real
-sessions; the Codex and Cursor hooks are built from the vendors' hook documentation and tested with the
-documented payloads, not yet in a live session.
-
-![rewindagents demo: an agent's last two steps delete the tests and overwrite the config; rewindagents replay lists the fourteen steps, rewindagents rewind 12 puts the files back](brand/demo.gif)
-
-The clip is a real session, not a mock-up: `brand/demo/build.py` runs fourteen agent steps through the
-hook in a temporary project, then the four commands shown, and draws the frames from what they printed.
-`tests/test_demo.py` plays the same session again and fails if any line differs.
+**Undo for AI coding agents.** rewindagents records every tool call your coding agent makes and keeps a copy of
+each file before a step changes it, including files only a shell command touched (`rm -rf`, `sed -i`, a script).
+When a run goes wrong you see what it changed and take back all of it, one step, or one file. It runs on your
+machine only: no account, no network, nothing but the Python standard library.
 
 ## Quick start
 
@@ -58,18 +25,77 @@ the plan, asks `[y/N]`, and adds the hook to each one it found, one line per age
 file.
 `--yes` skips the question. `--global` writes each agent's user config instead, so every project is
 recorded. Without `--yes` and without a terminal to ask on, it only prints the plan.
+`--agent claude` sets up only that agent (repeat it for more). In a git repository the config files `init`
+creates are listed in `.git/info/exclude`, this clone's own ignore list, because they name this machine's
+Python and would not run on a teammate's; a file git already tracks is changed and named instead.
+`rewindagents init --undo` takes it all out again and keeps what was recorded.
 
 Then use your agent as usual and:
 
 ```sh
+rewindagents summary                   # what it changed: each file, lines added and removed, which steps
 rewindagents replay                    # what it did, one line per step
 rewindagents diff 12                   # what taking it back to step 12 would change
 rewindagents rewind 12 --only src/db.py   # take back just that file
 ```
 
+`rewindagents status` says in plain words whether recording works right now: it runs each hook once in a
+scratch folder and checks that it wrote a record.
+
+## After a bad run
+
+Three commands, in the order you need them. `summary` prints the last two filled in for the session.
+
+```sh
+rewindagents summary          # which files are different now, by how much, and which steps did it
+rewindagents revert 7         # take back step 7 alone, keep every later step and hand edit
+rewindagents rewind 0         # put every file back as it was before the session's first step
+```
+
+`rewind` and `revert` refuse, change nothing and exit 1 when they would overwrite a change made after the
+agent's step (your own edit, for example); the message names the file and the command that shows what would
+be lost. Every rewind is itself a step, so it can be undone, and it prints the command that undoes it.
+
+Here is a real session: an agent's last two steps delete the tests and overwrite the config, `replay` lists the
+fourteen steps, `rewind 12` puts the files back.
+
+![rewindagents demo: an agent's last two steps delete the tests and overwrite the config; rewindagents replay lists the fourteen steps, rewindagents rewind 12 puts the files back](brand/demo.gif)
+
+`brand/demo/build.py` runs those fourteen agent steps through the hook in a temporary project, then the four
+commands shown, and draws the frames from what they printed; `tests/test_demo.py` plays the same session again
+and fails if any line differs.
+
+## What it cannot put back
+
+Files under a directory git ignores as a whole (`node_modules/`, `build/`), symlinks, files over 20 MB,
+changes outside the project, and the shell steps of a project with more than 20,000 files (`status` warns
+about that one, and `replay` marks such a step). Details under [Claude Code hook](#claude-code-hook),
+[Codex and Cursor hooks](#codex-and-cursor-hooks) and [Replay, rewind, branch](#replay-rewind-branch).
+
+Claude Code's own [checkpointing docs](https://code.claude.com/docs/en/checkpointing) (read 2026-11-12) name
+the gap this fills: "A file that only Bash commands changed isn't tracked and stays as it is." (its `/rewind`
+does undo Bash changes to a file Claude had already edited), and, of subagents, "Claude Code usually doesn't
+capture those edits in your session's checkpoints." rewindagents copies the project's files before every
+shell command and scans them after, so a `sed -i` or an `rm` is one more step you can rewind, and Claude Code
+runs the same hooks for a subagent's tool calls ([hooks docs](https://code.claude.com/docs/en/hooks)). A live
+session in which a subagent made eight steps, three of them edits, recorded and checkpointed all of them
+(`ux-review/DOGFOOD.md`). Every tool call goes into a tamper-evident, hash-chained log you can verify later.
+
+**Status: v0.0.8, pre-release.** Built and tested today: the recorder and its CLI, hooks for seven coding
+agents (Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen Code) that record every call and
+checkpoint the files a step changes, `summary`, `replay`, `rewind`, `revert` and `branch`, `fork` and
+`compare`, `export` (a session as one HTML page), `sessions`, `bundle` and `import`, `gc`, a local timeline UI,
+and a pip-installable package with a `rewindagents` command. Not on PyPI yet. The Claude Code hook has run in
+real sessions; the Codex and Cursor hooks are built from the vendors' hook documentation and tested with the
+documented payloads, not yet in a live session. macOS and Linux; Windows is not supported yet (see Recorder).
+
+Rewind to any step and let another agent take it from there: [Fork a step, compare the
+runs](#fork-a-step-compare-the-runs).
+
 ## Install
 
-Python 3.10 or newer (declared in `pyproject.toml`; tested on 3.15, macOS). No dependencies beyond the
+Python 3.10 or newer (declared in `pyproject.toml`; tested on 3.15, macOS; the full suite also passed there on
+3.10, 3.11, 3.12, 3.13 and 3.14 on 2026-11-14). No dependencies beyond the
 standard library. From the repository:
 
 ```sh
@@ -105,17 +131,22 @@ If that Python goes away later (the venv is deleted, Python is upgraded, the clo
 runs the hook, the hook fails, and nothing is recorded. `status` checks for that:
 
 ```sh
-rewindagents status             # per agent config file: ok, STALE, partial or no hook; then the log: records, last write, chain
+rewindagents status             # per agent config file: ok, STALE, FAILING, partial or no hook; then the log and the store
 ```
 
 A hook is stale when its interpreter path or its `PYTHONPATH` directory no longer exists; `status` then exits
 1. `install` and `init --yes` replace a stale rewindagents hook with the current one and leave every other
 hook in the file as it is.
 
-The last line of `status` is this project's log: how many records it holds, when the last one was written,
-and whether the chain verifies. A hook that is in place while the log stays empty after the agent has made a
-tool call is failing for a reason the stale check cannot see (a broken install, for example); `status` says so.
-A log that does not verify makes `status` exit 1, as `verify` does. `status` writes nothing.
+Each hook that is in place is also run once, the way the agent runs it, in a new temporary folder, and must
+write a record there: one that runs but records nothing (a broken install the stale check cannot see) is
+`FAILING`, with the hook's own error message, and `status` exits 1. Your agent does not show a failing hook,
+so this is the only place you find out. (Not on Windows yet.)
+
+After the hooks come this project's log: how many records it holds, when the last one was written, and
+whether the chain verifies; then the store: how much disk `.rewindagents/` takes. A log that does not verify
+makes `status` exit 1, as `verify` does. Over 20,000 project files it warns that shell commands are not
+checkpointed there. `status` writes nothing in the project.
 
 Once the hook is in, in each project Claude Code works in:
 
@@ -154,7 +185,8 @@ project's files before the command, scans again after it, and checkpoints, in th
 files that were changed, deleted or created. Details and limits:
 
 - "The project's files" means, in a git repo, what `git ls-files --cached --others --exclude-standard`
-  lists (tracked and untracked files), plus the files git ignores one by one, such as `.env` or `*.log`, so
+  lists (tracked and untracked files, except untracked ones under `__pycache__`, `node_modules`, `.venv` or
+  `venv`, so a Python run does not show up as `.pyc` changes), plus the files git ignores one by one, such as `.env` or `*.log`, so
   `rm .env` can be rewound; a directory git ignores as a whole (`node_modules/`, `build/`) is not scanned.
   `bench/takeback` (scenario S06) measures this. Outside git, every file under the project
   directory except `.git`, `.rewindagents`, `node_modules`, `.venv`, `venv` and `__pycache__`.
@@ -163,13 +195,18 @@ files that were changed, deleted or created. Details and limits:
   copy, so a deleted script comes back executable (takeback-bench S11).
 - Copies are stored by SHA-256, so an unchanged file is stored once. A stat cache
   (`.rewindagents/index.json`) means only files whose size, modification time or mode changed are read again.
-- A project with more than 20,000 files is not scanned; the call is still recorded and `rewind` reports it.
+- A project with more than 20,000 files is not scanned; the call is still recorded, `replay` marks the step
+  `[NOT checkpointed: ...]`, `status` warns, and `rewind` reports it.
+- A command that fails (exits non-zero) is checkpointed like any other: Claude Code sends a failed call to
+  the `PostToolUseFailure` hook event, and the hook is installed there too. An install from before 0.0.8 has
+  no hook on that event; `status` shows it as `partial` and `rewindagents init --yes` completes it.
 - A Bash call with `run_in_background: true`: Claude Code's hooks reference documents no hook event for a
   background shell finishing, so the after-scan may run while the command is still going. Files it changes
   after that are not in the step. `replay` marks such a step `[background: scan may be early]`, and `rewind`
   and `diff` print a note and exit 1 when one lies after the target step.
 
-To take the hook out again:
+To take the hook out again, from every agent `init` set up: `rewindagents init --undo` (add `--global` for the
+user config). For one agent:
 
 ```sh
 rewindagents uninstall          # removes the hook from .claude/settings.json in this project
@@ -193,19 +230,6 @@ Measured by `bench/hook_overhead.py` on macOS 27.0.1, Apple M6, 12 CPUs, Python 
 
 Other machines, disks and projects will differ; run `python3 bench/hook_overhead.py` to measure yours.
 <!-- overhead:end -->
-
-## Undo benchmark
-
-`python3 bench/takeback/takeback.py` runs takeback-bench: 17 scripted sessions in which an agent wrecks
-something (`rm -rf tests`, `sed -i`, an overwritten file, a binary, a git-ignored `.env`, a file over 20 MB, a
-file outside the project, a hand edit made after the bad step, an executable script, a symlink, a project
-without git, ...), then each tool's own undo. Every file is compared by SHA-256, executable bit and symlink
-target with the state the goal asks for, and any later work the undo destroyed is counted. rewindagents runs
-through its real hook; git with a commit after every step and git with a stash snapshot run as baselines.
-On 2026-11-14 rewindagents undoing with `revert` restored 14 of the 17 exactly, destroyed later work in none,
-and exited 1 on each of the other three; commit-per-step git restored 12 of the 16 it could run and destroyed
-later work once. rewindagents misses a deleted symlink, a file over 20 MB and a file outside the project.
-Every scenario, the baselines, the method and the sources are in `bench/RESULTS.md`.
 
 ## Codex and Cursor hooks
 
