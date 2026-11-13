@@ -13,10 +13,17 @@ from rewindagents import GENESIS, Recorder, head, read, verify  # noqa: E402
 from rewindagents.cli import main  # noqa: E402
 
 
-def _write_many(path, worker, count):
-    rec = Recorder(path)
-    for i in range(count):
-        rec.record(f"s{worker}", "Bash", {"command": f"echo {worker}-{i}"})
+def _write_many(path, worker, count, report=None):
+    # A child's exception never reaches the parent, so write it where the test can print it.
+    try:
+        rec = Recorder(path)
+        for i in range(count):
+            rec.record(f"worker{worker}", "Bash", {"command": f"echo {worker}-{i}"})
+    except BaseException:
+        if report:
+            import traceback
+            Path(report).write_text(traceback.format_exc())
+        raise
 
 
 class LogTest(unittest.TestCase):
@@ -102,12 +109,25 @@ class LogTest(unittest.TestCase):
         self.assertEqual([r["tool"] for r in read(self.path, "s1")], ["Bash", "Edit"])
 
     def test_concurrent_writers_keep_one_chain(self):
-        procs = [mp.Process(target=_write_many, args=(self.path, w, 25)) for w in range(4)]
+        reports = [Path(self.tmp.name) / f"worker-{w}.txt" for w in range(4)]
+        procs = [mp.Process(target=_write_many, args=(self.path, w, 25, reports[w])) for w in range(4)]
         for p in procs:
             p.start()
         for p in procs:
-            p.join()
-        self.assertEqual(verify(self.path), (True, 103, "chain intact"))
+            p.join(120)
+        why = {f"worker {w}": (p.exitcode, reports[w].read_text() if reports[w].exists() else "")
+               for w, p in enumerate(procs) if p.exitcode != 0}
+        for p in procs:
+            if p.is_alive():
+                p.kill()
+                p.join()
+        if why:
+            self.fail("writer processes did not finish cleanly:\n" +
+                      "\n".join(f"{w}: exitcode {code}\n{tb}" for w, (code, tb) in why.items()))
+        self.assertEqual(verify(self.path), (True, 103, "chain intact"),
+                         "every writer exited 0, so a missing record was lost by the recorder")
+        per_worker = [sum(1 for r in read(self.path, f"worker{w}")) for w in range(4)]
+        self.assertEqual(per_worker, [25] * 4)
 
 
 class CliTest(unittest.TestCase):
