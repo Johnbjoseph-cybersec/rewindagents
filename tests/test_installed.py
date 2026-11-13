@@ -125,7 +125,8 @@ class InstalledCommandTest(unittest.TestCase):
             out = str(Path(carry, "moved.bundle"))
             r = self._run("bundle", "--out", out, cwd=src)
             self.assertEqual(r.returncode, 0, r.stderr)
-            self.assertIn("session moved, 1 steps, 2 records, 1 stored files", r.stdout)
+            # app.py before the command and app.py as the command left it (the copy `revert` merges from)
+            self.assertIn("session moved, 1 steps, 2 records, 2 stored files", r.stdout)
             r = self._run("import", out, cwd=dst)
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertIn("imported session moved: 1 steps, 2 records", r.stdout)
@@ -156,16 +157,17 @@ class InstalledCommandTest(unittest.TestCase):
                 self.assertEqual((p.returncode, p.stderr), (0, ""))
                 if event == "PreToolUse":
                     subprocess.run(["sh", "-c", shell], cwd=proj, check=True)
-            # the scan saved app.py, big.txt and .claude/settings.json; only app.py changed
+            # the scan saved app.py, big.txt and .claude/settings.json; only app.py changed, so the log names
+            # app.py before the command and app.py as the command left it (the copy `revert` merges from)
             settings_size = Path(proj, ".claude", "settings.json").stat().st_size
             r = self._run("gc", "--dry-run", cwd=proj)
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertEqual(r.stdout, f"would delete 2 stored copies ({1000 + settings_size:,} bytes); "
-                                       "kept 1 that the log or a pending scan names\n")
+                                       "kept 2 that the log or a pending scan names\n")
             r = self._run("gc", cwd=proj)
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertIn("deleted 2 stored copies", r.stdout)
-            self.assertEqual(len(list(Path(proj, ".rewindagents", "objects").iterdir())), 1)
+            self.assertEqual(len(list(Path(proj, ".rewindagents", "objects").iterdir())), 2)
             r = self._run("rewind", "0", cwd=proj)
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertEqual(Path(proj, "app.py").read_text(), "x = 1\n")
