@@ -216,6 +216,9 @@ measurement, and must be quoted as such.
 
 ## Efficiency pilot (measured, n is small: not a claim)
 
+**Superseded by the pre-registered 190-run study:** `bench/EFFICIENCY_RESULTS.md` (no speed advantage found
+for racing three agents; rewind restored the files exactly in 10 of 10 wreck scenarios).
+
 Plan and rules: `bench/EFFICIENCY_PLAN.md`. Nine real Claude Code runs (`claude -p`, Claude Code 2.1.294,
 model claude-opus-5-5 as reported, isolated from user hooks and MCP servers) on one task with three seeded
 bugs and hidden tests the agent never saw. Raw runs: `bench/efficiency/runs.jsonl`; this table is
