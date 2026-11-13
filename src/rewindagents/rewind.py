@@ -106,7 +106,9 @@ def relative(path: str | Path, root: Path | None) -> str:
 def summary(step: dict, width: int = 80, root: Path | None = None) -> str:
     """One line describing what the step did."""
     inp = step.get("input")
-    if step["event"] in ("rewind", "branch"):
+    if step["event"] == "fork" and isinstance(inp, dict):
+        text = f"run {inp.get('fork')} starts here: the files as they were right after step {inp.get('from_step')}"
+    elif step["event"] in ("rewind", "branch"):
         text = f"rewound to step {step.get('to_step')}"
         if step.get("only"):
             text += f" (only {', '.join(step['only'])})"

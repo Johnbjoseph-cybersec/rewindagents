@@ -114,6 +114,10 @@ Once the hook is in, in each project Claude Code works in:
   to `.rewindagents/objects/<sha256>` and the hash goes into the `pre` record. A file that does not exist
   yet is recorded as absent. Files over 20 MB are noted and not copied.
 - `.rewindagents/` gets its own `.gitignore`, so the log and the copies stay out of your commits.
+- one log per project, wherever the agent is: after the agent runs `cd src`, its steps still go into the
+  project's `.rewindagents/`, the nearest one at or above its working directory (not above the repository
+  root). Before anything is recorded, Claude Code's `CLAUDE_PROJECT_DIR` (the directory the session started
+  in) decides; without it, the agent's working directory does.
 
 The hook never blocks or changes a call. It prints nothing and always exits 0, even if its input is
 broken or it cannot write; any problem goes to stderr only. `tests/test_hook_hardening.py` runs the real
@@ -272,8 +276,10 @@ diff and the step's input and result (`d` hides or shows the diffs).
 
 ## Replay, rewind, branch
 
-Run these from the project directory (the one holding `.rewindagents/`). They work on the latest session
-unless you pass `--session ID`.
+Run these from the project directory or any directory under it: like git, they use the nearest
+`.rewindagents/` at or above where you are (not above the repository root, never your home directory's from
+below it). They work on the latest session unless you pass `--session ID`; the start of an id is enough when
+only one session begins with it, and an id that matches none is an error that lists the sessions there are.
 
 ```sh
 rewindagents replay              # one line per step: number, tool, file or command
@@ -286,6 +292,9 @@ rewindagents rewind 12 --only src/db.py --only tests/   # put back only these
 rewindagents branch 12 --name try2   # keep the current files, then rewind to step 12
 ```
 
+- `replay --step N --diff` names each file step N changed, created or deleted, then diffs the file right
+  before the step against the file right after it (its next checkpoint in the session, else the file now),
+  the same before and after the export page shows. `git apply -R` of that diff undoes exactly that step.
 - `diff N [PATH ...]` reads the same plan `rewind N` acts on, so it names exactly the files `rewind N
   --dry-run` lists (a test checks this). The `a/` side is the file now, the `b/` side is the file after the
   rewind, so `git apply` of the diff does what the rewind would do. Files the rewind would delete diff to
@@ -314,6 +323,39 @@ rewindagents branch 12 --name try2   # keep the current files, then rewind to st
   are not put back. Directories created by
   later steps stay (empty). Files over 20 MB were never copied, so they are reported and not restored. If
   anything could not be restored, the exit code is 1.
+
+## Fork a step, compare the runs (prototype)
+
+A prototype on a branch, not released, and not on the docs page yet. A recorded step is a starting point
+you can hand to another agent, another model or another prompt, and the runs that follow can be compared on
+what they actually did to the files.
+
+`rewindagents fork 12 --name try2` makes a new directory next to the project (`<project>-try2`; `--dir`
+picks another place outside it) holding the project's files as `rewind 12` would leave them: the project as
+it is now, with every change that session made after step 12 taken back, untracked files included. In a git
+repository it is a `git worktree` on the branch `rewindagents/run/try2`, so your `HEAD`, index and files stay
+as they were; elsewhere it is a plain directory. The run gets its own `.rewindagents/`, whose first record names
+the session, the step, the source log's head hash at that moment, and every starting file with its SHA-256
+(copies kept in the run's store). Run any agent there, or edit by hand: with a hook in place (the project's
+agent config comes along when git does not ignore it, or a `--global` hook), its steps go into the run's own
+log, and `replay`, `rewind` and `diff` work in the run as in any project. `fork` says whether a hook reaches
+the run.
+
+Back in the project, `rewindagents compare` lines up the project and every run forked from the same step:
+per run, the agents and their number of tool calls since the start, the files changed, created or deleted
+and the lines added and removed; per file, which runs ended with the same bytes (the same letter).
+`rewindagents compare --check "python3 -m pytest -q"` runs your command in each run and reports pass or the
+exit code, with the last lines of a failing one. `rewindagents compare --diff proj try2` prints how two runs
+differ as a git diff (`git apply` in the first turns its files into the second's). `--json` prints it all
+as data.
+
+- `fork` refuses a step it cannot rebuild exactly (a stored copy missing, a command whose scan did not
+  finish, a log that does not verify) and leaves nothing behind when it fails half-way.
+- Git-ignored files (`.env`, `node_modules`) are not copied, as in any fresh worktree; caches and
+  environments (`__pycache__`, `.venv`, `node_modules`) are left out of the comparison even when git does not
+  ignore them. A project of more than 20,000 files is not forked.
+- `compare` writes nothing; the command `--check` runs may write in the run it runs in. Runs from different
+  steps are not mixed. Tested in `tests/test_runs.py`, through the real hook.
 
 ## Export a replay
 

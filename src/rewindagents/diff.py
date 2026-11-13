@@ -105,3 +105,66 @@ def run(log_path: str | Path, n: int, session: str | None, paths: list[str] | No
               f"so their after-scan may have run before it finished; files it changed later may not be in this diff",
               file=err)
     return 1 if p["cannot"] or p["bash_uncovered"] or p["scan_early"] else 0
+
+
+def step_changes(log_path: str | Path, all_steps: list[dict], n: int) -> list[dict]:
+    """What step n itself did to each file it checkpointed: the bytes right before the step (its checkpoint)
+    against the bytes right after it (the next checkpoint of that file in the session, else the file now), the
+    same before/after the export page diffs. One entry per file: path, kind (changed, created, deleted,
+    unchanged or unknown), the diff text, and why when it cannot be shown."""
+    from .export import _after, _read_object      # one definition of "right after the step" for both
+    root = rewind.project_root(log_path)
+    objects = root / ".rewindagents" / "objects"
+    out = []
+    for cp in all_steps[n - 1]["checkpoints"]:
+        rel = rewind.relative(cp["path"], root)
+        entry = {"path": rel, "kind": "unknown", "text": "", "why": ""}
+        if cp.get("skipped"):
+            entry["why"] = f"not checkpointed before the step ({cp['skipped']})"
+            out.append(entry)
+            continue
+        before = _read_object(objects, cp.get("sha256"))
+        if cp.get("sha256") and before is None:
+            entry["why"] = "the stored copy from before the step is missing"
+            out.append(entry)
+            continue
+        after, label = _after(all_steps, n - 1, cp["path"], root, objects)
+        if label.startswith("unknown"):
+            entry["why"] = f"the file right after the step is {label}"
+            out.append(entry)
+            continue
+        if before is None and after is None:
+            entry["kind"] = "unchanged"         # created and removed again within the step
+        elif before is None:
+            entry["kind"] = "created"
+        elif after is None:
+            entry["kind"] = "deleted"
+        else:
+            entry["kind"] = "changed" if before != after else "unchanged"
+        if entry["kind"] != "unchanged":
+            entry["text"] = file_diff(rel, before, after)
+        out.append(entry)
+    return out
+
+
+def step_run(log_path: str | Path, all_steps: list[dict], n: int, root: Path, out=None, err=None) -> int:
+    """`replay --step N --diff`: one line per file (changed, created, deleted), then the diffs, git-style, so
+    applying them in reverse undoes exactly this step. Exit 1 when some file's change cannot be shown."""
+    out, err = out or sys.stdout, err or sys.stderr
+    s = all_steps[n - 1]
+    changes = step_changes(log_path, all_steps, n)
+    print(f"step {n}  {s['tool']}  {rewind.summary(s, root=root)}", file=out)
+    if not changes:
+        why = "it changed no file" if s.get("scanned") or s["tool"] in rewind.FILE_TOOLS else \
+            "nothing was checkpointed for it (a tool that does not change files)"
+        print(f"  no file changes recorded: {why}", file=out)
+        return 0
+    for c in changes:
+        print(f"  {c['kind']:<9} {c['path']}" + (f"  ({c['why']})" if c["why"] else ""), file=out)
+    for c in changes:
+        if c["text"]:
+            out.write(c["text"])
+    if any(c["kind"] == "unknown" for c in changes):
+        print("rewindagents: some of this step's changes cannot be shown; see the lines marked unknown", file=err)
+        return 1
+    return 0
