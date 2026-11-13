@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 from . import __version__, agents, bundle, export, gc, hook, log, project, rewind, runs, sessions
-from . import diff as diffs, init as setup, revert as reverts
+from . import diff as diffs, init as setup, revert as reverts, summary as summaries
 
 
 def invocation() -> str:
@@ -20,7 +20,7 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         prog="rewindagents",
         description="The flight recorder for coding agents: see exactly what your agent did, and take back any "
-                    "part of it. Start with `rewindagents init`; then `replay`, `diff N`, `rewind N [--only PATH]`, "
+                    "part of it. Start with `rewindagents init`; then `summary`, `replay`, `diff N`, `rewind N [--only PATH]`, "
                     "`revert K` (take back step K alone, keep everything after it).",
         epilog="Exit codes: 0 done; 1 it ran but something was not done or does not check out (a file a rewind "
                "could not put back or refused to overwrite, a log that does not verify); 2 it could not run as "
@@ -51,7 +51,12 @@ def main(argv: list[str] | None = None) -> int:
                     help="claude: .claude/settings.json, codex: .codex/hooks.json, cursor: .cursor/hooks.json "
                          "(default: %(default)s)")
     un.add_argument("--settings", help="config file to change (default: the agent's file in the current project)")
-    rp = sub.add_parser("replay", help="list a session's steps, or show one step in full")
+    sm = sub.add_parser("summary", help="what the agent just did: each file it created, changed or deleted (lines "
+                                        "added and removed, which steps), and the commands that take it back")
+    sm.add_argument("--session", help="default: the session that wrote the last record")
+    rp = sub.add_parser("replay", help="list a session's steps, or show one step in full (replay N)")
+    rp.add_argument("n", nargs="?", type=int, metavar="STEP", help="show this step's full input, checkpoints and "
+                                                                    "result (same as --step)")
     rp.add_argument("--session", help="default: the session that wrote the last record")
     rp.add_argument("--step", type=int, help="show this step's full input, checkpoints and result")
     rp.add_argument("--diff", action="store_true",
@@ -82,6 +87,12 @@ def main(argv: list[str] | None = None) -> int:
     ini.add_argument("--yes", "-y", action="store_true", help="install without asking")
     ini.add_argument("--global", dest="global_", action="store_true",
                      help="write each agent's user config (every project) instead of this project's")
+    ini.add_argument("--agent", action="append", choices=sorted(agents.AGENTS), metavar="NAME",
+                     help="set up only this agent (repeat for more), even when it is not detected: "
+                          + ", ".join(sorted(agents.AGENTS)))
+    ini.add_argument("--undo", action="store_true",
+                     help="remove every rewindagents hook init added (other hooks and settings stay; files that "
+                          "held only our hook are deleted); the recorded history is kept")
     st = sub.add_parser("status", help="say, per agent config file, whether the rewindagents hook is there and "
                                        "can still run, then how many records this project's log holds, when the "
                                        "last was written and whether it verifies (exit 1 when a hook is stale or "
@@ -188,10 +199,13 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
         print(f"removed from {target}" if changed else f"not installed in {target}; left unchanged")
         return 0
     if a.cmd == "init":
-        return setup.main(yes=a.yes, global_=a.global_)
+        if a.undo:
+            return setup.undo(global_=a.global_, only=a.agent)
+        return setup.main(yes=a.yes, global_=a.global_, only=a.agent)
     if a.cmd == "compare":
         return _compare(a)
-    if a.cmd in ("verify", "show", "replay", "rewind", "revert", "branch", "export", "sessions", "bundle", "gc", "diff", "fork") \
+    if a.cmd in ("verify", "show", "replay", "rewind", "revert", "branch", "export", "sessions", "bundle", "gc", "diff", "fork",
+                 "summary") \
             and not Path(a.log).exists():
         print(f"rewindagents: no log at {a.log}" + ("" if explicit_log else ", here or in a parent directory"),
               file=sys.stderr)
@@ -258,9 +272,26 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
         return 0
     if a.cmd == "diff":
         return diffs.run(a.log, a.step, a.session, a.paths)
+    if a.cmd == "summary":
+        try:
+            d = summaries.summarize(a.log, a.session)
+        except rewind.RewindError as e:
+            print(f"rewindagents: {e}", file=sys.stderr)
+            return 1
+        for line in summaries.lines(d, invocation(), explicit_session=bool(a.session)):
+            print(line)
+        return 0
     if a.cmd == "replay":
+        if a.n is not None:
+            if a.step is not None and a.step != a.n:
+                print(f"rewindagents: replay {a.n} and --step {a.step} name different steps; give one",
+                      file=sys.stderr)
+                return 2
+            a.step = a.n
         if a.diff and a.step is None:
-            print("rewindagents: --diff needs --step N (diff N compares now with step N)", file=sys.stderr)
+            print("rewindagents: --diff needs a step: replay N --diff, or --step N --diff (diff N compares now with "
+                  "step N)",
+                  file=sys.stderr)
             return 2
         return _replay(a.log, a.session, a.step, a.diff, redact=not a.no_redact)
     if a.cmd == "sessions":
@@ -433,6 +464,9 @@ def _replay(log_path: str, session: str | None, step: int | None, show_diff: boo
             mark = f"  [{len(s['checkpoints'])} checkpointed]" if s["checkpoints"] else ""
             if (s.get("bash_scan") or {}).get("early"):
                 mark += "  [background: scan may be early]"
+            skipped = (s.get("bash_scan") or {}).get("skipped")
+            if skipped and not s["checkpoints"]:
+                mark += f"  [NOT checkpointed: {skipped}]"
             line = rewind.summary(s, width=sys.maxsize, root=root)
             if redact:
                 line, k = _redact.text(line)

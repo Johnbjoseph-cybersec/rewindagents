@@ -4,8 +4,8 @@ Setup, exactly as a new user: a fresh venv, `pip install <this worktree>` (the R
 with a local path), `rewindagents init` in small scratch projects, then real Claude Code sessions:
 `claude -p` (Claude Code 2.1.294, `--model claude-opus-5-5`, `--setting-sources project --strict-mcp-config`
 so only the project's hook runs, as in `bench/efficiency/pilot.py`, `--permission-mode acceptEdits`, tools
-Read/Edit/Write/Glob/Grep/Bash/Task). Five real agent runs, USD 0.87 in total (0.109, 0.172, 0.216, 0.305,
-0.066 as reported by `claude -p --output-format json`). Hook latency was measured with real hook processes
+Read/Edit/Write/Glob/Grep/Bash/Task). Six real agent runs, USD 0.93 in total (0.109, 0.172, 0.216, 0.305,
+0.066, 0.060 as reported by `claude -p --output-format json`; the sixth checked the F11 fix). Hook latency was measured with real hook processes
 (`python -m rewindagents hook` fed Claude Code shaped payloads), not with an agent.
 
 Projects: `p1` a git repo with a small todo CLI and tests (sessions: add a feature; a refactor with `sed -i`

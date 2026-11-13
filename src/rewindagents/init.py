@@ -28,7 +28,9 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -43,6 +45,89 @@ PROJECT_DIRS = {"claude": ".claude", "codex": ".codex", "cursor": ".cursor", "ge
 USER_DIRS = {"claude": ".claude", "codex": ".codex", "cursor": ".cursor", "gemini": ".gemini",
              "copilot": ".copilot", "droid": ".factory", "qwen": ".qwen"}
 NOTES = {"codex": "Codex asks you to trust a new hook once: run /hooks in Codex"}
+
+
+EXCLUDE_START = "# rewindagents init: hook files naming this machine's Python (`rewindagents init --undo` removes this block)"
+EXCLUDE_END = "# end rewindagents"
+
+
+def _git(root: Path, *args: str) -> str | None:
+    try:
+        p = subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return p.stdout.strip() if p.returncode == 0 else None
+
+
+def _exclude_file(root: Path) -> tuple[Path, Path] | None:
+    """(the repository's top directory, its .git/info/exclude) when root is in a git work tree, else None."""
+    top = _git(root, "rev-parse", "--show-toplevel")
+    ex = _git(root, "rev-parse", "--git-path", "info/exclude")
+    if not top or not ex:
+        return None
+    ex_p = Path(ex) if Path(ex).is_absolute() else root / ex
+    return Path(top).resolve(), ex_p
+
+
+def _block(text: str) -> tuple[list[str], list[str]]:
+    """(lines outside our block, the patterns inside it)."""
+    outside, inside, inblock = [], [], False
+    for line in text.splitlines():
+        if line == EXCLUDE_START:
+            inblock = True
+        elif line == EXCLUDE_END and inblock:
+            inblock = False
+        elif inblock:
+            if line.strip():
+                inside.append(line)
+        else:
+            outside.append(line)
+    return outside, inside
+
+
+def set_excluded(root: Path, add: list[Path] = (), remove: list[Path] = ()) -> list[str]:
+    """Keep the config files init created out of git: add (or remove) them in our block of .git/info/exclude,
+    which is this clone's own ignore list (never committed, unlike .gitignore). Returns the patterns now in the
+    block. Files git already ignores, or that git tracks, are not added. Not a git work tree: does nothing."""
+    found = _exclude_file(root)
+    if not found:
+        return []
+    top, ex = found
+    try:
+        text = ex.read_text(encoding="utf-8") if ex.is_file() else ""
+    except (OSError, UnicodeDecodeError):
+        return []
+    outside, inside = _block(text)
+
+    def pat(f: Path) -> str | None:
+        try:
+            return "/" + Path(f).resolve().relative_to(top).as_posix()
+        except ValueError:
+            return None
+    for f in add:
+        q = pat(f)
+        if not q or q in inside:
+            continue
+        rel = q[1:]
+        if _git(top, "ls-files", "--error-unmatch", rel) is not None:
+            continue                                 # tracked: excluding it would do nothing
+        if _git(top, "check-ignore", "-q", rel) is not None:
+            continue                                 # already ignored
+        inside.append(q)
+    gone = {pat(f) for f in remove}
+    inside = [q for q in inside if q not in gone]
+    while outside and not outside[-1].strip():
+        outside.pop()
+    lines = outside + ([""] if outside and inside else []) + ([EXCLUDE_START, *inside, EXCLUDE_END] if inside else [])
+    new = "\n".join(lines) + ("\n" if lines else "")
+    if new != text:
+        ex.parent.mkdir(parents=True, exist_ok=True)
+        ex.write_text(new, encoding="utf-8")
+    return inside
+
+
+def _tracked(path: Path) -> bool:
+    return _git(path.parent, "ls-files", "--error-unmatch", path.name) is not None
 
 
 def target(name: str, root: Path, home: Path, global_: bool) -> Path:
@@ -119,8 +204,57 @@ def recording(path: Path) -> tuple[str, str]:
     return "ok", f"{n:,} record{'s' if n != 1 else ''}{when}, chain intact"
 
 
+def probe_hooks(name: str, path: Path, timeout: float = 30.0) -> str | None:
+    """Run each rewindagents hook command in this config file the way the agent would (through the shell, a
+    tool call's JSON on stdin) in a scratch directory, and check that it wrote a record there. Returns why it
+    did not (the hook's own stderr, last line), or None when every command recorded. Nothing is written in the
+    project: the scratch directory is a new temporary one, removed afterwards. Not run on Windows, where the
+    agents' shells differ (agents.py)."""
+    if os.name != "posix":
+        return None
+    try:
+        have = agents.commands_in(agents.AGENTS[name], path)
+    except (ValueError, OSError, AttributeError, TypeError, KeyError):
+        return None
+    for cmd in dict.fromkeys(c for cmds in have.values() for c in cmds if hook.ours(c)):
+        with tempfile.TemporaryDirectory(prefix="rewindagents-probe-") as d:
+            payload = {"session_id": "rewindagents-status-probe", "cwd": d, "hook_event_name": "PreToolUse",
+                       "tool_name": "Read", "tool_input": {"file_path": os.path.join(d, "probe.txt")}}
+            env = {k: v for k, v in os.environ.items() if k != "CLAUDE_PROJECT_DIR"}
+            try:
+                r = subprocess.run(cmd, shell=True, input=json.dumps(payload), capture_output=True, text=True,
+                                   cwd=d, env=env, timeout=timeout)
+            except (OSError, subprocess.TimeoutExpired) as e:
+                return f"the hook did not finish: {e}"
+            logp = Path(d) / ".rewindagents" / "log.jsonl"
+            if not (logp.is_file() and logp.read_text(encoding="utf-8").strip()):
+                err = [l for l in (r.stderr or "").splitlines() if l.strip()]
+                return ("ran but recorded nothing: " + err[-1].strip()[:200]) if err else \
+                    f"ran but recorded nothing (exit {r.returncode}, no error message)"
+    return None
+
+
+def store_size(store: Path) -> int:
+    total = 0
+    for dirpath, _, files in os.walk(store):
+        for f in files:
+            try:
+                total += os.lstat(os.path.join(dirpath, f)).st_size
+            except OSError:
+                pass
+    return total
+
+
+def human(n: int) -> str:
+    for unit in ("bytes", "KB", "MB", "GB"):
+        if n < 1024 or unit == "GB":
+            return f"{n:,} bytes" if unit == "bytes" else f"{n:.1f} {unit}"
+        n /= 1024
+    return str(n)
+
+
 def status(global_: bool = False, root: Path | None = None, home: Path | None = None, out=None,
-           log_path: str | Path | None = None) -> int:
+           log_path: str | Path | None = None, probe: bool = True) -> int:
     """`rewindagents status`: one line per agent config file that exists: hook ok, stale, another one, or none;
     then one line for this project's log: records, time of the last one, and whether the chain verifies.
     Writes nothing. Exit 1 when any file holds a stale hook (or cannot be read) or the log does not verify."""
@@ -128,7 +262,7 @@ def status(global_: bool = False, root: Path | None = None, home: Path | None = 
     home = Path(home or Path.home())
     out = out or sys.stdout
     run = "rewindagents" if hook.installed() else "python3 -m rewindagents"
-    bad, shown, hooked = 0, 0, 0
+    bad, shown, hooked, failing = 0, 0, 0, 0
     for name in agents.AGENTS:
         t = target(name, root, home, global_)
         if not t.is_file():
@@ -153,12 +287,23 @@ def status(global_: bool = False, root: Path | None = None, home: Path | None = 
             line, why = "partial", "not on every event"
         else:
             line, why = "no hook", ""
+        if line == "ok" and probe:
+            failed = probe_hooks(name, t)
+            if failed:
+                bad += 1
+                failing += 1
+                line, why = "FAILING", failed
         print((f"  {name:<8} {line:<8} {where}" + (f"  ({why})" if why else "")).rstrip(), file=out)
     if not shown:
         print(f"No agent config file {'in your home directory' if global_ else 'in this project'}. "
               f"To add the hook: {run} init", file=out)
-    if bad:
+    if bad > failing:
         print(f"A stale hook records nothing. Fix: {run} init --yes" + (" --global" if global_ else ""), file=out)
+    if failing:
+        print(f"A FAILING hook records nothing, and your agent does not show its error. Reinstall rewindagents "
+              f"(pipx install --force ...), then: {run} init --yes" + (" --global" if global_ else ""), file=out)
+    if not bad and hooked and probe and os.name == "posix":
+        print("Recording works: each hook above ran once in a scratch folder and wrote a record.", file=out)
     # The log is always this project's: a global hook records into the project the agent runs in too.
     default = ".rewindagents/log.jsonl"
     lp = Path(log_path or default)
@@ -174,13 +319,26 @@ def status(global_: bool = False, root: Path | None = None, home: Path | None = 
     if rec == "BROKEN":
         print(f"The log does not verify: a record was edited, removed or damaged. Details: {run} verify", file=out)
     elif rec == "none" and hooked:
-        print("A hook is in place but nothing is recorded yet. Run the agent once; if it made a tool call and "
-              "there is still no record, the hook is failing: run the hook command by hand to see why.", file=out)
+        print("A hook is in place but nothing is recorded yet: run your agent once, then "
+              f"`{run} summary`.", file=out)
+    store = lp.parent
+    if store.is_dir():
+        size = store_size(store)
+        print(f"  {'store':<8} {human(size):<8} {where.rsplit('/', 1)[0] + '/' if '/' in where else where}  "
+              f"(the log plus a copy of each project file a step may need; `{run} gc` frees what no step needs)",
+              file=out)
+    if not global_ and (hooked or rec != "none"):
+        from . import bashscan
+        if bashscan.project_files(root, ignored_files=True) is None:
+            print(f"WARNING: this project has more than {bashscan.MAX_SCAN_FILES:,} files, so shell commands "
+                  f"(rm, sed -i, scripts) are NOT checkpointed here; edits made with the agent's file tools are. "
+                  f"Add big generated directories to .gitignore to get under the limit.", file=out)
     return 1 if bad or rec == "BROKEN" else 0
 
 
 def main(yes: bool = False, global_: bool = False, root: Path | None = None, home: Path | None = None,
-         path: str | None = None, stdin=None, out=None) -> int:
+         path: str | None = None, stdin=None, out=None, only: list[str] | None = None) -> int:
+    """`only`: the agents named with --agent; they are set up even when not detected, and no other is."""
     root = Path(root or Path.cwd()).resolve()
     home = Path(home or Path.home())
     stdin, out = stdin or sys.stdin, out or sys.stdout
@@ -203,6 +361,8 @@ def main(yes: bool = False, global_: bool = False, root: Path | None = None, hom
         return 2
     run = "rewindagents" if hook.installed() else "python3 -m rewindagents"
     found = detect(root, home, global_, path)
+    if only:
+        found = [dict(f, found=f["found"] or ["--agent"]) for f in found if f["agent"] in only]
     print(f"rewindagents init: {'your user config (every project)' if global_ else 'project ' + str(root)}",
           file=out)
     todo, rows, errors = [], [], 0
@@ -249,12 +409,13 @@ def main(yes: bool = False, global_: bool = False, root: Path | None = None, hom
             print("Nothing written.", file=out)
             return 0
     wanted = {f["agent"] for f in todo}
-    notes = []
+    notes, created, tracked = [], [], []
     for name, status, where, why in rows:
         if name not in wanted:
             say(name, status, where, why)
             continue
         t = next(f["target"] for f in todo if f["agent"] == name)
+        existed = t.exists()
         try:
             dead = hook.replace_stale(t, agent=name)
             if dead and state(name, t, hook.hook_command(name))[0] == "other":
@@ -265,6 +426,11 @@ def main(yes: bool = False, global_: bool = False, root: Path | None = None, hom
             errors += 1
             say(name, "error", where, f"not written: {e}")
             continue
+        if changed and not global_:
+            if not existed:
+                created.append(t)
+            elif _tracked(t):
+                tracked.append(where)
         if dead:
             say(name, "replaced", where, f"was stale: {dead[0][1]}")
         else:
@@ -273,5 +439,82 @@ def main(yes: bool = False, global_: bool = False, root: Path | None = None, hom
             notes.append(f"{name}: {NOTES[name]}")
     for n in notes:
         print(n, file=out)
-    print(f"Next: run your agent as usual, then `{run} replay` to see what it did.", file=out)
+    now_excluded = set_excluded(root, add=created) if created else []
+    hidden = [show(t) for t in created if "/" + show(t) in now_excluded or any(
+        q.endswith("/" + show(t)) for q in now_excluded)]
+    if hidden:
+        print(f"Kept out of git (.git/info/exclude, this clone only): {', '.join(hidden)}. "
+              f"{'They name' if len(hidden) > 1 else 'It names'} this machine's Python; teammates run "
+              f"`rewindagents init` themselves.", file=out)
+    for w in tracked:
+        print(f"Note: {w} is tracked by git and now names this machine's Python; do not commit that hook "
+              f"(or use `{run} init --global` instead).", file=out)
+    print(f"Next: run your agent as usual, then `{run} summary` to see what it did. "
+          f"Undo this setup: `{run} init --undo`.", file=out)
+    return 1 if errors else 0
+
+
+def _empty_config(settings) -> bool:
+    """A config that holds nothing but empty hook containers ({}, {"hooks": {}}, {"version": 1, "hooks": {}})."""
+    if not isinstance(settings, dict):
+        return False
+    rest = {k: v for k, v in settings.items() if k not in ("hooks", "version")}
+    return not rest and not settings.get("hooks")
+
+
+def undo(global_: bool = False, root: Path | None = None, home: Path | None = None, out=None,
+         only: list[str] | None = None) -> int:
+    """`rewindagents init --undo`: remove every rewindagents hook (any interpreter, stale or not) from each
+    agent's config file that init writes, leaving every other hook and key. A file left holding nothing but
+    empty hook containers is deleted, with the agent directory when that is then empty, and its line in
+    .git/info/exclude goes too. The recorded history (.rewindagents/) is never touched."""
+    root = Path(root or Path.cwd()).resolve()
+    home = Path(home or Path.home())
+    out = out or sys.stdout
+    removed, deleted, errors = 0, [], 0
+    print(f"rewindagents init --undo: {'your user config (every project)' if global_ else 'project ' + str(root)}",
+          file=out)
+    for name in agents.AGENTS:
+        if only and name not in only:
+            continue
+        t = target(name, root, home, global_)
+        where = ("~/" if global_ else "") + str(t.relative_to(home if global_ else root))
+        if not t.is_file():
+            continue
+        try:
+            have = agents.commands_in(agents.AGENTS[name], t) if t.read_text(encoding="utf-8").strip() else {}
+            mine = sorted({c for cmds in have.values() for c in cmds if hook.ours(c)})
+            for c in mine:
+                agents.uninstall(agents.AGENTS[name], t, c)
+        except (ValueError, OSError, AttributeError, TypeError, KeyError) as e:
+            errors += 1
+            print(f"  {name:<8} {'error':<14} {where}  (not changed: {e})", file=out)
+            continue
+        if not mine:
+            print(f"  {name:<8} {'no hook':<14} {where}", file=out)
+            continue
+        removed += 1
+        try:
+            empty = _empty_config(json.loads(t.read_text(encoding="utf-8") or "{}"))
+        except (ValueError, OSError):
+            empty = False
+        if empty:
+            t.unlink()
+            deleted.append(t)
+            d = t.parent
+            stop = home if global_ else root
+            while d != stop and d.is_dir() and not any(d.iterdir()):
+                d.rmdir()
+                d = d.parent
+            print(f"  {name:<8} {'removed':<14} {where}  (file deleted: it held nothing else)", file=out)
+        else:
+            print(f"  {name:<8} {'removed':<14} {where}  (other settings and hooks kept)", file=out)
+    if deleted and not global_:
+        set_excluded(root, remove=deleted)
+    if not removed and not errors:
+        print("No rewindagents hook found; nothing changed.", file=out)
+    store = (home if global_ else root) / ".rewindagents"
+    if not global_ and store.is_dir():
+        print("Your recorded history in .rewindagents/ is kept: replay and rewind still work. "
+              "To delete it too: rm -rf .rewindagents", file=out)
     return 1 if errors else 0
