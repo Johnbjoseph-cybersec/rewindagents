@@ -115,7 +115,11 @@ fork_ruler = build.ruler(2, n=3, w=60, h=20, dark=True)
 rpage = page.split("<script>")[0].replace(html.escape(build.PROMISE), html.escape(build.COURSE)).replace(
     "undo, the base: rewind any step", "fork any recorded step, compare the runs").replace(
     ".top .promise { font-family: var(--display); font-weight: 800; font-size: 24px;",
-    ".top .promise { font-family: var(--display); font-weight: 800; font-size: 22px;") + """<script>
+    ".top .promise { font-family: var(--display); font-weight: 800; font-size: 22px;").replace(
+    # the fork output prints a long temporary path and a long hint: with white-space: pre they ran past the right edge
+    # of the frame (cut off, John's no-overlap bar). Wrap them inside the panel, with a hanging indent.
+    "pre.term .l { white-space: pre; }",
+    "pre.term code { white-space: normal; } pre.term .l { white-space: pre-wrap; overflow-wrap: anywhere; display: block; padding-left: 2ch; text-indent: -2ch; }") + """<script>
 const BEATS = %(data)s;
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const TYPE = 1 / 22, HOLD = [2.6, 4.2, 3.6];
