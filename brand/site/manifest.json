@@ -161,6 +161,14 @@
    "node_modules",
    "venv"
   ],
+  "status": [
+   "rewindagents status             # per agent config file: ok, STALE, partial or no hook; then the log: records, last write, chain"
+  ],
+  "status_says": [
+   "The last line of `status` is this project's log: how many records it holds, when the last one was written, and whether the chain verifies.",
+   "`status` writes nothing.",
+   "A hook is stale when its interpreter path or its `PYTHONPATH` directory no longer exists; `status` then exits 1."
+  ],
   "steps": 14,
   "tested_on": "Python 3.15 on macOS",
   "uninstall": [

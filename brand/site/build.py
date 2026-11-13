@@ -88,6 +88,25 @@ def readme_blocks(readme, heading):
     return [blk.rstrip("\n").split("\n") for blk in re.findall(r"```sh\n(.*?)```", m.group(1), re.S)]
 
 
+def readme_sentence(readme, start):
+    """The README sentence that begins with `start` (line breaks folded), as markdown."""
+    m = re.search(r"%s.*?\.(?=\s|\Z)" % re.escape(start), " ".join(readme.split()))
+    if not m:
+        raise SystemExit("README has no sentence starting %r" % start)
+    return m.group(0)
+
+
+def md_inline(s):
+    """Escape a README sentence for HTML and turn its `code` spans into <code>."""
+    return re.sub(r"`([^`]+)`", r"<code>\1</code>", e(s))
+
+
+# The README's own words for what `status` reports, quoted on the docs page under "Is it recording?" (R25).
+# "exits 1." goes last so a wrap never starts a line with "1." (it read as a list item at 1440).
+STATUS_SENTENCES = ("The last line of `status` is this project's log", "`status` writes nothing",
+                    "A hook is stale when")
+
+
 def facts():
     readme = read("README.md")
     demo = json.loads(read("brand", "demo", "manifest.json"))
@@ -117,6 +136,8 @@ def facts():
             ("record", "Use it"), ("tests", "Tests"), ("quick", "Quick start"), ("ui", "Timeline UI"))},
         "quick_use": readme_blocks(readme, "Quick start")[1],
         "uninstall": next(blk for blk in readme_blocks(readme, "Claude Code hook") if blk[0].startswith("rewindagents uninstall")),
+        "status": next(blk for blk in readme_blocks(readme, "Claude Code hook") if blk[0].startswith("rewindagents status")),
+        "status_says": [readme_sentence(readme, s) for s in STATUS_SENTENCES],
         "beats": demo["beats"],
         "gif": {k: demo["gif_facts"][k] for k in ("width", "height", "seconds", "frames")},
     }
@@ -621,7 +642,8 @@ def docs_html(cfg, f):
     desc = "Getting started with rewindagents: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, export, find a session, verify the log."
     toc = [("install", "Install"), ("hook", "Add the hook"), ("first", "A first session"), ("recorded", "What gets recorded"),
            ("replay", "Replay and rewind"), ("branch", "Branch"), ("export", "Export"), ("sessions", "Find a session"),
-           ("verify", "Verify"), ("overhead", "Overhead"), ("limits", "Limits"), ("remove", "Remove it")]
+           ("verify", "Verify"), ("status", "Is it recording?"), ("overhead", "Overhead"), ("limits", "Limits"),
+           ("remove", "Remove it")]
     first = "".join('<li><p>%s</p>%s</li>' % (text, panel(beat_rows(bt, lit=(i == 2)))) for i, (text, bt) in enumerate(zip((
         "Ask Claude Code for anything in a project with the hook installed; here, %d steps that add a timeout to a small service, then two steps that delete the tests and overwrite the config. <code>replay</code> lists every step with its number." % f["good_step"],
         "git shows the damage: three files changed, two deleted.",
@@ -693,6 +715,10 @@ def docs_html(cfg, f):
 <p>The recorder also works on its own, without the hook:</p>
 %(record)s
 
+<h2 id="status">Is it recording?</h2>
+%(status)s
+<p>%(status_says)s</p>
+
 <h2 id="overhead">Overhead</h2>
 %(overhead)s
 
@@ -719,6 +745,7 @@ def docs_html(cfg, f):
        "tested": e(f["tested_on"]), "install": code(b["install"]),
        "version": panel([("cmd", "rewindagents --version"), ("out", "rewindagents %s" % f["version"])]),
        "hook": code(b["hook"]), "agents": code(b["agents"]), "uninstall": code(f["uninstall"]),
+       "status": code(f["status"]), "status_says": " ".join(md_inline(s) for s in f["status_says"]),
        "codex": e(f["agents"]["codex"]["settings"]),
        "cursor": e(f["agents"]["cursor"]["settings"]),
        "more_agents": more_agents_html(),

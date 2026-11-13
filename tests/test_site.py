@@ -307,6 +307,27 @@ class TestSite(unittest.TestCase):
         # the one output line not from the session is the version line, and it is what the binary prints
         self.assertIn("rewindagents %s" % rewindagents.__version__, text_of("docs/index.html"))
 
+    def test_docs_status_answer_is_the_readme_block_and_words(self):
+        readme = read("README.md", ROOT)
+        html = read("docs/index.html")
+        m = re.search(r'<h2 id="status">Is it recording\?</h2>\n(<pre class="term[^"]*"><code>.*?</code></pre>)\n<p>(.*?)</p>',
+                      html, re.S)
+        self.assertIsNotNone(m, "docs page has no 'Is it recording?' answer")
+        self.assertIn('<a href="#status">Is it recording?</a>', html)
+        # the panel is exactly the README's status block, as code() renders it
+        build = load_build()
+        block = next(blk for blk in build.readme_blocks(readme, "Claude Code hook") if blk[0].startswith("rewindagents status"))
+        self.assertEqual(m.group(1), build.code(block))
+        page_cmds = [unesc(re.sub(r"<[^>]+>", "", r))[2:] for r in m.group(1).split("\n") if 'class="p"' in r]
+        self.assertEqual(page_cmds, ["rewindagents status"])
+        # every sentence under it is a README sentence, word for word
+        prose = " ".join(readme.split())
+        said = unesc(re.sub(r"</?code>", "`", m.group(2)))
+        sentences = re.findall(r".+?\.(?=\s|$)", said)
+        self.assertEqual(len(sentences), len(build.STATUS_SENTENCES))
+        for s in sentences:
+            self.assertIn(s.strip(), prose)
+
     def test_planned_items_are_brand_md_phrases_and_nothing_is_for_sale(self):
         build = load_build()
         brand_md = read("BRAND.md", BRAND)
