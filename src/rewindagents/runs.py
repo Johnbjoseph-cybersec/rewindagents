@@ -43,10 +43,15 @@ class RunError(Exception):
 
 
 # ---------------------------------------------------------------------------------------------------- fork
-def start_state(log_path: str | Path, n: int, session: str | None = None) -> dict[str, tuple[str, Any]]:
+def start_state(log_path: str | Path, n: int, session: str | None = None,
+                drift: list | None = None) -> dict[str, tuple[str, Any]]:
     """{relative path: ("now", absolute path) | ("object", sha256)}: the project's files as `rewind n` would
-    leave them. Refuses when that cannot be known exactly (what rewind would report as CANNOT or unscanned)."""
+    leave them. Refuses when that cannot be known exactly (what rewind would report as CANNOT or unscanned).
+    When `drift` is a list, the plan's drift entries (rewind.drift: files changed after the steps it takes
+    back, by hand or another session) are appended to it: the run starts without those changes."""
     p = rewind.plan(log_path, n, session)
+    if drift is not None:
+        drift.extend(p.get("drift") or [])
     root = rewind.project_root(log_path)
     problems = [f"{rewind.relative(path, root)}: {why}" for path, why in p["cannot"]]
     if p["bash_uncovered"]:
@@ -125,7 +130,8 @@ def fork(log_path: str | Path, n: int, name: str, session: str | None = None,
         raise RunError(f"{target} already exists; pick another --name or --dir")
     if any(r.get("name") == name for r in read_index(root)):
         raise RunError(f"this project already has a run named {name!r} (`rewindagents compare` lists them)")
-    state = start_state(log_path, n, session)
+    drifted: list[dict] = []
+    state = start_state(log_path, n, session, drifted)
     objects = root / ".rewindagents" / "objects"
 
     head = _git_head(root)
@@ -169,6 +175,8 @@ def fork(log_path: str | Path, n: int, name: str, session: str | None = None,
         origin = {"name": name, "project": str(root), "session": session, "step": n,
                   "log_head": log.head(log_path), "git_branch": git_branch, "git_base": head,
                   "files": len(start)}
+        if drifted:     # the run starts without these later changes; the source keeps them
+            origin["drift"] = [{"path": rewind.relative(d["path"], root), "why": rewind.drift_why(d)} for d in drifted]
         log.Recorder(store / "log.jsonl").record(
             f"run:{name}", "rewindagents", {"input": {"fork": name, "from_step": n}, "fork": origin,
                                             "start": start}, None, actor="user", event="fork")
@@ -178,7 +186,8 @@ def fork(log_path: str | Path, n: int, name: str, session: str | None = None,
     entry = {"name": name, "dir": str(target), "session": session, "step": n, "created": round(time.time(), 3)}
     _append_index(root, entry)
     return {**entry, "files": len(state), "git_branch": git_branch, "hooked": hooked_agents(target),
-            "project": str(root)}
+            "project": str(root), "drift": [{"path": rewind.relative(d["path"], root), "why": rewind.drift_why(d)}
+                                           for d in drifted]}
 
 
 def _undo_fork(root: Path, target: Path, git_branch: str | None) -> None:

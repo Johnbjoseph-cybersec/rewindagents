@@ -220,7 +220,9 @@ def _plan_view(log_path: str | Path, p: dict, only: str | None, diffs: bool) -> 
     cannot = [{"path": rewind.relative(path, root), "why": why} for path, why in p["cannot"] if keep(path)]
     return {"session": p["session"], "to_step": p["to_step"], "steps": p["steps"], "changes": changes,
             "cannot": cannot, "bash_uncovered": p["bash_uncovered"], "scan_early": p["scan_early"], "only": rewind.relative(only, root) if only else None,
-            "new_step": p["steps"] + 1}
+            "new_step": p["steps"] + 1,
+            "drift": [{"path": rewind.relative(d["path"], root), "why": rewind.drift_why(d)}
+                      for d in p.get("drift") or [] if keep(d["path"])]}
 
 
 def preview(log_path: str | Path, body: dict) -> dict:
@@ -267,10 +269,11 @@ def do_rewind(log_path: str | Path, body: dict) -> dict:
             raise UIError(400, "this version cannot rewind a single file")
         only = _target(log_path, session, body["path"])
     try:
+        force = body.get("force") is True     # a file changed after the steps taken back: see rewind.drift
         if only:
-            p = rewind.rewind(log_path, n, session, only=_only_arg(only))
+            p = rewind.rewind(log_path, n, session, only=_only_arg(only), force=force)
         else:
-            p = rewind.rewind(log_path, n, session)
+            p = rewind.rewind(log_path, n, session, force=force)
     except rewind.RewindError as e:
         raise UIError(409, str(e))
     out = _plan_view(log_path, p, only, diffs=False)

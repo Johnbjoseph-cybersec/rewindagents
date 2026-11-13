@@ -81,7 +81,8 @@ def diff(log_path: str | Path, n: int, session: str | None = None,
 
 def run(log_path: str | Path, n: int, session: str | None, paths: list[str] | None, out=None, err=None) -> int:
     """CLI body. The diff goes to stdout; anything rewind could not put back goes to stderr.
-    Exit 0, or 1 when something could not be shown (the rewind would report it and exit 1 too)."""
+    Exit 0, or 1 when something could not be shown (the rewind would report it and exit 1 too) or a file
+    changed after the steps the rewind takes back (p["drift"]: the rewind would refuse without --force)."""
     out, err = out or sys.stdout, err or sys.stderr
     try:
         p = diff(log_path, n, session, paths)
@@ -95,6 +96,9 @@ def run(log_path: str | Path, n: int, session: str | None, paths: list[str] | No
         print(f"rewindagents: CANNOT {rewind.relative(path_s, root)}: {why}", file=err)
     for q in p["unmatched"]:
         print(f"rewindagents: {q}: no step after step {n} changed it", file=err)
+    for d in p.get("drift") or []:
+        print(f"rewindagents: WARNING {rewind.relative(d['path'], root)}: {rewind.drift_why(d)}; rewind {n} would "
+              f"overwrite that, so it refuses without --force", file=err)
     if not p["files"] and not p["cannot"]:
         print(f"rewindagents: rewind {n} would change nothing (session {p['session']})", file=err)
     if p["bash_uncovered"]:
@@ -104,7 +108,7 @@ def run(log_path: str | Path, n: int, session: str | None, paths: list[str] | No
         print(f"rewindagents: note: {p['scan_early']} step(s) after step {n} ran a command in the background, "
               f"so their after-scan may have run before it finished; files it changed later may not be in this diff",
               file=err)
-    return 1 if p["cannot"] or p["bash_uncovered"] or p["scan_early"] else 0
+    return 1 if p["cannot"] or p["bash_uncovered"] or p["scan_early"] or p.get("drift") else 0
 
 
 def step_changes(log_path: str | Path, all_steps: list[dict], n: int) -> list[dict]:

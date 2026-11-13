@@ -374,6 +374,7 @@ def _rewind_record(log_path):
     r = log.read(log_path)[-1]
     args = dict(r["args"])
     args["checkpoints"] = [dict(cp, path=rewind.relative(cp["path"], root)) for cp in args["checkpoints"]]
+    args["after"] = [dict(x, path=rewind.relative(x["path"], root)) for x in args.get("after", [])]
     return {k: v for k, v in r.items() if k not in ("ts", "hash", "prev")} | {"args": args}
 
 
