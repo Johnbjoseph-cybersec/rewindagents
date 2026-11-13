@@ -74,7 +74,7 @@ git checkout 6e08a05 -- src && python3 bench/takeback/takeback.py --tool rewinda
 ## Measured: current code (branch feat/revert: the two fixes and `revert`)
 
 <!-- takeback:current:start -->
-Measured on macOS 27.0.1, arm64, 12 CPUs, Python 3.15.2, git version 2.50.1 (Apple Git-155), on 2026-11-14 at commit d09e453.
+Measured on macOS 27.0.1, arm64, 12 CPUs, Python 3.15.2, git version 2.50.1 (Apple Git-155), on 2026-11-14 at commit d822596.
 
 | Scenario | rewindagents | rewindagents revert | git commit per step | git stash snapshot |
 |---|---|---|---|---|
@@ -102,23 +102,23 @@ Undo time / time the tool added while the session ran (one run each, wall-clock)
 
 | Scenario | rewindagents undo / record | rewindagents revert undo / record | git commit per step undo / record | git stash snapshot undo / record |
 |---|---|---|---|---|
-| S01 | 97 / 631 ms | 83 / 430 ms | 46 / 274 ms | 51 / 103 ms |
-| S02 | 82 / 459 ms | 125 / 501 ms | 46 / 370 ms | 49 / 59 ms |
-| S03 | 72 / 316 ms | 146 / 554 ms | 47 / 362 ms | 48 / 61 ms |
-| S04 | 96 / 456 ms | 105 / 545 ms | 52 / 280 ms | 77 / 88 ms |
-| S05 | 183 / 554 ms | 88 / 566 ms | 52 / 240 ms | 65 / 65 ms |
-| S06 | 98 / 883 ms | 98 / 494 ms | 61 / 243 ms | 54 / 71 ms |
-| S07 | 86 / 542 ms | 97 / 669 ms | 59 / 462 ms | 134 / 112 ms |
-| S08 | 91 / 392 ms | 102 / 375 ms | 71 / 268 ms | 42 / 68 ms |
-| S09 | 81 / 336 ms | 139 / 306 ms | 51 / 299 ms | 38 / 63 ms |
-| S10 | 94 / 638 ms | 87 / 735 ms | 24 / 265 ms | 38 / 73 ms |
-| S11 | 91 / 575 ms | 79 / 441 ms | 78 / 260 ms | 50 / 81 ms |
-| S12 | 93 / 449 ms | 78 / 419 ms | 53 / 264 ms | 39 / 85 ms |
-| S13 | 77 / 394 ms | 86 / 356 ms | n/a | n/a |
-| S14 | 87 / 1,045 ms | 284 / 1,268 ms | 44 / 686 ms | 52 / 56 ms |
-| S15 | 102 / 413 ms | 170 / 439 ms | 44 / 230 ms | 76 / 186 ms |
-| S16 | 102 / 325 ms | 107 / 539 ms | 24 / 213 ms | 43 / 53 ms |
-| S17 | 77 / 547 ms | 69 / 433 ms | 22 / 226 ms | 36 / 44 ms |
+| S01 | 115 / 611 ms | 92 / 467 ms | 38 / 280 ms | 42 / 68 ms |
+| S02 | 103 / 458 ms | 86 / 456 ms | 49 / 334 ms | 51 / 66 ms |
+| S03 | 92 / 326 ms | 99 / 354 ms | 41 / 259 ms | 54 / 87 ms |
+| S04 | 82 / 328 ms | 128 / 418 ms | 48 / 209 ms | 40 / 58 ms |
+| S05 | 107 / 492 ms | 75 / 533 ms | 36 / 256 ms | 37 / 59 ms |
+| S06 | 72 / 486 ms | 89 / 414 ms | 35 / 207 ms | 36 / 51 ms |
+| S07 | 83 / 396 ms | 77 / 414 ms | 76 / 430 ms | 111 / 123 ms |
+| S08 | 108 / 425 ms | 73 / 439 ms | 40 / 214 ms | 41 / 73 ms |
+| S09 | 76 / 349 ms | 71 / 297 ms | 36 / 221 ms | 44 / 51 ms |
+| S10 | 76 / 558 ms | 68 / 609 ms | 31 / 253 ms | 43 / 50 ms |
+| S11 | 102 / 470 ms | 72 / 378 ms | 48 / 195 ms | 52 / 87 ms |
+| S12 | 102 / 555 ms | 78 / 412 ms | 46 / 244 ms | 45 / 59 ms |
+| S13 | 90 / 317 ms | 63 / 376 ms | n/a | n/a |
+| S14 | 162 / 1,176 ms | 351 / 1,160 ms | 45 / 512 ms | 72 / 57 ms |
+| S15 | 71 / 411 ms | 157 / 381 ms | 36 / 286 ms | 92 / 125 ms |
+| S16 | 108 / 309 ms | 111 / 444 ms | 19 / 210 ms | 44 / 73 ms |
+| S17 | 102 / 417 ms | 110 / 449 ms | 29 / 242 ms | 48 / 68 ms |
 <!-- takeback:current:end -->
 
 ## Measured: baseline (before this branch's fixes; `revert` did not exist)
