@@ -324,11 +324,22 @@ rewindagents branch 12 --name try2   # keep the current files, then rewind to st
   later steps stay (empty). Files over 20 MB were never copied, so they are reported and not restored. If
   anything could not be restored, the exit code is 1.
 
-## Fork a step, compare the runs (prototype)
+## Fork a step, compare the runs
 
-A prototype on a branch, not released, and not on the docs page yet. A recorded step is a starting point
-you can hand to another agent, another model or another prompt, and the runs that follow can be compared on
-what they actually did to the files.
+Rewind to any step, fork it, let another agent take it from there, compare. A recorded step is a starting
+point you can hand to another agent, another model, another prompt or a person, and the runs that follow can
+be compared on what they actually did to the files and on your own check.
+
+```sh
+rewindagents replay                         # pick the step to start from, say 12
+rewindagents fork 12 --name try2            # ../<project>-try2 with step 12's files
+cd ../your-project-try2                     # run any agent with a hook here, or edit by hand
+cd - && rewindagents compare --check "python3 -m pytest -q"
+rewindagents compare --diff your-project try2   # how two runs differ, as a git diff
+```
+
+`sh ux-review/try-runs.sh` does the whole loop in a temporary project with no agent needed: it records a
+session through the real hook, forks step 2, makes a second attempt by hand and compares the two.
 
 `rewindagents fork 12 --name try2` makes a new directory next to the project (`<project>-try2`; `--dir`
 picks another place outside it) holding the project's files as `rewind 12` would leave them: the project as
@@ -547,8 +558,12 @@ rewindagents verify --head <pinned-hash>
 
 - Publish on PyPI
 - Run the Codex and Cursor hooks in live sessions and keep the real payloads as test fixtures
-- A paid Cloud tier (cloud sync, shareable replay links, long retention, session search): planned, not built,
-  not priced. The waitlist is a GitHub issue on this repository with the label `waitlist`; say what you would pay for.
+- Fork and compare, next: saved starting points (a step plus the check that judges it) and re-running one across
+  agents on your machine. See `ux-review/ROADMAP.md`.
+- A paid Cloud tier for teams, opt-in, that the local tool never needs (a shared page per comparison, saved
+  starting points run in parallel cloud sandboxes, a team's comparison history, scheduled re-runs when a model or
+  prompt changes; retention, SSO, seats): planned, not built, not priced. The waitlist is a GitHub issue on this
+  repository with the label `waitlist`; say what you would pay for.
 
 ## Payments code (not live)
 

@@ -11,6 +11,7 @@
   "og-1200x630.png"
  ],
  "checkout": false,
+ "course": "Rewind to any step. Let another agent take it from there.",
  "credit": "made by John B Joseph",
  "facts": {
   "action_says": [
@@ -174,6 +175,11 @@
    "`import` writes nothing until everything checks out: the file's own SHA-256, every record's hash, that every record belongs to the session and is in log order, every stored copy against its SHA-256, that no copy a record names is missing, that this project's log verifies, and that it does not already hold the session.",
    "Nothing goes over a network; carry the file however you like."
   ],
+  "compare_says": [
+   "Back in the project, `rewindagents compare` lines up the project and every run forked from the same step: per run, the agents and their number of tool calls since the start, the files changed, created or deleted and the lines added and removed; per file, which runs ended with the same bytes (the same letter).",
+   "`rewindagents compare --check \"python3 -m pytest -q\"` runs your command in each run and reports pass or the exit code, with the last lines of a failing one.",
+   "`rewindagents compare --diff proj try2` prints how two runs differ as a git diff (`git apply` in the first turns its files into the second's)."
+  ],
   "diff_kb": 256,
   "diff_lines": 400,
   "file_mb": 20,
@@ -182,6 +188,25 @@
    "Edit",
    "MultiEdit",
    "NotebookEdit"
+  ],
+  "fork": [
+   "rewindagents replay                         # pick the step to start from, say 12",
+   "rewindagents fork 12 --name try2            # ../<project>-try2 with step 12's files",
+   "cd ../your-project-try2                     # run any agent with a hook here, or edit by hand",
+   "cd - && rewindagents compare --check \"python3 -m pytest -q\"",
+   "rewindagents compare --diff your-project try2   # how two runs differ, as a git diff"
+  ],
+  "fork_lead": "Rewind to any step, fork it, let another agent take it from there, compare.",
+  "fork_limits": [
+   "`fork` refuses a step it cannot rebuild exactly (a stored copy missing, a command whose scan did not finish, a log that does not verify) and leaves nothing behind when it fails half-way.",
+   "`compare` writes nothing; the command `--check` runs may write in the run it runs in.",
+   "Runs from different steps are not mixed."
+  ],
+  "fork_says": [
+   "A recorded step is a starting point you can hand to another agent, another model, another prompt or a person, and the runs that follow can be compared on what they actually did to the files and on your own check.",
+   "`rewindagents fork 12 --name try2` makes a new directory next to the project (`<project>-try2`; `--dir` picks another place outside it) holding the project's files as `rewind 12` would leave them: the project as it is now, with every change that session made after step 12 taken back, untracked files included.",
+   "In a git repository it is a `git worktree` on the branch `rewindagents/run/try2`, so your `HEAD`, index and files stay as they were; elsewhere it is a plain directory.",
+   "Run any agent there, or edit by hand: with a hook in place (the project's agent config comes along when git does not ignore it, or a `--global` hook), its steps go into the run's own log, and `replay`, `rewind` and `diff` work in the run as in any project."
   ],
   "gc": [
    "rewindagents gc --dry-run   # what would be deleted, and how many bytes",
@@ -224,6 +249,56 @@
    "rewindagents rewind 12 --only src/db.py   # take back just that file"
   ],
   "result_chars": 4000,
+  "runs": {
+   "command": "rewindagents (installed)",
+   "commands": {
+    "compare": "rewindagents compare --check \"python3 test_cart.py\"",
+    "diff": "rewindagents compare --diff shop clamp",
+    "fork": "rewindagents fork 2 --name clamp"
+   },
+   "output": {
+    "compare, with the test file as the check": [
+     "runs from session demo-000 step 2 of shop (2 files at the start)",
+     "",
+     "  run       agents         steps  files  lines                 check",
+     "  shop      claude             1      1  +1 -1                 FAIL (exit 1)",
+     "  clamp     -                  0      1  +1 -1                 pass",
+     "",
+     "  file     shop         clamp",
+     "  cart.py  changed A    changed B",
+     "",
+     "  - = as at the start; the same letter in a row = the same bytes in those runs.",
+     "  shop:     assert total([10, 5], discount=20) >= 0, \"a total below zero\"",
+     "  shop:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+     "  shop: AssertionError: a total below zero",
+     "  how two runs differ: rewindagents compare --diff shop clamp"
+    ],
+    "fork step 2 into a second attempt": [
+     "run clamp: /private/var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/tmp.9fIYfjmXeq/shop-clamp",
+     "  2 files as they were right after step 2 of session demo-0001; git worktree on branch rewindagents/run/clamp",
+     "  no agent hook reaches it, so an agent's steps there will not be recorded: run `rewindagents init` in it (compare still compares the files)",
+     "  next: cd /private/var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/tmp.9fIYfjmXeq/shop-clamp and let any agent (or you) continue; then, back here: rewindagents compare"
+    ],
+    "how the second attempt differs": [
+     "# a/ = run shop (/private/var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/tmp.9fIYfjmXeq/shop), b/ = run clamp (/private/var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/tmp.9fIYfjmXeq/shop-clamp)",
+     "diff --git a/cart.py b/cart.py",
+     "--- a/cart.py",
+     "+++ b/cart.py",
+     "@@ -1,2 +1,2 @@",
+     " def total(prices, discount=0):",
+     "-    return sum(prices) - discount  # TODO clamp",
+     "+    return max(0, sum(prices) - discount)",
+     "(left in /var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/tmp.9fIYfjmXeq; delete it when done)"
+    ],
+    "the recorded session": [
+     "    1  Write         cart.py  [1 checkpointed]",
+     "    2  Write         test_cart.py  [1 checkpointed]",
+     "    3  Write         cart.py  [1 checkpointed]"
+    ]
+   },
+   "script": "ux-review/try-runs.sh",
+   "version": "rewindagents 0.0.7"
+  },
   "scan_files": 20000,
   "show_files": 5,
   "skip_dirs": [
@@ -260,6 +335,65 @@
   "wreck_steps": 2
  },
  "hero": [
+  [
+   "cmd",
+   "rewindagents fork 2 --name clamp"
+  ],
+  [
+   "out",
+   "  2 files as they were right after step 2 of session demo-0001; git worktree on branch rewindagents/run/clamp"
+  ],
+  [
+   "cmd",
+   "rewindagents compare --check \"python3 test_cart.py\""
+  ],
+  [
+   "out",
+   "runs from session demo-000 step 2 of shop (2 files at the start)"
+  ],
+  [
+   "out",
+   ""
+  ],
+  [
+   "tab",
+   "  run       agents         steps  files  lines                 check"
+  ],
+  [
+   "tab",
+   "  shop      claude             1      1  +1 -1                 FAIL (exit 1)"
+  ],
+  [
+   "tabhit",
+   "  clamp     -                  0      1  +1 -1                 pass"
+  ],
+  [
+   "out",
+   ""
+  ],
+  [
+   "tab",
+   "  file     shop         clamp"
+  ],
+  [
+   "tab",
+   "  cart.py  changed A    changed B"
+  ]
+ ],
+ "pages": [
+  "docs/index.html",
+  "index.html",
+  "pricing.html"
+ ],
+ "planned": [
+  "a shared page per comparison",
+  "parallel cloud sandboxes",
+  "comparison history",
+  "scheduled re-runs",
+  "retention, SSO, seats"
+ ],
+ "promise": "Ctrl+Z for AI coding agents: record, replay, rewind.",
+ "rewind_rows": [
   [
    "cmd",
    "rewindagents replay"
@@ -313,17 +447,5 @@
    "  this rewind is step 15; undo it with: rewindagents rewind 14 --session demo"
   ]
  ],
- "pages": [
-  "docs/index.html",
-  "index.html",
-  "pricing.html"
- ],
- "planned": [
-  "cloud sync",
-  "shareable replay links",
-  "long retention",
-  "session search"
- ],
- "promise": "Ctrl+Z for AI coding agents: record, replay, rewind.",
  "site_url_key": "site_url"
 }

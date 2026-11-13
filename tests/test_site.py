@@ -235,28 +235,31 @@ class TestSite(unittest.TestCase):
         self.assertTrue(os.path.isfile(os.path.join(BRAND, "vsl", "vsl-90s-poster.jpg")))
 
     def test_hero_panel_shows_lines_the_session_printed(self):
-        # tests/test_demo.py proves brand/demo/manifest.json is what the CLI prints today; the hero must quote it.
+        # The hero leads with the course (John, 2026-11-13): fork and compare, quoted from brand/demo/runs.json, which
+        # tests/test_runs_demo.py proves try-runs.sh still prints. The rewind session stays on the page as the base:
+        # tests/test_demo.py proves brand/demo/manifest.json is what the CLI prints today, and the page quotes it all.
         m = manifest()
-        demo = json.loads(read(os.path.join("demo", "manifest.json"), BRAND))
-        commands = [b["command"] for b in demo["beats"]]
-        outputs = {ln for b in demo["beats"] for ln in b["output"].rstrip("\n").split("\n")}
+        build = load_build()
+        self.assertEqual(m["course"], build.COURSE)
+        self.assertIn(build.COURSE, read("BRAND.md", BRAND))
+        self.assertIn('<h1 id="h1">%s</h1>' % build.COURSE, read("index.html"))
+        runs = json.loads(read(os.path.join("demo", "runs.json"), BRAND))
+        printed = {ln for lines in runs["output"].values() for ln in lines}
         kinds = [k for k, _ in m["hero"]]
-        self.assertEqual([k for k in kinds if k == "cmd"], ["cmd", "cmd"])
+        self.assertEqual([t for k, t in m["hero"] if k == "cmd"], [runs["commands"]["fork"], runs["commands"]["compare"]])
         for kind, text in m["hero"]:
-            if kind == "cmd":
-                self.assertIn(text, commands, text)
-            elif kind in ("out", "hit"):
-                self.assertIn(text, outputs, text)
-            else:
-                self.assertEqual((kind, text.strip()), ("gap", "..."))
-        hits = [t for k, t in m["hero"] if k == "hit"]
-        self.assertEqual(len(hits), 4)
-        self.assertTrue(all(t.startswith("  restore") for t in hits), hits)
-        self.assertTrue(any("undo it with: rewindagents rewind" in t for _, t in m["hero"]))
+            if kind in ("out", "hit", "tab", "tabhit"):
+                self.assertIn(text, printed, text)
+        hits = [t for k, t in m["hero"] if k in ("hit", "tabhit")]
+        self.assertEqual(len(hits), 1)
+        self.assertTrue(hits[0].strip().startswith("clamp") and hits[0].endswith("pass"), hits)
+        self.assertIn("cmd", kinds)
         index = read("index.html")
+        shown = unesc(re.sub(r"<[^>]+>", "", index))
         for _, text in m["hero"]:
-            self.assertIn(text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"), index, text)
+            self.assertIn(text, shown, text)
         # the clip's four commands and every line they printed are on the page as text too
+        demo = json.loads(read(os.path.join("demo", "manifest.json"), BRAND))
         for b in demo["beats"]:
             self.assertIn(b["command"], index)
             for ln in b["output"].rstrip("\n").split("\n"):
@@ -291,13 +294,15 @@ class TestSite(unittest.TestCase):
         for p in PAGES:
             html = read(p)
             beat_commands = {b["command"] for b in json.loads(read(os.path.join("demo", "manifest.json"), BRAND))["beats"]}
+            # the fork-and-compare panels quote ux-review/try-runs.sh (tests/test_runs_demo.py checks them there)
+            run_commands = set(json.loads(read(os.path.join("demo", "runs.json"), BRAND))["commands"].values())
             for block in re.findall(r'<pre class="term[^"]*"><code>(.*?)</code></pre>', html, re.S):
                 rows = block.split("\n")
                 for i, row in enumerate(rows):
                     if not row.startswith('<span class="l"><span class="p">$ </span>'):
                         continue
                     cmd = unesc(re.sub(r"<[^>]+>", "", row)[2:])
-                    if cmd in beat_commands or cmd == "rewindagents --version":
+                    if cmd in beat_commands or cmd in run_commands or cmd == "rewindagents --version":
                         continue
                     # the README's trailing comment sits on the row before (describes) or after (alternative)
                     near = [unesc(re.sub(r"<[^>]+>", "", rows[j])) for j in (i - 1, i + 1)
