@@ -138,6 +138,13 @@ only that agent's reply, and leaves the log verifying. What it can read it recor
 response cut to its first 4,000 characters); for a `cwd` that does not exist it records nothing and creates
 nothing.
 
+Each record and its newline go to the log in one write. If a write is still cut off (a full disk, a killed
+process), the next record starts on a fresh line chained to the last whole record and the cut-off line stays
+where it is, so recording goes on. `verify` and `status` then name that line ("torn write at the end of the
+log", or "not a valid record" once records follow it) and exit 1, because the call it was recording is lost.
+`rewind` and `diff` still work from such a log, print a note about the torn write and exit 1; `gc` and
+`bundle` refuse it. `tests/test_torn_write.py` drives this through the real hook.
+
 Around every `Bash` call (for example `sed -i`, `rm`, `mv`, a code generator), the hook saves the
 project's files before the command, scans again after it, and checkpoints, in the `post` record, only the
 files that were changed, deleted or created. Details and limits:

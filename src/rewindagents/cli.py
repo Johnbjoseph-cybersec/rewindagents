@@ -294,7 +294,7 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
         # does a background command whose after-scan may have been early (nobody can say it was all restored).
         if p.get("drift") and getattr(a, "dry_run", False) and not a.force:
             return 1        # the real rewind would refuse
-        return 1 if p["cannot"] or p["bash_uncovered"] or p["scan_early"] else 0
+        return 1 if p["cannot"] or p["bash_uncovered"] or p["scan_early"] or p.get("torn") else 0
     if a.cmd == "record":
         try:
             call = json.load(sys.stdin)
@@ -445,6 +445,9 @@ def _report(p: dict, dry_run: bool, root) -> None:
     if p["scan_early"]:
         print(f"  note: {p['scan_early']} step(s) after step {p['to_step']} ran a command in the background, so "
               f"their after-scan may have run before it finished; files it changed later may not have been put back")
+    if p.get("torn"):
+        print(f"  note: the log has a torn write ({p['torn']}); the call it was recording is not in the log, "
+              f"so files it changed may not have been put back")
 
 
 if __name__ == "__main__":

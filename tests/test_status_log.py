@@ -112,7 +112,8 @@ class StatusLogTest(unittest.TestCase):
         code, out = self.run_status()
         self.assertEqual(code, 1, out)
         self.assertIn("BROKEN", self.log_line(out))
-        self.assertIn("cannot be read", self.log_line(out))
+        # lines are decoded one by one since R37 (a torn write can cut a character), so this is a bad line
+        self.assertIn("record 1: not a valid record", self.log_line(out))
 
     def test_a_stale_hook_and_a_good_log_still_exit_1(self):
         log.Recorder(self.lp).record("s1", "Read", {})

@@ -108,7 +108,10 @@ def run(log_path: str | Path, n: int, session: str | None, paths: list[str] | No
         print(f"rewindagents: note: {p['scan_early']} step(s) after step {n} ran a command in the background, "
               f"so their after-scan may have run before it finished; files it changed later may not be in this diff",
               file=err)
-    return 1 if p["cannot"] or p["bash_uncovered"] or p["scan_early"] or p.get("drift") else 0
+    if p.get("torn"):
+        print(f"rewindagents: note: the log has a torn write ({p['torn']}); the call it was recording is not in "
+              f"the log, so files it changed may not be in this diff", file=err)
+    return 1 if p["cannot"] or p["bash_uncovered"] or p["scan_early"] or p.get("drift") or p.get("torn") else 0
 
 
 def step_changes(log_path: str | Path, all_steps: list[dict], n: int, redact: bool = False) -> list[dict]:

@@ -58,6 +58,8 @@ def start_state(log_path: str | Path, n: int, session: str | None = None,
         problems.append(f"{p['bash_uncovered']} step(s) after step {n} were not scanned before and after")
     if p["scan_early"]:
         problems.append(f"{p['scan_early']} step(s) after step {n} ran a command in the background")
+    if p.get("torn"):
+        problems.append(f"the log has a torn write ({p['torn']})")
     if problems:
         raise RunError("cannot rebuild the files as they were right after step %d, so a run from it would not "
                        "start where the session was: %s" % (n, "; ".join(problems)))

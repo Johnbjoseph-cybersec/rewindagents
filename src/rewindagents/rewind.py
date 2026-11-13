@@ -270,8 +270,8 @@ def plan(log_path: str | Path, n: int, session: str | None = None,
     With `only`, the plan covers just those files (or the files under those directories); `p["unmatched"]`
     lists the `only` entries that no step after n changed, so they are already as they were at step n
     (as far as the log knows)."""
-    ok, _, msg = log.verify(log_path)
-    if not ok:
+    ok, _, msg, torn_only = log.check(log_path)
+    if not ok and not torn_only:
         raise RewindError(f"log does not verify ({msg}); refusing to rewind from it")
     session = session or latest_session(log_path)
     all_steps = steps(log_path, session)
@@ -306,7 +306,9 @@ def plan(log_path: str | Path, n: int, session: str | None = None,
                                                and "changed" not in (s.get("bash_scan") or {})),
                          # background commands whose after-scan may have run before they finished (bashscan.EARLY)
                          "scan_early": sum(1 for s in all_steps[n:] if (s.get("bash_scan") or {}).get("early")),
-                         "only": [str(q) for q in only] if only else None, "unmatched": unmatched}
+                         "only": [str(q) for q in only] if only else None, "unmatched": unmatched,
+                         # every record verifies, but a write was cut off: the call it recorded is not in the log
+                         "torn": None if ok else msg}
     for path_s, cp in first.items():
         path = Path(path_s)
         if not _inside(path, root):
