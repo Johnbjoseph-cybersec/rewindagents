@@ -214,6 +214,7 @@ details > p { padding-bottom: 18px; margin: 0; }
   /* phone and tablet: the install row straight after the buttons, then the session */
   .hero-text { order: 1; }
   .hero-install { order: 2; grid-template-columns: minmax(0, 1fr); margin-top: 32px; padding-top: 0; border-top: 0; }
+  .hero-install .small { max-width: var(--measure); }
   .hero-panel { order: 3; margin-top: 40px; }
   /* how it works on a tablet: one row per step, name left, text right, instead of three bare stacked rules (F9) */
   .steps { grid-template-columns: minmax(0, 1fr); gap: 28px; }

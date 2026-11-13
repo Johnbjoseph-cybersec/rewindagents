@@ -37,3 +37,23 @@ Impact: H = costs the 30-second reader the install or the belief, M = costs clar
 | F12 | L | section labels | `ruler(n=7)` | With a new section the 7-tick label ruler would run out. | Label ruler gets one tick per section (8). |
 | F13 | L | after/index-1440.png, clip | `demo.gif` | The GIF's first frame is an empty prompt, so with motion paused (screenshots, some readers) the clip is a black box. | Deferred: the GIF is built by `brand/demo/build.py`, outside this pass's scope (brand/site and ux-review only). Recommend a first frame that already shows the replay. |
 | F14 | L | 390 nav | `.nav` | Five links wrap to a second row under the logo; fine, but it costs 44px of the first screen. | Deferred: changing the nav is structure. |
+
+## Status after pass 2
+
+| # | Status | Where to look |
+|---|---|---|
+| F1 install on the first screen | fixed | compare/hero-1440-before-after.png, compare/hero-390-before-after.png |
+| F2 one-click copy | fixed scriptless (click selects the command without `$`; measured in GATE.md). A clipboard button is deferred to John: it needs a script, which the footer promise and tests/test_site.py forbid | after/index-1440-hero.png |
+| F3 wreck marked | fixed: ruler in the panel head, steps 13 and 14 struck, caption says the mark is ours | after/index-1440-hero.png |
+| F4 Tested section | fixed: section 04, 9 claims, 13 cited tests, build fails on a missing one | compare/tested-1440-new.png, compare/tested-390-new.png |
+| F5 og:image 1200x630 | fixed: brand/site/og/og-1200x630.png, first og:image + twitter:image + alt | launch-assets/og-1200x630.png |
+| F6 undo row wrap at 1440 | fixed | after/index-1440-hero.png |
+| F7 pipx line wrap at 1440 | fixed | compare/install-1440-before-after.png |
+| F8 hole under the hero caption | fixed: two-row hero on one grid | compare/hero-1440-before-after.png |
+| F9 long lede | fixed: 3 sentences, 32 words | compare/hero-1440-before-after.png |
+| F10 phone table wraps | fixed: no indent cap, 11.5px session tables; `[1 checkpointed]` still wraps as a unit under its column (keeping it on one line would need markup inside a line the site test matches verbatim) | after/index-390.png |
+| F11 hero buttons | fixed: Read the docs / Source on GitHub | after/index-1440-hero.png |
+| F12 label ruler ticks | fixed: 8 ticks for 8 sections | after/index-1440.png |
+| F13 GIF blank first frame | deferred (brand/demo is outside this pass); the new launch clip starts on a non-blank frame | launch-assets/rewind-in-action-1280x720.mp4 |
+| F14 phone nav two rows | deferred (structure) | after/index-390-hero.png |
+| found in the gate: pricing heading order | fixed: plan headings are h2 on the pricing page | GATE.md |
