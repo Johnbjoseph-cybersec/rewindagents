@@ -135,29 +135,52 @@ def hero_rows(beats):
     return rows
 
 
-def nowrap_urls(text):
+def nowrap_urls(text, flags=False):
     """A URL on a phone may break only after a slash, never at a hyphen inside a name: each slash-delimited
-    piece is kept whole and a <wbr> sits between the pieces."""
+    piece is kept whole and a <wbr> sits between the pieces. With `flags` (command rows only), a `--flag` and
+    its value are kept whole too, so a wrap never falls between the two hyphens of `--settings` (UX audit F4).
+    The tags change no text: the README-block test strips them before it compares."""
     def url(w):
         pieces = re.split(r"(?<=/)(?!/)", w)
         return "<wbr>".join('<span class="nb">%s</span>' % e(p) for p in pieces if p)
-    return " ".join(url(w) if "://" in w else e(w) for w in text.split(" "))
+    words, out, i = text.split(" "), [], 0
+    while i < len(words):
+        w = words[i]
+        if flags and w.startswith("--") and len(w) > 2:
+            group = [w]
+            if i + 1 < len(words) and words[i + 1] and not words[i + 1].startswith(("-", "#")):
+                group.append(words[i + 1])
+                i += 1
+            out.append('<span class="nb">%s</span>' % e(" ".join(group)))
+        else:
+            out.append(url(w) if "://" in w else e(w))
+        i += 1
+    return " ".join(out)
+
+
+def hang(text):
+    """Where a wrapped output row continues, in characters: under its last column when the row is a table
+    (`replay` lines continue under the command, `restore` lines under the path), else two past its own indent.
+    Without it a wrapped `-q` or `[1 checkpointed]` fell back to the panel's left edge (UX audit F4)."""
+    lead = len(text) - len(text.lstrip(" "))
+    cols = [m.end() for m in re.finditer(r"\S {2,}(?=\S)", text) if m.end() <= 24]
+    return cols[-1] if cols else lead + 2
 
 
 def term(rows):
     """Rows of a terminal panel as HTML, one block per row (a wrapped row gets a hanging indent): the prompt and
-    comments in Playhead, hit rows in Rewind."""
+    comments in Playhead, hit rows in Rewind. Output rows carry their own indent in --i (see hang())."""
     out = []
     for kind, text in rows:
-        t = nowrap_urls(text)
+        t = nowrap_urls(text, flags=(kind == "cmd"))
         if kind == "cmd":
             out.append('<span class="l"><span class="p">$ </span>%s</span>' % t)
         elif kind in ("gap", "c"):
             out.append('<span class="l"><span class="c">%s</span></span>' % t)
         elif kind == "hit":
-            out.append('<span class="l"><span class="hit">%s</span></span>' % t)
+            out.append('<span class="l" style="--i:%dch"><span class="hit">%s</span></span>' % (hang(text), t))
         else:
-            out.append('<span class="l">%s</span>' % t)
+            out.append('<span class="l" style="--i:%dch">%s</span>' % (hang(text), t))
     return "\n".join(out)
 
 
@@ -168,14 +191,16 @@ def panel(rows, cls=""):
 def code(lines):
     """A README sh block as a terminal panel. A trailing `# comment` moves to its own line (the README aligns
     comments with spaces, which would force a wide block on a phone): before the command when it describes it,
-    after the command when it offers an alternative (`# or: ...`). Words are untouched."""
+    after the command when it offers an alternative command (`# or: ...`). `# or for every project` describes
+    its own line, so it goes before it (UX audit F5: after it, it read as the caption of the next block).
+    Words are untouched."""
     rows = []
     for line in lines:
         if not line.strip():
             continue
         m = re.match(r"^(.*?)(?:\s+(# .*))?$", line)
         body, comment = m.group(1), m.group(2)
-        if comment and comment.startswith("# or"):
+        if comment and comment.startswith("# or:"):
             rows += [("cmd", body), ("c", comment)]
         elif comment:
             rows += [("c", comment), ("cmd", body)]
@@ -353,9 +378,9 @@ def index_html(cfg, f, hero, open_all=False):
 %(label)s
 <div class="head"><h2 id="h-install">Install, then add the hook to a project.</h2>
 <p class="lede">Python %(py)s. No dependencies beyond the standard library. Tested on %(tested)s. Not on PyPI yet, so install from the repository. The <a href="docs/">docs</a> walk through a first session.</p></div>
-<div class="cols">
-<div><h3>Install</h3>%(install)s<p>Or from a clone, <code>pip install .</code>. Without installing, <code>PYTHONPATH=src python3 -m rewindagents</code> runs the same CLI from a clone.</p></div>
-<div><h3>Add the hook</h3>%(hook)s%(agents)s<p><code>install</code> keeps everything already in the file and does nothing if the hook is already there. For Codex the file is <code>%(codex)s</code> and for Cursor <code>%(cursor)s</code>; those two hooks are tested with the payloads in the vendors&#x27; documentation, not yet in a live session. <code>.rewindagents/</code> gets its own <code>.gitignore</code>, so the log and the copies stay out of your commits.</p></div>
+<div class="cmdlist">
+<div class="cmdrow"><div><h3>Install</h3><p>Or from a clone, <code>pip install .</code>. Without installing, <code>PYTHONPATH=src python3 -m rewindagents</code> runs the same CLI from a clone.</p></div>%(install)s</div>
+<div class="cmdrow"><div><h3>Add the hook</h3><p><code>install</code> keeps everything already in the file and does nothing if the hook is already there. For Codex the file is <code>%(codex)s</code> and for Cursor <code>%(cursor)s</code>; those two hooks are tested with the payloads in the vendors&#x27; documentation, not yet in a live session. <code>.rewindagents/</code> gets its own <code>.gitignore</code>, so the log and the copies stay out of your commits.</p></div><div class="stack">%(hook)s%(agents)s</div></div>
 </div>
 </div></section>
 """ % {"label": label(2, "Install"), "py": e(f["py_req"]), "tested": e(f["tested_on"]), "install": code(b["install"]), "hook": code(b["hook"]),
