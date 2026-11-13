@@ -190,6 +190,19 @@ Measured by `bench/hook_overhead.py` on macOS 27.0.1, Apple M6, 12 CPUs, Python 
 Other machines, disks and projects will differ; run `python3 bench/hook_overhead.py` to measure yours.
 <!-- overhead:end -->
 
+## Undo benchmark
+
+`python3 bench/takeback/takeback.py` runs takeback-bench: 15 scripted sessions in which an agent wrecks
+something (`rm -rf tests`, `sed -i`, an overwritten file, a binary, a git-ignored `.env`, a file over 20 MB, a
+file outside the project, a hand edit made after the bad step, an executable script, a symlink, a project
+without git, ...), then each tool's own undo. Every file is compared by SHA-256, executable bit and symlink
+target with the state the goal asks for, and any later work the undo destroyed is counted. rewindagents runs
+through its real hook; git with a commit after every step and git with a stash snapshot run as baselines.
+On 2026-11-14 rewindagents restored 11 of the 15 exactly and destroyed later work in none; commit-per-step
+git restored 11 of the 14 it could run and destroyed later work once. rewindagents misses a deleted symlink,
+a file over 20 MB, a file outside the project, and refuses (exit 1) to overwrite a later hand edit. Every
+scenario, the baselines, the method and the sources are in `bench/RESULTS.md`.
+
 ## Codex and Cursor hooks
 
 ```sh
