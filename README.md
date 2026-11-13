@@ -14,7 +14,10 @@ agent, model, prompt or person, and compare the runs on what they did to the fil
 ![rewindagents fork and compare: a recorded session, a second try forked from step 2, compare --check shows FAIL for the first run and pass for the second, compare --diff shows how they differ](brand/readme/fork-and-compare-800.gif)
 
 rewindagents rewinds what your coding agent changed, step by step, from one verifiable log, including the files
-only a shell command touched.
+only a shell command touched. What it cannot put back (files the scan skips because git ignores them, files over
+20 MB, changes outside the project, steps in a project of more than 20,000 files) is listed under
+[Claude Code hook](#claude-code-hook), [Codex and Cursor hooks](#codex-and-cursor-hooks) and
+[Replay, rewind, branch](#replay-rewind-branch).
 
 Claude Code's own [checkpointing docs](https://code.claude.com/docs/en/checkpointing) (read 2026-11-12) name
 that gap: "A file that only Bash commands changed isn't tracked and stays as it is." (its `/rewind` does undo Bash

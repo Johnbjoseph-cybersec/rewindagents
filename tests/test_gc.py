@@ -215,6 +215,9 @@ class TestGc(unittest.TestCase):
             self.assertEqual(gc.lines(got)[-1], "    0.0 days old  command not recorded "
                                                 "(scan made before rewindagents named it in the log)")
 
+    # Unix only: msvcrt has no shared lock, so on Windows a shared request takes the exclusive one (filelock.py) and
+    # a second holder in the same process waits for the first forever. CI run 43437432241 hung here for 20 min.
+    @unittest.skipIf(os.name == "nt", "msvcrt has no shared lock: shared holders take turns on Windows (filelock.py)")
     def test_hooks_share_the_lock_with_each_other(self):
         with TemporaryDirectory() as d:
             a = Agent(d)
