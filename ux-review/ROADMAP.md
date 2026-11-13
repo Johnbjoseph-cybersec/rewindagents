@@ -8,7 +8,7 @@ Nothing here has users yet, and none are claimed.
 
 GitLab's rule: what the individual developer needs is free; what a lead or an organisation buys is paid.
 
-| Open core (Apache-2.0, local, stdlib, no network, no account, never blocks a tool call) | Paid hosted (opt-in upload; the local tool never needs it) |
+| Open core (Apache-2.0, local, stdlib, no network, no account, never stops or changes a tool call) | Paid hosted (opt-in upload; the local tool never needs it) |
 |---|---|
 | record, replay, diff, rewind, branch, export, bundle/import, gc, ui | |
 | `fork N` and `compare` (built), `--check`, `--diff`, `--json` | a shared page per comparison, linkable from a PR or a chat |
