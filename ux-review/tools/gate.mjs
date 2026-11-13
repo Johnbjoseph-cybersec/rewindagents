@@ -23,6 +23,8 @@ for (const p of pages) {
     page.on("requestfailed", (r) => failed.push(r.url()));
     page.on("response", (r) => { if (r.status() >= 400) failed.push(r.status() + " " + r.url()); });
     await page.setViewport({ width: w, height: 900 });
+    // REDUCED=1: the page as a reader with reduced motion sees it (site.js then adds no SplitText masks)
+    if (process.env.REDUCED) await page.emulateMediaFeatures([{ name: "prefers-reduced-motion", value: "reduce" }]);
     await page.goto(base + p, { waitUntil: "networkidle0" });
     await page.evaluate(() => document.fonts.ready);
     // load lazy images too, so a failing one would show
@@ -31,7 +33,13 @@ for (const p of pages) {
       const de = document.documentElement, res = { overflowX: de.scrollWidth - de.clientWidth, overlaps: [], clipped: [], offRight: [] };
       for (const el of document.querySelectorAll("body *")) {
         const r = el.getBoundingClientRect();
-        if (r.width && r.right > de.clientWidth + 0.5) res.offRight.push(el.tagName + "." + el.className);
+        // past the right edge, unless it sits in a box that scrolls sideways on purpose (a terminal table on a phone)
+        const scroller = (n) => { for (let p = n.parentElement; p; p = p.parentElement) { const o = getComputedStyle(p).overflowX; if (o === "auto" || o === "scroll") return p; } return null; };
+        if (r.width && r.right > de.clientWidth + 0.5) {
+          const sc = scroller(el);
+          if (sc && sc.getBoundingClientRect().right <= de.clientWidth + 0.5) res.inScroller = (res.inScroller || 0) + 1;
+          else res.offRight.push(el.tagName + "." + el.className);
+        }
         const cs = getComputedStyle(el);
         if (["hidden", "clip"].includes(cs.overflowX) || ["hidden", "clip"].includes(cs.overflowY))
           if (el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1) res.clipped.push(el.tagName + "." + el.className);
@@ -65,10 +73,13 @@ for (const p of pages) {
       }
     }
     if (p === "index.html") {
-      const sel = await page.evaluate(() => {
+      await page.evaluate(() => {
         const el = document.querySelector(".hero-install .sel");
         el.scrollIntoView({ block: "center" });
-        const r = el.getClientRects()[0];      // the first line box of the command
+      });
+      await new Promise((r) => setTimeout(r, 1500));   // let the entrance motion settle, as a reader would
+      const sel = await page.evaluate(() => {
+        const r = document.querySelector(".hero-install .sel").getClientRects()[0];      // the first line box of the command
         return { x: r.left + 20, y: r.top + r.height / 2 };
       });
       await page.mouse.click(sel.x, sel.y);

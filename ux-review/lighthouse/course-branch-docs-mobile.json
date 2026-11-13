@@ -1,0 +1,18 @@
+{
+ "url": "http://localhost:8765/docs/",
+ "lighthouse": "12.2.1",
+ "preset": "mobile",
+ "scores": {
+  "performance": 92,
+  "accessibility": 100,
+  "best-practices": 100,
+  "seo": 92
+ },
+ "metrics": {
+  "first-contentful-paint": "1.7\u00a0s",
+  "largest-contentful-paint": "3.2\u00a0s",
+  "cumulative-layout-shift": "0",
+  "total-blocking-time": "0\u00a0ms",
+  "speed-index": "1.7\u00a0s"
+ }
+}
