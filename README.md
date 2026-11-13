@@ -106,7 +106,10 @@ Once the hook is in, in each project Claude Code works in:
 
 - every tool call gets a `pre` record (tool and input) and a `post` record (tool and response) in
   `.rewindagents/log.jsonl`, in one hash chain. Responses longer than 4,000 characters are cut, with the
-  full length noted.
+  full length noted. So is any text in the input longer than 4,000 characters (a `Write`'s content, an
+  `Edit`'s new text): every key stays, and the file path and the command are kept whole. Rewind does not
+  need that text; it restores from the copies below. `bench/log_growth.py` writes one 10 MB file through
+  the real hook: before this cut the log grew by 20,972,561 bytes, now by 9,135.
 - before `Write`, `Edit`, `MultiEdit` and `NotebookEdit`, the current bytes of the target file are copied
   to `.rewindagents/objects/<sha256>` and the hash goes into the `pre` record. A file that does not exist
   yet is recorded as absent. Files over 20 MB are noted and not copied.

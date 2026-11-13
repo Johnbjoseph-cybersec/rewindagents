@@ -35,6 +35,9 @@ FILE_TOOLS = {"Write": "file_path", "Edit": "file_path", "MultiEdit": "file_path
               "NotebookEdit": "notebook_path"}
 MAX_CHECKPOINT_BYTES = 20 * 1024 * 1024
 MAX_RESULT_CHARS = 4000
+MAX_INPUT_CHARS = 4000
+# Input fields kept whole however long: what replay shows, rewind restores and the checkpoint reads.
+KEEP_WHOLE = frozenset({"file_path", "notebook_path", "path", "command", "working_directory", "cwd"})
 
 
 def store_dir(cwd: str | Path) -> Path:
@@ -115,6 +118,22 @@ def _clip(value: Any) -> Any:
     return {"truncated": True, "chars": len(text), "head": text[:MAX_RESULT_CHARS]}
 
 
+def clip_input(value: Any, top: bool = True) -> Any:
+    """The tool input as recorded: every string longer than MAX_INPUT_CHARS (a Write's content, an Edit's
+    new_string) becomes {"truncated": True, "chars": <length>, "head": <first MAX_INPUT_CHARS>}; every key
+    stays, and the top-level fields in KEEP_WHOLE stay whole. The file's bytes are in the stored copy, not
+    here. Pre and post records clip the same way, so they still pair (rewind.steps_from compares inputs)."""
+    if isinstance(value, str):
+        if len(value) <= MAX_INPUT_CHARS:
+            return value
+        return {"truncated": True, "chars": len(value), "head": value[:MAX_INPUT_CHARS]}
+    if isinstance(value, list):
+        return [clip_input(v, False) for v in value]
+    if isinstance(value, dict):
+        return {k: v if top and k in KEEP_WHOLE else clip_input(v, False) for k, v in value.items()}
+    return value
+
+
 def handle(payload: dict, agent: str = agents.DEFAULT) -> dict:
     """Record one hook event from `agent` (a key of agents.AGENTS). Returns the record written."""
     ag = agents.AGENTS[agent]
@@ -132,8 +151,9 @@ def handle(payload: dict, agent: str = agents.DEFAULT) -> dict:
 
 def _handle(payload: dict, ag, agent: str, n: dict, store: Path, rec: Recorder) -> dict:
     cwd, event, tool, tool_input, session = n["cwd"], n["event"], n["tool"], n["input"], n["session"]
+    recorded = clip_input(tool_input)   # the checkpoint and the scan key read the whole input, not this
     if event == "pre":
-        args: dict[str, Any] = {"input": tool_input, "agent": agent}
+        args: dict[str, Any] = {"input": recorded, "agent": agent}
         key = FILE_TOOLS.get(tool) if ag.file_tools else None
         if key and isinstance(tool_input, dict) and tool_input.get(key):
             target = Path(tool_input[key])
@@ -145,12 +165,12 @@ def _handle(payload: dict, ag, agent: str, n: dict, store: Path, rec: Recorder) 
             args["bash_scan"] = bashscan.before(payload, cwd, store)
         return rec.record(session, tool, args, None, event="pre")
     if event == "post":
-        args = {"input": tool_input, "agent": agent}
+        args = {"input": recorded, "agent": agent}
         if agents.scans(ag, tool):
             from . import bashscan
             args["bash_scan"], args["checkpoints"] = bashscan.after(payload, cwd, store)
         return rec.record(session, tool, args, _clip(n["response"]), event="post")
-    return rec.record(session, tool, {"input": tool_input, "agent": agent}, None, event=event)
+    return rec.record(session, tool, {"input": recorded, "agent": agent}, None, event=event)
 
 
 def _read(stdin=None) -> str:
