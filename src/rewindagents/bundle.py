@@ -44,7 +44,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from . import __version__, log, rewind
+from . import __version__, log, ospaths, rewind
 from . import redact as _redact
 from .hook import store_lock
 
@@ -113,11 +113,16 @@ def root_spellings(records: list[dict], root: Path) -> list[str]:
 def move_paths(obj: Any, spellings: list[str], dest: Path) -> Any:
     """obj with every string that is, or is under, one of the spellings moved under dest."""
     if isinstance(obj, str):
-        for sp in spellings:
+        for sp in (f for s in spellings for f in ospaths.forms(s)):   # Windows: C:\proj\a.py, C:/proj/a.py
             if obj == sp:
                 return str(dest)
-            if obj.startswith(sp.rstrip("/") + "/"):
-                return str(dest) + obj[len(sp.rstrip("/")):]
+            sep = ospaths.seps(sp)
+            base = sp.rstrip(sep)
+            if len(obj) > len(base) and obj.startswith(base) and obj[len(base)] in sep:
+                rest = obj[len(base) + 1:]
+                for c in sep:
+                    rest = rest.replace(c, os.sep)
+                return str(dest) + os.sep + rest
         return obj
     if isinstance(obj, dict):
         return {k: move_paths(v, spellings, dest) for k, v in obj.items()}
@@ -234,7 +239,7 @@ def check(b: Any) -> dict[str, bytes]:
     session, records, objects = b.get("session"), b.get("records"), b.get("objects")
     if not isinstance(session, str) or not isinstance(records, list) or not records or not isinstance(objects, dict):
         raise BundleError("bundle is missing its session, records or stored copies")
-    if not isinstance(b.get("root_spellings"), list) or not all(isinstance(s, str) and s.startswith("/")
+    if not isinstance(b.get("root_spellings"), list) or not all(isinstance(s, str) and ospaths.isabs(s)
                                                                 for s in b["root_spellings"]):
         raise BundleError("bundle is missing the source project's path")
     last = 0

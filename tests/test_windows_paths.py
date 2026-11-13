@@ -1,0 +1,105 @@
+"""Windows path spellings, driven on any OS (R41: the Windows port, local half).
+
+No Windows machine is needed: a Windows path is just a string here (C:\\proj, C:/proj), and the code that
+reads paths recorded on another machine (bundle import) or scrubs them out of a page (export) must accept
+both separators for a Windows root. Paths this machine resolves itself stay this machine's business."""
+import hashlib
+import json
+import sys
+import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from rewindagents import bundle, export, rewind, verify  # noqa: E402
+from test_bundle import recorded, tree  # noqa: E402
+
+WIN = "C:\\Users\\dev\\proj"
+
+
+def windowsify(obj, spellings):
+    """obj with every path under one of the spellings re-spelled as if recorded under WIN on Windows."""
+    if isinstance(obj, str):
+        for sp in spellings:
+            if obj == sp:
+                return WIN
+            if obj.startswith(sp + "/"):
+                return WIN + "\\" + obj[len(sp) + 1:].replace("/", "\\")
+        return obj
+    if isinstance(obj, dict):
+        return {k: windowsify(v, spellings) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [windowsify(v, spellings) for v in obj]
+    return obj
+
+
+def made_on_windows(path):
+    """Rewrite a bundle as the same session recorded in C:\\Users\\dev\\proj (record hashes + digest redone)."""
+    b = json.loads(Path(path).read_text(encoding="utf-8"))
+    spellings = b["root_spellings"]
+    for i, r in enumerate(b["records"]):
+        r = windowsify(r, spellings)
+        r["hash"] = hashlib.sha256(json.dumps({k: v for k, v in r.items() if k != "hash"}, sort_keys=True,
+                                              separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()
+        b["records"][i] = r
+    b["root"], b["root_spellings"] = WIN, [WIN]
+    b["digest"] = bundle.digest(b)
+    Path(path).write_text(json.dumps(b), encoding="utf-8")
+
+
+class TestBundleFromWindows(unittest.TestCase):
+    def test_a_bundle_recorded_on_windows_imports_replays_and_rewinds_here(self):
+        with TemporaryDirectory() as src, TemporaryDirectory() as dst:
+            a = recorded(src)
+            out = Path(src, "win.bundle")
+            bundle.bundle(a.log, out)
+            made_on_windows(out)
+            self.assertIn(WIN + "\\a.txt", out.read_text(encoding="utf-8").replace("\\\\", "\\"))
+            dest_log = Path(dst, ".rewindagents", "log.jsonl")
+            got = bundle.import_bundle(out, dest_log)
+            self.assertEqual((got["session"], got["steps"]), ("s1", 4))
+            self.assertTrue(verify(dest_log)[0])
+            self.assertNotIn("C:", dest_log.read_text(encoding="utf-8"))   # every Windows path moved here
+            rewind.rewind(dest_log, 2, "s1")
+            self.assertEqual(tree(dst), {"a.txt": "v2\n"})
+            rewind.rewind(dest_log, 1, "s1")
+            self.assertEqual(tree(dst), {"a.txt": "v1\n"})
+
+    def test_move_paths_takes_both_windows_separators_and_this_machines_separator_out(self):
+        dest = Path("/home/me/proj")
+        self.assertEqual(bundle.move_paths(WIN + "\\src\\a.py", [WIN], dest), "/home/me/proj/src/a.py")
+        self.assertEqual(bundle.move_paths("C:/Users/dev/proj/src/a.py", [WIN], dest), "/home/me/proj/src/a.py")
+        self.assertEqual(bundle.move_paths(WIN, [WIN], dest), "/home/me/proj")
+        self.assertEqual(bundle.move_paths(WIN + "2\\a.py", [WIN], dest), WIN + "2\\a.py")   # a sibling stays
+        self.assertEqual(bundle.move_paths("/src/proj/a/b.py", ["/src/proj"], dest), "/home/me/proj/a/b.py")
+
+    def test_check_still_refuses_a_relative_root(self):
+        with TemporaryDirectory() as src:
+            a = recorded(src)
+            out = Path(src, "b")
+            bundle.bundle(a.log, out)
+            b = json.loads(out.read_text(encoding="utf-8"))
+            b["root_spellings"] = ["proj"]
+            b["digest"] = bundle.digest(b)
+            with self.assertRaisesRegex(bundle.BundleError, "source project's path"):
+                bundle.check(b)
+
+
+class TestScrubWindowsRoot(unittest.TestCase):
+    def test_both_separators_after_a_windows_root_are_scrubbed(self):
+        self.assertEqual(export.scrub("edit " + WIN + "\\src\\a.py", [WIN]), "edit src\\a.py")
+        self.assertEqual(export.scrub("edit C:/Users/dev/proj/src/a.py", [WIN]), "edit src/a.py")
+        self.assertEqual(export.scrub("cd C:/Users/dev/proj && ls", [WIN]), "cd . && ls")
+        self.assertEqual(export.scrub("cd " + WIN, [WIN]), "cd .")
+
+    def test_a_sibling_that_only_starts_with_the_root_is_left_alone(self):
+        self.assertEqual(export.scrub(WIN + "2\\a.py", [WIN]), WIN + "2\\a.py")
+
+    def test_posix_roots_are_unchanged(self):
+        self.assertEqual(export.scrub("cat /p/proj/a.txt; cd /p/proj", ["/p/proj"]), "cat a.txt; cd .")
+
+
+if __name__ == "__main__":
+    unittest.main()

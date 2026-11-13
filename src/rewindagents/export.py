@@ -23,7 +23,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from . import __version__, log, rewind
+from . import __version__, log, ospaths, rewind
 from . import redact as _redact
 
 # BRAND.md palette; tests/test_export.py checks every value against the table there.
@@ -214,9 +214,11 @@ footer{margin-top:40px;padding-top:12px;border-top:1px solid var(--rule);color:v
 def scrub(text: str, roots: list[str]) -> str:
     """Drop the project's location: a path inside it becomes relative, the bare root (`cd /abs/proj`,
     a Cursor working_directory) becomes `.`. A longer path that only starts with the root is left alone."""
-    for r in roots:
-        text = text.replace(r + os.sep, "")
-        text = re.sub(r"(?<![\w.-])" + re.escape(r) + r"(?![\w.-])", ".", text)
+    for root in roots:
+        for r in ospaths.forms(root):   # a Windows root: C:\proj\a.py and C:/proj/a.py
+            for sep in ospaths.seps(r):
+                text = text.replace(r + sep, "")
+            text = re.sub(r"(?<![\w.-])" + re.escape(r) + r"(?![\w.-])", ".", text)
     return text
 
 
