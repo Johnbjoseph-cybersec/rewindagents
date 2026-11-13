@@ -4,10 +4,6 @@
    "overflowX": 0,
    "overlaps": [],
    "clipped": [
-    "DIV.h1-mask-line-mask",
-    "DIV.h1-mask-line-mask",
-    "DIV.h1-mask-line-mask",
-    "DIV.h1-mask-line-mask",
     "DIV.",
     "DIV.",
     "DIV.",
@@ -78,9 +74,6 @@
    "overflowX": 0,
    "overlaps": [],
    "clipped": [
-    "DIV.h1-mask-line-mask",
-    "DIV.h1-mask-line-mask",
-    "DIV.h1-mask-line-mask",
     "DIV.",
     "DIV.",
     "DIV.",
@@ -151,10 +144,6 @@
    "overflowX": 0,
    "overlaps": [],
    "clipped": [
-    "DIV.h1-mask-line-mask",
-    "DIV.h1-mask-line-mask",
-    "DIV.h1-mask-line-mask",
-    "DIV.h1-mask-line-mask",
     "DIV.",
     "DIV.",
     "DIV.",
@@ -313,13 +302,19 @@
    ],
    [
     "index.html",
+    "fonts/hanken-grotesk-latin-600-normal.woff2",
+    200,
+    true
+   ],
+   [
+    "index.html",
     "fonts/commit-mono-latin-400-normal.woff2",
     200,
     true
    ],
    [
     "index.html",
-    "site.css",
+    "site.min.css",
     200,
     true
    ],
@@ -392,6 +387,18 @@
    [
     "index.html",
     "vendor/logos/qwen.svg",
+    200,
+    true
+   ],
+   [
+    "index.html",
+    "docs/#fork",
+    200,
+    true
+   ],
+   [
+    "index.html",
+    "assets/film-poster.jpg",
     200,
     true
    ],
@@ -481,13 +488,19 @@
    ],
    [
     "pricing.html",
+    "fonts/hanken-grotesk-latin-600-normal.woff2",
+    200,
+    true
+   ],
+   [
+    "pricing.html",
     "fonts/commit-mono-latin-400-normal.woff2",
     200,
     true
    ],
    [
     "pricing.html",
-    "site.css",
+    "site.min.css",
     200,
     true
    ],
@@ -583,13 +596,19 @@
    ],
    [
     "docs/",
+    "../fonts/hanken-grotesk-latin-600-normal.woff2",
+    200,
+    true
+   ],
+   [
+    "docs/",
     "../fonts/commit-mono-latin-400-normal.woff2",
     200,
     true
    ],
    [
     "docs/",
-    "../site.css",
+    "../site.min.css",
     200,
     true
    ],
