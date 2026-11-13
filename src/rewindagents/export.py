@@ -200,6 +200,7 @@ summary .cps{color:var(--muted);font-size:13px;white-space:nowrap}
 .body{padding:0 0 16px 3.5em}
 .body h3{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:12px 0 4px}
 pre{margin:0;background:var(--code-bg);color:var(--code-fg);padding:12px;overflow:auto;font:13px/1.45 "Commit Mono",ui-monospace,Menlo,Consolas,monospace;border-radius:2px}
+pre.io{white-space:pre-wrap;overflow-wrap:anywhere}
 pre.diff .add{color:var(--code-accent)}
 pre.diff .del{color:var(--code-muted);text-decoration:line-through}
 pre.diff .hunk{color:var(--code-muted)}
@@ -317,9 +318,9 @@ def render(data: dict) -> str:
         elif not data["contents"]:
             body.append('<p class="note">Input and result left out (exported without contents).</p>')
         else:
-            body.append(f"<h3>Input</h3><pre>{_json(s['input'], root, s.get('input_clips'))}</pre>")
+            body.append(f'<h3>Input</h3><pre class="io">{_json(s["input"], root, s.get("input_clips"))}</pre>')
             if s["result"] is not None:
-                body.append(f"<h3>Result</h3><pre>{_json(s['result'], root, s.get('result_clips'))}</pre>")
+                body.append(f'<h3>Result</h3><pre class="io">{_json(s["result"], root, s.get("result_clips"))}</pre>')
             elif s["tool"] != "rewindagents":
                 body.append('<p class="note">No result was recorded for this call.</p>')
         if s.get("bash_scan") and "skipped" in s["bash_scan"]:

@@ -210,6 +210,29 @@ class TestPage(unittest.TestCase):
         for hexval in re.findall(r"#[0-9A-Fa-f]{6}", export._CSS):
             self.assertIn(hexval.upper(), {v.upper() for v in rows.values()})
 
+    def test_input_and_result_wrap_diffs_do_not(self):
+        # R33: at 390 px a 4,000-character JSON string ran off the panel, clip note and all.
+        rules = dict(re.findall(r"^(pre[.\w]*)\{([^}]*)\}", export._CSS, re.M))
+        self.assertIn("white-space:pre-wrap", rules["pre.io"])
+        self.assertIn("overflow-wrap:anywhere", rules["pre.io"])
+        self.assertNotIn("white-space", rules["pre"])               # diffs keep pre, so columns line up
+        with TemporaryDirectory() as d:
+            a = wrecked(d)
+            page = export.render(export.build(a.log))
+            self.assertIn('<h3>Input</h3><pre class="io">', page)
+            self.assertIn('<h3>Result</h3><pre class="io">', page)
+            self.assertIn('<pre class="diff">', page)
+            self.assertNotIn('class="diff io"', page)
+        from test_clip_view import notes_from_log, record
+        with TemporaryDirectory() as d:
+            lg = record(Path(d).resolve(), "line of the new file\n" * 600, "x" * 9000 + "END")
+            in_note, res_note = notes_from_log(lg)
+            page = export.render(export.build(lg))
+            panels = re.findall(r'<pre class="io">(.*?)</pre>', page, re.S)
+            lines = [l.strip() for p in panels for l in p.split("\n")]
+            for note in (in_note, res_note):                        # still a line of its own, inside a wrapping panel
+                self.assertIn(note, lines)
+
     def test_readme_limit_is_the_real_one(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         self.assertIn(f"{export.MAX_DIFF_BYTES // 1024} KB", readme)
