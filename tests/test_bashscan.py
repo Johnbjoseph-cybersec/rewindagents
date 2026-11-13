@@ -141,6 +141,74 @@ class TestBashLimits(unittest.TestCase):
             names = [Path(c["path"]).name for c in rewind.steps(a.log)[0]["checkpoints"]]
             self.assertEqual(names, ["draft.md"])
 
+    def test_a_git_ignored_file_deleted_by_bash_is_put_back(self):
+        """takeback-bench S06: `rm .env` was a silent miss (rewind exited 0, "did change 0 files")."""
+        with TemporaryDirectory() as d:
+            git(d, "init", "-q")
+            Path(d, ".gitignore").write_text(".env\n*.log\nbuild/\n")
+            Path(d, ".env").write_text("API_KEY=dev\n")
+            Path(d, "src").mkdir()
+            Path(d, "src", "local.log").write_text("log\n")
+            Path(d, "build").mkdir()
+            Path(d, "build", "out.js").write_text("old")
+            a = Agent(d)
+
+            def act(c):
+                Path(c, ".env").unlink()
+                Path(c, "src", "local.log").write_text("rotated\n")
+                Path(c, "build", "out.js").write_text("new")
+            a.bash("rm .env && make", act)
+            names = sorted(Path(c["path"]).name for c in rewind.steps(a.log)[0]["checkpoints"])
+            self.assertEqual(names, [".env", "local.log"])     # the ignored directory is still not scanned
+            code, out, err = cli("--log", str(a.log), "rewind", "0")
+            self.assertEqual(code, 0, out + err)
+            self.assertEqual(Path(d, ".env").read_text(), "API_KEY=dev\n")
+            self.assertEqual(Path(d, "src", "local.log").read_text(), "log\n")
+            self.assertEqual(Path(d, "build", "out.js").read_text(), "new")
+
+    def test_a_deleted_script_comes_back_executable(self):
+        """takeback-bench S11: the bytes came back, the executable bit did not, and rewind exited 0."""
+        with TemporaryDirectory() as d:
+            git(d, "init", "-q")
+            Path(d, "scripts").mkdir()
+            s = Path(d, "scripts", "run.sh")
+            s.write_text("#!/bin/sh\necho hi\n")
+            s.chmod(0o755)
+            Path(d, "tool.sh").write_text("#!/bin/sh\n")
+            Path(d, "tool.sh").chmod(0o750)
+            a = Agent(d)
+
+            def act(c):
+                s.unlink()
+                Path(c, "tool.sh").chmod(0o640)          # a chmod alone, the bytes unchanged
+            a.bash("rm -rf scripts && chmod -x tool.sh", act)
+            self.assertEqual(sorted(Path(c["path"]).name for c in rewind.steps(a.log)[0]["checkpoints"]),
+                             ["run.sh", "tool.sh"])
+            self.assertEqual(cli("--log", str(a.log), "rewind", "0")[0], 0)
+            self.assertEqual(s.stat().st_mode & 0o777, 0o755)
+            self.assertEqual(s.read_text(), "#!/bin/sh\necho hi\n")
+            self.assertEqual(Path(d, "tool.sh").stat().st_mode & 0o777, 0o750)
+
+    def test_a_file_the_write_tool_replaced_gets_its_mode_back(self):
+        with TemporaryDirectory() as d:
+            s = Path(d, "deploy.sh")
+            s.write_text("#!/bin/sh\n")
+            s.chmod(0o700)
+            a = Agent(d)
+            a.bash("rm deploy.sh", lambda c: s.unlink())
+            a.write("deploy.sh", "echo stub\n")
+            self.assertEqual(cli("--log", str(a.log), "rewind", "0")[0], 0)
+            self.assertEqual((s.read_text(), s.stat().st_mode & 0o777), ("#!/bin/sh\n", 0o700))
+
+    def test_ignored_files_under_skip_dirs_are_not_scanned(self):
+        with TemporaryDirectory() as d:
+            git(d, "init", "-q")
+            Path(d, ".gitignore").write_text("*.env\n")
+            Path(d, "venv").mkdir()
+            Path(d, "venv", "x.env").write_text("a")
+            self.assertEqual(bashscan.project_files(Path(d), ignored_files=True), [".gitignore"])
+            self.assertEqual(bashscan.project_files(Path(d)), [".gitignore"])
+
     def test_store_and_git_dir_never_scanned(self):
         with TemporaryDirectory() as d:
             git(d, "init", "-q")

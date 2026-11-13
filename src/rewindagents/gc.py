@@ -83,7 +83,8 @@ def needed(log_path: str | Path, skip: frozenset[str] = frozenset()) -> tuple[se
             raise GcError(f"cannot read pending scan {p.name} ({e}); nothing deleted")
         if not isinstance(snap, dict):
             raise GcError(f"pending scan {p.name} is not a scan; nothing deleted")
-        named |= {v for v in snap.values() if isinstance(v, str)}
+        # "<sha256>:<mode>" since the scan records permission bits; a scan from before holds the bare sha256
+        named |= {v.partition(":")[0] for v in snap.values() if isinstance(v, str)}
     return named, len(pending)
 
 

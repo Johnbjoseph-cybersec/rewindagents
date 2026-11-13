@@ -14,7 +14,7 @@ agent, model, prompt or person, and compare the runs on what they did to the fil
 ![rewindagents fork and compare: a recorded session, a second try forked from step 2, compare --check shows FAIL for the first run and pass for the second, compare --diff shows how they differ](brand/readme/fork-and-compare-800.gif)
 
 rewindagents rewinds what your coding agent changed, step by step, from one verifiable log, including the files
-only a shell command touched. What it cannot put back (files the scan skips because git ignores them, files over
+only a shell command touched. What it cannot put back (files under a directory git ignores as a whole, symlinks, files over
 20 MB, changes outside the project, steps in a project of more than 20,000 files) is listed under
 [Claude Code hook](#claude-code-hook), [Codex and Cursor hooks](#codex-and-cursor-hooks) and
 [Replay, rewind, branch](#replay-rewind-branch).
@@ -150,12 +150,15 @@ project's files before the command, scans again after it, and checkpoints, in th
 files that were changed, deleted or created. Details and limits:
 
 - "The project's files" means, in a git repo, what `git ls-files --cached --others --exclude-standard`
-  lists: tracked and untracked files, but not git-ignored ones. Outside git, every file under the project
+  lists (tracked and untracked files), plus the files git ignores one by one, such as `.env` or `*.log`, so
+  `rm .env` can be rewound; a directory git ignores as a whole (`node_modules/`, `build/`) is not scanned.
+  `bench/takeback` (scenario S06) measures this. Outside git, every file under the project
   directory except `.git`, `.rewindagents`, `node_modules`, `.venv`, `venv` and `__pycache__`.
 - Only the project directory is scanned. A command that changes files elsewhere is recorded, not saved.
-- Symlinks are not saved. Files over 20 MB are noted and not copied.
+- Symlinks are not saved. Files over 20 MB are noted and not copied. Permission bits are saved with each
+  copy, so a deleted script comes back executable (takeback-bench S11).
 - Copies are stored by SHA-256, so an unchanged file is stored once. A stat cache
-  (`.rewindagents/index.json`) means only files whose size or modification time changed are read again.
+  (`.rewindagents/index.json`) means only files whose size, modification time or mode changed are read again.
 - A project with more than 20,000 files is not scanned; the call is still recorded and `rewind` reports it.
 - A Bash call with `run_in_background: true`: Claude Code's hooks reference documents no hook event for a
   background shell finishing, so the after-scan may run while the command is still going. Files it changes
