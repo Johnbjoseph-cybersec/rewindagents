@@ -245,7 +245,7 @@ class TestCli(unittest.TestCase):
             self.assertEqual(cli("--log", str(Path(d, "none.jsonl")), "export")[0], 2)
             code, _, err = cli("--log", str(a.log), "export", "--session", "nope")
             self.assertEqual(code, 1)
-            self.assertIn("no steps for session 'nope'", err)
+            self.assertIn("no session 'nope'", err)   # the CLI now names the sessions there are
             lines = a.log.read_text().splitlines()
             rec = json.loads(lines[0])
             rec["tool"] = "Edit"

@@ -82,3 +82,34 @@ def lines(entries: list[dict], root: Path | None = None, width: int = 80) -> lis
         for s in e["hits"]:
             out.append(f"    {s['step']:>5}  {s['tool']:<12}  {rewind.summary(s, width=width, root=root)}")
     return out
+
+
+class SessionError(Exception):
+    pass
+
+
+def resolve(log_path: str | Path, given: str) -> str:
+    """The session id `given` names: an exact id, or the start of exactly one id (as a short commit hash
+    names a commit; Claude Code session ids are 36-character UUIDs). Raises SessionError naming the sessions
+    there are, so a typo is never answered with an empty replay."""
+    recs = log.read(log_path)
+    ids: list[str] = []
+    for r in recs:
+        if r["session"] not in ids:
+            ids.append(r["session"])
+    if given in ids:
+        return given
+    matches = [i for i in ids if i.startswith(given)]
+    if len(matches) == 1:
+        return matches[0]
+    if matches:
+        raise SessionError(f"session {given!r} is ambiguous: it starts {len(matches)} sessions "
+                           f"({', '.join(matches[:5])}{', ...' if len(matches) > 5 else ''}); type more of it")
+    if not ids:
+        raise SessionError(f"no session {given!r}: the log holds no records yet")
+    latest = recs[-1]["session"]
+    shown = list(reversed(ids))[:5]
+    listed = ", ".join(f"{i} (latest)" if i == latest else i for i in shown)
+    more = f" and {len(ids) - 5} more" if len(ids) > 5 else ""
+    raise SessionError(f"no session {given!r} in this log. Sessions, newest first: {listed}{more}. "
+                       f"`rewindagents sessions` lists them all; a unique start of an id is enough")

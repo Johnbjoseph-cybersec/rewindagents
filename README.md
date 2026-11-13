@@ -114,6 +114,10 @@ Once the hook is in, in each project Claude Code works in:
   to `.rewindagents/objects/<sha256>` and the hash goes into the `pre` record. A file that does not exist
   yet is recorded as absent. Files over 20 MB are noted and not copied.
 - `.rewindagents/` gets its own `.gitignore`, so the log and the copies stay out of your commits.
+- one log per project, wherever the agent is: after the agent runs `cd src`, its steps still go into the
+  project's `.rewindagents/`, the nearest one at or above its working directory (not above the repository
+  root). Before anything is recorded, Claude Code's `CLAUDE_PROJECT_DIR` (the directory the session started
+  in) decides; without it, the agent's working directory does.
 
 The hook never blocks or changes a call. It prints nothing and always exits 0, even if its input is
 broken or it cannot write; any problem goes to stderr only. `tests/test_hook_hardening.py` runs the real
@@ -272,8 +276,10 @@ diff and the step's input and result (`d` hides or shows the diffs).
 
 ## Replay, rewind, branch
 
-Run these from the project directory (the one holding `.rewindagents/`). They work on the latest session
-unless you pass `--session ID`.
+Run these from the project directory or any directory under it: like git, they use the nearest
+`.rewindagents/` at or above where you are (not above the repository root, never your home directory's from
+below it). They work on the latest session unless you pass `--session ID`; the start of an id is enough when
+only one session begins with it, and an id that matches none is an error that lists the sessions there are.
 
 ```sh
 rewindagents replay              # one line per step: number, tool, file or command
@@ -286,6 +292,9 @@ rewindagents rewind 12 --only src/db.py --only tests/   # put back only these
 rewindagents branch 12 --name try2   # keep the current files, then rewind to step 12
 ```
 
+- `replay --step N --diff` names each file step N changed, created or deleted, then diffs the file right
+  before the step against the file right after it (its next checkpoint in the session, else the file now),
+  the same before and after the export page shows. `git apply -R` of that diff undoes exactly that step.
 - `diff N [PATH ...]` reads the same plan `rewind N` acts on, so it names exactly the files `rewind N
   --dry-run` lists (a test checks this). The `a/` side is the file now, the `b/` side is the file after the
   rewind, so `git apply` of the diff does what the rewind would do. Files the rewind would delete diff to

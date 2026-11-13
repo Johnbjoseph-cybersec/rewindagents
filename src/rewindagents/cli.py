@@ -7,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import __version__, agents, bundle, export, gc, hook, log, rewind, sessions
+from . import __version__, agents, bundle, export, gc, hook, log, project, rewind, sessions
 from . import diff as diffs, init as setup
 
 
@@ -22,7 +22,8 @@ def main(argv: list[str] | None = None) -> int:
         description="The flight recorder for coding agents: see exactly what your agent did, and take back any "
                     "part of it. Start with `rewindagents init`; then `replay`, `diff N`, `rewind N [--only PATH]`.")
     ap.add_argument("--version", action="version", version=f"rewindagents {__version__}")
-    ap.add_argument("--log", default=".rewindagents/log.jsonl", help="log file (default: %(default)s)")
+    ap.add_argument("--log", help="log file (default: .rewindagents/log.jsonl here, or in the nearest parent "
+                                  "directory that has one, as git finds a repository)")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     r = sub.add_parser("record", help="append one tool call, read as JSON from stdin")
@@ -48,6 +49,9 @@ def main(argv: list[str] | None = None) -> int:
     rp = sub.add_parser("replay", help="list a session's steps, or show one step in full")
     rp.add_argument("--session", help="default: the session that wrote the last record")
     rp.add_argument("--step", type=int, help="show this step's full input, checkpoints and result")
+    rp.add_argument("--diff", action="store_true",
+                    help="with --step N: what step N itself changed, as a unified diff per file (before the step "
+                         "-> right after it)")
     rw = sub.add_parser("rewind", help="put the files back the way they were right after step N")
     rw.add_argument("step", type=int, help="step number from `replay` (0 = before the first step)")
     rw.add_argument("--session", help="default: the session that wrote the last record")
@@ -103,6 +107,23 @@ def main(argv: list[str] | None = None) -> int:
     ui_p.add_argument("--no-open", action="store_true", help="print the link, do not open a browser")
 
     a = ap.parse_args(argv)
+    explicit_log = a.log is not None
+    if not explicit_log:
+        a.log = str(project.default_log())
+    try:
+        return _dispatch(a, explicit_log)
+    except sessions.SessionError as e:
+        print(f"rewindagents: {e}", file=sys.stderr)
+        return 1
+    except OSError as e:   # a file we were asked to write or read: say which and why, not a traceback
+        what = f"{e.strerror}: {e.filename}" if e.strerror and e.filename else str(e)
+        print(f"rewindagents: {what}", file=sys.stderr)
+        return 1
+
+
+def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
+    if getattr(a, "session", None) and a.cmd not in ("record", "hook") and Path(a.log).exists():
+        a.session = sessions.resolve(a.log, a.session)     # exact id, or a unique prefix of one
     if a.cmd == "ui":
         from . import ui
         return ui.run(a.log, a.session, a.port, open_browser=not a.no_open)
@@ -121,6 +142,11 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  replaced a stale rewindagents hook: {why}")
         return 0
     if a.cmd == "status":
+        here = Path(".rewindagents/log.jsonl")
+        if not explicit_log and Path(a.log) != here:     # found in a parent directory: that is the project
+            root = rewind.project_root(a.log)
+            print(f"project: {root}")
+            return setup.status(global_=a.global_, root=root)
         return setup.status(global_=a.global_, log_path=a.log)
     if a.cmd == "uninstall":
         target = a.settings or agents.config_path(agents.AGENTS[a.agent])
@@ -131,7 +157,11 @@ def main(argv: list[str] | None = None) -> int:
         return setup.main(yes=a.yes, global_=a.global_)
     if a.cmd in ("verify", "show", "replay", "rewind", "branch", "export", "sessions", "bundle", "gc", "diff") \
             and not Path(a.log).exists():
-        print(f"rewindagents: no log at {a.log}", file=sys.stderr)
+        print(f"rewindagents: no log at {a.log}" + ("" if explicit_log else ", here or in a parent directory"),
+              file=sys.stderr)
+        if not explicit_log:
+            print(f"Nothing has been recorded for this project yet. Add the hook with `{invocation()} init`, run "
+                  f"your agent, then try again; `{invocation()} status` checks the hook.", file=sys.stderr)
         return 2
     if a.cmd == "gc":
         try:
@@ -165,7 +195,10 @@ def main(argv: list[str] | None = None) -> int:
     if a.cmd == "diff":
         return diffs.run(a.log, a.step, a.session, a.paths)
     if a.cmd == "replay":
-        return _replay(a.log, a.session, a.step)
+        if a.diff and a.step is None:
+            print("rewindagents: --diff needs --step N (diff N compares now with step N)", file=sys.stderr)
+            return 2
+        return _replay(a.log, a.session, a.step, a.diff)
     if a.cmd == "sessions":
         found = sessions.sessions(a.log, a.grep)
         for line in sessions.lines(found, root=rewind.project_root(a.log)):
@@ -232,7 +265,7 @@ def _redaction_line(n: int | None) -> str:
     return f"  {n} secret value{'s' if n != 1 else ''} replaced with [redacted ...]; --no-redact keeps them"
 
 
-def _replay(log_path: str, session: str | None, step: int | None) -> int:
+def _replay(log_path: str, session: str | None, step: int | None, show_diff: bool = False) -> int:
     all_steps = rewind.steps(log_path, session)
     root = rewind.project_root(log_path)
     if step is None:
@@ -245,6 +278,8 @@ def _replay(log_path: str, session: str | None, step: int | None) -> int:
     if not 1 <= step <= len(all_steps):
         print(f"rewindagents: step {step} is out of range (1-{len(all_steps)})", file=sys.stderr)
         return 2
+    if show_diff:
+        return diffs.step_run(log_path, all_steps, step, root)
     print(export.show(all_steps[step - 1]))
     return 0
 
