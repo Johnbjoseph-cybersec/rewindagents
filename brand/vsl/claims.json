@@ -1,326 +1,279 @@
 {
  "reviewer": "claim-verifier (independent agent)",
  "independent": true,
- "reviewer_note": "Every row judged by the independent claim-verifier on 2026-11-12 in three passes: full film (21 rows), the status card, and the round-4 rows (b18 --only, vertical strap). Verdicts per row; publish-dependent rows stay BLOCK until the local tree is on the public repo and the site address serves (brand/vsl/claims-verified.json).",
- "date": "2026-11-12",
- "judged_on": 20,
+ "reviewer_note": "Round 2 of 2026-11-13: every card of the three films re-judged from scratch by the independent claim-verifier against the PUBLISHED repository (main 327d9b6) and the live site, one settled frame per beat from the published films. Rows below are its reply verbatim; the product hostname is written {site_url} (brand/site/config.json) because tests/test_site.py keeps it there only.",
+ "date": "2026-11-13",
+ "judged_against": "published main 327d9b6 (GitHub API https://api.github.com/repos/Johnbjoseph-cybersec/rewindagents/commits/main returns sha 327d9b6fc698f09e01feca645042d133f8978bef, commit date 2026-11-13T14:01:35Z) + {site_url} (live, re-read 2026-11-13) + the complete CI logs _verify/ci-327d9b6-job-131930936925.log and _verify/ci-327d9b6-job-131930937853.log, each read in full. Nothing in brand/ has changed since round 3, so I re-confirmed the round-3 film rows against the same files. The vendor and NTSB pages were read today in round 3 and were not fetched again.",
+ "judged_on": 19,
  "beats_sha256": "c17eccb1db13ec882c5f56f88084fe78dbed3f2abcf510c1f80dca30ffe7c878",
  "beats_sha256_note": "sha256 of brand/vsl/beats.json as committed with this file (python3 hashlib).",
+ "blocked_in_scripts": 0,
  "claims": [
   {
    "where": [
     "vsl-90s b01",
     "vsl-30s b01"
    ],
-   "claim": "The agent's session ran fourteen steps.",
+   "claim": "Your agent just ran fourteen steps. The ruler shows 14 ticks with the playhead on 14.",
    "verdict": "CLEAR",
-   "source": "brand/demo/manifest.json:84 \"steps\": 14; :12 replay output ends at step 14",
-   "note": ""
+   "source": "brand/demo/manifest.json:84 \"steps\": 14; manifest.json:12 replay output, rows 1 to 14; brand/demo/scenario.py:72-88 STEPS has 14 entries",
+   "note": "Re-confirmed on 327d9b6. CI also ran test_vsl.test_numbers_come_from_the_code_or_the_session, which printed 'ok' on ubuntu (log 925:744) and on macos (log 853:745)."
   },
   {
    "where": [
     "vsl-90s b02",
+    "vsl-90s b02 screen",
     "vsl-30s b02",
-    "vsl-90s b02 screen",
-    "vsl-90s b11 screen",
-    "vsl-90s b12 screen",
-    "vsl-90s b13 screen",
-    "vsl-30s b02 screen",
-    "vsl-30s b04 screen",
-    "vsl-30s b05 screen",
-    "vsl-90s b02 screen",
-    "vsl-90s b12 screen",
-    "vsl-90s b13 screen",
-    "vsl-30s b02 screen",
-    "vsl-30s b04 screen",
-    "vsl-30s b05 screen",
-    "vsl-90s b02 screen",
-    "vsl-90s b12 screen",
-    "vsl-90s b13 screen",
-    "vsl-30s b02 screen",
-    "vsl-30s b04 screen",
-    "vsl-30s b05 screen"
+    "vsl-30s b02 screen"
    ],
-   "claim": "Steps 13 and 14 delete the tests and overwrite the config; terminal lines 12-14 verbatim",
+   "claim": "Then it deleted your tests and overwrote your config. Screen shows replay rows 12, 13 and 14.",
    "verdict": "CLEAR",
-   "source": "brand/demo/manifest.json:12 replay output lines 12, 13, 14 verbatim; :16 caption \"# its last two steps deleted the tests and overwrote the config\"",
-   "note": ""
+   "source": "manifest.json:12 \"   12  Read          tests/test_server.py\\n   13  Bash          rm -rf tests  [3 checkpointed]\\n   14  Write         app/config.py  [1 checkpointed]\"; scenario.py:86-87",
+   "note": "Re-confirmed. test_every_terminal_line_on_screen_is_one_the_demo_session_printed printed 'ok' on both operating systems (log 925:743, log 853:744)."
   },
   {
    "where": [
     "vsl-90s b03",
+    "vsl-90s b03 screen",
     "vsl-30s b03",
+    "vsl-30s b03 screen",
     "vsl-15s-vertical b01",
-    "vsl-90s b03 screen",
-    "vsl-30s b03 screen",
-    "vsl-90s b03 screen",
-    "vsl-30s b03 screen",
-    "vsl-90s b03 screen",
-    "vsl-30s b03 screen",
-    "vsl-15s-vertical b01 screen",
-    "vsl-90s b03 screen",
-    "vsl-30s b03 screen",
-    "vsl-15s-vertical b01 screen",
-    "vsl-90s b03 screen",
-    "vsl-30s b03 screen",
     "vsl-15s-vertical b01 screen"
    ],
-   "claim": "git status after the wreck: two test files deleted, config modified (a question card, no claim of its own)",
+   "claim": "Can you get them back? Screen shows git status --short output with the two D test lines (the vertical film adds the strap 'Agent undo').",
    "verdict": "CLEAR",
-   "source": "brand/demo/manifest.json:17 \"command\": \"git status --short\"; :20 output \" M README.md\\n M app/config.py\\n M app/server.py\\n D tests/test_config.py\\n D tests/test_server.py\\n\"",
-   "note": "The vertical shows three of these lines in a different order (both D lines, then app/config.py); each is verbatim."
+   "source": "manifest.json:17-20 command \"git status --short\", output \" M README.md\\n M app/config.py\\n M app/server.py\\n D tests/test_config.py\\n D tests/test_server.py\\n\"",
+   "note": "Re-confirmed. In the 90s and 30s films every line is verbatim and in order. The 15s vertical shows three of the five lines with ' M app/config.py' moved after the D lines. Each line is verbatim, so nothing false is shown. 'Agent undo' is a tagline."
+  },
+  {
+   "where": [
+    "vsl-90s b04",
+    "vsl-90s b04 screen"
+   ],
+   "claim": "Three parts: the problem, how it works, the fix.",
+   "verdict": "CLEAR",
+   "source": "brand/vsl/beats.json:73-80; frame _verify/vsl-90s-b04.png",
+   "note": "This card only describes how the film is laid out. It makes no factual claim."
   },
   {
    "where": [
     "vsl-90s b05",
-    "vsl-90s b05 screen",
     "vsl-90s b05 screen"
    ],
-   "claim": "The third test file was written by the agent at step 6 and never committed, so git has no copy",
+   "claim": "Why can't git help? The third test was never committed. Screen shows step 6 writing tests/test_timeout.py and the line 'untracked: git has no copy of it'.",
    "verdict": "CLEAR",
-   "source": "brand/demo/manifest.json:12 replay line 6 \"Write tests/test_timeout.py [1 checkpointed]\"; :20 git status shows only two D lines (git cannot list a file it never tracked); :41 after the rewind \"?? tests/test_timeout.py\" (untracked)",
-   "note": ""
+   "source": "scenario.py:59-67 FILES (the initial commit) holds only tests/test_config.py and tests/test_server.py; scenario.py:78 (\"Write\", (\"tests/test_timeout.py\", TEST_TIMEOUT)); manifest.json:12 \"    6  Write         tests/test_timeout.py  [1 checkpointed]\"; manifest.json:20 git status lists no test_timeout.py",
+   "note": "Re-confirmed. The file was created at step 6 and never committed, so git has no copy of it."
   },
   {
    "where": [
     "vsl-90s b06",
-    "vsl-90s b06 screen",
     "vsl-90s b06 screen"
    ],
-   "claim": "Claude Code's checkpointing docs say a file only Bash commands changed isn't tracked",
+   "claim": "Claude Code's docs: shell-only changes aren't tracked. Quote: \"A file that only Bash commands changed isn't tracked ...\"",
    "verdict": "CLEAR",
-   "source": "README.md:11-12 quotes https://code.claude.com/docs/en/checkpointing (read 2026-11-12): \"A file that only Bash commands changed isn't tracked and stays as it is.\"",
-   "note": "The card shortens the quote with an ellipsis; README.md:12 carries the exception (/rewind does undo Bash changes to a file Claude had already edited), which the 3.45 s card does not repeat."
+   "source": "https://code.claude.com/docs/en/checkpointing (read 2026-11-13, round 3), section 'Bash command changes not tracked': \"A file that only Bash commands changed isn't tracked and stays as it is.\"",
+   "note": "This is the vendor's own page. The quote matches, and the ellipsis cuts only the end of the sentence. The page was not fetched again in round 4 and the card text has not changed."
   },
   {
    "where": [
     "vsl-90s b07",
     "vsl-90s b08",
-    "vsl-90s b08 screen",
-    "vsl-90s b09 screen",
-    "vsl-90s b16 screen",
-    "vsl-90s b17 screen"
+    "vsl-90s b08 screen"
    ],
-   "claim": "Analogy: a flight recorder records what happened so it can be examined afterwards",
+   "claim": "Think of a flight recorder. It keeps every move, so you can replay it. Screen: 'flight recorder   every move, kept'.",
    "verdict": "CLEAR",
-   "source": "https://en.wikipedia.org/wiki/Flight_recorder (read 2026-11-12): \"A flight recorder is an electronic recording device placed in an aircraft for the purpose of facilitating the investigation of aviation accidents and incidents.\"",
-   "note": "An analogy, not a product claim; the product side is the next row."
+   "source": "https://www.ntsb.gov/news/Pages/cvr_fdr.aspx (read 2026-11-13, round 3): \"The FDR onboard the aircraft records many different operating conditions of the flight.\" and \"With the data retrieved from the FDR, the Safety Board can generate a computer animated video reconstruction of the flight.\"",
+   "note": "This is an analogy and carries no weight as a fact. 'Every move' is looser than the NTSB wording, which is acceptable for an analogy. I judged b07 and b08 from beats.json."
   },
   {
    "where": [
     "vsl-90s b09",
     "vsl-90s b09 screen",
-    "vsl-90s b16 screen",
-    "vsl-90s b17 screen",
     "vsl-90s b10",
-    "vsl-90s b10 screen",
     "vsl-90s b10 screen"
    ],
-   "claim": "Every tool call is recorded in one hash-chained log at .rewindagents/log.jsonl; each record holds the SHA-256 of the one before",
+   "claim": "rewindagents records your agent: every tool call goes into one hash-chained log, .rewindagents/log.jsonl, where each record holds the SHA-256 of the one before.",
    "verdict": "CLEAR",
-   "source": "README.md:18-19 \"Every tool call goes into a tamper-evident, hash-chained log\"; :84-85 \"every tool call gets a pre record ... and a post record ... in .rewindagents/log.jsonl, in one hash chain\"; :360 \"Each record holds the SHA-256 of the record before it\"",
-   "note": ""
+   "source": "src/rewindagents/log.py:3 \"Each record carries the SHA-256 of the record before it\"; log.py:53-56; README.md:115-116, 125",
+   "note": "Re-confirmed. The chain tests (test_log.LogTest.*) printed 'ok' on both operating systems (log 925:466-476, log 853:467-477). 'One log' means one log per project."
   },
   {
    "where": [
     "vsl-90s b11",
     "vsl-90s b11 screen"
    ],
-   "claim": "Files are saved before each edit tool call and before each shell command, and scanned after the command",
+   "claim": "Before each edit or shell command, files are saved. Step 13 is shown as 'rm -rf tests  [3 checkpointed]' with the note 'saved before, scanned after'.",
    "verdict": "CLEAR",
-   "source": "README.md:87-88 \"before Write, Edit, MultiEdit and NotebookEdit, the current bytes of the target file are copied\"; :95-96 \"Around every Bash call ... the hook saves the project's files before the command, scans again after it\"",
-   "note": "README.md:102-106 lists the limits (project directory only, symlinks, files over 20 MB, projects over 20,000 files); the card does not claim more than 'saved'."
+   "source": "README.md:121-122; README.md:138-140 \"Around every Bash call ... the hook saves the project's files before the command, scans again after it\"; manifest.json:12 row 13",
+   "note": "True within the limits the README documents at lines 142-153. test_bashscan.* printed 'ok' on both operating systems."
   },
   {
    "where": [
     "vsl-90s b12",
+    "vsl-90s b12 screen",
+    "vsl-90s b13",
+    "vsl-90s b13 screen",
     "vsl-30s b04",
-    "vsl-90s b12 screen",
     "vsl-30s b04 screen",
-    "vsl-90s b12 screen",
-    "vsl-90s b13 screen",
-    "vsl-30s b04 screen",
-    "vsl-30s b05 screen",
-    "vsl-90s b12 screen",
-    "vsl-90s b13 screen",
-    "vsl-30s b04 screen",
+    "vsl-30s b05",
     "vsl-30s b05 screen"
    ],
-   "claim": "rewindagents replay lists the steps; lines 10-14 verbatim",
+   "claim": "rewindagents replay shows rows 10 to 14; twelve is the step to rewind to, because thirteen is the delete.",
    "verdict": "CLEAR",
-   "source": "brand/demo/manifest.json:9 \"command\": \"rewindagents replay\"; :12 output lines 10-14 verbatim; README.md:53 \"rewindagents replay # what it did, one line per step\", :230",
-   "note": ""
-  },
-  {
-   "where": [
-    "vsl-90s b13",
-    "vsl-30s b05"
-   ],
-   "claim": "Step 12 is the last good step; step 13 is the rm -rf tests",
-   "verdict": "CLEAR",
-   "source": "brand/demo/manifest.json:78 \"good_step\": 12; :12 line 13 \"Bash rm -rf tests\"",
-   "note": ""
+   "source": "manifest.json:9-12 command \"rewindagents replay\", rows 10-14 verbatim; manifest.json:78 \"good_step\": 12; scenario.py:89 GOOD_STEP",
+   "note": "Re-confirmed character for character."
   },
   {
    "where": [
     "vsl-90s b14",
+    "vsl-90s b14 screen",
     "vsl-30s b06",
+    "vsl-30s b06 screen",
     "vsl-15s-vertical b02",
-    "vsl-90s b14 screen",
-    "vsl-90s b15 screen",
-    "vsl-30s b06 screen",
-    "vsl-15s-vertical b02 screen",
-    "vsl-90s b14 screen",
-    "vsl-90s b15 screen",
-    "vsl-30s b06 screen",
-    "vsl-90s b14 screen",
-    "vsl-90s b15 screen",
-    "vsl-30s b06 screen",
-    "vsl-15s-vertical b02 screen",
-    "vsl-90s b14 screen",
-    "vsl-90s b15 screen",
-    "vsl-30s b06 screen",
-    "vsl-15s-vertical b02 screen",
-    "vsl-90s b14 screen",
-    "vsl-90s b15 screen",
-    "vsl-30s b06 screen",
-    "vsl-15s-vertical b02 screen",
-    "vsl-90s b14 screen",
-    "vsl-90s b15 screen",
-    "vsl-30s b06 screen",
     "vsl-15s-vertical b02 screen"
    ],
-   "claim": "rewindagents rewind 12 restores four files: the three tests and the config",
+   "claim": "One command, and four files come back: rewindagents rewind 12 prints 'session demo: rewind to step 12 of 14 (did change 4 files)' and four restore lines.",
    "verdict": "CLEAR",
-   "source": "brand/demo/manifest.json:30 \"command\": \"rewindagents rewind 12\"; :33 output \"(did change 4 files)\" and the four restore lines verbatim; README.md:235 \"rewindagents rewind 12 # files back to how they were right after step 12\"",
-   "note": ""
+   "source": "manifest.json:30-33; src/rewindagents/cli.py:412-415",
+   "note": "Re-confirmed. test_vsl.test_each_video_shows_the_real_wreck_and_the_real_rewind printed 'ok' on both operating systems (log 925:739, log 853:740). The vertical film leaves out the header line, which does not change the meaning."
   },
   {
    "where": [
     "vsl-90s b15",
     "vsl-90s b15 screen"
    ],
-   "claim": "A rewind is itself a step and can be undone",
+   "claim": "Even the rewind can be undone: 'this rewind is step 15; undo it with: rewindagents rewind 14 --session demo'.",
    "verdict": "CLEAR",
-   "source": "brand/demo/manifest.json:33 last line verbatim; README.md:253-255 \"A rewind is undoable. It first saves the current bytes of every file it will change and records itself as a new step\"",
-   "note": ""
+   "source": "manifest.json:33 \"  this rewind is step 15; undo it with: rewindagents rewind 14 --session demo\"; cli.py:440-441; README.md:323",
+   "note": "Verbatim. test_rewind.test_rewind_can_itself_be_rewound and test_undo_hint_names_the_command_that_exists printed 'ok' on both operating systems."
   },
   {
    "where": [
     "vsl-90s b16",
     "vsl-90s b16 screen",
-    "vsl-90s b17 screen"
-   ],
-   "claim": "A flight recorder records; it cannot undo what happened",
-   "verdict": "CLEAR",
-   "source": "https://en.wikipedia.org/wiki/Flight_recorder (read 2026-11-12): a recording device \"for the purpose of facilitating the investigation of aviation accidents and incidents\"",
-   "note": "The limit of the analogy, not a product claim."
-  },
-  {
-   "where": [
     "vsl-90s b17",
     "vsl-90s b17 screen"
    ],
-   "claim": "rewind puts files back to how they were after a step",
+   "claim": "The analogy breaks: recorders can't undo a crash. This one puts your files back ('rewind 12: files back').",
    "verdict": "CLEAR",
-   "source": "README.md:235 \"rewindagents rewind 12 # files back to how they were right after step 12\"; :250-252 \"rewind N puts back every file that a step after N changed\"; brand/demo/manifest.json:33",
-   "note": ""
+   "source": "README.md:298 \"rewindagents rewind 12           # files back to how they were right after step 12\"; NTSB page (read 2026-11-13) describes recording and reconstruction only",
+   "note": "Rhetorical. 'Files back' is supported by b14."
   },
   {
    "where": [
     "vsl-90s b18",
-    "vsl-90s b18 screen",
-    "vsl-90s b18 screen",
-    "vsl-90s b18 screen",
     "vsl-90s b18 screen"
    ],
-   "claim": "diff N previews a rewind; rewind N --only PATH takes back just that file. The diff command is verbatim from the README; the --only chip now names app/config.py (not the README's src/db.py) and shows the line it prints",
+   "claim": "Preview with diff, take back one file with --only. Screen: 'rewindagents diff 12' over '+++ b/tests/test_config.py'; 'rewindagents rewind 12 --only app/config.py' over '  restore  app/config.py'. The ruler shows 14 ticks with the playhead on 14.",
    "verdict": "CLEAR",
-   "source": "README.md:54 \"rewindagents diff 12 # what taking it back to step 12 would change\"; :55 \"rewindagents rewind 12 --only src/db.py # take back just that file\"; :245 \"rewind N --only PATH puts back only those files\"; screen line \"+++ b/tests/test_config.py\" is printed by `rewindagents diff 12` on the demo session (brand/demo/scenario.py; tests/test_vsl.py test_every_diff_line_on_screen_is_one_diff_12_prints_on_the_demo_session); tests/test_vsl.py test_every_command_on_screen_is_a_readme_or_demo_command replays the demo session and runs it",
-   "note": "NOT YET JUDGED (round 4, 2026-11-12, by the maker, not the claim-verifier). Was CLEAR for the chip 'rewindagents rewind 12 --only src/db.py' verbatim from README.md:55. On the demo session that command exits 1: 'rewindagents: no step after step 12 changed src/db.py; nothing to put back'. So the chip is now 'rewindagents rewind 12 --only app/config.py', which on the demo session exits 0 and prints 'session demo: rewind to step 12 of 14 (did change 1 files)' / '  restore  app/config.py' / '  this rewind is step 15; undo it with: ...'; the second line is shown under the chip. Checked by execution in tests/test_vsl.py test_every_command_on_screen_is_a_readme_or_demo_command. Needs the claim-verifier.",
-   "verified_by": "claim-verifier (independent), 2026-11-12"
+   "source": "cli.py:66, 71; diff.py:41-47; cli.py:415; README.md:63, 315; CI logs: test_vsl.test_every_diff_line_on_screen_is_one_diff_12_prints_on_the_demo_session ... ok (ubuntu log 925:742, macos log 853:743); test_every_command_on_screen_is_a_readme_or_demo_command ... ok (925:741, 853:742); test_rewind_only.* ... ok on both",
+   "note": "My reading of the code, the maker's transcript and two CI test runs on 327d9b6 now agree. On CI, test_vsl_wipes.test_b18_one_chip_types_at_a_time_and_each_has_its_output was SKIPPED on both operating systems ('fontTools not installed'). That test checks render timing, not what the card says. I judged the b18 frame myself in round 3."
   },
   {
    "where": [
     "vsl-90s b19",
-    "vsl-90s b19 screen",
     "vsl-90s b19 screen"
    ],
-   "claim": "rewindagents ui shows every step as a timeline and can rewind (and undo a rewind) from it; it listens on 127.0.0.1 only",
+   "claim": "You can now see every step and the change it made. Screen: 'rewindagents ui' and 'the timeline runs on 127.0.0.1 only'.",
    "verdict": "CLEAR",
-   "source": "README.md:203 \"rewindagents ui # opens the timeline in your browser\"; :207-209 each step on a timeline; :214-215 \"Rewind to here ... an Undo button rewinds it back\"; :217 \"It listens on 127.0.0.1 only\"; src/rewindagents/ui.py:44 HOST = \"127.0.0.1\"",
-   "note": "The screenshot under the card is brand/ui-timeline.png, the real ui over the demo session."
+   "source": "src/rewindagents/ui.py:3-5, 10, 44 HOST = \"127.0.0.1\"; cli.py:131; README.md:268-271, 278; CI: test_ui.TestBind.test_listens_on_127_0_0_1_and_a_random_free_port ... ok and test_refuses_any_address_but_127_0_0_1 ... ok (925:699-700, 853:700-701)",
+   "note": "Re-confirmed. The current wording no longer claims undo, so the old 'see every step and undo any of it' block in the committed brand/vsl/claims-verified.json (dated 2026-11-12) is out of date. Steps whose scan did not finish have no change to show. The README documents this and the line does not deny it."
   },
   {
    "where": [
     "vsl-90s b20",
-    "vsl-90s b20 screen",
-    "vsl-90s b20 screen",
-    "vsl-90s b20 screen",
     "vsl-90s b20 screen"
    ],
-   "claim": "init looks for the seven supported agents; only Claude Code has run in real sessions, the other six are tested with documented payloads, not yet in a live session",
+   "claim": "Apache-2.0. Standard library only. Not on PyPI yet. Screen: rewindagents init; 'Claude Code: has run in real sessions'; 'Six other agents: tested, not yet in a live session'; the repository URL.",
    "verdict": "CLEAR",
-   "source": "README.md:40 \"... && rewindagents init\"; :43-44 \"init looks for the agents it supports (Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen Code)\"; :25-27 \"The Claude Code hook has run in real sessions; the Codex and Cursor hooks ... tested with the documented payloads, not yet in a live session\"; :163-164 the other four \"tested with the documented payloads, not yet in a live session\"; src/rewindagents/agents.py:142-160 AGENTS has these seven keys",
-   "note": "'Up next' is a bridge to the install section; the status qualifier sits on the line directly under the six names, same bullet."
+   "source": "LICENSE:2-3; pyproject.toml:10, 13 dependencies = []; README.md:30, 33, 48, 209-210, 224-226; brand/site/config.json:4; live site (re-read 2026-11-13): \"Not on PyPI yet, so from GitHub; then add the hook in a project.\"; CI: test_dist.test_pypi_lines_are_marked_after_release_and_nothing_claims_it_is_on_pypi ... ok, test_polar.test_billing_is_stdlib_and_not_in_the_package ... ok",
+   "note": "Re-confirmed. 'Has run in real sessions' is the project's own statement (listed under unverified)."
   },
   {
    "where": [
     "vsl-90s b21",
     "vsl-90s b21 screen",
-    "vsl-90s b21 screen"
-   ],
-   "claim": "Licensed Apache-2.0; Python 3.10+, no dependencies beyond the standard library; not on PyPI yet; installed from the repository",
-   "verdict": "CLEAR",
-   "source": "LICENSE:2 \"Apache License\"; pyproject.toml:11 requires-python = \">=3.10\", :12 dependencies = []; README.md:25 \"Not on PyPI yet.\"; :60-61 \"Python 3.10 or newer ... No dependencies beyond the standard library. From the repository:\"; {repo_url} is brand/site/config.json repo_url, filled at render time",
-   "note": ""
-  },
-  {
-   "where": [
-    "vsl-90s b22",
     "vsl-30s b07",
+    "vsl-30s b07 screen",
     "vsl-15s-vertical b03",
-    "vsl-90s b22 screen",
-    "vsl-30s b07 screen",
-    "vsl-15s-vertical b03 screen",
-    "vsl-90s b22 screen",
-    "vsl-30s b07 screen",
-    "vsl-15s-vertical b03 screen",
-    "vsl-90s b22 screen",
-    "vsl-30s b07 screen",
-    "vsl-15s-vertical b03 screen",
-    "vsl-90s b22 screen",
-    "vsl-30s b07 screen",
     "vsl-15s-vertical b03 screen"
    ],
-   "claim": "End card: name, one-line promise, site address, credit; 'Your editor has had undo for decades'",
+   "claim": "End card: 'Your editor has had undo for decades. Now your agent does.', rewindagents, 'Ctrl+Z for AI coding agents: record, replay, rewind.', the site address, 'made by John B Joseph'.",
    "verdict": "CLEAR",
-   "source": "pyproject.toml:6 name = \"rewindagents\"; BRAND.md one-line promise verbatim (tests/test_vsl.py test_end_card_and_placeholders); BRAND.md \"Credit line, used exactly in footers: made by John B Joseph\"; BRAND.md example \"Undo is a feature your editor has had for decades.\"; README.md:235 (the agent side: rewind)",
-   "note": ""
+   "source": "brand/BRAND.md:10, 56, 60; brand/site/config.json:3 \"site_url\": \"{site_url}\"; {site_url} (re-read 2026-11-13) resolves, credit \"made by John B Joseph\"",
+   "note": "The site address resolves today, so the 'did not resolve' block in the committed claims-verified.json is out of date. The live page does not carry the Ctrl+Z tagline as text. It does not need to: the tagline is the film's own line and matches BRAND.md:10 exactly. CI: test_vsl.test_end_card_and_placeholders ... ok on both operating systems."
   },
   {
    "where": [
-    "vsl-90s b04",
-    "vsl-90s b04 screen",
-    "vsl-90s b04 screen",
-    "vsl-90s b04 screen"
+    "README (point a)"
    ],
-   "claim": "Roadmap card (no factual claim)",
+   "claim": "The README no longer says the repository is not public or that the videos are not made.",
    "verdict": "CLEAR",
-   "source": "brand/vsl/beats.json b04 (structure of the film itself)",
-   "note": "Listed so every card has a row."
+   "source": "README.md:626-629; a grep for 'not public' or 'not made' finds nothing; commit 5c95332",
+   "note": "Re-confirmed."
   },
   {
    "where": [
-    "vsl-15s-vertical b01 screen"
+    "evidence: _verify/ci-327d9b6-job-131930936925.log",
+    "evidence: _verify/ci-327d9b6-job-131930937853.log",
+    "evidence: _verify/ci-b18-tests.txt",
+    "vsl-90s b18"
    ],
-   "claim": "Strap 'Agent undo' over the vertical's first card: the tool is undo for an AI agent's changes",
+   "claim": "CI run 43438869001 on 327d9b6 failed only because of a gate on the independent verifier's recorded verdict, and every test that guards the films' content passed.",
    "verdict": "CLEAR",
-   "source": "brand/BRAND.md one-line promise 'Ctrl+Z for AI coding agents: record, replay, rewind.'; README.md 'rewind N' puts files back to how they were right after step N (both read, not judged)",
-   "note": "NOT YET JUDGED (round 4, 2026-11-12, added by the maker for review-textcut-r3.json's vertical story row). Needs the claim-verifier.",
-   "verified_by": "claim-verifier (independent), 2026-11-12"
+   "source": "ubuntu log 925:737 and macos log 853:738: 'test_claim_review_is_independent_and_nothing_blocked_remains (test_vsl.TestVsl...) ... FAIL'. These are the only lines ending in '... FAIL' or '... ERROR' in either log. 925:780-782 and 853:784-786: 'Ran 624 tests ... FAILED (failures=1, skipped=25)'. Traceback 925:772-777: 'tests/test_vsl.py, line 357 ... AssertionError: 'BLOCK' != 'CLEAR' : the independent claim verifier still blocks: ['film shows init/ui/diff/--only and 7 agents; public main (baf5d02) has none of them and 3 agents', 'end card shows the site address ... which did not resolve at check time', \"b19 'see every step and undo any of it' overstates ...\"]'. tests/test_vsl.py:356-358 asserts only v.get(\"overall\") == \"CLEAR\" for brand/vsl/claims-verified.json. GitHub API (read 2026-11-13) https://api.github.com/repos/Johnbjoseph-cybersec/rewindagents/actions/runs/43438869001/jobs: job 131930936925 'test (ubuntu-latest, python3)' head_sha 327d9b6fc698f09e01feca645042d133f8978bef conclusion failure, completed 14:02:29Z; job 131930937853 'test (macos-latest, python3)' same sha, conclusion failure, completed 14:03:21Z; in both, the failed step is 'Run python3 -m unittest discover -s tests -v'.",
+   "note": "Settled. In both logs exactly one test fails. It fails at its last assertion (line 357), so the checks before it passed: claims.json has no BLOCK, blocked_in_scripts is 0, and beats_sha256 matches beats.json. That last match means the film text has not changed since the claim review. The failing assertion checks nothing except that the committed claims-verified.json says overall CLEAR. That file is the verifier's 2026-11-12 verdict against baf5d02, and its three blocks were resolved in round 3 (public main now has the features, the site resolves, b19 was reworded). The red run therefore reflects my own out-of-date verdict and does not show any film claim to be wrong. Every content test passed on both operating systems: test_vsl (12 other tests), test_site, test_demo, test_narration, test_launch, test_diff, test_rewind, test_rewind_only and test_ui. The logs are consistent with the API: same job IDs, sha and failing step, and end times that match the log timestamps. The failure message also quotes the committed file word for word. One correction to round 3: I said the run 'failed'. The API shows run status in_progress with conclusion null, because a third job (Windows) has not finished. See unverified."
   }
  ],
- "blocked_in_scripts": 0,
- "claims_note_round4": "Round-4 rows judged CLEAR by the claim-verifier (2026-11-12). Known follow-up: beats.json 'cites' quote BRAND.md as 'record, replay and rewind.' where BRAND.md:10 reads 'record, replay, rewind.' (metadata only; on-screen text is correct; fix at the next render so the manifest pin stays honest)."
+ "unverified": [
+  {
+   "where": [
+    "CI run 43438869001, job 131930937285 test (windows-latest, python)"
+   ],
+   "text": "Result of the test suite on Windows for 327d9b6",
+   "note": "The GitHub API (read 2026-11-13) shows status in_progress and conclusion null. Step 'Run python -m unittest discover -s tests -v' started at 2026-11-13T14:02:00Z and has no completed_at. The same suite took 36 s on ubuntu and 84 s on macos. No log was supplied, and I cannot tell whether the job is queued, hung or failing. No film card claims anything about Windows, and the claim tests are platform-independent checks on text and data that passed on two operating systems, so this does not bear on the films. It must not be described as a green run.",
+   "load_bearing": false
+  },
+  {
+   "where": [
+    "_verify/ci-327d9b6-job-*.log"
+   ],
+   "text": "The log bytes are verbatim GitHub output",
+   "note": "Job logs need authentication, so I could not download them myself. Job metadata from the public API (IDs, sha, failing step, end times) and the word-for-word match with the committed claims-verified.json both corroborate them.",
+   "load_bearing": false
+  },
+  {
+   "where": [
+    "CI skips on both operating systems"
+   ],
+   "text": "test_vsl_render.test_frame_review_is_independent_and_passed, five test_vsl_wipes tests (b18/b19 render timing) and the ffmpeg audio checks were SKIPPED",
+   "note": "The frame-review gate skipped with the reason 'no independent review of the films on disk yet (re-review needed: brand/vsl/review-textcut.json scored the previous render)'. That gate covers visual and render quality, not what the films claim, and is outside this review. It is recorded here so that nobody reads 'skipped=25' as covered.",
+   "load_bearing": false
+  },
+  {
+   "where": [
+    "site film"
+   ],
+   "text": "The site's film is byte-identical to brand/vsl/vsl-90s-web.mp4.",
+   "note": "The live page (re-read 2026-11-13) shows the poster 'assets/film-poster.jpg' with the label 'Play the film 1:30, with music', and no mp4 source appears in the fetched text, so I could not compare bytes. CI: test_narration.test_the_export_is_the_committed_file_and_fits and test_the_export_is_the_current_90s_video printed 'ok' on both operating systems.",
+   "load_bearing": false
+  },
+  {
+   "where": [
+    "vsl-90s b20 screen"
+   ],
+   "text": "Claude Code: has run in real sessions",
+   "note": "This is the project's own statement (README.md:33-34). No session artefact in the repo proves it independently. CLEAR as a self-statement.",
+   "load_bearing": false
+  },
+  {
+   "where": [
+    "_verify/b18-demo-transcript.txt"
+   ],
+   "text": "Verbatim output of diff 12 and rewind 12 --only app/config.py on the demo session",
+   "note": "This is the maker's transcript and I did not run the code. My reading of diff.py and cli.py agrees with it, and test_every_diff_line_on_screen_is_one_diff_12_prints_on_the_demo_session passed in CI on ubuntu and macos.",
+   "load_bearing": false
+  }
+ ]
 }

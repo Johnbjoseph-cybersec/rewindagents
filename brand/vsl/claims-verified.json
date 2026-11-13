@@ -1,33 +1,9 @@
 {
  "verifier": "claim-verifier (independent)",
- "date": "2026-11-12",
- "overall": "BLOCK",
- "blocks": [
-  {
-   "rows": [
-    15,
-    16,
-    17,
-    18
-   ],
-   "issue": "film shows init/ui/diff/--only and 7 agents; public main (baf5d02) has none of them and 3 agents",
-   "clears_when": "local main pushed to the public repo (repo_url in brand/site/config.json) (needs John's publish approval)"
-  },
-  {
-   "rows": [
-    19
-   ],
-   "issue": "end card shows the site address from brand/site/config.json (site_url), which did not resolve at check time",
-   "clears_when": "domain DNS connected (needs John's GoDaddy login)"
-  },
-  {
-   "rows": [
-    16
-   ],
-   "issue": "b19 'see every step and undo any of it' overstates (README limits: unscanned steps, files > 20 MB)",
-   "clears_when": "card copy qualified"
-  }
- ],
+ "date": "2026-11-13",
+ "overall": "CLEAR",
+ "judged_against": "published main 327d9b6 and the live site (site_url in brand/site/config.json)",
+ "blocks": [],
  "clear": [
   1,
   2,
@@ -43,24 +19,46 @@
   12,
   13,
   14,
-  21
+  15,
+  16,
+  17,
+  18,
+  19
  ],
- "unverified": [
+ "unverified": [],
+ "cleared": [
   {
-   "row": 20,
-   "text": "Your editor has had undo for decades. Now your agent does.",
-   "note": "rhetorical; no primary source for 'decades'"
-  }
- ],
- "source_changes": [
-  {
+   "was": "film shows init/ui/diff/--only and 7 agents; public main (baf5d02) has none of them and 3 agents",
    "rows": [
-    6,
-    13
+    15,
+    16,
+    17,
+    18
    ],
-   "from": "Wikipedia",
-   "to": "https://www.ntsb.gov/news/Pages/cvr_fdr.aspx"
+   "cleared_by": "main pushed to the public repository (b1e12fc, then 327d9b6); the verifier found init/ui/diff/--only and the seven agents on published main"
+  },
+  {
+   "was": "end card shows the site address from brand/site/config.json (site_url), which did not resolve at check time",
+   "rows": [
+    19
+   ],
+   "cleared_by": "the domain resolves and serves the site (verifier fetched it 2026-11-13)"
+  },
+  {
+   "was": "b19 'see every step and undo any of it' overstates (README limits: unscanned steps, files > 20 MB)",
+   "rows": [
+    16
+   ],
+   "cleared_by": "b19 card already reads 'You can now see every step and the change it made.' (commit 42c69f6, films re-rendered 2026-11-12 20:55); the published and served films show it"
+  },
+  {
+   "was": "round 1 of 2026-11-13: README said the repository is not public and the videos are not made",
+   "cleared_by": "README corrected in 5c95332"
+  },
+  {
+   "was": "round 1 of 2026-11-13: b18 screen lines in neither README nor the demo manifest",
+   "cleared_by": "judged against the published tests that play the demo session and the CI log of those tests"
   }
  ],
- "readme_note": "README status line (lines ~21-22) still says 'hooks for Claude Code, Codex and Cursor'; agents section says 7"
+ "round1_2026_11_13": "BLOCK (3 issues, listed under cleared); round 2 CLEAR"
 }
