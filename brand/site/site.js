@@ -87,7 +87,10 @@
       b.type = "button"; b.className = "copy"; b.textContent = "Copy";
       b.setAttribute("aria-label", file ? "Copy the file" : cmds.length > 1 ? "Copy " + cmds.length + " commands" : "Copy the command");
       b.addEventListener("click", function () {
-        navigator.clipboard.writeText(cmds.join("\n")).then(function () { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1600); });
+        navigator.clipboard.writeText(cmds.join("\n")).then(function () {
+          b.textContent = "Copied"; b.classList.add("done"); pre.classList.remove("copied"); void pre.offsetWidth; pre.classList.add("copied");
+          setTimeout(function () { b.textContent = "Copy"; b.classList.remove("done"); pre.classList.remove("copied"); }, 1600);
+        });
       });
       pre.classList.add("has-copy"); pre.appendChild(b);
     });
@@ -106,6 +109,7 @@
   function loadMotion() {
     if (asked) return;
     asked = true;
+    safe("replay", replay);
     var n = 0;
     (function next() {
       if (n === VENDOR.length) { safe("motion", start); return; }
@@ -128,6 +132,112 @@
     po.observe({ type: "paint", buffered: true });
   } catch (err) { setTimeout(pass, 1000); }
   ["scroll", "pointerdown", "keydown"].forEach(function (ev) { window.addEventListener(ev, loadMotion, { once: true, passive: true }); });
+
+  /* ---- the hero replay: the session behind the panel plays itself, then holds the still -----------------------
+     Runs after first paint (with the motion files), never with reduced motion, only while the panel is on screen.
+     Every line it shows is a line already in the panel: rows are hidden and shown again (visibility only, so nothing
+     on the page moves), the two commands are typed back to their own text, and the elided "..." row shows the steps
+     it stands for, which build.py put there from the same recorded session. Stop ends it on the still. */
+  function replay() {
+    var box = $("#replay"); if (!box) return;
+    var pre = $("pre.term", box), svg = $(".ruler.live", box), at = $(".tl-at", box);
+    if (!pre || !svg || !at) return;
+    var rows = $$(".l", pre), gap = $(".rp-gap", pre);
+    var cmds = rows.filter(function (r) { var s = $(".sel", r); return s && !s.children.length; });
+    if (cmds.length !== 2 || !gap) return;
+    var ticks = $$(".rp-tk", gap), dots = $(".c", gap);
+    var i0 = rows.indexOf(gap), i1 = rows.indexOf(cmds[1]);
+    var steps = rows.slice(i0 + 1, i1), after = rows.slice(i1 + 1);
+    var struck = $$(".x", pre), wreck = steps.filter(function (r) { return $(".x", r); });
+    var still = at.textContent, words = cmds.map(function (r) { return $(".sel", r).textContent; });
+    // the ruler: the playhead path moves; ticks and rule left of it in ink, right of it in the rewound colour
+    var home = +svg.getAttribute("data-at"), x0 = +svg.getAttribute("data-x0"), pitch = +svg.getAttribute("data-pitch");
+    var ink = svg.getAttribute("data-ink"), dim = svg.getAttribute("data-after"), W = +svg.getAttribute("width");
+    var head = $("path", svg), base = $$("rect", svg).filter(function (r) { return r.getAttribute("height") === "1"; });
+    var marks = $$("rect", svg).filter(function (r) { return r.getAttribute("height") === "5"; });
+    function playhead(k) {
+      var px = x0 + (k - 1) * pitch;
+      head.style.transform = "translateX(" + ((k - home) * pitch) + "px)";
+      base[0].setAttribute("width", px.toFixed(1)); base[1].setAttribute("x", px.toFixed(1)); base[1].setAttribute("width", (W - px).toFixed(1));
+      marks.forEach(function (m) { m.setAttribute("fill", +m.getAttribute("x") + 0.5 <= px + 0.01 ? ink : dim); });
+    }
+    function show(r, on) { r.classList.toggle("off", !on); }
+    var cursor = document.createElement("span"); cursor.className = "rp-cur"; cursor.setAttribute("aria-hidden", "true");
+    function type(r, n, w) { var sel = $(".sel", r); sel.textContent = w.slice(0, n); sel.appendChild(cursor); }
+    function untype(r, w) { $(".sel", r).textContent = w; }
+    function tick(k) { ticks.forEach(function (t, j) { t.hidden = j !== k; }); dots.hidden = k >= 0; }
+
+    // one pass, as [ms, action]: the tape runs back, the session plays, the rewind lands, then a hold on the still
+    var T = [], t = 0, c, k;
+    function when(ms, fn) { T.push([ms, fn]); }
+    rows.slice().reverse().forEach(function (r, j) { when(j * 30, function () { show(r, false); r.classList.remove("land", "lit"); }); });
+    when(0, function () { at.textContent = "rewind"; struck.forEach(function (x) { x.classList.remove("on"); }); });
+    for (k = home; k >= 1; k--) (function (k, j) { when(j * 34, function () { playhead(k); }); })(k, home - k);
+    t = 420;
+    when(t, function () { show(cmds[0], true); type(cmds[0], 0, words[0]); at.textContent = "step 1"; });
+    for (c = 1; c <= words[0].length; c++) (function (c) { when(t + 60 + c * 34, function () { type(cmds[0], c, words[0]); }); })(c);
+    t += 60 + words[0].length * 34 + 220;
+    when(t, function () { untype(cmds[0], words[0]); show(gap, true); });
+    ticks.forEach(function (_, j) { when(t + j * 105, function () { tick(j); playhead(j + 1); at.textContent = "step " + (j + 1); }); });
+    t += ticks.length * 105;
+    steps.forEach(function (r, j) {
+      var n = ticks.length + 1 + j, slow = wreck.indexOf(r) >= 0;
+      when(t, function () { if (j === 0) tick(-1); show(r, true); if (slow) r.classList.add("land"); playhead(n); at.textContent = "step " + n; });
+      t += slow ? 420 : 240;
+    });
+    t += 420;
+    when(t, function () { show(cmds[1], true); type(cmds[1], 0, words[1]); });
+    for (c = 1; c <= words[1].length; c++) (function (c) { when(t + 60 + c * 38, function () { type(cmds[1], c, words[1]); }); })(c);
+    t += 60 + words[1].length * 38 + 260;
+    var last = ticks.length + steps.length;
+    when(t, function () { untype(cmds[1], words[1]); at.textContent = still; });
+    for (k = last - 1; k >= home; k--) (function (k, j) { when(t + j * 170, function () { playhead(k); }); })(k, last - 1 - k);
+    t += (last - home) * 170 + 60;
+    when(t, function () { struck.forEach(function (x) { x.classList.add("on"); }); });
+    t += 380;
+    after.forEach(function (r, j) { when(t + j * 150, function () { show(r, true); if ($(".hit", r)) r.classList.add("lit"); }); });
+    t += after.length * 150;
+    var LOOP = t + 3600, LOOPS = 3;
+    T.sort(function (a, b) { return a[0] - b[0]; });
+
+    function settle() {      // the still, exactly as built
+      tick(-1);
+      rows.forEach(function (r) { show(r, true); r.classList.remove("land", "lit"); });
+      cmds.forEach(function (r, j) { untype(r, words[j]); });
+      struck.forEach(function (x) { x.classList.add("on"); });
+      playhead(home); at.textContent = still; pre.classList.remove("rp");
+    }
+    var btn = document.createElement("button");
+    btn.type = "button"; btn.className = "copy rp-btn";
+    function label(playing) { btn.textContent = playing ? "Stop" : "Replay"; btn.setAttribute("aria-label", playing ? "Stop the replay" : "Play the replay again"); }
+    pre.appendChild(btn);
+
+    var running = false, seen = false, el = 0, next = 0, loop = 0, prev = 0;
+    function frame(now) {
+      if (!running) return;
+      var live = seen && !document.hidden;      // off screen, the pass waits where it is
+      if (live) el += Math.min(64, now - prev);
+      prev = now;
+      while (live && next < T.length && T[next][0] <= el) T[next++][1]();
+      if (el >= LOOP) {
+        if (++loop >= LOOPS) { stop(); return; }
+        el = 0; next = 0;
+      }
+      requestAnimationFrame(frame);
+    }
+    function play() { running = true; loop = 0; el = 0; next = 0; pre.classList.add("rp", "played"); label(true); prev = performance.now(); requestAnimationFrame(frame); }
+    function stop() { running = false; settle(); label(false); }
+    btn.addEventListener("click", function () { if (running) stop(); else play(); });
+    if ("IntersectionObserver" in window) {
+      // off screen the panel goes back to the still, never a half-drawn pass; back on screen the pass starts over
+      new IntersectionObserver(function (en) {
+        seen = en[0].isIntersecting;
+        if (!running) return;
+        if (!seen) { settle(); el = 0; next = 0; } else pre.classList.add("rp");
+      }, { threshold: 0.5 }).observe(pre);
+    } else seen = true;
+    play();
+  }
 
   function start() {
     if (!window.gsap || !window.ScrollTrigger) return;
@@ -161,7 +271,7 @@
 
   /* ---- 3. rows and tiles arrive by row ---------------------------------------------------------------- */
   safe("rows", function () {
-    var groups = [".trio > div", ".shot", ".session > div", ".cols > div", ".steps > li", ".ledger > li", ".cmdrow", ".plan", ".faq details", ".walk > li", ".doc > section"];
+    var groups = [".gap > li", ".trio > div", ".shot", ".session > div", ".cols > div", ".steps > li", ".ledger > li", ".cmdrow", ".plan", ".faq details", ".walk > li", ".doc > section"];
     groups.forEach(function (sel) {
       var els = $$(sel).filter(below); if (!els.length) return;
       gsap.set(els, { y: 46, opacity: 0 });
@@ -206,6 +316,19 @@
     var tape = document.createElement("div");
     tape.className = "tape"; tape.setAttribute("aria-hidden", "true");
     var bar = document.createElement("span"); bar.className = "tape-bar"; tape.appendChild(bar);
+    // one tick per numbered section, where it starts on the page; the playhead in Record runs along them
+    var secs = $$(".sec .label").map(function (l) { return l.closest(".sec"); });
+    var tks = secs.map(function () { var k = document.createElement("span"); k.className = "tape-tk"; tape.appendChild(k); return k; });
+    var ph = document.createElement("span"); ph.className = "tape-ph"; tape.appendChild(ph);
+    var marks = [];
+    function place() {
+      var max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      marks = secs.map(function (s, j) {
+        var p = Math.min(1, Math.max(0, (s.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.3) / max));
+        tks[j].style.left = (p * 100) + "%"; return p;
+      });
+    }
+    place(); ScrollTrigger.addEventListener("refresh", place);
     var tag = document.createElement("span"); tag.className = "tape-tag"; tag.textContent = "◂◂ rewinding"; tape.appendChild(tag);
     document.body.appendChild(tape);
     var skewEls = $$(".sec .head h2, .hero h1");
@@ -215,6 +338,8 @@
       start: 0, end: "max",
       onUpdate: function (self) {
         bar.style.transform = "scaleX(" + self.progress.toFixed(4) + ")";
+        ph.style.transform = "translateX(" + (self.progress * (tape.clientWidth - 3) + 1).toFixed(1) + "px)";
+        marks.forEach(function (p, j) { tks[j].classList.toggle("past", p <= self.progress + 0.0005); });
         var v = self.getVelocity();
         if (v < -900) {
           tape.classList.add("rew"); root.classList.add("rewinding");

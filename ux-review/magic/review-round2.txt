@@ -1,0 +1,24 @@
+Warning: no stdin data received in 3s, proceeding without it. If piping from a slow command, redirect stdin explicitly: < /dev/null to skip, or wait longer.
+**Round 2 scores**
+
+| # | Row | Score | Evidence and fix |
+|---|---|---|---|
+| 1 | Identity | 9.2 | Paper page, black terminals, ruler motif and a single red accent hold at 1440, 834 and 390, and nothing from the rejected redesign has crept in. |
+| 2 | Hero | 8.6 | At 1440 the wide ruler with its playhead on 12 and the struck 13-14 read as "undo" even without motion, and the loop in the sheet is calm. The 390 sheet is a problem (see mobile). |
+| 3 | Gap section | 9.0 | The rewindagents column now sits at x=752, the same edge as the lede. Claims are quoted with links, the exception is stated, and 834 stacks cleanly. Weak: the grey quotes and tiny mono "docs" links are low-contrast, and the footnote wraps short of the grid at 1440. |
+| 4 | Type and rhythm | 8.8 | The headings, ledes and ledger hang together. Install-to-strip spacing is still loose, and the hero has a big dead gap under the buttons at 1440. |
+| 5 | Mobile 390 | 7.8 | The static hero is good: the two-line panel head works and the ticker is tidy. But `frames-390/sheet.png` shows the panel stuck on a bare "$" and cursor, "step 1", from 350 ms to 9450 ms. Nothing types, no rows appear and the playhead never moves. Frame 0 shows the finished still, then the panel blanks. |
+| 6 | Motion restraint | 8.5 | At 1440 the wash and playhead sweep are purposeful and calm. At 390 the loop blanks the panel and never recovers, which is worse than a still. I did not see the tape or copy states re-rendered, so I'm carrying them from round 1. |
+| 7 | Claims honesty | 9.0 | Everything is sourced: dated quotes, the DOGFOOD file linked, "strike-through is ours" disclosed, and the docs' own exception stated. |
+| 8 | Overall vs BEFORE | 8.8 | It is clearly richer than before, but the 390 failure holds it back. |
+
+**OVERALL: 8.7.** This is below the 9.0 bar, and mobile is under 8.
+
+If the 390 stall is a capture artefact (an IntersectionObserver or timer not firing in the harness), re-capture it and the bar is probably met. As rendered, it is a blocking defect.
+
+**Ranked fixes**
+1. Fix or explain the 390 replay stall. Check why the typing and step scheduler never advances on phone. Likely causes are the wrapped rows, the two-line head, or an observer or resize path. Re-record the sheet and show the rows ticking.
+2. Add a fallback: if the loop hasn't produced a row by about 800 ms, or the layout changed, render the built still and stop. Never blank the panel between loops. At the loop restart, keep the last still until the first typed character.
+3. Raise the contrast of the grey Claude Code quotes and make the "docs" links larger than the current tiny mono, to at least 13 px in a darker grey. Extend the footnote to the full 1:1 grid width.
+4. Tighten the dead space in the hero: reduce the gap under the buttons and between the install block and the strip.
+5. Re-capture the tape and the copy "Copied" flash in this round's renders so I can verify them instead of carrying round 1.

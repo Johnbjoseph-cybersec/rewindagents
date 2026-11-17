@@ -717,3 +717,117 @@ pre.term .l:empty::before { content: "\200b"; }
 
 /* a command in a headline never breaks at its hyphen ("rm -" / "rf") */
 .nw { white-space: nowrap; }
+
+/* ==== 2026-11-18: the gap, the hero replay, the tape as a ruler, copy feedback ==== */
+/* the gap: the README's comparison as a three-column ledger on the page grid. An outline square for what
+   Claude Code's checkpoints do, a filled one for rewindagents (the plan list's own markers) */
+:root { --gap3: minmax(0, 4fr) minmax(0, 4fr) minmax(0, 5fr); }
+.gap-grid { border-top: 2px solid var(--reel); }
+.gap-cols { display: grid; grid-template-columns: var(--gap3); column-gap: 40px; padding: 16px 0 14px; font: 12px/1.4 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--tape); border-bottom: 1px solid var(--rule); }
+.gap-cols span:nth-child(n+2)::before, .gap-k::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 10px; vertical-align: 0; border: 1.5px solid var(--tape); }
+.gap-cols span:nth-child(3), .gap-ra .gap-k { color: var(--reel); font-weight: 700; }
+.gap-cols span:nth-child(3)::before, .gap-ra .gap-k::before { background: var(--reel); border-color: var(--reel); }
+ul.gap { list-style: none; padding: 0; margin: 0; max-width: none; }
+.gap li { display: grid; grid-template-columns: var(--gap3); column-gap: 40px; padding: 28px 0 30px; margin: 0; border-bottom: 1px solid var(--rule); align-items: start; }
+.gap-when { font-weight: 600; font-size: 18px; line-height: 1.45; text-wrap: pretty; }
+.gap-cc { color: var(--tape); font-size: 17px; line-height: 1.5; }
+.gap-cc q { font-style: normal; }
+.gap-doc { font: 13px/1 var(--mono); color: var(--tape); margin-left: 6px; }
+.gap-ra { font-size: 17px; line-height: 1.5; }
+.gap-ra b { display: block; font-weight: 600; }
+.gap-ev { display: block; margin-top: 12px; font-size: 15px; color: var(--tape); line-height: 1.55; }
+.gap-src { display: block; font: 12px/1.5 var(--mono); color: var(--tape); margin-bottom: 8px; }
+.gap-src code { font-weight: 400; }
+.gap .gap-line { display: block; background: var(--spool); color: var(--leader); font-weight: 400; font-size: 12.5px; line-height: 1.6; padding: 10px 14px; border-radius: 4px; white-space: pre; overflow-x: auto; border: 0; }
+.gap .gap-line .hit { color: var(--rewind); }
+.gap-k { display: none; }
+.gap-note { margin: 20px 0 0; max-width: 84ch; }
+@media (max-width: 960px) {
+  .gap-cols { display: none; }
+  .gap li { grid-template-columns: minmax(0, 1fr); row-gap: 14px; padding: 24px 0 26px; }
+  .gap-k { display: block; font: 12px/1.4 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--tape); margin-bottom: 4px; }
+  .gap-when { font-size: 19px; }
+}
+
+/* the hero replay (site.js): the session plays itself into the panel, then holds the still above. Rows are hidden
+   with visibility only, so nothing moves; with reduced motion or no script the still is all there is */
+.panel-head .tl-at { display: inline-block; min-width: 9ch; text-align: right; }
+.ruler.live path { transition: transform .16s var(--ease); }
+pre.term .rp-gap { white-space: pre; overflow: hidden; text-overflow: ellipsis; padding-right: 72px; }
+.rp .l.off { visibility: hidden; }
+pre.term.rp .x { text-decoration-color: transparent; color: var(--leader); transition: text-decoration-color .5s var(--ease), color .5s var(--ease); }
+pre.term.rp .x.on { text-decoration-color: var(--rewind); color: var(--playhead); }
+.rp .l.land { animation: land 1.1s var(--ease) both; }
+.rp .l.lit .hit { animation: lit2 1.2s var(--ease) both; }
+.rp-cur { display: inline-block; width: 0.6em; height: 1.15em; margin-left: 1px; vertical-align: -0.22em; background: var(--leader); animation: blink 1s steps(2, start) infinite; }
+@keyframes land { 0% { background: var(--record); } 55% { background: var(--record); } 100% { background: transparent; } }
+@keyframes lit2 { 0% { color: var(--leader); } 30% { color: var(--reel); background: var(--rewind); } 100% { color: var(--rewind); background: transparent; } }
+.rp-btn { position: absolute; top: 12px; right: 12px; z-index: 1; }
+.hero-panel .rp-btn:focus-visible, pre.term .copy:focus-visible { outline-color: var(--rewind); }
+
+/* copy: the button says so, and the lines it copied flash once */
+.copy.done { border-color: var(--rewind); color: var(--rewind); }
+pre.term.copied .sel { animation: copied .7s var(--ease); }
+@keyframes copied { 0% { background: var(--tape); } 100% { background: transparent; } }
+
+/* the tape: scroll progress as the brand ruler, one tick per section, the playhead in Record */
+.tape { height: 10px; }
+.tape-bar { height: 2px; bottom: auto; }
+.tape-tk { position: absolute; top: 0; width: 1px; height: 6px; background: var(--rule); transition: background-color .3s var(--ease), height .3s var(--ease); }
+.tape-tk.past { background: var(--reel); height: 8px; }
+.tape-ph { position: absolute; top: 0; left: 0; width: 3px; height: 10px; margin-left: -1px; background: var(--record); will-change: transform; }
+.tape.rew .tape-ph { background: var(--reel); }
+
+@media (max-width: 600px) {
+  /* hero rows continue under their own column (the replay table under its command, restore lines under the path) */
+  .hero-panel pre.term .l:not(.t) { padding-left: var(--i, 2ch); text-indent: calc(-1 * var(--i, 2ch)); }
+  .hero-panel pre.term .rp-gap { padding-right: 64px; }
+  .panel-head { flex-wrap: wrap; row-gap: 6px; }
+  .panel-head > span:first-child { flex: 1 1 100%; }
+  .gap-line { font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .ruler.live path { transition: none; } .tape-ph { display: none; } }
+/* the ticker row is one line at every width: a long step is cut with an ellipsis, never wrapped (no shift) */
+.hero-panel pre.term .l.rp-gap { white-space: pre; overflow-wrap: normal; overflow: hidden; text-overflow: ellipsis; }
+.gap-ev code { white-space: nowrap; }
+@media (max-width: 600px) { .gap .gap-line { font-size: 11px; padding: 10px 10px; } }
+/* tablet: the situation across the row, then the two answers side by side (the before/after reads at a glance) */
+@media (min-width: 601px) and (max-width: 960px) { .gap li { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 32px; } .gap-when { grid-column: 1 / -1; } }
+
+/* ==== review round 1 (cs-iris-kapoor, 8.4) ==== */
+/* 1. the gap ledger on the page split: left half = situation + Claude Code (a 1:1 pair), right half = rewindagents */
+@media (min-width: 961px) { .gap li, .gap-cols { grid-template-columns: var(--split); column-gap: var(--gap); } }
+.gap-l { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 32px; align-items: start; }
+@media (max-width: 960px) {
+  .gap-l { display: block; }
+  .gap-l .gap-cc { display: block; margin-top: 14px; }
+}
+@media (min-width: 601px) and (max-width: 960px) {
+  .gap li { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 32px; }
+  .gap-l { display: contents; }
+  .gap-l .gap-cc { margin-top: 0; }
+}
+/* 2. the panel ruler at twice the pitch: the playhead on 12 and the rewound 13, 14 read in the still */
+.panel-head { align-items: center; }
+.panel-head .tl { gap: 12px; }
+/* 4. phone: the head on two lines, the ruler and its label on the second */
+@media (max-width: 600px) {
+  .panel-head .tl { flex: 1 1 100%; justify-content: space-between; }
+}
+/* 5. the wreck lands as a Record wash under the text, not a solid bar */
+.rp .l.land { animation: none; position: relative; isolation: isolate; }
+.rp .l.land::before { content: ""; position: absolute; inset: 0 -22px; background: var(--record); z-index: -1; animation: wash 1s var(--ease) both; }
+@keyframes wash { 0% { opacity: .55; } 100% { opacity: 0; } }
+.tape-ph { height: 12px; width: 3px; }
+@media (max-width: 600px) { .rp .l.land::before { inset: 0; } }
+.tape { overflow: hidden; }   /* the playhead never pushes past the edge (a phone widened its layout viewport by 6 px) */
+/* once the replay has run, the still never re-runs the CSS intro (Stop showed the restore lines flash again) */
+.hero-panel pre.term.played .hit { animation: none; }
+.gap-cols > span:last-child { color: var(--reel); font-weight: 700; }
+.gap-cols > span:last-child::before { background: var(--reel); border-color: var(--reel); }
+@media (max-width: 960px) { .gap .gap-line { font-size: 11px; padding: 10px 10px; } }
+/* ==== review round 2 (cs-iris-kapoor, 8.7) ==== */
+.gap-cc q { color: var(--reel); }
+.gap-doc { font-size: 13.5px; color: var(--reel); }
+.gap-note { max-width: none; }
+@media (min-width: 961px) { .hero-install { margin-top: 36px; } .hero .agents { margin-top: 28px; } }

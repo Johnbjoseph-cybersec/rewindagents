@@ -31,6 +31,10 @@ SKIP_DIRS = {".git", ".venv", ".brandcache", "node_modules", "__pycache__", "bui
 # address in use, and it may appear only in config.json and in the pages built from it.
 PRODUCT_HOST = re.compile(r"rewindagents\.(com|dev|io|app|org|net|sh|co|ai)\b|[\w.-]+\.github\.io", re.I)
 HOST_ALLOWED = {"brand/site/config.json", "brand/site/manifest.json", "tests/test_site.py"} | {"brand/site/" + p for p in PAGES}
+# The one source the landing page quotes (the gap section, 2026-11-18): the exact page the README cites for the
+# checkpoint comparison, nothing else on that host. test_every_absolute_url_on_the_pages_comes_from_config checks
+# the README still links it.
+CITED = "https://code.claude.com/docs/en/checkpointing"
 THIRD_PARTY = ("https://schema.org",)
 BANNED = re.compile(r"revolutionary|seamless|unleash|AI-powered|game-changer|secure|protect|defend|magic|"
                     r"never lose|instant|bulletproof|foolproof|guaranteed", re.I)
@@ -128,6 +132,11 @@ def text_of(rel, base=SITE):
     return " ".join(" ".join(parse(rel, base).text).split())
 
 
+def demo_replay_lines():
+    demo = json.loads(read(os.path.join("demo", "manifest.json"), BRAND))
+    return demo["beats"][0]["output"].rstrip("\n").split("\n")
+
+
 class TestSite(unittest.TestCase):
     def test_site_url_lives_in_config_only(self):
         cfg = config()
@@ -147,6 +156,9 @@ class TestSite(unittest.TestCase):
         for p in PAGES:
             for url in set(re.findall(r"https?://[^\s\"'<>]+", read(p))):
                 if url == "https://...":        # the README's "or: pip install git+https://..." comment
+                    continue
+                if url == CITED:                # quoted source, exact URL only, and only while the README cites it
+                    self.assertIn("(%s)" % CITED, read("README.md", ROOT), "the gap section cites what the README cites")
                     continue
                 self.assertTrue(url.startswith(ok), "%s: %s" % (p, url))
 
@@ -373,6 +385,48 @@ class TestSite(unittest.TestCase):
             self.assertIn(b["command"], index)
             for ln in b["output"].rstrip("\n").split("\n"):
                 self.assertIn(ln.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"), index, ln)
+
+    def test_hero_replay_shows_only_the_session_and_never_moves_the_page(self):
+        """The hero replay (2026-11-18): the session plays itself into the panel, after first paint, never with
+        reduced motion, with a Stop control, and holds the built still. It types nothing of its own: the elided row
+        carries the session's own replay lines (hidden without a script), and the commands are read from the panel."""
+        demo = json.loads(read(os.path.join("demo", "manifest.json"), BRAND))
+        replay_lines = demo["beats"][0]["output"].rstrip("\n").split("\n")
+        index = read("index.html")
+        hero = index[index.index('<section class="hero"'):index.index("</section>", index.index('<section class="hero"'))]
+        ticker = [unesc(t) for t in re.findall(r'<span class="rp-tk" hidden>([^<]*)</span>', hero)]
+        self.assertEqual(ticker, replay_lines[:-4], "the ticker is every step the panel elides, as printed")
+        self.assertEqual(len(ticker) + 4, demo["steps"], "with the four rows shown, every step of the session")
+        self.assertIn('class="ruler live"', hero)
+        js = read("site.js")
+        body = js[js.index("function replay()"):js.index("function start()", js.index("function replay()"))]
+        self.assertLess(js.index('if (reduce || !here) return;'), js.index('safe("replay", replay)'),
+                        "the replay starts on the after-first-paint path, never with reduced motion")
+        self.assertNotRegex(body, r'"[^"]*rewindagents[^"]*"|"[^"]*(Bash|Write|restore)[^"]*"', "no session text typed by the script")
+        self.assertIn('"Stop the replay"', body)
+        self.assertNotRegex(body, r"\.style\.(display|height|width|margin|padding)", "rows hide by class (visibility), never by layout")
+        css = read("site.css")
+        self.assertIn(".rp .l.off { visibility: hidden; }", css)
+        self.assertIn(".hero-panel pre.term .l.rp-gap { white-space: pre;", css, "the ticker row never wraps")
+
+    def test_gap_section_is_the_readme_comparison(self):
+        """'What Claude Code's checkpoints miss' quotes the README's table cells, cites the docs the README cites,
+        and carries the README's own exception (its /rewind undoes Bash changes to a file Claude had edited)."""
+        build = load_build()
+        readme = read("README.md", ROOT)
+        head, rows = build.readme_table(readme, "After your agent...")
+        index = read("index.html")
+        sec = re.search(r'<section class="sec" id="gap".*?</section>', index, re.S).group(0)
+        text = unesc(re.sub(r"<[^>]+>", "", sec))
+        for r in rows[:2]:
+            self.assertIn(re.sub(r"`", "", r[0]), text)
+            self.assertIn(re.match(r'^"([^"]+)"', r[1]).group(1), text)
+            self.assertIn(r[2], text)
+        self.assertNotIn(rows[2][0], text, "the third row is the agent strip's job")
+        self.assertIn("does undo Bash changes to a file Claude had already edited", text)
+        self.assertIn(build.GAP_NUANCE.replace("`", ""), text)
+        rm_line = next(ln for ln in demo_replay_lines() if "rm -rf" in ln)
+        self.assertIn(rm_line.strip(), text, "the evidence line is the session's own replay line")
 
     def test_numbers_come_from_the_code(self):
         f = manifest()["facts"]
