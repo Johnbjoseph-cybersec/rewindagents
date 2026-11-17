@@ -36,7 +36,7 @@ What it does today:
 - `rewindagents export` writes a session as one HTML page, `rewindagents sessions --grep config.py` finds sessions, and `rewindagents bundle --out s1.bundle` carries one to another machine.
 - It never blocks or changes a call, and the hook always exits 0.
 
-What it does not do yet, said plainly: it is not on PyPI yet (install it from the repository with pipx). The Codex and Cursor hooks are built from the vendors' hook documentation and tested with the documented payloads, not yet in a live session. A paid Cloud tier (cloud sync, shareable replay links, long retention, session search) is planned, not built and not priced.
+What it does not do yet, said plainly: The Codex and Cursor hooks are built from the vendors' hook documentation and tested with the documented payloads, not yet in a live session. A paid Cloud tier (cloud sync, shareable replay links, long retention, session search) is planned, not built and not priced.
 
 The clip in the gallery is a real session: fourteen agent steps through the hook, the last two delete the tests and overwrite the config, and one rewind puts the four files back. The repository has the script that recorded it.
 
@@ -53,6 +53,6 @@ uploading.
 2. `rewindagents replay`: the end of the fourteen steps, the last two marked; the first nine are folded into one tick each.
 3. `git status --short` after the wreck: the deleted tests.
 4. `rewindagents rewind 12`: four files restored, and the undo line.
-5. Install in two commands: pipx from the repository, then `rewindagents install` in the project.
+5. Install in two commands: pipx from PyPI, then `rewindagents install` in the project.
 
 made by John B Joseph

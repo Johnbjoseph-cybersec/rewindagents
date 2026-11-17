@@ -38,7 +38,7 @@ THEMES = {
 TAGLINE = "Ctrl+Z for AI coding agents: record, replay, rewind."
 COMMAND = "rewindagents rewind 12"
 CREDIT = "made by John B Joseph"
-INSTALL = "pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagents"
+INSTALL = "pipx install rewindagents"
 
 # Visible rows of the mark on the 16 grid (the '<' top and bottom cuts); x spans 1..15.
 MARK_TOP, MARK_BOTTOM = 3, 13

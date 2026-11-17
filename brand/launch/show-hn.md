@@ -22,7 +22,7 @@ rewindagents records every tool call a coding agent makes into a hash-chained JS
 Install and hook it into a project:
 
 ```sh
-pipx install git+{repo_url}
+pipx install rewindagents
 cd /path/to/your/project
 rewindagents install
 ```
@@ -45,7 +45,7 @@ How it works:
 
 Limits, since you will ask: files over 20 MB are noted, not copied. Symlinks are not saved. A project of more than 20,000 files is not scanned around a Bash call; the call is still recorded and rewind reports it. Only the project directory is scanned, and git-ignored files are left out. A hash chain alone cannot tell that records were cut off the end or that the whole file was rewritten and re-hashed, so `rewindagents verify --head <pinned-hash>` checks against a head hash you keep somewhere the agent cannot write.
 
-Status: the Claude Code hook has run in real sessions. The Codex and Cursor hooks are built from the vendors' hook documentation and tested with the documented payloads, not yet in a live session. If you run either and the payload differs, an issue with the payload would help a lot. Not on PyPI yet. A hosted tier is planned, not built, not priced.
+Status: the Claude Code hook has run in real sessions. The Codex and Cursor hooks are built from the vendors' hook documentation and tested with the documented payloads, not yet in a live session. If you run either and the payload differs, an issue with the payload would help a lot. On PyPI: `pipx install rewindagents`. A hosted tier is planned, not built, not priced.
 
 Apache-2.0. Feedback welcome on files outside the project: right now a file outside it that an edit tool changed is reported and left alone, and a shell command's changes outside the project are not seen at all.
 

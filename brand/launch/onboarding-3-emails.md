@@ -13,10 +13,10 @@ Hi,
 
 Here is the shortest path to your first recorded session.
 
-Install it from the repository (it is not on PyPI yet). It needs Python 3.10 or newer on macOS or Linux (it uses a Unix file lock), and nothing beyond the standard library:
+Install it from PyPI. It needs Python 3.10 or newer on macOS or Linux (it uses a Unix file lock), and nothing beyond the standard library:
 
 ```sh
-pipx install git+{repo_url}
+pipx install rewindagents
 rewindagents --version
 ```
 

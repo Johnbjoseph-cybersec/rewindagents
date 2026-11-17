@@ -174,7 +174,7 @@ class TestGallery(unittest.TestCase):
                     self.assertEqual(r[2][0], "  # " + sh[cmd], "the comment is the README's")
                 cmds.append(cmd)
         self.assertEqual(len(cmds), 2)
-        self.assertTrue(cmds[0].startswith("pipx install git+"))
+        self.assertEqual(cmds[0], "pipx install rewindagents")   # on PyPI since v0.0.8
         self.assertEqual(cmds[1], "rewindagents install")
         self.assertEqual(s["headline"], s["item"].split(":")[0])
         readme = " ".join(read(ROOT, "README.md").split())

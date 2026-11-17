@@ -25,7 +25,7 @@ step, or one file. It runs on your machine only: no account, no network, nothing
 The flight recorder for coding agents: see exactly what your agent did, and take back any part of it.
 
 ```sh
-pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagents && cd your-project && rewindagents init
+pipx install rewindagents && cd your-project && rewindagents init
 ```
 
 `init` looks for the agents it supports (Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen
@@ -89,11 +89,11 @@ runs the same hooks for a subagent's tool calls ([hooks docs](https://code.claud
 session in which a subagent made eight steps, three of them edits, recorded and checkpointed all of them
 (`ux-review/DOGFOOD.md`). Every tool call goes into a tamper-evident, hash-chained log you can verify later.
 
-**Status: v0.0.8, pre-release.** Built and tested today: the recorder and its CLI, hooks for seven coding
+**Status: v0.0.9, pre-release.** Built and tested today: the recorder and its CLI, hooks for seven coding
 agents (Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen Code) that record every call and
 checkpoint the files a step changes, `summary`, `replay`, `rewind`, `revert` and `branch`, `fork` and
 `compare`, `export` (a session as one HTML page), `sessions`, `bundle` and `import`, `gc`, a local timeline UI,
-and a pip-installable package with a `rewindagents` command. Not on PyPI yet. The Claude Code hook has run in
+and a package on PyPI with a `rewindagents` command. The Claude Code hook has run in
 real sessions; the Codex and Cursor hooks are built from the vendors' hook documentation and tested with the
 documented payloads, not yet in a live session. macOS and Linux; Windows is not supported yet (see Recorder).
 
@@ -104,18 +104,17 @@ runs](#fork-a-step-compare-the-runs).
 
 Python 3.10 or newer (declared in `pyproject.toml`; tested on 3.15, macOS; the full suite also passed there on
 3.10, 3.11, 3.12, 3.13 and 3.14 on 2026-11-14). No dependencies beyond the
-standard library. From the repository:
+standard library. From PyPI:
 
 ```sh
-pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagents     # or: pip install git+https://...
+pipx install rewindagents     # or: pip install rewindagents
 rewindagents --version
 ```
 
 Or from a clone, `pip install .`. Without installing, `PYTHONPATH=src python3 -m rewindagents` runs the same
 CLI from a clone.
 
-After the first release to PyPI (not there yet), `uv tool install rewindagents` or `pipx install rewindagents`
-will also work. Do not add the hook with `uvx rewindagents install` or `pipx run rewindagents install`: those run
+`uv tool install rewindagents` works as well as `pipx install rewindagents`. Do not add the hook with `uvx rewindagents install` or `pipx run rewindagents install`: those run
 from a cached environment the tool may delete, and the hook names that environment's Python. `install` and
 `init` detect such a Python, write nothing, and print the two lasting commands above.
 
@@ -673,7 +672,6 @@ rewindagents verify --head <pinned-hash>
 
 ## Roadmap
 
-- Publish on PyPI
 - Run the Codex and Cursor hooks in live sessions and keep the real payloads as test fixtures
 - Fork and compare, next: saved starting points (a step plus the check that judges it) and re-running one across
   agents on your machine. See `ux-review/ROADMAP.md`.

@@ -64,10 +64,10 @@ CREDIT_SIZE = 18
 CREDIT_BASE = H - render.SAFE
 REGION_BOTTOM = CREDIT_BASE - CREDIT_SIZE - 28   # bands and notes end above the credit
 REPLAY_FROM = 10                 # ph-2 shows the replay list from this step on
-STEP_LABELS = ("From the repository", "In the project")     # phrases of producthunt.md gallery item 5
+STEP_LABELS = ("From PyPI", "In the project")     # phrases of producthunt.md gallery item 5
 CREDIT = render.vsl.CREDIT       # "made by John B Joseph", BRAND.md
 PROMISE = render.vsl.PROMISE     # BRAND.md one-line promise, verbatim
-README_NOTES = ("Not on PyPI yet.", "No dependencies beyond the standard library.")
+README_NOTES = ("Python 3.10 or newer", "No dependencies beyond the standard library.")
 
 
 def read(*parts):
@@ -153,7 +153,7 @@ def shots():
                             "rows": [command_row(rewind["command"])] + output_rows(rewind, undo)}]})
 
     sh = readme_sh_lines()
-    pipx = next(c for c, _ in sh if c.startswith("pipx install "))
+    pipx = next(c for c, _ in sh if c == "pipx install rewindagents")   # the Install section line, not the quickstart chain
     install = next(c for c, _ in sh if c == "rewindagents install")
     readme = " ".join(read("README.md").split())        # sentences wrap across lines in the file
     for note in README_NOTES:

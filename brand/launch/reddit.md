@@ -31,7 +31,7 @@ What it is: an open-source recorder (Apache-2.0, Python standard library only). 
 
 What it is not: it never blocks or changes a call, and it does not send anything anywhere. The hook always exits 0; it prints nothing, except the replies Cursor's hook protocol requires ({"permission": "allow"} before a call, {} after).
 
-Status, plainly: the Claude Code hook has run in real sessions. The Codex and Cursor hooks are built from the vendors' hook docs and tested with the documented payloads, not yet in a live session. Not on PyPI yet; install from the repository with pipx.
+Status, plainly: the Claude Code hook has run in real sessions. The Codex and Cursor hooks are built from the vendors' hook docs and tested with the documented payloads, not yet in a live session. On PyPI: `pipx install rewindagents`.
 
 Repository: {repo_url}
 Docs and the recorded clip: {site_url}

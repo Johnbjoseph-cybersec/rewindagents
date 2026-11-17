@@ -31,7 +31,7 @@
 <link rel="preload" href="../fonts/commit-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../site.min.css">
 <script src="../site.js" defer></script>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "applicationCategory": "DeveloperApplication", "author": {"@type": "Person", "name": "John B Joseph"}, "codeRepository": "https://github.com/Johnbjoseph-cybersec/rewindagents", "description": "Getting started with rewindagents: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, fork a step and compare the runs, export, find a session, verify the log.", "license": "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE", "name": "rewindagents", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "operatingSystem": "macOS, Linux", "softwareVersion": "0.0.8", "url": "https://rewindagents.com/docs/"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "applicationCategory": "DeveloperApplication", "author": {"@type": "Person", "name": "John B Joseph"}, "codeRepository": "https://github.com/Johnbjoseph-cybersec/rewindagents", "description": "Getting started with rewindagents: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, fork a step and compare the runs, export, find a session, verify the log.", "license": "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE", "name": "rewindagents", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "operatingSystem": "macOS, Linux", "softwareVersion": "0.0.9", "url": "https://rewindagents.com/docs/"}</script>
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -48,17 +48,17 @@
 <nav class="toc" aria-label="On this page"><a href="#install">Install</a><a href="#hook">Add the hook</a><a href="#after">After a bad run</a><a href="#first">A first session</a><a href="#recorded">What gets recorded</a><a href="#replay">Replay and rewind</a><a href="#branch">Branch</a><a href="#fork">Fork and compare</a><a href="#ui">Timeline in a browser</a><a href="#export">Export</a><a href="#sessions">Find a session</a><a href="#bundle">Move a session</a><a href="#attach">Attach to a PR</a><a href="#verify">Verify</a><a href="#status">Is it recording?</a><a href="#gc">Free space</a><a href="#overhead">Overhead</a><a href="#limits">Limits</a><a href="#remove">Remove it</a></nav>
 <article class="doc">
 <h2 id="install">Install</h2>
-<p>Python &gt;=3.10, standard library only. Tested on Python 3.15 on macOS. Not on PyPI yet, so install from the repository:</p>
-<pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">pipx install <span class="nb">git+https://</span><wbr><span class="nb">github.com/</span><wbr><span class="nb">Johnbjoseph-cybersec/</span><wbr><span class="nb">rewindagents</span></span></span>
-<span class="l"><span class="c"># or: pip install <span class="nb">git+https://</span><wbr><span class="nb">...</span></span></span>
+<p>Python &gt;=3.10, standard library only. Tested on Python 3.15 on macOS. Install it from PyPI:</p>
+<pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">pipx install rewindagents</span></span>
+<span class="l"><span class="c"># or: pip install rewindagents</span></span>
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents <span class="nb">--version</span></span></span></code></pre>
 <p>The last command prints the version it installed:</p>
 <pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">rewindagents <span class="nb">--version</span></span></span>
-<span class="l i2">rewindagents 0.0.8</span></code></pre>
+<span class="l i2">rewindagents 0.0.9</span></code></pre>
 <p>Or from a clone, <code>pip install .</code>. Without installing, <code>PYTHONPATH=src python3 -m rewindagents</code> runs the same CLI from a clone; then the undo hint says <code>python3 -m rewindagents</code> instead of <code>rewindagents</code>.</p>
 
 <h2 id="hook">Add the hook</h2>
-<pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">pipx install <span class="nb">git+https://</span><wbr><span class="nb">github.com/</span><wbr><span class="nb">Johnbjoseph-cybersec/</span><wbr><span class="nb">rewindagents</span> &amp;&amp; cd <span class="nb">your-project</span> &amp;&amp; rewindagents init</span></span></code></pre>
+<pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">pipx install rewindagents &amp;&amp; cd <span class="nb">your-project</span> &amp;&amp; rewindagents init</span></span></code></pre>
 <p><code>init</code> looks for the agents it supports (Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen Code): their config directory in the project or your home directory, or their command on <code>PATH</code>. It prints the plan, asks <code>[y/N]</code>, and adds the hook to each one it found, one line per agent: <code>installed</code>, <code>already there</code>, <code>replaced</code> or <code>not found</code>. It never adds a second copy and keeps every hook already in the file. <code>--yes</code> skips the question. <code>--global</code> writes each agent&#x27;s user config instead, so every project is recorded. Without <code>--yes</code> and without a terminal to ask on, it only prints the plan. <code>--agent claude</code> sets up only that agent (repeat it for more). In a git repository the config files <code>init</code> creates are listed in <code>.git/info/exclude</code>, this clone&#x27;s own ignore list, because they name this machine&#x27;s Python and would not run on a teammate&#x27;s; a file git already tracks is changed and named instead. <code>rewindagents init --undo</code> takes it all out again and keeps what was recorded.</p>
 <p>Or add it to one agent at a time:</p>
 <pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">cd /path/to/your/project</span></span>

@@ -166,7 +166,8 @@ class TestLaunchKit(unittest.TestCase):
                     self.assertIn("planned", p, "%s: paid tier without 'planned': %r" % (name, p))
                     self.assertNotRegex(p, r"\b(buy|price|pricing|subscribe)\b", "%s: %r" % (name, p))
                 if "pypi" in p:
-                    self.assertRegex(p, r"\b(not|yet|no)\b", "%s: PyPI without the status: %r" % (name, p))
+                    # on PyPI since v0.0.8 (2026-11-18): a draft may not still say it is not
+                    self.assertNotRegex(p, r"not on pypi|no package on pypi", "%s: stale PyPI status: %r" % (name, p))
             if re.search(r"\b(codex|cursor)\b", text, re.I):
                 self.assertIn("not yet in a live session", text, "%s names Codex or Cursor without the status" % name)
                 for s in vsl.sentences(text.lower()):

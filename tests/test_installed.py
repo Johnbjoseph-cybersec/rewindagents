@@ -427,10 +427,13 @@ class ReadmeCommandsTest(unittest.TestCase):
         self.assertTrue({"install", "uninstall", "replay", "rewind", "branch", "verify", "export", "sessions", "bundle",
                          "import", "gc"} <= seen, seen)
 
-    def test_readme_says_the_package_exists_and_is_not_on_pypi(self):
+    def test_readme_says_the_package_is_on_pypi(self):
+        # v0.0.8 is on PyPI (2026-11-18, release workflow publish.yml); the README installs from there
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         self.assertNotIn("no pip package yet", readme.lower())
-        self.assertIn("not on pypi yet", readme.lower())
+        self.assertNotIn("not on pypi yet", readme.lower())
+        self.assertIn("pipx install rewindagents", readme)
+        self.assertNotIn("pipx install git+", readme)
         self.assertIn(f"v{VERSION},", readme)
 
 

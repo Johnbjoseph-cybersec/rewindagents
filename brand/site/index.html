@@ -31,7 +31,7 @@
 <link rel="preload" href="fonts/commit-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="site.min.css">
 <script src="site.js" defer></script>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "applicationCategory": "DeveloperApplication", "author": {"@type": "Person", "name": "John B Joseph"}, "codeRepository": "https://github.com/Johnbjoseph-cybersec/rewindagents", "description": "Undo for AI coding agents, including what they do in the shell: rm -rf, sed -i, a script. rewindagents saves each file before every step and takes back the whole session, one step or one file. Open source, local, standard library only. Hooks for Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid and Qwen Code.", "license": "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE", "name": "rewindagents", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "operatingSystem": "macOS, Linux", "softwareVersion": "0.0.8", "url": "https://rewindagents.com/"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "applicationCategory": "DeveloperApplication", "author": {"@type": "Person", "name": "John B Joseph"}, "codeRepository": "https://github.com/Johnbjoseph-cybersec/rewindagents", "description": "Undo for AI coding agents, including what they do in the shell: rm -rf, sed -i, a script. rewindagents saves each file before every step and takes back the whole session, one step or one file. Open source, local, standard library only. Hooks for Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid and Qwen Code.", "license": "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE", "name": "rewindagents", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "operatingSystem": "macOS, Linux", "softwareVersion": "0.0.9", "url": "https://rewindagents.com/"}</script>
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -42,7 +42,7 @@
 
 <section class="hero" aria-labelledby="h1"><div class="wrap">
 <div class="hero-text">
-<p class="eyebrow"><b>v0.0.8</b> hooks for 7 coding agents</p>
+<p class="eyebrow"><b>v0.0.9</b> hooks for 7 coding agents</p>
 <h1 id="h1">Your coding agent ran <span class="nw">rm -rf</span>. Take it back.</h1>
 <p class="lede">rewindagents records every step your coding agent takes and saves each file before it changes, including files only a shell command touched. When a run goes wrong, take back the whole session, one step, or one file.</p>
 <p class="lede base">Then fork any recorded step, let another agent continue from there, and compare the runs, within the <a href="#limits">limits</a>.</p>
@@ -66,9 +66,9 @@
 <ul class="facts"><li>standard library only</li><li>no network, no account</li><li>never stops or changes a call</li><li>Apache-2.0</li></ul>
 </div>
 <div class="hero-install">
-<p class="small"><b>Install.</b> Not on PyPI yet, so from GitHub; then add the hook in a project. One click on a command selects all of it, without the prompt.</p>
-<pre class="term install"><code><span class="l"><span class="p">$ </span><span class="sel">pipx install <span class="nb">git+https://</span><wbr><span class="nb">github.com/</span><wbr><span class="nb">Johnbjoseph-cybersec/</span><wbr><span class="nb">rewindagents</span></span></span>
-<span class="l"><span class="c"># or: pip install <span class="nb">git+https://</span><wbr><span class="nb">...</span></span></span>
+<p class="small"><b>Install.</b> From PyPI; then add the hook in a project. One click on a command selects all of it, without the prompt.</p>
+<pre class="term install"><code><span class="l"><span class="p">$ </span><span class="sel">pipx install rewindagents</span></span>
+<span class="l"><span class="c"># or: pip install rewindagents</span></span>
 <span class="l"><span class="c"># adds the hook to .claude/settings.json in this project</span></span>
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents install</span></span></code></pre>
 </div>
@@ -179,7 +179,7 @@
 <figure class="shot"><img src="assets/ui-timeline.png" alt="rewindagents ui: the demo session as a timeline. Steps 13 and 14 are struck through as rewound by step 15; the right panel shows the diff step 15 restored, with Preview rewind to here and Rewind to here buttons" width="1440" height="900" loading="lazy">
 <figcaption><code>rewindagents ui</code> on the demo session: steps 13 and 14 struck through, rewound by step 15. Local only, on 127.0.0.1, behind a one-time token.</figcaption></figure>
 <div class="trio">
-<div><h3>One command to set up</h3><p><code>init</code> finds the agents you have and adds the hook to each one, keeping every hook already there.</p><pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">pipx install <span class="nb">git+https://</span><wbr><span class="nb">github.com/</span><wbr><span class="nb">Johnbjoseph-cybersec/</span><wbr><span class="nb">rewindagents</span> &amp;&amp; cd <span class="nb">your-project</span> &amp;&amp; rewindagents init</span></span></code></pre></div>
+<div><h3>One command to set up</h3><p><code>init</code> finds the agents you have and adds the hook to each one, keeping every hook already there.</p><pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">pipx install rewindagents &amp;&amp; cd <span class="nb">your-project</span> &amp;&amp; rewindagents init</span></span></code></pre></div>
 <div><h3>See it</h3><p>The timeline in your browser: every step, every file, every diff. <kbd>j</kbd> <kbd>k</kbd> to move, <kbd>r</kbd> to rewind.</p><pre class="term"><code><span class="l"><span class="c"># opens the timeline in your browser; Ctrl+C stops it</span></span>
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents ui</span></span></code></pre></div>
 <div><h3>Take back exactly what you mean</h3><p>Preview a rewind as a diff, then take back the whole session or a single file. Every rewind is a new step, so it can be undone.</p><pre class="term"><code><span class="l"><span class="c"># what taking it back to step 12 would change</span></span>
@@ -192,9 +192,9 @@
 <section class="sec" id="install" aria-labelledby="h-install"><div class="wrap">
 <p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="28.7" height="1" fill="#121412"/><rect x="28.7" y="16" width="55.3" height="1" fill="#838C86"/><rect x="1.5" y="12" width="1" height="5" fill="#121412"/><rect x="10.4" y="12" width="1" height="5" fill="#121412"/><rect x="19.3" y="12" width="1" height="5" fill="#121412"/><rect x="37.1" y="12" width="1" height="5" fill="#838C86"/><rect x="45.9" y="12" width="1" height="5" fill="#838C86"/><rect x="54.8" y="12" width="1" height="5" fill="#838C86"/><rect x="63.7" y="12" width="1" height="5" fill="#838C86"/><rect x="72.6" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M25.7 1H31.7V4L29.7 6.5V17H27.7V6.5L25.7 4Z" fill="#B82A16"/></svg><span class="n">04</span><span>Install</span></p>
 <div class="head"><h2 id="h-install">Install, then add the hook to a project.</h2>
-<p class="lede">Python &gt;=3.10. No dependencies beyond the standard library. Tested on Python 3.15 on macOS. Not on PyPI yet, so install from the repository. The <a href="docs/">docs</a> walk through a first session.</p></div>
-<div class="install-row"><div><h3>Get the command</h3><p><code>pipx</code> installs it from the repository, as in the panel. From a clone, <code>pip install .</code> works too; without installing, <code>PYTHONPATH=src python3 -m rewindagents</code> runs the same CLI.</p></div><pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">pipx install <span class="nb">git+https://</span><wbr><span class="nb">github.com/</span><wbr><span class="nb">Johnbjoseph-cybersec/</span><wbr><span class="nb">rewindagents</span></span></span>
-<span class="l"><span class="c"># or: pip install <span class="nb">git+https://</span><wbr><span class="nb">...</span></span></span>
+<p class="lede">Python &gt;=3.10. No dependencies beyond the standard library. Tested on Python 3.15 on macOS. Install it from PyPI. The <a href="docs/">docs</a> walk through a first session.</p></div>
+<div class="install-row"><div><h3>Get the command</h3><p><code>pipx</code> installs it from PyPI, as in the panel. From a clone, <code>pip install .</code> works too; without installing, <code>PYTHONPATH=src python3 -m rewindagents</code> runs the same CLI.</p></div><pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">pipx install rewindagents</span></span>
+<span class="l"><span class="c"># or: pip install rewindagents</span></span>
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents <span class="nb">--version</span></span></span></code></pre></div>
 <div class="pair"><div><h3>Add the Claude Code hook</h3><pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">cd /path/to/your/project</span></span>
 <span class="l"><span class="c"># adds the hook to .claude/settings.json in this project</span></span>
@@ -300,8 +300,8 @@
 <section class="sec close" aria-labelledby="h-close"><div class="wrap">
 <div class="closegrid"><div><h2 id="h-close">Install it, add the hook, carry on.</h2>
 <div class="cta"><a class="btn btn-primary" href="#install">Install</a><a class="btn btn-ghost" href="docs/">Read the docs</a></div></div>
-<pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">pipx install <span class="nb">git+https://</span><wbr><span class="nb">github.com/</span><wbr><span class="nb">Johnbjoseph-cybersec/</span><wbr><span class="nb">rewindagents</span></span></span>
-<span class="l"><span class="c"># or: pip install <span class="nb">git+https://</span><wbr><span class="nb">...</span></span></span></code></pre></div>
+<pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">pipx install rewindagents</span></span>
+<span class="l"><span class="c"># or: pip install rewindagents</span></span></code></pre></div>
 </div></section>
 
 </main>

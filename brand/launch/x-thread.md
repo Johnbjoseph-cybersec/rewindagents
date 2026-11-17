@@ -42,10 +42,10 @@ Today: Claude Code, tested in real sessions.
 
 Codex and Cursor: built from their hook docs and tested with the documented payloads, not yet in a live session. If you try one, an issue with the real payload helps.
 
-Not on PyPI yet.
+On PyPI: pipx install rewindagents
 
 ## Post 7
 
-Install from the repository with pipx, then run rewindagents install in your project.
+Install from PyPI with pipx, then run rewindagents install in your project.
 
 Docs and the full clip: {site_url}

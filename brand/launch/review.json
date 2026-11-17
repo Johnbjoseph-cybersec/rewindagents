@@ -10,56 +10,134 @@
     "ph-1.png": {
       "png_sha256": "d56bd0cd9a5c586850c921ff8ae084b233579f14e1ec33c1b4a6c42f87f70775",
       "scores": {
-        "first_read": {"score": 9, "evidence": "Mark now x56-358, y125-340 (302 px wide) over 'rewindagent' (x56-1076, y380-510); at 320 px the name is about 270 px wide and the '<' plus cursor reads as a clear second object. Red ground edge to edge."},
-        "legibility": {"score": 9, "evidence": "Wordmark very large, tagline about 44 px (x56-1100, y568-608), roughly 11 px at 320 wide; only the 15 px credit (y715) is small and it is a footer."},
-        "brand_fidelity": {"score": 9, "evidence": "Concept E in one colour Leader on Record, Bricolage 800 plus Hanken, left aligned on x56, no gradient or chrome. Geometry unchanged, only scaled."},
-        "composition": {"score": 9, "evidence": "The larger mark now holds against the wordmark (302 px against 1020 px) and the stack fills y125-608 in a clear mark, name, tagline order; the open right side is deliberate; credit on the shared baseline y715."},
-        "truthfulness": {"score": 9, "evidence": "Name, BRAND.md promise word for word, credit line. Nothing implied."}
+        "first_read": {
+          "score": 9,
+          "evidence": "Mark now x56-358, y125-340 (302 px wide) over 'rewindagent' (x56-1076, y380-510); at 320 px the name is about 270 px wide and the '<' plus cursor reads as a clear second object. Red ground edge to edge."
+        },
+        "legibility": {
+          "score": 9,
+          "evidence": "Wordmark very large, tagline about 44 px (x56-1100, y568-608), roughly 11 px at 320 wide; only the 15 px credit (y715) is small and it is a footer."
+        },
+        "brand_fidelity": {
+          "score": 9,
+          "evidence": "Concept E in one colour Leader on Record, Bricolage 800 plus Hanken, left aligned on x56, no gradient or chrome. Geometry unchanged, only scaled."
+        },
+        "composition": {
+          "score": 9,
+          "evidence": "The larger mark now holds against the wordmark (302 px against 1020 px) and the stack fills y125-608 in a clear mark, name, tagline order; the open right side is deliberate; credit on the shared baseline y715."
+        },
+        "truthfulness": {
+          "score": 9,
+          "evidence": "Name, BRAND.md promise word for word, credit line. Nothing implied."
+        }
       }
     },
     "ph-2.png": {
       "png_sha256": "8f3fc163f842b1362bfcd7108e5d075ca943ac3b06a912be0efa183bebf3b413",
       "scores": {
-        "first_read": {"score": 9, "evidence": "72 px two-line headline (x58-890, y50-190), dark band y250-670 edge to edge, six lines at 37 px; rows 13 and 14 in Rewind orange (y562, y614) are the only lit lines. Thumbnail reads headline, terminal, two hot rows."},
-        "legibility": {"score": 9, "evidence": "37 px mono (about 9 px at 320, 18 at 635), 53 px pitch; longest line ends x1208, 62 px from the edge, no wrap. Tick marks (x100-370, y338-360) are grey decoration."},
-        "brand_fidelity": {"score": 9, "evidence": "Red ground, Spool band, Leader text, one Rewind accent on the two rows the list names, Playhead prompt, left aligned, no chrome."},
-        "composition": {"score": 9, "evidence": "Band starts y250 and runs to y670 with text spanning x58-1208; headline-to-band gap 60 px, credit in the y670-760 strip. Tight and full."},
-        "truthfulness": {"score": 9, "evidence": "Rows 10-14 verbatim recorded output; nine ticks stand for the nine folded steps as the gallery list says."}
+        "first_read": {
+          "score": 9,
+          "evidence": "72 px two-line headline (x58-890, y50-190), dark band y250-670 edge to edge, six lines at 37 px; rows 13 and 14 in Rewind orange (y562, y614) are the only lit lines. Thumbnail reads headline, terminal, two hot rows."
+        },
+        "legibility": {
+          "score": 9,
+          "evidence": "37 px mono (about 9 px at 320, 18 at 635), 53 px pitch; longest line ends x1208, 62 px from the edge, no wrap. Tick marks (x100-370, y338-360) are grey decoration."
+        },
+        "brand_fidelity": {
+          "score": 9,
+          "evidence": "Red ground, Spool band, Leader text, one Rewind accent on the two rows the list names, Playhead prompt, left aligned, no chrome."
+        },
+        "composition": {
+          "score": 9,
+          "evidence": "Band starts y250 and runs to y670 with text spanning x58-1208; headline-to-band gap 60 px, credit in the y670-760 strip. Tight and full."
+        },
+        "truthfulness": {
+          "score": 9,
+          "evidence": "Rows 10-14 verbatim recorded output; nine ticks stand for the nine folded steps as the gallery list says."
+        }
       }
     },
     "ph-3.png": {
       "png_sha256": "78f740c61d348305ebd9ead13f60ff8c8fb6be1b7b300a13cb3ac9baedba84e3",
       "scores": {
-        "first_read": {"score": 9, "evidence": "40 px mono fills band y250-668 with five lines at 60 px pitch; the two orange D lines (y545, y607) sit directly under 'deleted the tests' (y130-185). Reads at 320 px."},
-        "legibility": {"score": 9, "evidence": "40 px mono (about 10 px at 320), longest line ends x607, orange on Spool strong. Credit 15 px is a footer."},
-        "brand_fidelity": {"score": 9, "evidence": "Record, Spool, Leader, accent only on the two deleted files, left aligned on x58."},
-        "composition": {"score": 8.5, "evidence": "Headline now breaks 'Its last two steps / deleted the tests' with no orphan, and the band starts y250 like ph-2; text is vertically even in the band. It still stops at x607, so the right 660 px of the band is empty black."},
-        "truthfulness": {"score": 9, "evidence": "git status lines verbatim; headline limited to what the two D lines show."}
+        "first_read": {
+          "score": 9,
+          "evidence": "40 px mono fills band y250-668 with five lines at 60 px pitch; the two orange D lines (y545, y607) sit directly under 'deleted the tests' (y130-185). Reads at 320 px."
+        },
+        "legibility": {
+          "score": 9,
+          "evidence": "40 px mono (about 10 px at 320), longest line ends x607, orange on Spool strong. Credit 15 px is a footer."
+        },
+        "brand_fidelity": {
+          "score": 9,
+          "evidence": "Record, Spool, Leader, accent only on the two deleted files, left aligned on x58."
+        },
+        "composition": {
+          "score": 8.5,
+          "evidence": "Headline now breaks 'Its last two steps / deleted the tests' with no orphan, and the band starts y250 like ph-2; text is vertically even in the band. It still stops at x607, so the right 660 px of the band is empty black."
+        },
+        "truthfulness": {
+          "score": 9,
+          "evidence": "git status lines verbatim; headline limited to what the two D lines show."
+        }
       }
     },
     "ph-4.png": {
       "png_sha256": "90d0de4aefa14d4bfc457ae956f89731a387086978362af5bfbe0b025940f15e",
       "scores": {
-        "first_read": {"score": 8, "evidence": "Balanced headline (x58-1010, y50-190) lands and the single orange undo line (y598, x87-1195) is now the one lit thing, which is right. But mono is 25 px, about 6 px at 320 wide, so at thumbnail the band is a dark bar with one orange line you cannot read."},
-        "legibility": {"score": 8, "evidence": "25 px mono, 48 px pitch; undo line ends x1195, 75 px from the edge. Still the smallest terminal text in the set, about 12 px at 635 wide, width-limited by the verbatim 76-character line."},
-        "brand_fidelity": {"score": 9, "evidence": "Accent now only on the undo line, the product's claim; the four restore rows and the rest in Leader. One focal point; palette, type and alignment correct."},
-        "composition": {"score": 8.5, "evidence": "Band y250-668 with padding and leading fills the room; the red voids above and below are gone and the top matches ph-2 and ph-3. The text block (y297-615) is airy rather than dense and the type reads smaller than its neighbours."},
-        "truthfulness": {"score": 9, "evidence": "Rewind output verbatim, four files, step 15, undo with --session demo."}
+        "first_read": {
+          "score": 8,
+          "evidence": "Balanced headline (x58-1010, y50-190) lands and the single orange undo line (y598, x87-1195) is now the one lit thing, which is right. But mono is 25 px, about 6 px at 320 wide, so at thumbnail the band is a dark bar with one orange line you cannot read."
+        },
+        "legibility": {
+          "score": 8,
+          "evidence": "25 px mono, 48 px pitch; undo line ends x1195, 75 px from the edge. Still the smallest terminal text in the set, about 12 px at 635 wide, width-limited by the verbatim 76-character line."
+        },
+        "brand_fidelity": {
+          "score": 9,
+          "evidence": "Accent now only on the undo line, the product's claim; the four restore rows and the rest in Leader. One focal point; palette, type and alignment correct."
+        },
+        "composition": {
+          "score": 8.5,
+          "evidence": "Band y250-668 with padding and leading fills the room; the red voids above and below are gone and the top matches ph-2 and ph-3. The text block (y297-615) is airy rather than dense and the type reads smaller than its neighbours."
+        },
+        "truthfulness": {
+          "score": 9,
+          "evidence": "Rewind output verbatim, four files, step 15, undo with --session demo."
+        }
       }
     },
     "ph-5.png": {
-      "png_sha256": "87ed1fd68c829fcf17a873a1acd900919fe9e296a81c91b351976bb87950004c",
+      "png_sha256": "eec30753ce2bfb9004544991fd65a57c38ffd0de0090b3e7a8161b8a9f745edf",
       "scores": {
-        "first_read": {"score": 8.5, "evidence": "'Install in two commands' (x58-893, y50-110); two dark strips y250-360 and y441-552 are the only dark shapes, and the orange 'rewindagent install' (x90-401, y493) is now the single lit item. Labels at 30 px read at 320; command text is still about 7 px there."},
-        "legibility": {"score": 8.5, "evidence": "Mono 27.5 px, width-limited by the 73-char pipx line which ends x1210; labels and notes at 30 px white on red read well. The commands are the smallest text, about 14 px at 635 wide."},
-        "brand_fidelity": {"score": 8.5, "evidence": "Rewind accent on the install command gives the shot its focal point; Record, Spool, Leader, Playhead prompt, left aligned. No mark, which is fine here."},
-        "composition": {"score": 8.5, "evidence": "Strips are 110 px tall and content reaches y655, so the old 120 px dead band is gone and the first strip starts y250 like the others. Remaining weakness: 100 px of red between headline (y110) and first label (y213), and small commands inside tall strips."},
-        "truthfulness": {"score": 9, "evidence": "README commands verbatim; 'Not on PyPI yet.' and the standard-library line match the README."}
+        "first_read": {
+          "score": 8.5,
+          "evidence": "Re-reviewed 2026-11-18, full-res and gallery-sheet. Headline x58-893; two dark strips y250-362 and y441-553; orange 'rewindagents install' is the single lit item. Commands still about 7 px at 320 wide."
+        },
+        "legibility": {
+          "score": 8.5,
+          "evidence": "Mono about 27.5 px, longest line ends x703 of 1270; labels and notes about 30 px white on red read well. Commands remain the smallest text."
+        },
+        "brand_fidelity": {
+          "score": 8.5,
+          "evidence": "Record, Spool, Leader, one Rewind accent, Playhead prompt, left aligned on x56, no chrome."
+        },
+        "composition": {
+          "score": 8.5,
+          "evidence": "No overlap or overflow; strips y250-362/441-553, notes y595/640, credit y715. Remaining weakness: about 100 px red gap under the headline and small commands inside tall strips."
+        },
+        "truthfulness": {
+          "score": 9,
+          "evidence": "Label now 'From PyPI' (x56-192, y213), true for 'pipx install rewindagents' (README line 107-110). 'rewindagents install' matches README Install/hook section; notes 'Python 3.10 or newer' and 'No dependencies beyond the standard library.' match README lines 105-107. Nothing implied beyond that."
+        }
       }
     }
   },
   "set": {
-    "sequence": {"score": 9, "evidence": "Headline x58 and credit y715 shared across all five; terminal bands start y250 on ph-2 to ph-5 and end y552-670; red ground and the one-accent rule hold. Terminal type still steps 37, 40, 25, 27.5 px, so ph-4 and ph-5 read a size lighter when flicked through, but the set steps cleanly."}
+    "sequence": {
+      "score": 9,
+      "evidence": "Headline x58 and credit y715 shared across all five; terminal bands start y250 on ph-2 to ph-5 and end y552-670; red ground and the one-accent rule hold. Terminal type still steps 37, 40, 25, 27.5 px, so ph-4 and ph-5 read a size lighter when flicked through, but the set steps cleanly."
+    }
   },
   "mean": 8.81,
   "lowest": 8,
@@ -96,56 +174,134 @@
       "ph-1.png": {
         "png_sha256": "881c7ae7a4691da22b4492c36330e8d3098bcddb31e895f920ca358a50ddeecf",
         "scores": {
-          "first_read": {"score": 9, "evidence": "Stacked lockup: mark about 208 px wide (x64-272, y186-303) over an 800-weight name about 800 px wide, then the tagline. Name and mark both land at thumbnail; the red playhead is the single lit element."},
-          "legibility": {"score": 9, "evidence": "Wordmark about 120 px and tagline about 36 px are readable at 635 px wide; only the 15 px credit goes small, and it is a footer."},
-          "brand_fidelity": {"score": 9, "evidence": "Leader ground, Reel type, Record on the playhead only, left aligned on x64, Bricolage 800 plus Hanken. Mark geometry as logo-light.png. The flat-topped head still reads a little like a funnel, but that is the approved logo, not this shot."},
-          "composition": {"score": 9, "evidence": "Block sits y186-540, a little above centre, with the credit on the same baseline (y706, x48) as the other shots. Left edge of the lockup (x64) is 16 px inside the credit and headline margin (x48); small, but visible on the sheet."},
-          "truthfulness": {"score": 9, "evidence": "Name, BRAND.md promise word for word, credit line; nothing implied."}
+          "first_read": {
+            "score": 9,
+            "evidence": "Stacked lockup: mark about 208 px wide (x64-272, y186-303) over an 800-weight name about 800 px wide, then the tagline. Name and mark both land at thumbnail; the red playhead is the single lit element."
+          },
+          "legibility": {
+            "score": 9,
+            "evidence": "Wordmark about 120 px and tagline about 36 px are readable at 635 px wide; only the 15 px credit goes small, and it is a footer."
+          },
+          "brand_fidelity": {
+            "score": 9,
+            "evidence": "Leader ground, Reel type, Record on the playhead only, left aligned on x64, Bricolage 800 plus Hanken. Mark geometry as logo-light.png. The flat-topped head still reads a little like a funnel, but that is the approved logo, not this shot."
+          },
+          "composition": {
+            "score": 9,
+            "evidence": "Block sits y186-540, a little above centre, with the credit on the same baseline (y706, x48) as the other shots. Left edge of the lockup (x64) is 16 px inside the credit and headline margin (x48); small, but visible on the sheet."
+          },
+          "truthfulness": {
+            "score": 9,
+            "evidence": "Name, BRAND.md promise word for word, credit line; nothing implied."
+          }
         }
       },
       "ph-2.png": {
         "png_sha256": "be8aa16ac213cfcd63cbb7c887ed528db822e3c71834d0ddaefc239039a56133",
         "scores": {
-          "first_read": {"score": 8, "evidence": "One-line headline now reads; window starts at y114 and the 14 rows fill it with only rows 13 and 14 in orange. At thumbnail it is still a dense list, but the two lit rows say where the damage is."},
-          "legibility": {"score": 8, "evidence": "Mono 23.5 px, about 11.7 px at thumbnail: borderline but legible, and row spacing (32 px) is generous. Full size is clean; longest line ends x1003 of 1222."},
-          "brand_fidelity": {"score": 9, "evidence": "Spool window, Leader text, one Rewind accent on the last two rows, left aligned, no title bar chrome, no gradient. Prompt in Playhead."},
-          "composition": {"score": 9, "evidence": "Window x48-1222, y114-668 holds the rows with about 55 px below row 14; headline and credit on the same positions as ph-3 and ph-4. Balanced and full."},
-          "truthfulness": {"score": 9, "evidence": "All 14 rows are the recorded replay; last two marked as the gallery list says; headline is a clause of the session comment."}
+          "first_read": {
+            "score": 8,
+            "evidence": "One-line headline now reads; window starts at y114 and the 14 rows fill it with only rows 13 and 14 in orange. At thumbnail it is still a dense list, but the two lit rows say where the damage is."
+          },
+          "legibility": {
+            "score": 8,
+            "evidence": "Mono 23.5 px, about 11.7 px at thumbnail: borderline but legible, and row spacing (32 px) is generous. Full size is clean; longest line ends x1003 of 1222."
+          },
+          "brand_fidelity": {
+            "score": 9,
+            "evidence": "Spool window, Leader text, one Rewind accent on the last two rows, left aligned, no title bar chrome, no gradient. Prompt in Playhead."
+          },
+          "composition": {
+            "score": 9,
+            "evidence": "Window x48-1222, y114-668 holds the rows with about 55 px below row 14; headline and credit on the same positions as ph-3 and ph-4. Balanced and full."
+          },
+          "truthfulness": {
+            "score": 9,
+            "evidence": "All 14 rows are the recorded replay; last two marked as the gallery list says; headline is a clause of the session comment."
+          }
         }
       },
       "ph-3.png": {
         "png_sha256": "e3247c88fad19df96a38911f17f3411da8028144992d00f1e77bf8662b1ee0a2",
         "scores": {
-          "first_read": {"score": 8, "evidence": "Two orange D lines under 'Its last two steps deleted the tests' land fast, but the five lines sit in the top 30 percent of a huge black slab, so the thumbnail is mostly dark nothing with a small cluster of text."},
-          "legibility": {"score": 9, "evidence": "23.5 px mono, about 11.7 px at thumbnail, five short lines with clear space; the orange D rows are the strongest contrast on the shot."},
-          "brand_fidelity": {"score": 9, "evidence": "One Rewind accent on the two deleted files, Spool window, left aligned, no decoration."},
-          "composition": {"score": 7, "evidence": "Window y114-668 but text ends at y320 and stops at x396: about 350 px of empty black below and about 830 px empty to the right, 60 percent of the window is void. Matching the window across shots 2-4 made this shot a heavy dark slab with a tiny cluster at the top left."},
-          "truthfulness": {"score": 9, "evidence": "Headline cut to the part the output shows; git status lines are verbatim from the session."}
+          "first_read": {
+            "score": 8,
+            "evidence": "Two orange D lines under 'Its last two steps deleted the tests' land fast, but the five lines sit in the top 30 percent of a huge black slab, so the thumbnail is mostly dark nothing with a small cluster of text."
+          },
+          "legibility": {
+            "score": 9,
+            "evidence": "23.5 px mono, about 11.7 px at thumbnail, five short lines with clear space; the orange D rows are the strongest contrast on the shot."
+          },
+          "brand_fidelity": {
+            "score": 9,
+            "evidence": "One Rewind accent on the two deleted files, Spool window, left aligned, no decoration."
+          },
+          "composition": {
+            "score": 7,
+            "evidence": "Window y114-668 but text ends at y320 and stops at x396: about 350 px of empty black below and about 830 px empty to the right, 60 percent of the window is void. Matching the window across shots 2-4 made this shot a heavy dark slab with a tiny cluster at the top left."
+          },
+          "truthfulness": {
+            "score": 9,
+            "evidence": "Headline cut to the part the output shows; git status lines are verbatim from the session."
+          }
         }
       },
       "ph-4.png": {
         "png_sha256": "b33c54fa10873f16bd75802127834edc6fb62a0508f92db5e3779953d4db39e0",
         "scores": {
-          "first_read": {"score": 8, "evidence": "Four orange restore rows read as 'files came back' at thumbnail, matching gallery item 4's 'four files restored'. The undo line is plain Leader on the last line and is the longest, so it is found second, on a second look."},
-          "legibility": {"score": 9, "evidence": "23.5 px mono; undo line ends x1143, 79 px from the window edge, so the margin problem is gone."},
-          "brand_fidelity": {"score": 8, "evidence": "Judged on merits: accenting the four restore rows is defensible (it is what the headline and the list item lead with, and the GIF does the same), but the accent covers a block of four rows plus the word 'restore' as well as the path, which dilutes 'one thing to look at'; the undo line, the product's distinct claim, is unlit. Marked down one point, not failing."},
-          "composition": {"score": 7, "evidence": "Same issue as ph-3: text runs y114-350, then about 320 px of blank black under it; window is 70 percent void in height and the right 20 percent is empty. Consistent with ph-2/3, but dead space is the dominant impression."},
-          "truthfulness": {"score": 9, "evidence": "Rewind output verbatim, four files, step 15, undo command with --session demo."}
+          "first_read": {
+            "score": 8,
+            "evidence": "Four orange restore rows read as 'files came back' at thumbnail, matching gallery item 4's 'four files restored'. The undo line is plain Leader on the last line and is the longest, so it is found second, on a second look."
+          },
+          "legibility": {
+            "score": 9,
+            "evidence": "23.5 px mono; undo line ends x1143, 79 px from the window edge, so the margin problem is gone."
+          },
+          "brand_fidelity": {
+            "score": 8,
+            "evidence": "Judged on merits: accenting the four restore rows is defensible (it is what the headline and the list item lead with, and the GIF does the same), but the accent covers a block of four rows plus the word 'restore' as well as the path, which dilutes 'one thing to look at'; the undo line, the product's distinct claim, is unlit. Marked down one point, not failing."
+          },
+          "composition": {
+            "score": 7,
+            "evidence": "Same issue as ph-3: text runs y114-350, then about 320 px of blank black under it; window is 70 percent void in height and the right 20 percent is empty. Consistent with ph-2/3, but dead space is the dominant impression."
+          },
+          "truthfulness": {
+            "score": 9,
+            "evidence": "Rewind output verbatim, four files, step 15, undo command with --session demo."
+          }
         }
       },
       "ph-5.png": {
         "png_sha256": "0522455f9f4efd622e172665fdfa84bf928f6fa51b7030608e586cae1389b1b5",
         "scores": {
-          "first_read": {"score": 8, "evidence": "'Install in two commands' with two labelled strips reads at once and the quiet no-accent shot is a calm finish; the two command strips are only about 70 px tall each so at thumbnail it is a few dark bars on a pale page."},
-          "legibility": {"score": 8, "evidence": "Mono 23.5 px; the Playhead comment (#B9C2BB on Spool) is the weakest text, and the notes are Tape at 22 px, both pass contrast but are small at thumbnail."},
-          "brand_fidelity": {"score": 8, "evidence": "Palette, type and left alignment right; no accent at all on this view where BRAND.md says one per view (the coordinator chose none; it is allowed to omit but the page lacks a focal point). Title bars removed, which is cleaner."},
-          "composition": {"score": 7, "evidence": "Content ends at y465, then about 240 px of empty paper before the credit at y706; upper-heavy. Windows here are 72 px strips while shots 2-4 use a 554 px window, so the set looks like two layouts."},
-          "truthfulness": {"score": 9, "evidence": "Two README commands and the comment verbatim; 'Not on PyPI yet' stated; nothing overclaimed."}
+          "first_read": {
+            "score": 8,
+            "evidence": "'Install in two commands' with two labelled strips reads at once and the quiet no-accent shot is a calm finish; the two command strips are only about 70 px tall each so at thumbnail it is a few dark bars on a pale page."
+          },
+          "legibility": {
+            "score": 8,
+            "evidence": "Mono 23.5 px; the Playhead comment (#B9C2BB on Spool) is the weakest text, and the notes are Tape at 22 px, both pass contrast but are small at thumbnail."
+          },
+          "brand_fidelity": {
+            "score": 8,
+            "evidence": "Palette, type and left alignment right; no accent at all on this view where BRAND.md says one per view (the coordinator chose none; it is allowed to omit but the page lacks a focal point). Title bars removed, which is cleaner."
+          },
+          "composition": {
+            "score": 7,
+            "evidence": "Content ends at y465, then about 240 px of empty paper before the credit at y706; upper-heavy. Windows here are 72 px strips while shots 2-4 use a 554 px window, so the set looks like two layouts."
+          },
+          "truthfulness": {
+            "score": 9,
+            "evidence": "Two README commands and the comment verbatim; 'Not on PyPI yet' stated; nothing overclaimed."
+          }
         }
       }
     },
     "set": {
-      "sequence": {"score": 9, "evidence": "Name, recorded replay, wreck, rewind, install, in that order; headline tops, window tops and credit baseline now line up across 2-5. Story reads."}
+      "sequence": {
+        "score": 9,
+        "evidence": "Name, recorded replay, wreck, rewind, install, in that order; headline tops, window tops and credit baseline now line up across 2-5. Story reads."
+      }
     },
     "mean": 8.46,
     "lowest": 7,

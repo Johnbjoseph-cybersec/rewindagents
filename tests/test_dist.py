@@ -130,12 +130,16 @@ class EphemeralPythonTest(unittest.TestCase):
 
 
 class ReadmeInstallLinesTest(unittest.TestCase):
-    def test_pypi_lines_are_marked_after_release_and_nothing_claims_it_is_on_pypi(self):
+    def test_pypi_lines_are_current_and_nothing_says_it_is_not_on_pypi(self):
+        # Before 0.0.8 this rule required the PyPI lines to be marked "after the first release" and forbade any
+        # claim that the package was on PyPI. 0.0.8 is on PyPI, so the rule flips, just as strict: the README
+        # gives the PyPI install, and nothing in it still says (or plans as if) it is not there.
         readme = (ROOT / "README.md").read_text()
         self.assertIn("uv tool install rewindagents", readme)
         self.assertIn("pipx install rewindagents", readme)
-        self.assertRegex(readme, r"(?i)after (the )?(first )?release")
-        self.assertNotRegex(readme, r"(?i)(is|now|available) on PyPI")
+        self.assertNotRegex(readme, r"(?i)not (yet )?on PyPI|on PyPI yet|not there yet")
+        self.assertNotRegex(readme, r"(?i)after (the )?(first )?release")
+        self.assertNotRegex(readme, r"(?im)^- Publish on PyPI")
 
 
 if __name__ == "__main__":

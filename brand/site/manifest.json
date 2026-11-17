@@ -126,11 +126,11 @@
     "rewindagents install --settings ~/.claude/settings.json   # or for every project"
    ],
    "install": [
-    "pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagents     # or: pip install git+https://...",
+    "pipx install rewindagents     # or: pip install rewindagents",
     "rewindagents --version"
    ],
    "quick": [
-    "pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagents && cd your-project && rewindagents init"
+    "pipx install rewindagents && cd your-project && rewindagents init"
    ],
    "record": [
     "echo '{\"tool\": \"Bash\", \"args\": {\"command\": \"ls\"}}' | rewindagents record --session s1",
@@ -347,7 +347,7 @@
    "rewindagents uninstall          # removes the hook from .claude/settings.json in this project",
    "rewindagents uninstall --agent cursor --settings ~/.cursor/hooks.json   # same flags as install"
   ],
-  "version": "0.0.8",
+  "version": "0.0.9",
   "wreck_steps": 2
  },
  "hero": [

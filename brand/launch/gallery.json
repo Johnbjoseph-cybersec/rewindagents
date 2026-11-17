@@ -319,16 +319,16 @@
     "Install in two commands"
    ],
    "headline_px": 72,
-   "item": "Install in two commands: pipx from the repository, then `rewindagents install` in the project.",
+   "item": "Install in two commands: pipx from PyPI, then `rewindagents install` in the project.",
    "kind": "term",
-   "mono_px": 27.0,
+   "mono_px": 40,
    "notes": [
-    "Not on PyPI yet.",
+    "Python 3.10 or newer",
     "No dependencies beyond the standard library."
    ],
    "panels": [
     {
-     "label": "From the repository",
+     "label": "From PyPI",
      "rows": [
       [
        [
@@ -336,7 +336,7 @@
         "Playhead"
        ],
        [
-        "pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagents",
+        "pipx install rewindagents",
         "Leader"
        ]
       ]
@@ -363,22 +363,22 @@
    "samples": [
     [
      4,
-     305,
+     306,
      "Spool"
     ],
     [
      1266,
-     305,
+     306,
      "Spool"
     ],
     [
      4,
-     496,
+     498,
      "Spool"
     ],
     [
      1266,
-     496,
+     498,
      "Spool"
     ],
     [
@@ -392,7 +392,7 @@
      "Record"
     ]
    ],
-   "sha256": "87ed1fd68c829fcf17a873a1acd900919fe9e296a81c91b351976bb87950004c"
+   "sha256": "eec30753ce2bfb9004544991fd65a57c38ffd0de0090b3e7a8161b8a9f745edf"
   }
  ],
  "width": 1270

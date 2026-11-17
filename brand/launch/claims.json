@@ -2,8 +2,8 @@
  "reviewer": "claim-verifier",
  "written_by": "fire",
  "date": "2026-11-12",
- "rounds": "round 1: 21 BLOCK (each-file overstatement, Cursor prints, 'full speed', editor undo history, rewind checks, exit code, branch outside git, export path, Codex trust) + 4 UNVERIFIED incl. first-person authorship; round 2: 8 BLOCK (incomplete exception lists, Cursor also prints {}, Codex folder trust, export size caps); round 3: 0 BLOCK, 3 UNVERIFIED, none a public claim; round 4 (RB5e, 2026-11-12, producthunt.md Gallery section only): 1 BLOCK (reviewed-by-a-critic read as approval while every review on file failed) -> reworded -> 0 BLOCK; round 5 (RB0 rename to rewindagents, 2026-11-12): diff confirmed name-only, every row re-read against current sources and re-anchored, 3 new rows (command and install line, not on PyPI via pypi.org JSON 404, no live-repo claim); 1 BLOCK outside the copy (exported page heading kept the old name, export.py:275) fixed, verifier confirmed CLEAR; README Pages wording made future",
- "kit_sha256": "915f3de1ecb96d1aa22eba612618936c9d802683be6493aadc26c615d189a0d7",
+ "rounds": "round 1: 21 BLOCK (each-file overstatement, Cursor prints, 'full speed', editor undo history, rewind checks, exit code, branch outside git, export path, Codex trust) + 4 UNVERIFIED incl. first-person authorship; round 2: 8 BLOCK (incomplete exception lists, Cursor also prints {}, Codex folder trust, export size caps); round 3: 0 BLOCK, 3 UNVERIFIED, none a public claim; round 4 (RB5e, 2026-11-12, producthunt.md Gallery section only): 1 BLOCK (reviewed-by-a-critic read as approval while every review on file failed) -> reworded -> 0 BLOCK; round 5 (RB0 rename to rewindagents, 2026-11-12): diff confirmed name-only, every row re-read against current sources and re-anchored, 3 new rows (command and install line, not on PyPI via pypi.org JSON 404, no live-repo claim); 1 BLOCK outside the copy (exported page heading kept the old name, export.py:275) fixed, verifier confirmed CLEAR; README Pages wording made future; round 2026-11-18 (claim-verifier, two passes): PyPI switch - every PyPI/pipx/install line CLEAR against the PyPI JSON; the 2026-11-12 'not on PyPI' (404) rows superseded",
+ "kit_sha256": "b18e4dc08680754febdb8fc70d4bd395df4f684d536540d6da8f9d7aa0f1f366",
  "rb6_rounds": "RB6 (2026-11-12): round 1 BLOCKed six headlines that said every agent's built-in rewind cannot undo shell or subagent changes (Claude Code's /rewind does undo Bash changes to a file Claude already edited; only Claude Code's limits are documented) and marked subagent claims UNVERIFIED (payload-shaped test only). Round 2, after rescoping to capability claims with the /rewind and subagent caveats: CLEAR. Open, not claimed anywhere: background Bash after-scan timing.",
  "blocked_in_kit": 0,
  "found_beyond_the_kit": "Round 5: export.py:275 heading kept the old name (fixed); README.md:310 said the site is published (fixed). Earlier R11 items fixed in 93c9358.",
@@ -88,9 +88,9 @@
   },
   {
    "file": "producthunt.md",
-   "claim": "Not on PyPI; Codex/Cursor tested with documented payloads, not live; Cloud tier planned, not built, not priced",
+   "claim": "On PyPI; Codex/Cursor tested with documented payloads, not live; Cloud tier planned, not built, not priced",
    "verdict": "CLEAR",
-   "source": "README.md:15-17 \"Not on PyPI yet. ... the Codex and Cursor hooks are built from the vendors' hook documentation and tested with the documented payloads, not yet in a live session.\"; README.md:283-284 \"A paid Cloud tier (...): planned, not built, not priced.\"; agents.py:35-36"
+   "source": "https://pypi.org/pypi/rewindagents/json (2026-11-18): version 0.0.8, uploaded 2026-11-17T19:16:39, Source link github.com/Johnbjoseph-cybersec/rewindagents; README.md:96-98"
   },
   {
    "file": "producthunt.md",
@@ -172,9 +172,9 @@
   },
   {
    "file": "show-hn.md",
-   "claim": "Claude Code hook ran in real sessions; Codex/Cursor not live; not on PyPI; hosted tier planned",
+   "claim": "Claude Code hook ran in real sessions; Codex/Cursor not live; on PyPI; hosted tier planned",
    "verdict": "CLEAR",
-   "source": "README.md:15-17; agents.py:32-33 \"driven by a real Claude Code session\"; README.md:283-284 (project's own record)"
+   "source": "https://pypi.org/pypi/rewindagents/json (2026-11-18): version 0.0.8, uploaded 2026-11-17T19:16:39, Source link github.com/Johnbjoseph-cybersec/rewindagents; README.md:96-98"
   },
   {
    "file": "x-thread.md",
@@ -336,7 +336,7 @@
    "file": "producthunt.md",
    "claim": "Gallery built by brand/launch/gallery.py from the recorded session, the README, the BRAND.md promise, this list and the logo set",
    "verdict": "CLEAR",
-   "source": "gallery.json:61, 74, 247, 283 quote manifest/producthunt.md text with the new name; gallery.json:339 \"pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagents\" = README.md:31; BRAND.md:10"
+   "source": "gallery.json:61, 74, 247, 283 quote manifest/producthunt.md text with the new name; gallery.json:339 \"pipx install rewindagents\" = README.md:31; BRAND.md:10 (2026-11-18: gallery.json:339 `pipx install rewindagents` = README.md:110)"
   },
   {
    "file": "producthunt.md",
@@ -352,16 +352,16 @@
   },
   {
    "file": "producthunt.md",
-   "claim": "NEW (C-i): command `rewindagents` and install line `pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagents` match README.md and pyproject.toml",
+   "claim": "command `rewindagents` and install line `pipx install rewindagents` match README.md:110 and the PyPI name rewindagents",
    "verdict": "CLEAR",
-   "source": "pyproject.toml:28-29 \"[project.scripts]\\nrewindagents = \\\"rewindagents.cli:main\\\"\"; pyproject.toml:6 name = \"rewindagents\"; pyproject.toml:26 Source = \"https://github.com/Johnbjoseph-cybersec/rewindagents\"; README.md:31 \"pipx install git+https://github.com/Johnbjoseph-cybersec/rewindagents\"; README.md:32 \"rewindagents --version\"; cli.py:19 prog=\"rewindagents\"; brand/site/config.json:4 repo_url = same URL, so the kit's `pipx install git+{repo_url}` fills to the README line",
+   "source": "https://pypi.org/pypi/rewindagents/json (2026-11-18): version 0.0.8, uploaded 2026-11-17T19:16:39, Source link github.com/Johnbjoseph-cybersec/rewindagents; README.md:110; pyproject.toml:6 name = \"rewindagents\"",
    "files": "README.md, pyproject.toml, show-hn.md, onboarding-3-emails.md, producthunt.md, x-thread.md"
   },
   {
    "file": "producthunt.md",
-   "claim": "NEW (C-ii): 'Not on PyPI yet' / 'it is not on PyPI yet'",
+   "claim": "On PyPI (0.0.8 published 2026-11-18); no sentence in the kit claims a specific version is on PyPI",
    "verdict": "CLEAR",
-   "source": "https://pypi.org/pypi/rewindagents/json (2026-11-12): HTTP 404 Not Found; https://pypi.org/simple/rewindagents/ (2026-11-12): HTTP 404 Not Found. The HTML page pypi.org/project/rewindagents/ returned only a JS shell, so I relied on the API and the simple index. README.md:15 \"Not on PyPI yet.\"",
+   "source": "https://pypi.org/pypi/rewindagents/json (2026-11-18): version 0.0.8, uploaded 2026-11-17T19:16:39, Source link github.com/Johnbjoseph-cybersec/rewindagents",
    "files": "producthunt.md, show-hn.md, x-thread.md, reddit.md, linkedin-for-jj.md, onboarding-3-emails.md"
   },
   {

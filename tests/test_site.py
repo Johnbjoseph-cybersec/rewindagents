@@ -610,7 +610,8 @@ class TestSite(unittest.TestCase):
                     self.assertIn("hook", low, "%s: Codex/Cursor outside the hook: %s" % (p, sentence))
                     self.assertNotIn("planned", low, "%s: the Codex/Cursor hooks are built: %s" % (p, sentence))
                 if "pypi" in low:
-                    self.assertRegex(low, r"not on pypi|no package on pypi", "%s: %s" % (p, sentence))
+                    # on PyPI since v0.0.8 (2026-11-18): a page may not still say it is not
+                    self.assertNotRegex(low, r"not on pypi|no package on pypi", "%s: %s" % (p, sentence))
         # the pages carry the same caveat the README does, and name the unscanned tools from the code
         for p in ("index.html", "docs/index.html"):
             self.assertIn("not yet in a live session", text_of(p), p)

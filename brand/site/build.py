@@ -724,7 +724,7 @@ def index_html(cfg, f, hero, open_all=False):
 <ul class="facts"><li>standard library only</li><li>no network, no account</li><li>never stops or changes a call</li><li>%(licence)s</li></ul>
 </div>
 <div class="hero-install">
-<p class="small"><b>Install.</b> Not on PyPI yet, so from GitHub; then add the hook in a project. One click on a command selects all of it, without the prompt.</p>
+<p class="small"><b>Install.</b> From PyPI; then add the hook in a project. One click on a command selects all of it, without the prompt.</p>
 %(install)s
 </div>
 %(agents)s
@@ -791,8 +791,8 @@ def index_html(cfg, f, hero, open_all=False):
 <section class="sec" id="install" aria-labelledby="h-install"><div class="wrap">
 %(label)s
 <div class="head"><h2 id="h-install">Install, then add the hook to a project.</h2>
-<p class="lede">Python %(py)s. No dependencies beyond the standard library. Tested on %(tested)s. Not on PyPI yet, so install from the repository. The <a href="docs/">docs</a> walk through a first session.</p></div>
-<div class="install-row"><div><h3>Get the command</h3><p><code>pipx</code> installs it from the repository, as in the panel. From a clone, <code>pip install .</code> works too; without installing, <code>PYTHONPATH=src python3 -m rewindagents</code> runs the same CLI.</p></div>%(install)s</div>
+<p class="lede">Python %(py)s. No dependencies beyond the standard library. Tested on %(tested)s. Install it from PyPI. The <a href="docs/">docs</a> walk through a first session.</p></div>
+<div class="install-row"><div><h3>Get the command</h3><p><code>pipx</code> installs it from PyPI, as in the panel. From a clone, <code>pip install .</code> works too; without installing, <code>PYTHONPATH=src python3 -m rewindagents</code> runs the same CLI.</p></div>%(install)s</div>
 <div class="pair"><div><h3>Add the Claude Code hook</h3>%(hook)s</div><div><h3>Codex and Cursor hooks</h3>%(agents)s</div></div>
 <div class="pair-note"><p><code>install</code> keeps everything already in the file and does nothing if the hook is already there. For Codex the file is <code>%(codex)s</code> and for Cursor <code>%(cursor)s</code>; those two hooks are tested with the payloads in the vendors&#x27; documentation, not yet in a live session. <code>.rewindagents/</code> gets its own <code>.gitignore</code>, so the log and the copies stay out of your commits.</p></div>
 </div></section>
@@ -953,7 +953,7 @@ def docs_html(cfg, f):
 <nav class="toc" aria-label="On this page">%(toc)s</nav>
 <article class="doc">
 <h2 id="install">Install</h2>
-<p>Python %(py)s, standard library only. Tested on %(tested)s. Not on PyPI yet, so install from the repository:</p>
+<p>Python %(py)s, standard library only. Tested on %(tested)s. Install it from PyPI:</p>
 %(install)s
 <p>The last command prints the version it installed:</p>
 %(version)s
