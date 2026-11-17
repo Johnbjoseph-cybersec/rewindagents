@@ -5,6 +5,19 @@ and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html). 
 minor version may change behaviour; every release is a git tag `vX.Y.Z` that equals `rewindagents.__version__`,
 and only a published GitHub release publishes to PyPI (`.github/workflows/publish.yml` refuses a mismatched tag).
 
+## [1.0.0] - 2026-11-18
+
+### Changed
+- Stable release. Within 1.x the CLI commands and options documented in the README, the exit codes and the
+  on-disk session log, store and bundle format stay compatible; breaking changes come only in 2.0, and a
+  deprecation is announced here at least one minor release ahead. See "Stability" in the README.
+- PyPI classifier `Development Status :: 5 - Production/Stable` (was `3 - Alpha`).
+- README status: "stable" in place of "pre-release"; the limits are unchanged (Claude Code hook live-tested,
+  the other six hooks tested with the documented payloads, not live; macOS and Linux only).
+
+### Added
+- README section "Stability".
+
 ## [0.0.9] - 2026-11-18
 
 ### Changed
@@ -46,6 +59,7 @@ Pre-release, GitHub only.
 - `fork` any recorded step and `compare` the runs (files, lines, and your own check).
 - Hooks for seven agents: Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Factory Droid, Qwen Code.
 
+[1.0.0]: https://github.com/Johnbjoseph-cybersec/rewindagents/compare/v0.0.9...v1.0.0
 [0.0.9]: https://github.com/Johnbjoseph-cybersec/rewindagents/compare/v0.0.8...v0.0.9
 [0.0.8]: https://github.com/Johnbjoseph-cybersec/rewindagents/compare/v0.0.7...v0.0.8
 [0.0.7]: https://github.com/Johnbjoseph-cybersec/rewindagents/releases/tag/v0.0.7

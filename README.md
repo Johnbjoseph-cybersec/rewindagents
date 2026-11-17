@@ -89,13 +89,15 @@ runs the same hooks for a subagent's tool calls ([hooks docs](https://code.claud
 session in which a subagent made eight steps, three of them edits, recorded and checkpointed all of them
 (`ux-review/DOGFOOD.md`). Every tool call goes into a tamper-evident, hash-chained log you can verify later.
 
-**Status: v0.0.9, pre-release.** Built and tested today: the recorder and its CLI, hooks for seven coding
+**Status: v1.0.0, stable.** What 1.0 covers: the recorder and its CLI, hooks for seven coding
 agents (Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen Code) that record every call and
 checkpoint the files a step changes, `summary`, `replay`, `rewind`, `revert` and `branch`, `fork` and
 `compare`, `export` (a session as one HTML page), `sessions`, `bundle` and `import`, `gc`, a local timeline UI,
 and a package on PyPI with a `rewindagents` command. The Claude Code hook has run in
-real sessions; the Codex and Cursor hooks are built from the vendors' hook documentation and tested with the
-documented payloads, not yet in a live session. macOS and Linux; Windows is not supported yet (see Recorder).
+real sessions; the other six hooks are built from the vendors' hook documentation and tested with the
+documented payloads, not yet in a live session. macOS and Linux; Windows is not supported (see Recorder).
+What 1.0 does not change is [what it cannot put back](#what-it-cannot-put-back). What stays compatible
+within 1.x: [Stability](#stability).
 
 Rewind to any step and let another agent take it from there: [Fork a step, compare the
 runs](#fork-a-step-compare-the-runs).
@@ -629,6 +631,24 @@ many it deleted and the bytes those files took on disk.
   (the agent was killed, a crash) stays pending and keeps its copies; `--drop-pending-older-than DAYS` removes
   the scans older than DAYS first, so their copies are collected too. That command's step then rewinds as
   unscanned, as it already did while the scan was pending. Scans younger than 1 day are never dropped.
+
+## Stability
+
+From 1.0.0, versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Within 1.x:
+
+- The CLI commands and options documented in this README keep working as documented.
+- Exit codes keep their meaning: 0 done, 1 ran but something was not done or does not check out, 2 could not run
+  as asked (see [Replay, rewind, branch](#replay-rewind-branch)).
+- The on-disk format stays readable: a session log, store (`.rewindagents/`) or bundle written by 1.0 is read,
+  verified, replayed and rewound by every later 1.x release. The session log and the store carry no format
+  version field; their compatibility is this promise and the tests that read them. A bundle names its format
+  and version (`"format": "rewindagents-bundle"`, `"version": 1`), and `import` refuses a version it does not
+  read and says so.
+- Breaking changes to any of these come only in 2.0. A deprecation is announced in `CHANGELOG.md` at least one
+  minor release before the change.
+
+Not covered: the Python API inside `src/rewindagents/`, the HTML of `export` and the timeline UI, and the wording
+of messages (exit codes, not text, are what scripts should test).
 
 ## Recorder
 

@@ -347,7 +347,7 @@
    "rewindagents uninstall          # removes the hook from .claude/settings.json in this project",
    "rewindagents uninstall --agent cursor --settings ~/.cursor/hooks.json   # same flags as install"
   ],
-  "version": "0.0.9",
+  "version": "1.0.0",
   "wreck_steps": 2
  },
  "hero": [
