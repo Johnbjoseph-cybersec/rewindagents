@@ -3,7 +3,8 @@
    GSAP is progressive enhancement: its three files are added after the load event, when the browser is idle (or at
    the first scroll, touch or key), and only content still below the fold is animated, so nothing already on screen
    moves or shifts. Every block is isolated: one failure cannot cost the page another.
-   Signature move: scrolling back up fast "rewinds" the page (the tape at the top runs red, headings skew back). */
+   Signature moves: the hero stage plays the recorded session and, pinned, scrubs it with the scroll both ways; each
+   section's top rule is swept right to left by a playhead (a rewind); scrolling back up fast "rewinds" the page. */
 (function () {
   "use strict";
   var root = document.documentElement;
@@ -78,7 +79,7 @@
   safe("copy", function () {
     if (!navigator.clipboard) return;
     $$("pre.term").forEach(function (pre) {
-      if (pre.closest(".session") || pre.closest(".hero-panel")) return;     // a record of a session, not commands to run
+      if (pre.closest(".session") || pre.closest(".stage")) return;     // a record of a session, not commands to run
       var file = pre.classList.contains("file");                              // a file to paste (the workflow yaml): every line
       var cmds = $$(".l", pre).filter(function (l) { return file || (l.firstElementChild && l.firstElementChild.classList.contains("p")); })
         .map(function (l) { return l.textContent.replace(/^\$ /, ""); });
@@ -109,7 +110,6 @@
   function loadMotion() {
     if (asked) return;
     asked = true;
-    safe("replay", replay);
     var n = 0;
     (function next() {
       if (n === VENDOR.length) { safe("motion", start); return; }
@@ -133,112 +133,6 @@
   } catch (err) { setTimeout(pass, 1000); }
   ["scroll", "pointerdown", "keydown"].forEach(function (ev) { window.addEventListener(ev, loadMotion, { once: true, passive: true }); });
 
-  /* ---- the hero replay: the session behind the panel plays itself, then holds the still -----------------------
-     Runs after first paint (with the motion files), never with reduced motion, only while the panel is on screen.
-     Every line it shows is a line already in the panel: rows are hidden and shown again (visibility only, so nothing
-     on the page moves), the two commands are typed back to their own text, and the elided "..." row shows the steps
-     it stands for, which build.py put there from the same recorded session. Stop ends it on the still. */
-  function replay() {
-    var box = $("#replay"); if (!box) return;
-    var pre = $("pre.term", box), svg = $(".ruler.live", box), at = $(".tl-at", box);
-    if (!pre || !svg || !at) return;
-    var rows = $$(".l", pre), gap = $(".rp-gap", pre);
-    var cmds = rows.filter(function (r) { var s = $(".sel", r); return s && !s.children.length; });
-    if (cmds.length !== 2 || !gap) return;
-    var ticks = $$(".rp-tk", gap), dots = $(".c", gap);
-    var i0 = rows.indexOf(gap), i1 = rows.indexOf(cmds[1]);
-    var steps = rows.slice(i0 + 1, i1), after = rows.slice(i1 + 1);
-    var struck = $$(".x", pre), wreck = steps.filter(function (r) { return $(".x", r); });
-    var still = at.textContent, words = cmds.map(function (r) { return $(".sel", r).textContent; });
-    // the ruler: the playhead path moves; ticks and rule left of it in ink, right of it in the rewound colour
-    var home = +svg.getAttribute("data-at"), x0 = +svg.getAttribute("data-x0"), pitch = +svg.getAttribute("data-pitch");
-    var ink = svg.getAttribute("data-ink"), dim = svg.getAttribute("data-after"), W = +svg.getAttribute("width");
-    var head = $("path", svg), base = $$("rect", svg).filter(function (r) { return r.getAttribute("height") === "1"; });
-    var marks = $$("rect", svg).filter(function (r) { return r.getAttribute("height") === "5"; });
-    function playhead(k) {
-      var px = x0 + (k - 1) * pitch;
-      head.style.transform = "translateX(" + ((k - home) * pitch) + "px)";
-      base[0].setAttribute("width", px.toFixed(1)); base[1].setAttribute("x", px.toFixed(1)); base[1].setAttribute("width", (W - px).toFixed(1));
-      marks.forEach(function (m) { m.setAttribute("fill", +m.getAttribute("x") + 0.5 <= px + 0.01 ? ink : dim); });
-    }
-    function show(r, on) { r.classList.toggle("off", !on); }
-    var cursor = document.createElement("span"); cursor.className = "rp-cur"; cursor.setAttribute("aria-hidden", "true");
-    function type(r, n, w) { var sel = $(".sel", r); sel.textContent = w.slice(0, n); sel.appendChild(cursor); }
-    function untype(r, w) { $(".sel", r).textContent = w; }
-    function tick(k) { ticks.forEach(function (t, j) { t.hidden = j !== k; }); dots.hidden = k >= 0; }
-
-    // one pass, as [ms, action]: the tape runs back, the session plays, the rewind lands, then a hold on the still
-    var T = [], t = 0, c, k;
-    function when(ms, fn) { T.push([ms, fn]); }
-    rows.slice().reverse().forEach(function (r, j) { when(j * 30, function () { show(r, false); r.classList.remove("land", "lit"); }); });
-    when(0, function () { at.textContent = "rewind"; struck.forEach(function (x) { x.classList.remove("on"); }); });
-    for (k = home; k >= 1; k--) (function (k, j) { when(j * 34, function () { playhead(k); }); })(k, home - k);
-    t = 420;
-    when(t, function () { show(cmds[0], true); type(cmds[0], 0, words[0]); at.textContent = "step 1"; });
-    for (c = 1; c <= words[0].length; c++) (function (c) { when(t + 60 + c * 34, function () { type(cmds[0], c, words[0]); }); })(c);
-    t += 60 + words[0].length * 34 + 220;
-    when(t, function () { untype(cmds[0], words[0]); show(gap, true); });
-    ticks.forEach(function (_, j) { when(t + j * 105, function () { tick(j); playhead(j + 1); at.textContent = "step " + (j + 1); }); });
-    t += ticks.length * 105;
-    steps.forEach(function (r, j) {
-      var n = ticks.length + 1 + j, slow = wreck.indexOf(r) >= 0;
-      when(t, function () { if (j === 0) tick(-1); show(r, true); if (slow) r.classList.add("land"); playhead(n); at.textContent = "step " + n; });
-      t += slow ? 420 : 240;
-    });
-    t += 420;
-    when(t, function () { show(cmds[1], true); type(cmds[1], 0, words[1]); });
-    for (c = 1; c <= words[1].length; c++) (function (c) { when(t + 60 + c * 38, function () { type(cmds[1], c, words[1]); }); })(c);
-    t += 60 + words[1].length * 38 + 260;
-    var last = ticks.length + steps.length;
-    when(t, function () { untype(cmds[1], words[1]); at.textContent = still; });
-    for (k = last - 1; k >= home; k--) (function (k, j) { when(t + j * 170, function () { playhead(k); }); })(k, last - 1 - k);
-    t += (last - home) * 170 + 60;
-    when(t, function () { struck.forEach(function (x) { x.classList.add("on"); }); });
-    t += 380;
-    after.forEach(function (r, j) { when(t + j * 150, function () { show(r, true); if ($(".hit", r)) r.classList.add("lit"); }); });
-    t += after.length * 150;
-    var LOOP = t + 3600, LOOPS = 3;
-    T.sort(function (a, b) { return a[0] - b[0]; });
-
-    function settle() {      // the still, exactly as built
-      tick(-1);
-      rows.forEach(function (r) { show(r, true); r.classList.remove("land", "lit"); });
-      cmds.forEach(function (r, j) { untype(r, words[j]); });
-      struck.forEach(function (x) { x.classList.add("on"); });
-      playhead(home); at.textContent = still; pre.classList.remove("rp");
-    }
-    var btn = document.createElement("button");
-    btn.type = "button"; btn.className = "copy rp-btn";
-    function label(playing) { btn.textContent = playing ? "Stop" : "Replay"; btn.setAttribute("aria-label", playing ? "Stop the replay" : "Play the replay again"); }
-    pre.appendChild(btn);
-
-    var running = false, seen = false, el = 0, next = 0, loop = 0, prev = 0;
-    function frame(now) {
-      if (!running) return;
-      var live = seen && !document.hidden;      // off screen, the pass waits where it is
-      if (live) el += Math.min(64, now - prev);
-      prev = now;
-      while (live && next < T.length && T[next][0] <= el) T[next++][1]();
-      if (el >= LOOP) {
-        if (++loop >= LOOPS) { stop(); return; }
-        el = 0; next = 0;
-      }
-      requestAnimationFrame(frame);
-    }
-    function play() { running = true; loop = 0; el = 0; next = 0; pre.classList.add("rp", "played"); label(true); prev = performance.now(); requestAnimationFrame(frame); }
-    function stop() { running = false; settle(); label(false); }
-    btn.addEventListener("click", function () { if (running) stop(); else play(); });
-    if ("IntersectionObserver" in window) {
-      // off screen the panel goes back to the still, never a half-drawn pass; back on screen the pass starts over
-      new IntersectionObserver(function (en) {
-        seen = en[0].isIntersecting;
-        if (!running) return;
-        if (!seen) { settle(); el = 0; next = 0; } else pre.classList.add("rp");
-      }, { threshold: 0.5 }).observe(pre);
-    } else seen = true;
-    play();
-  }
-
   function start() {
     if (!window.gsap || !window.ScrollTrigger) return;
     gsap.registerPlugin(ScrollTrigger); if (window.SplitText) gsap.registerPlugin(SplitText);
@@ -250,6 +144,132 @@
 
   function motion() {
   var EASE = "expo.out", SNAP = "power4.inOut";
+  var wide = window.matchMedia("(min-width: 961px)").matches, fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+  /* ---- 1. the hero stage ------------------------------------------------------------------------------
+     One function draws the session at a position p: 0..N the steps play (rows, files, the ruler's playhead), N..N+1
+     the damage holds, N+1..N+2 the rewind is typed and the playhead runs back, N+2..N+3 the restore rows tick in and
+     the deleted files fly back from the terminal, N+3..N+4 the still. Every word comes from the page: rows are shown
+     and hidden by visibility, tags read from the rows' data attributes. Autoplay (with Stop) while the stage is on
+     screen; pinned, the scroll drives p both ways. */
+  safe("stage", function () {
+    var box = $("#stage"); if (!box) return;
+    var pin = $(".stage-pin", box), pre = $("pre.term", box), at = $(".st-at", box), slot = $(".st-ctl", box) || $(".st-head", box);
+    var rows = $$(".l", pre);
+    var cmds = rows.filter(function (r) { var s = $(".sel", r); return s && !s.children.length; });
+    if (cmds.length !== 2) return;
+    var i1 = rows.indexOf(cmds[1]), steps = rows.slice(1, i1), after = rows.slice(i1 + 1), N = steps.length, END = N + 4;
+    var words = cmds.map(function (r) { return $(".sel", r).textContent; }), still = at.textContent;
+    var ticks = $$(".sr-tk", box), phw = $(".sr-phw", box), fill = $(".sr-fill", box), struck = $$(".x", pre);
+    var good = ticks.map(function (t) { return t.classList.contains("at"); }).indexOf(true) + 1;
+    var wFrom = ticks.map(function (t) { return t.classList.contains("w"); }).indexOf(true) + 1;
+    if (good < 1 || wFrom < 1) return;
+    var files = $$(".ff", box).map(function (li) {
+      return { li: li, tag: $(".ftg", li), born: +li.getAttribute("data-born"), gone: +li.getAttribute("data-gone"),
+               back: +li.getAttribute("data-back"), still: li.getAttribute("data-still"),
+               touch: (li.getAttribute("data-touch") || "").split(",").filter(Boolean).map(function (t) { var k = t.split(":"); return [+k[0], k[1]]; }) };
+    });
+    var cur = $(".rp-cur") || document.createElement("span"); cur.className = "rp-cur"; cur.setAttribute("aria-hidden", "true");
+    function clamp(v) { return Math.max(0, Math.min(1, v)); }
+    function cls(el, c, on) { if (el.classList.contains(c) !== on) el.classList.toggle(c, on); }
+    function text(el, t) { if (el.textContent !== t) el.textContent = t; }
+    function ease(v) { return v < 0.5 ? 2 * v * v : 1 - Math.pow(-2 * v + 2, 2) / 2; }
+    files.forEach(function (f) { f.li.classList.remove("back"); });
+    box.classList.add("live");
+    var typed = -1;
+    function render(p) {
+      var s = Math.min(N, Math.floor(p + 1e-6)), rw = clamp(p - N - 1);
+      var head = p <= N ? p : p < N + 1 ? N : N - (N - good) * ease(rw);
+      var x = Math.max(0, head - 0.5) / N;
+      phw.style.transform = "translateX(" + (x * 100).toFixed(3) + "%)";
+      fill.style.transform = "scaleX(" + x.toFixed(4) + ")";
+      var undone = p >= N + 1.5, landed = p >= N + 2;
+      ticks.forEach(function (t, j) {
+        var k = j + 1;
+        cls(t, "past", k <= head + 1e-6);
+        cls(t, "hitw", k >= wFrom && k <= s && !undone);
+        cls(t, "undone", k >= wFrom && undone);
+        cls(t, "home", k === good && landed);
+      });
+      steps.forEach(function (r, j) {
+        var k = j + 1;
+        cls(r, "off", k > s);
+        cls(r, "cur", k === s && k < wFrom && p < N);
+        cls(r, "wreck", k >= wFrom && k <= s && !undone);
+      });
+      struck.forEach(function (el) { cls(el, "on", undone); });
+      cls(cmds[1], "off", p < N + 1);
+      var n = p < N + 1 ? 0 : Math.round(words[1].length * clamp((p - N - 1) / 0.45));
+      if (n !== typed) {
+        typed = n;
+        var sel = $(".sel", cmds[1]); sel.textContent = words[1].slice(0, n);
+        if (n < words[1].length && p >= N + 1) sel.appendChild(cur);
+      }
+      after.forEach(function (r, j) { cls(r, "off", p < N + 2 + j * 0.16); });
+      text(at, p < 1 ? words[0].split(" ").pop() : p < N + 1 ? "step " + s : still);
+      var shift = wide ? 1 : 0;
+      files.forEach(function (f) {
+        var tb = f.back >= 0 ? N + 2 + f.back * 0.16 : Infinity, back = p >= tb, fb = clamp((p - tb) / 0.4);
+        var last = null; f.touch.forEach(function (t) { if (t[0] <= s) last = t; });
+        var gone = f.gone > 0 && s >= f.gone && !back;
+        cls(f.li, "off", s < f.born && !back);
+        cls(f.li, "gone", gone);
+        cls(f.li, "wreck", !back && !!last && last[0] >= wFrom);
+        cls(f.li, "hot", !back && !!last && last[0] === s && p - s < 0.8 && p < N);
+        cls(f.li, "home", back && fb >= 1);
+        cls(f.li, "fly", back && fb < 1);
+        text(f.tag, back ? f.still : last ? last[1] + " " + last[0] : "");
+        var tx = 0, ty = 0;
+        if (back) { var e = 1 - Math.pow(1 - fb, 3); if (shift) tx = (1 - e) * 220; else ty = (1 - e) * 48; }
+        else if (gone) tx = -14 * clamp((p - f.gone) / 0.3);
+        else if (f.born > 0 && s >= f.born) tx = 28 * (1 - clamp((p - f.born) / 0.35));
+        var tr = tx || ty ? "translate(" + tx.toFixed(1) + "px," + ty.toFixed(1) + "px)" : "";
+        if (f.li.style.transform !== tr) f.li.style.transform = tr;
+      });
+    }
+
+    // autoplay: the tape runs back from the still, the session plays, the rewind lands, hold; three passes
+    var r0 = box.getBoundingClientRect();
+    var A = { p: END }, S = { p: END }, scrubbing = false, stopped = false, inView = r0.top < window.innerHeight && r0.bottom > 0, done = false;
+    var auto = gsap.timeline({ paused: true, repeat: 2, repeatDelay: 3, onUpdate: function () { if (!scrubbing) render(A.p); },
+                               onComplete: function () { done = true; label(false); } });
+    auto.to(A, { p: 0, duration: 0.9, ease: "power2.inOut" })
+        .to(A, { p: N, duration: N * 0.36, ease: "none" })
+        .to(A, { p: N + 1, duration: 0.9, ease: "none" })
+        .to(A, { p: N + 2, duration: 1.1, ease: "power1.inOut" })
+        .to(A, { p: N + 3, duration: 1.3, ease: "none" })
+        .to(A, { p: END, duration: 0.3, ease: "none" });
+    var btn = document.createElement("button");
+    btn.type = "button"; btn.className = "copy rp-btn";
+    function label(playing) { btn.textContent = playing ? "Stop" : "Replay"; btn.setAttribute("aria-label", playing ? "Stop the replay" : "Play the replay again"); }
+    function chase(p, d) { gsap.to(S, { p: p, duration: d, ease: "power3.out", overwrite: true, onUpdate: function () { render(S.p); } }); }
+    function play() { if (stopped || done || scrubbing || !inView) return; auto.play(); label(true); }
+    btn.addEventListener("click", function () {
+      if (auto.isActive() || (!stopped && !done && !scrubbing)) { stopped = true; auto.pause(); label(false); S.p = A.p; chase(END, 0.6); }
+      else { stopped = false; done = false; scrubbing = false; auto.restart(); label(true); }
+    });
+    slot.appendChild(btn); label(true);
+    ScrollTrigger.create({ trigger: box, start: "top bottom", end: "bottom top",
+      onToggle: function (self) { inView = self.isActive; if (!inView) auto.pause(); else play(); } });
+
+    // the pin: only if the reader has not reached the stage yet, so the space it adds is never above them
+    var top = $(".top"), offset = top && getComputedStyle(top).position === "sticky" ? top.offsetHeight + 8 : 0;
+    // pinned in the middle of the free screen, so the paper above and below it is even
+    var room = window.innerHeight - offset, mid = offset + Math.max(0, Math.round((room - pin.offsetHeight) / 2));
+    var pinTop = pin.getBoundingClientRect().top + window.scrollY - mid;
+    if (pin.offsetHeight <= room && window.scrollY < pinTop - 4) {
+      ScrollTrigger.create({ trigger: pin, start: "top " + mid + "px", end: "+=" + (wide ? 2200 : 1500), pin: true, anticipatePin: 1,
+        onToggle: function (self) { if (self.isActive) { scrubbing = true; auto.pause(); S.p = A.p; } },
+        onUpdate: function (self) { if (self.isActive) { scrubbing = true; chase(Math.min(END, self.progress * (END + 0.8)), 0.5); } },
+        onLeave: function () { scrubbing = false; chase(END, 0.4); },
+        onLeaveBack: function () {
+          scrubbing = false;
+          if (!stopped && !done) { A.p = S.p; auto.play(0.9 + Math.max(0, S.p) * 0.36); label(true); } else chase(END, 0.5);
+        } });
+    }
+    render(END);
+    play();
+  });
 
   /* ---- 2. section heads: the ruler's playhead scrubs into place, the heading rises word by word ------- */
   safe("heads", function () {
@@ -258,14 +278,76 @@
       var h2 = head && $("h2", head), lede = head && $(".lede", head);
       var playhead = $(".ruler path", lab);
       var tl = gsap.timeline({ paused: true, defaults: { ease: EASE } });
-      if (playhead) tl.from(playhead, { x: -70, duration: 1.2, ease: SNAP }, 0);
-      tl.from($$("span", lab), { opacity: 0, x: -8, duration: 0.6, stagger: 0.08 }, 0.15);
+      // the cut: a playhead runs the section's top rule right to left (a rewind), drawing ticks behind it
+      var sec = lab.closest(".sec"), sw = document.createElement("div");
+      sw.className = "sweep"; sw.setAttribute("aria-hidden", "true");
+      ["sw-line", "sw-tk", "sw-phw"].forEach(function (c) { var k = document.createElement("span"); k.className = c; sw.appendChild(k); });
+      var ph = document.createElement("span"); ph.className = "sw-ph"; sw.lastChild.appendChild(ph);
+      sec.insertBefore(sw, sec.firstChild);
+      tl.to($(".sw-phw", sw), { xPercent: -100, duration: 0.9, ease: SNAP }, 0)
+        .to($(".sw-line", sw), { scaleX: 1, duration: 0.9, ease: SNAP }, 0)
+        .fromTo($(".sw-tk", sw), { clipPath: "inset(0 0 0 100%)" }, { clipPath: "inset(0 0 0 0%)", duration: 0.9, ease: SNAP }, 0)
+        .to(sw, { opacity: 0, duration: 0.5, ease: "power2.out" }, 1.0);
+      if (playhead) tl.from(playhead, { x: 70, duration: 0.9, ease: SNAP }, 0.05);
+      tl.from($$("span", lab), { opacity: 0, x: 10, duration: 0.45, stagger: 0.05 }, 0.12);
       if (h2) {
         var words = window.SplitText ? new SplitText(h2, { type: "words", mask: "words" }).words : [h2];
-        tl.from(words, { yPercent: 105, duration: 0.95, stagger: 0.04 }, 0.2);
+        tl.from(words, { yPercent: 110, duration: 0.7, stagger: 0.025 }, 0.12);
       }
-      if (lede) tl.from(lede, { y: 22, opacity: 0, duration: 0.9 }, 0.45);
-      ScrollTrigger.create({ trigger: lab, start: "top 86%", once: true, onEnter: function () { tl.play(); } });
+      if (lede) {
+        var lines = window.SplitText ? new SplitText(lede, { type: "lines", mask: "lines", aria: "none" }).lines : [lede];
+        tl.from(lines, { yPercent: 100, duration: 0.7, stagger: 0.05 }, 0.3);
+      }
+      // locked to the scroll position: the cut and the heading are complete before the heading passes ~two thirds
+      // of the screen, at any scroll speed, and they run back if the reader scrolls back up past the cut
+      ScrollTrigger.create({ trigger: sec, start: "clamp(top bottom)", end: "clamp(top 50%)", scrub: 0.3, animation: tl });
+    });
+  });
+
+  /* ---- 2b. terminals and the screenshot wipe in right to left (the rewind direction) ------------------- */
+  safe("wipes", function () {
+    // locked to the scroll position, not to time: at any scroll speed a panel is whole before it reaches mid-screen
+    $$(".sec pre.term, .sec .shot img").filter(below).forEach(function (el) {
+      gsap.fromTo(el, { clipPath: "inset(-24px -24px -24px 100%)" }, { clipPath: "inset(-24px -24px -24px 0%)", ease: "power2.out",
+        scrollTrigger: { trigger: el, start: "clamp(top bottom)", end: "clamp(top 74%)", scrub: 0.35 } });
+    });
+  });
+
+  /* ---- 2c. counters count up from zero the first time they are seen (the built number is the fallback) -- */
+  safe("counts", function () {
+    $$(".cnt").filter(below).forEach(function (k) {
+      var end = parseInt(k.getAttribute("data-to"), 10), obj = { v: 0 };
+      if (!(end > 0)) return;
+      k.textContent = "0";
+      ScrollTrigger.create({ trigger: k, start: "top 92%", once: true, onEnter: function () {
+        gsap.to(obj, { v: end, duration: Math.min(2.2, 0.9 + end / 600), ease: "power3.out", onUpdate: function () { k.textContent = String(Math.round(obj.v)); } });
+      } });
+    });
+  });
+
+  /* ---- 2d. desktop: terminals drift against the scroll; the agent row slides with it ------------------------ */
+  safe("parallax", function () {
+    if (!wide) return;
+    $$(".sec pre.term").filter(function (p) { return !p.closest(".session"); }).forEach(function (p) {
+      gsap.fromTo(p, { y: 22 }, { y: -22, ease: "none", scrollTrigger: { trigger: p, start: "top bottom", end: "bottom top", scrub: 0.8 } });
+    });
+    var strip = $(".hero .agents ul");  // the marks drift into the free space right of the row; the label and rule stay on the grid
+    if (strip && window.innerWidth >= 1200) gsap.fromTo(strip, { x: 0 }, { x: 64, ease: "none", scrollTrigger: { start: 0, end: 900, scrub: 0.6 } });
+  });
+
+  /* ---- 2e. pointer devices: primary buttons lean to the pointer; terminals tilt a little under it ------- */
+  safe("pointer", function () {
+    if (!fine) return;
+    $$(".btn-primary").forEach(function (b) {
+      var qx = gsap.quickTo(b, "x", { duration: 0.45, ease: "power3.out" }), qy = gsap.quickTo(b, "y", { duration: 0.45, ease: "power3.out" });
+      b.addEventListener("pointermove", function (ev) { var r = b.getBoundingClientRect(); qx((ev.clientX - r.left - r.width / 2) * 0.18); qy((ev.clientY - r.top - r.height / 2) * 0.3); });
+      b.addEventListener("pointerleave", function () { qx(0); qy(0); });
+    });
+    $$(".sec pre.term, .hero-install pre.term").forEach(function (p) {
+      gsap.set(p, { transformPerspective: 1200 });
+      var rx = gsap.quickTo(p, "rotationX", { duration: 0.5, ease: "power3.out" }), ry = gsap.quickTo(p, "rotationY", { duration: 0.5, ease: "power3.out" });
+      p.addEventListener("pointermove", function (ev) { var r = p.getBoundingClientRect(); ry(((ev.clientX - r.left) / r.width - 0.5) * 2.4); rx(-((ev.clientY - r.top) / r.height - 0.5) * 2.4); });
+      p.addEventListener("pointerleave", function () { rx(0); ry(0); });
     });
   });
 
@@ -274,10 +356,9 @@
     var groups = [".gap > li", ".trio > div", ".shot", ".session > div", ".cols > div", ".steps > li", ".ledger > li", ".cmdrow", ".plan", ".faq details", ".walk > li", ".doc > section"];
     groups.forEach(function (sel) {
       var els = $$(sel).filter(below); if (!els.length) return;
-      gsap.set(els, { y: 46, opacity: 0 });
-      ScrollTrigger.batch(els, {
-        start: "top 90%", once: true,
-        onEnter: function (b) { gsap.to(b, { y: 0, opacity: 1, duration: 0.95, stagger: 0.09, ease: EASE, overwrite: true }); }
+      els.forEach(function (el) {
+        gsap.fromTo(el, { y: 46, opacity: 0 }, { y: 0, opacity: 1, ease: "power2.out",
+          scrollTrigger: { trigger: el, start: "clamp(top bottom)", end: "clamp(top 80%)", scrub: 0.3 } });
       });
     });
     // the ledger's numbers count up from zero the first time they are seen
@@ -308,7 +389,7 @@
     var tl = gsap.timeline({ paused: true });
     tl.from(chars, { yPercent: 100, opacity: 0, duration: 0.8, stagger: 0.014, ease: "expo.out" })
       .from($$(".btn, pre", c), { y: 20, opacity: 0, duration: 0.7, stagger: 0.1, ease: EASE }, 0.35);
-    ScrollTrigger.create({ trigger: c, start: "top 75%", once: true, onEnter: function () { tl.play(); } });
+    ScrollTrigger.create({ trigger: c, start: "clamp(top bottom)", end: "clamp(top 55%)", scrub: 0.3, animation: tl });
   });
 
   /* ---- 6. the tape: scroll progress as the brand ruler; scrolling back up fast is a rewind ------------ */

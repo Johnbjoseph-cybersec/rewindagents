@@ -252,7 +252,9 @@ class TestSite(unittest.TestCase):
         self.assertIn("var gates = 2;", js)
         self.assertIn("requestIdleCallback", js)
         self.assertIn('if (reduce || !here) return;', js)
-        # GSAP runs only on what is still below the fold: no tween is set up on anything already on screen
+        # GSAP runs only on what is still below the fold: no tween is set up on anything already on screen. The one
+        # exception is the hero stage (2026-11-18), which may change visibility and transform only, never layout or
+        # opacity (test_hero_stage_is_the_recorded_session_and_never_moves_the_page), so the first paint never shifts
         self.assertIn("function below(el) { return el.getBoundingClientRect().top > window.innerHeight; }", js)
         self.assertNotIn('safe("hero"', js, "the hero's intro is CSS; GSAP never re-hides the first screen")
         for sel in ('$$(".sec .label").filter(below)', "$$(sel).filter(below)", '$$(".ledger .k").filter(below)',
@@ -386,28 +388,78 @@ class TestSite(unittest.TestCase):
             for ln in b["output"].rstrip("\n").split("\n"):
                 self.assertIn(ln.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"), index, ln)
 
-    def test_hero_replay_shows_only_the_session_and_never_moves_the_page(self):
-        """The hero replay (2026-11-18): the session plays itself into the panel, after first paint, never with
-        reduced motion, with a Stop control, and holds the built still. It types nothing of its own: the elided row
-        carries the session's own replay lines (hidden without a script), and the commands are read from the panel."""
+    def test_hero_stage_is_the_recorded_session_and_never_moves_the_page(self):
+        """The hero stage (bold round, 2026-11-18; replaces the hero replay panel): a ruler of the session's steps,
+        the project's files and the terminal that printed them. Every terminal row is a recorded line, the file tree is
+        derived from those lines (never typed), the built page is the still after the rewind, and site.js plays and
+        scrubs it after first paint by visibility and transform only, with a Stop control, never with reduced motion."""
         demo = json.loads(read(os.path.join("demo", "manifest.json"), BRAND))
-        replay_lines = demo["beats"][0]["output"].rstrip("\n").split("\n")
+        beats = demo["beats"]
         index = read("index.html")
-        hero = index[index.index('<section class="hero"'):index.index("</section>", index.index('<section class="hero"'))]
-        ticker = [unesc(t) for t in re.findall(r'<span class="rp-tk" hidden>([^<]*)</span>', hero)]
-        self.assertEqual(ticker, replay_lines[:-4], "the ticker is every step the panel elides, as printed")
-        self.assertEqual(len(ticker) + 4, demo["steps"], "with the four rows shown, every step of the session")
-        self.assertIn('class="ruler live"', hero)
+        stage = index[index.index('<div class="stage" id="stage">'):index.index('<p class="caption st-cap">')]
+        term = re.search(r'<pre class="term"><code>(.*?)</code></pre>', stage, re.S).group(1)
+        rows = [unesc(re.sub(r"<[^>]+>", "", r)) for r in term.split("\n")]
+        lines = lambda b: b["output"].rstrip("\n").split("\n")   # noqa: E731
+        self.assertEqual(rows, ["$ " + beats[0]["command"]] + lines(beats[0]) + ["$ " + beats[2]["command"]] + lines(beats[2]),
+                         "the whole replay, then the whole rewind, as printed")
+        self.assertEqual(len(re.findall(r'class="sr-tk', stage)), demo["steps"], "one ruler tick per recorded step")
+        # the tree: every file a file tool or the rewind names, born/gone/back from the recorded words
+        steps = [re.match(r"^\s*(\d+)\s+(\w+)\s+(.*?)(?:\s+\[\d+ checkpointed\])?$", ln).groups() for ln in lines(beats[0])]
+        restored = [ln.split()[1] for ln in lines(beats[2]) if ln.strip().startswith("restore ")]
+        named = {t for _, tool, t in steps if tool in ("Read", "Edit", "Write")} | set(restored)
+        tree = re.findall(r'<li class="ff[^"]*" data-born="(\d+)" data-gone="(\d+)" data-back="(-?\d+)" data-touch="([^"]*)" '
+                          r'data-still="([^"]*)"><span class="fn"><span class="fd">([^<]*)</span>([^<]*)</span>', stage)
+        self.assertEqual({d + f for *_, d, f in tree}, named)
+        untracked = {ln[3:] for ln in lines(beats[3]) if ln.startswith("?? ")}
+        wipe = next(int(n) for n, tool, t in steps if tool == "Bash" and t.startswith("rm -rf "))
+        wiped = next(t for n, tool, t in steps if int(n) == wipe)[len("rm -rf "):] + "/"
+        for born, gone, back, touch, still, d, f in tree:
+            path = d + f
+            first_write = min((int(n) for n, tool, t in steps if t == path and tool == "Write"), default=0)
+            self.assertEqual(int(born), first_write if path in untracked else 0, path)
+            self.assertEqual(int(gone), wipe if path.startswith(wiped) else 0, path)
+            self.assertEqual(int(back), lines(beats[2]).index("  restore  " + path) if path in restored else -1, path)
+            for t in filter(None, touch.split(",")):
+                n, tool = t.split(":")
+                self.assertTrue(any(int(m) == int(n) and tl == tool for m, tl, _ in steps), "%s: %s" % (path, t))
+            self.assertEqual(still, "restore" if path in restored else (lambda t: "%s %s" % (t[1], t[0]))(touch.split(",")[-1].split(":")), path)
+        # the script: after first paint, never with reduced motion, nothing typed of its own, nothing laid out
         js = read("site.js")
-        body = js[js.index("function replay()"):js.index("function start()", js.index("function replay()"))]
-        self.assertLess(js.index('if (reduce || !here) return;'), js.index('safe("replay", replay)'),
-                        "the replay starts on the after-first-paint path, never with reduced motion")
-        self.assertNotRegex(body, r'"[^"]*rewindagents[^"]*"|"[^"]*(Bash|Write|restore)[^"]*"', "no session text typed by the script")
+        body = js[js.index('safe("stage"'):js.index('safe("heads"')]
+        self.assertLess(js.index('if (reduce || !here) return;'), js.index("function motion()"))
+        self.assertNotRegex(body, r'"[^"]*rewindagents[^"]*"|"[^"]*(Bash|Write|Read|Edit|restore|README|tests/|app/)[^"]*"',
+                            "no session text typed by the script")
         self.assertIn('"Stop the replay"', body)
-        self.assertNotRegex(body, r"\.style\.(display|height|width|margin|padding)", "rows hide by class (visibility), never by layout")
+        self.assertNotRegex(body, r"\.style\.(display|height|width|margin|padding|top|left)|opacity", "visibility and transform only")
+        self.assertIn("window.scrollY < pinTop", body, "the pin never adds space above a reader who is past it")
         css = read("site.css")
-        self.assertIn(".rp .l.off { visibility: hidden; }", css)
-        self.assertIn(".hero-panel pre.term .l.rp-gap { white-space: pre;", css, "the ticker row never wraps")
+        self.assertIn(".stage.live .l.off, .stage.live .ff.off { visibility: hidden; }", css)
+        self.assertNotRegex(css, r"(^|[,}]\s*)\.stage(-pin)?\s*[,{][^}]*animation", "no transform on the pin's ancestors")
+        self.assertIn('<span class="st-ctl"></span>', stage, "the Stop button has its slot before it exists")
+
+    def test_counters_are_counted_from_the_repository(self):
+        """The hero's counters are build-time numbers, each with its source on the page (no live fetches: the CSP is
+        connect-src 'none'). The test count is the static count of test functions, never a claim that tests pass."""
+        build = load_build()
+        index = read("index.html")
+        cells = re.findall(r'<li><b class="cnt" data-to="(\d+)">(\d+)</b><span class="cnt-l">([^<]+)</span><span class="cnt-s">(.*?)</span></li>', index)
+        got = {lbl: (int(a), int(b), src) for a, b, lbl, src in cells}
+        tests_dir = os.path.join(ROOT, "tests")
+        defs = sum(len(re.findall(r"^\s*def test_", read(n, tests_dir), re.M)) for n in os.listdir(tests_dir) if n.endswith(".py"))
+        demo = json.loads(read(os.path.join("demo", "manifest.json"), BRAND))
+        restored = len([ln for ln in demo["beats"][2]["output"].split("\n") if ln.strip().startswith("restore ")])
+        with open(os.path.join(ROOT, "pyproject.toml"), encoding="utf-8") as fh:
+            self.assertIn("dependencies = []", fh.read())
+        want = {"coding agents with a hook": (len(agents.AGENTS), "src/<wbr>rewindagents/<wbr>agents.py"),
+                "test functions in the repository": (defs, "def test_"),
+                "claims on this page, each checked by a named test": (len(build.PROOF), 'href="#tested"'),
+                "files back from one rewind, in the session above": (restored, "brand/<wbr>demo/<wbr>manifest.json"),
+                "dependencies beyond the standard library": (0, "pyproject.toml")}
+        self.assertEqual(set(got), set(want))
+        for lbl, (n, src) in want.items():
+            self.assertEqual(got[lbl][:2], (n, n), lbl)
+            self.assertIn(src, got[lbl][2], lbl)
+        self.assertNotRegex(text_of("index.html"), r"\d+ tests? pass", "a count of test functions, never a pass claim")
 
     def test_gap_section_is_the_readme_comparison(self):
         """'What Claude Code's checkpoints miss' quotes the README's table cells, cites the docs the README cites,

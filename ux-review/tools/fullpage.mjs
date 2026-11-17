@@ -29,7 +29,7 @@ for (const [w, h, dpr, mobile] of widths) {
   // walk the page so every once-only entrance fires, then back to the top
   await page.evaluate(async () => {
     const step = Math.round(innerHeight * 0.6);
-    for (let y = 0; y < document.documentElement.scrollHeight; y += step) { scrollTo(0, y); await new Promise((r) => setTimeout(r, 160)); }
+    for (let y = 0; y < document.documentElement.scrollHeight; y += step) { scrollTo({ top: y, behavior: "instant" }); await new Promise((r) => setTimeout(r, 160)); }
     await new Promise((r) => setTimeout(r, 1600));
   });
   const gate = await page.evaluate(() => {
@@ -43,10 +43,14 @@ for (const [w, h, dpr, mobile] of widths) {
     const st = window.ScrollTrigger ? ScrollTrigger.getAll().filter((t) => t.end === undefined || isNaN(t.end)).length : null;
     return { overflow: over, scrollLeft: sl, faded, stNoEnd: st, height: d.scrollHeight };
   });
-  await page.evaluate(() => scrollTo(0, 0));
+  await page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
   await new Promise((r) => setTimeout(r, 2200));
   // the hero replay: shot on the still it ends on (heroframes.mjs records the motion)
-  await page.evaluate(() => { const b = document.querySelector("#replay pre.rp .rp-btn"); if (b) b.click(); });
+  await page.evaluate(() => { const b = document.querySelector("#replay pre.rp .rp-btn, #stage .rp-btn"); if (b && /Stop/.test(b.textContent)) b.click(); });
+  await new Promise((r) => setTimeout(r, 900));
+  // a full-page still cannot show a pinned scene; the pin's scroll distance would print as an empty band
+  await page.evaluate(() => { if (window.ScrollTrigger) ScrollTrigger.getAll().forEach((t) => { if (t.vars.pin) t.kill(true); }); });
+  gate.height = await page.evaluate(() => document.documentElement.scrollHeight);
   await new Promise((r) => setTimeout(r, 300));
   const file = path.join(out, which.replace(/\W+/g, "-").replace(/-html$/, "") + "-" + w + ".png");
   await page.screenshot({ path: file, fullPage: true });
