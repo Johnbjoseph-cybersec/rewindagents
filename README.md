@@ -5,10 +5,20 @@
   <img src="brand/logo-wordmark.svg" alt="rewindagents" height="40">
 </picture>
 
-**Undo for AI coding agents.** rewindagents records every tool call your coding agent makes and keeps a copy of
-each file before a step changes it, including files only a shell command touched (`rm -rf`, `sed -i`, a script).
-When a run goes wrong you see what it changed and take back all of it, one step, or one file. It runs on your
-machine only: no account, no network, nothing but the Python standard library.
+### Your coding agent ran `rm -rf`. Take it back.
+
+**Undo for AI coding agents, including what they do in the shell.** rewindagents records every tool call your
+coding agent makes and keeps a copy of each file before a step changes it, including files only a shell command
+touched (`rm -rf`, `sed -i`, a script). When a run goes wrong you see what it changed and take back all of it, one
+step, or one file. It runs on your machine only: no account, no network, nothing but the Python standard library.
+
+![rewindagents demo: an agent's last two steps delete the tests and overwrite the config; rewindagents replay lists the fourteen steps, rewindagents rewind 12 puts the files back](brand/demo.gif)
+
+| After your agent... | Claude Code checkpoints | rewindagents |
+|---|---|---|
+| changed a file only through a shell command (`rm`, `sed -i`, a script) | "isn't tracked and stays as it is" ([docs](https://code.claude.com/docs/en/checkpointing)) | rewind it like any other step |
+| had a subagent edit files | "usually doesn't capture those edits" ([docs](https://code.claude.com/docs/en/checkpointing)) | recorded through the same hooks |
+| was Codex, Cursor, Gemini CLI, Copilot CLI, Droid or Qwen Code | Claude Code only | one record and one `rewind` for all seven |
 
 ## Quick start
 
@@ -56,10 +66,8 @@ rewindagents rewind 0         # put every file back as it was before the session
 agent's step (your own edit, for example); the message names the file and the command that shows what would
 be lost. Every rewind is itself a step, so it can be undone, and it prints the command that undoes it.
 
-Here is a real session: an agent's last two steps delete the tests and overwrite the config, `replay` lists the
-fourteen steps, `rewind 12` puts the files back.
-
-![rewindagents demo: an agent's last two steps delete the tests and overwrite the config; rewindagents replay lists the fourteen steps, rewindagents rewind 12 puts the files back](brand/demo.gif)
+The demo at the top is a real session: an agent's last two steps delete the tests and overwrite the config,
+`replay` lists the fourteen steps, `rewind 12` puts the files back.
 
 `brand/demo/build.py` runs those fourteen agent steps through the hook in a temporary project, then the four
 commands shown, and draws the frames from what they printed; `tests/test_demo.py` plays the same session again
