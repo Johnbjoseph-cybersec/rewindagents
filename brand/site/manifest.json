@@ -11,7 +11,7 @@
   "og-1200x630.png"
  ],
  "checkout": false,
- "course": "Rewind to any step. Let another agent take it from there.",
+ "course": "Your coding agent ran rm -rf. Take it back.",
  "credit": "made by John B Joseph",
  "facts": {
   "action_says": [

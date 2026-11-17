@@ -40,9 +40,9 @@ import scenario  # noqa: E402
 
 NAME = "rewindagents"
 PROMISE = "Ctrl+Z for AI coding agents: record, replay, rewind."
-# The course John chose on 2026-11-13: rewind is the verb that makes the proving ground possible. BRAND.md carries
+# Headline John approved 2026-11-18 (launch: lead with the shell gap; fork/compare stays as the second section). BRAND.md carries
 # it word for word (tests/test_site.py); the promise above stays the base it is built on.
-COURSE = "Rewind to any step. Let another agent take it from there."
+COURSE = "Your coding agent ran rm -rf. Take it back."
 FORK = "Fork a step, compare the runs"      # the README section the fork-and-compare panels come from
 CREDIT = "made by John B Joseph"
 LICENCE = "Apache-2.0"
@@ -54,8 +54,8 @@ ASSETS = ["ui-timeline.png", "demo.gif", "logo-wordmark.svg", "logo-wordmark-rev
 # brand/site/og/ files, copied into assets/ next to the brand/ ones. The share card is rendered from this build's
 # own pages (`build.py cards DIR`, then ux-review/tools/cards.mjs), so it is committed as a PNG here.
 SITE_ASSETS = ["og-1200x630.png"]
-OG_ALT = ("rewindagents: Rewind to any step. Let another agent take it from there. A terminal shows rewindagents fork 2 "
-          "and rewindagents compare --check: the agent's run fails the check, the second try passes.")
+OG_ALT = ("rewindagents: Your coding agent ran rm -rf. Take it back. A terminal shows rewindagents replay with steps "
+          "13 and 14 (rm -rf tests, a config overwrite) struck through, then rewindagents rewind 12 restoring four files.")
 FONTS = {"bricolage-grotesque": (700, 800), "hanken-grotesk": (400, 600), "commit-mono": (400, 700)}
 C = {"Leader": "#F2F4F1", "Reel": "#121412", "Spool": "#1C201D", "Tape": "#55605A",
      "Record": "#B82A16", "Rewind": "#FF7A59", "Playhead": "#B9C2BB", "Rule": "#838C86"}
@@ -702,9 +702,9 @@ def index_html(cfg, f, hero, open_all=False):
     rel = ""
     b = f["blocks"]
     n, good = f["steps"], f["good_step"]
-    desc = ("Rewind to any step of a coding agent's session, fork it, let another agent take it from there, and compare "
-            "the runs on what they changed and on your own check. Open source; every tool call goes into a hash-chained "
-            "log and every file is saved before it changes. Hooks for Claude Code, Codex, Cursor and more.")
+    desc = ("Undo for AI coding agents, including what they do in the shell: rm -rf, sed -i, a script. rewindagents saves "
+            "each file before every step and takes back the whole session, one step or one file. Open source, local, "
+            "standard library only. Hooks for Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid and Qwen Code.")
     replay = f["beats"][0]
     wreck = {ln for i, ln in enumerate(replay["output"].rstrip("\n").split("\n")) if i in replay["accent_rows"]}
     struck = {i for i, (k, t) in enumerate(hero) if k == "out" and t in wreck}
@@ -713,14 +713,14 @@ def index_html(cfg, f, hero, open_all=False):
 <section class="hero" aria-labelledby="h1"><div class="wrap">
 <div class="hero-text">
 <p class="eyebrow"><b>v%(v)s</b> %(eyebrow)s</p>
-<h1 id="h1">%(course)s</h1>
-<p class="lede">rewindagents records every step your coding agent takes and saves each file before it changes. Fork any recorded step, let another agent or a person continue from there, and compare the runs on what they changed and on your own check.</p>
-<p class="lede base">Undo is the base it stands on: rewind the working tree to any step, within the <a href="#limits">limits</a>.</p>
-<div class="cta"><a class="btn btn-primary" href="docs/#fork">Read the docs</a><a class="btn btn-ghost" href="%(repo)s">Source on GitHub</a></div>
+<h1 id="h1">%(course_h1)s</h1>
+<p class="lede">rewindagents records every step your coding agent takes and saves each file before it changes, including files only a shell command touched. When a run goes wrong, take back the whole session, one step, or one file.</p>
+<p class="lede base">Then fork any recorded step, let another agent continue from there, and compare the runs, within the <a href="#limits">limits</a>.</p>
+<div class="cta"><a class="btn btn-primary" href="#install">Install</a><a class="btn btn-ghost" href="%(repo)s">Source on GitHub</a></div>
 </div>
 <div class="hero-panel">
-<div class="panel"><div class="panel-head"><span>a session, and a second try from step 2</span><span class="tl">%(tl)s<span>fork 2</span></span></div>%(hero)s</div>
-<p class="caption">What <code>ux-review/try-runs.sh</code> printed against an installed build, unedited; lines naming its temporary folder are left out. <code>shop</code> is the agent&#x27;s run, recorded through the real hook; <code>clamp</code> is a second attempt made by hand in the fork. A test runs the script again and fails if a line here changes; see <a href="#tested">Tested</a>.</p>
+<div class="panel"><div class="panel-head"><span>a session of %(n)d steps; the last %(wreck)d wrecked the repo</span><span class="tl">%(tl)s<span>rewind %(good)d</span></span></div>%(hero)s</div>
+<p class="caption">Lines the session behind the clip printed, unedited. The strike-through is ours: it marks the two steps the rewind undid. A test replays the session and fails if a line changes; see <a href="#tested">Tested</a>.</p>
 <ul class="facts"><li>standard library only</li><li>no network, no account</li><li>never stops or changes a call</li><li>%(licence)s</li></ul>
 </div>
 <div class="hero-install">
@@ -729,9 +729,9 @@ def index_html(cfg, f, hero, open_all=False):
 </div>
 %(agents)s
 </div></section>
-""" % {"v": e(f["version"]), "eyebrow": e(eyebrow(f)), "licence": LICENCE, "course": e(COURSE),
-       "tl": ruler(2, n=3, w=40, h=16, dark=True), "repo": e(cfg["repo_url"]),
-       "hero": panel(runs_rows(runs, "hero")), "install": hero_install(b), "agents": agent_strip()}
+""" % {"v": e(f["version"]), "eyebrow": e(eyebrow(f)), "licence": LICENCE, "course": e(COURSE), "course_h1": e(COURSE).replace("rm -rf", '<span class="nw">rm -rf</span>'), "n": n, "wreck": f["wreck_steps"],
+       "good": good, "tl": ruler(good, n=n, w=4 + 6 * (n - 1), h=16, dark=True), "repo": e(cfg["repo_url"]),
+       "hero": panel(hero, struck=struck), "install": hero_install(b), "agents": agent_strip()}
 
     fork = """
 <section class="sec" id="fork" aria-labelledby="h-fork"><div class="wrap">
@@ -740,16 +740,17 @@ def index_html(cfg, f, hero, open_all=False):
 <p class="lede">%(lead)s %(says0)s</p></div>
 <div class="cmdlist">
 <div class="cmdrow"><div><h3>Fork any recorded step</h3><p>%(fork_says)s</p></div>%(block)s</div>
+<div class="cmdrow"><div><h3>A session, and a second try from step 2</h3><p>What <code>ux-review/try-runs.sh</code> printed against an installed build, unedited; lines naming its temporary folder are left out. <code>shop</code> is the agent&#x27;s run, recorded through the real hook; <code>clamp</code> is a second attempt made by hand in the fork.</p></div>%(runs)s</div>
 <div class="cmdrow"><div><h3>Compare the runs</h3><p>%(compare_says)s</p></div>%(diff)s</div>
 <div class="cmdrow"><div><h3>What it will not do</h3></div><ul class="plain-list">%(limits)s</ul></div>
 </div>
 <p class="small more">Every option, and how a fork works in a git repository, is on the <a href="docs/#fork">docs page</a>.</p>
 </div></section>
-""" % {"label": label(1, "Fork and compare"), "lead": md_inline(f["fork_lead"]), "says0": md_inline(f["fork_says"][0]),
+""" % {"label": label(2, "Fork and compare"), "lead": md_inline(f["fork_lead"]), "says0": md_inline(f["fork_says"][0]),
        "fork_says": " ".join(md_inline(x) for x in FORK_SHORT),
        "compare_says": " ".join(md_inline(x) for x in COMPARE_SHORT),
        "limits": "".join("<li>%s</li>" % md_inline(x) for x in f["fork_limits"]),
-       "block": code(f["fork"]), "diff": panel(runs_rows(runs, "diff"))}
+       "block": code(f["fork"]), "runs": panel(runs_rows(runs, "hero")), "diff": panel(runs_rows(runs, "diff"))}
 
     right = beat_rows(f["beats"][1]) + beat_rows(f["beats"][2]) + beat_rows(f["beats"][3])
     demo = """
@@ -765,7 +766,7 @@ def index_html(cfg, f, hero, open_all=False):
 <div><p class="small">Then the damage, the rewind, and the project after it.</p>%(right)s</div>
 </div>
 </div></section>
-""" % {"film": film(srt_cues("brand/vsl/%s.srt" % FILM)), "label": label(2, "Undo, the base"), "n": n, "good": good, "s13": n - 1, "s14": n, "gw": f["gif"]["width"],
+""" % {"film": film(srt_cues("brand/vsl/%s.srt" % FILM)), "label": label(1, "Undo"), "n": n, "good": good, "s13": n - 1, "s14": n, "gw": f["gif"]["width"],
        "gh": f["gif"]["height"], "secs": ("%.1f" % f["gif"]["seconds"]).rstrip("0").rstrip("."), "frames": f["gif"]["frames"],
        "left": panel(beat_rows(f["beats"][0], lit=False), "fill"), "right": panel(right, "fill")}
 
@@ -893,7 +894,7 @@ def index_html(cfg, f, hero, open_all=False):
 </div></section>
 """ % {"install": code(b["install"][:1])}
 
-    body = hero_s + fork + demo + timeline + install + how + tested + limits + commands + pricing + faq + closing
+    body = hero_s + demo + fork + timeline + install + how + tested + limits + commands + pricing + faq + closing
     return page(cfg, "index.html", "%s: %s" % (NAME, COURSE.rstrip(".")), desc, body, "home")
 
 
@@ -1224,15 +1225,21 @@ def cards(out):
     shutil.copyfile(os.path.join(HERE, "site.css"), os.path.join(out, "site.css"))
     shutil.copytree(os.path.join(HERE, "fonts"), os.path.join(out, "fonts"), dirs_exist_ok=True)
     shutil.copyfile(os.path.join(BRAND, "logo-wordmark.svg"), os.path.join(out, "logo-wordmark.svg"))
-    rows = runs_rows(f["runs"], "hero")
+    # launch headline (John, 2026-11-18): the cards show the wrecked-repo rewind, the same panel as the page's hero
+    rows = hero_rows(f["beats"])
+    replay = f["beats"][0]
+    wreck = {ln for i, ln in enumerate(replay["output"].rstrip("\n").split("\n")) if i in replay["accent_rows"]}
+    struck = {i for i, (k, t) in enumerate(rows) if k == "out" and t in wreck}
+    n, good = f["steps"], f["good_step"]
     host = cfg["site_url"].split("//", 1)[1].rstrip("/")
-    head = ('<div class="panel-head"><span>a session, and a second try from step 2</span>'
-            '<span class="tl">%s<span>fork 2</span></span></div>' % ruler(2, n=3, w=40, h=16, dark=True))
-    # the wide cards keep the commands and the two tables; the long fork line and the header line are left out
-    short = [r for r in rows if r[0] in ("cmd", "tab", "tabhit") or r == ("out", "")]
+    head = ('<div class="panel-head"><span>a session of %d steps; the last %d wrecked the repo</span>'
+            '<span class="tl">%s<span>rewind %d</span></span></div>'
+            % (n, f["wreck_steps"], ruler(good, n=n, w=4 + 6 * (n - 1), h=16, dark=True), good))
+    short = rows
     pipx, _ = split_comment(f["blocks"]["install"][0])
     meta = '<b>v%s</b> &middot; open source, %s<br>%s' % (e(f["version"]), e(LICENCE), e(eyebrow(f)))
-    sub = "Fork any recorded step, let another agent try, compare the runs. Built on rewind."
+    sub = "Undo for AI coding agents, including what they do in the shell. Seven agents, local, open source."
+    h1 = e(COURSE).replace("rm -rf", '<span class="nw">rm -rf</span>')
     def doc(body, w, h):
         return ('<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="site.css">'
                 '<style>%s</style></head><body>%s</body></html>' % (CARD_CSS % {"w": w, "h": h}, body))
@@ -1241,7 +1248,7 @@ def cards(out):
                 '<div><h1>%s</h1><p class="sub">%s</p></div>'
                 '<p class="meta">%s<br><span class="host">%s</span> &middot; <span class="credit">%s</span></p></div>'
                 '<div class="panel">%s%s</div></div>'
-                % (e(COURSE), e(sub), meta, e(host), e(CREDIT), head, panel(short)))
+                % (h1, e(sub), meta, e(host), e(CREDIT), head, panel(short, struck=struck)))
         with open(os.path.join(out, name + ".html"), "w", encoding="utf-8") as fh:
             fh.write(doc(body, w, h))
     body = ('<div class="card tall"><img class="mark" src="logo-wordmark.svg" alt="" style="height:44px">'
@@ -1249,7 +1256,7 @@ def cards(out):
             '<div class="install">%s</div>'
             '<div class="foot2"><p class="meta">%s</p><p class="meta" style="text-align:right">'
             '<span class="host" style="font-size:24px">%s</span><br><span class="credit">%s</span></p></div></div>'
-            % (e(COURSE), e(sub), head, panel(short), panel([("cmd", pipx)]), meta, e(host), e(CREDIT)))
+            % (h1, e(sub), head, panel(short, struck=struck), panel([("cmd", pipx)]), meta, e(host), e(CREDIT)))
     with open(os.path.join(out, "portrait.html"), "w", encoding="utf-8") as fh:
         fh.write(doc(body, 1080, 1350))
     return ["og.html", "linkedin.html", "portrait.html"]

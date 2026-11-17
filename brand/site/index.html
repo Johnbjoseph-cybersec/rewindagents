@@ -5,24 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self'; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
-<title>rewindagents: Rewind to any step. Let another agent take it from there</title>
-<meta name="description" content="Rewind to any step of a coding agent&#x27;s session, fork it, let another agent take it from there, and compare the runs on what they changed and on your own check. Open source; every tool call goes into a hash-chained log and every file is saved before it changes. Hooks for Claude Code, Codex, Cursor and more.">
+<title>rewindagents: Your coding agent ran rm -rf. Take it back</title>
+<meta name="description" content="Undo for AI coding agents, including what they do in the shell: rm -rf, sed -i, a script. rewindagents saves each file before every step and takes back the whole session, one step or one file. Open source, local, standard library only. Hooks for Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid and Qwen Code.">
 <link rel="canonical" href="https://rewindagents.com/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="rewindagents">
-<meta property="og:title" content="rewindagents: Rewind to any step. Let another agent take it from there">
-<meta property="og:description" content="Rewind to any step of a coding agent&#x27;s session, fork it, let another agent take it from there, and compare the runs on what they changed and on your own check. Open source; every tool call goes into a hash-chained log and every file is saved before it changes. Hooks for Claude Code, Codex, Cursor and more.">
+<meta property="og:title" content="rewindagents: Your coding agent ran rm -rf. Take it back">
+<meta property="og:description" content="Undo for AI coding agents, including what they do in the shell: rm -rf, sed -i, a script. rewindagents saves each file before every step and takes back the whole session, one step or one file. Open source, local, standard library only. Hooks for Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid and Qwen Code.">
 <meta property="og:url" content="https://rewindagents.com/">
 <meta property="og:image" content="https://rewindagents.com/assets/og-1200x630.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="rewindagents: Rewind to any step. Let another agent take it from there. A terminal shows rewindagents fork 2 and rewindagents compare --check: the agent&#x27;s run fails the check, the second try passes.">
+<meta property="og:image:alt" content="rewindagents: Your coding agent ran rm -rf. Take it back. A terminal shows rewindagents replay with steps 13 and 14 (rm -rf tests, a config overwrite) struck through, then rewindagents rewind 12 restoring four files.">
 <meta property="og:image" content="https://rewindagents.com/assets/social-preview-1280x640.png">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="640">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://rewindagents.com/assets/og-1200x630.png">
-<meta name="twitter:image:alt" content="rewindagents: Rewind to any step. Let another agent take it from there. A terminal shows rewindagents fork 2 and rewindagents compare --check: the agent&#x27;s run fails the check, the second try passes.">
+<meta name="twitter:image:alt" content="rewindagents: Your coding agent ran rm -rf. Take it back. A terminal shows rewindagents replay with steps 13 and 14 (rm -rf tests, a config overwrite) struck through, then rewindagents rewind 12 restoring four files.">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="preload" href="fonts/bricolage-grotesque-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
@@ -31,7 +31,7 @@
 <link rel="preload" href="fonts/commit-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="site.min.css">
 <script src="site.js" defer></script>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "applicationCategory": "DeveloperApplication", "author": {"@type": "Person", "name": "John B Joseph"}, "codeRepository": "https://github.com/Johnbjoseph-cybersec/rewindagents", "description": "Rewind to any step of a coding agent's session, fork it, let another agent take it from there, and compare the runs on what they changed and on your own check. Open source; every tool call goes into a hash-chained log and every file is saved before it changes. Hooks for Claude Code, Codex, Cursor and more.", "license": "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE", "name": "rewindagents", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "operatingSystem": "macOS, Linux", "softwareVersion": "0.0.8", "url": "https://rewindagents.com/"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "applicationCategory": "DeveloperApplication", "author": {"@type": "Person", "name": "John B Joseph"}, "codeRepository": "https://github.com/Johnbjoseph-cybersec/rewindagents", "description": "Undo for AI coding agents, including what they do in the shell: rm -rf, sed -i, a script. rewindagents saves each file before every step and takes back the whole session, one step or one file. Open source, local, standard library only. Hooks for Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid and Qwen Code.", "license": "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE", "name": "rewindagents", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "operatingSystem": "macOS, Linux", "softwareVersion": "0.0.8", "url": "https://rewindagents.com/"}</script>
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -43,24 +43,26 @@
 <section class="hero" aria-labelledby="h1"><div class="wrap">
 <div class="hero-text">
 <p class="eyebrow"><b>v0.0.8</b> hooks for 7 coding agents</p>
-<h1 id="h1">Rewind to any step. Let another agent take it from there.</h1>
-<p class="lede">rewindagents records every step your coding agent takes and saves each file before it changes. Fork any recorded step, let another agent or a person continue from there, and compare the runs on what they changed and on your own check.</p>
-<p class="lede base">Undo is the base it stands on: rewind the working tree to any step, within the <a href="#limits">limits</a>.</p>
-<div class="cta"><a class="btn btn-primary" href="docs/#fork">Read the docs</a><a class="btn btn-ghost" href="https://github.com/Johnbjoseph-cybersec/rewindagents">Source on GitHub</a></div>
+<h1 id="h1">Your coding agent ran <span class="nw">rm -rf</span>. Take it back.</h1>
+<p class="lede">rewindagents records every step your coding agent takes and saves each file before it changes, including files only a shell command touched. When a run goes wrong, take back the whole session, one step, or one file.</p>
+<p class="lede base">Then fork any recorded step, let another agent continue from there, and compare the runs, within the <a href="#limits">limits</a>.</p>
+<div class="cta"><a class="btn btn-primary" href="#install">Install</a><a class="btn btn-ghost" href="https://github.com/Johnbjoseph-cybersec/rewindagents">Source on GitHub</a></div>
 </div>
 <div class="hero-panel">
-<div class="panel"><div class="panel-head"><span>a session, and a second try from step 2</span><span class="tl"><svg class="ruler" width="40" height="16" viewBox="0 0 40 16" aria-hidden="true"><rect x="0" y="14" width="20.0" height="1" fill="#B9C2BB"/><rect x="20.0" y="14" width="20.0" height="1" fill="#55605A"/><rect x="1.5" y="10" width="1" height="5" fill="#B9C2BB"/><rect x="37.5" y="10" width="1" height="5" fill="#55605A"/><path d="M17.0 1H23.0V4L21.0 6.5V15H19.0V6.5L17.0 4Z" fill="#B82A16"/></svg><span>fork 2</span></span></div><pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">rewindagents fork 2 <span class="nb">--name clamp</span></span></span>
-<span class="l i4">  2 files as they were right after step 2 of session <span class="nb">demo-0001;</span> git worktree on branch rewindagents/run/clamp</span>
-<span class="l"><span class="p">$ </span><span class="sel">rewindagents compare <span class="nb">--check &quot;python3</span> test_cart.py&quot;</span></span>
-<span class="l i2">runs from session <span class="nb">demo-000</span> step 2 of shop (2 files at the start)</span>
-<span class="l i2"></span>
-<span class="l t">  run       agents         steps  files  lines                 check</span>
-<span class="l t">  shop      claude             1      1  +1 -1                 FAIL (exit 1)</span>
-<span class="l t"><span class="hit">  clamp     -                  0      1  +1 -1                 pass</span></span>
-<span class="l i2"></span>
-<span class="l t">  file     shop         clamp</span>
-<span class="l t">  cart.py  changed A    changed B</span></code></pre></div>
-<p class="caption">What <code>ux-review/try-runs.sh</code> printed against an installed build, unedited; lines naming its temporary folder are left out. <code>shop</code> is the agent&#x27;s run, recorded through the real hook; <code>clamp</code> is a second attempt made by hand in the fork. A test runs the script again and fails if a line here changes; see <a href="#tested">Tested</a>.</p>
+<div class="panel"><div class="panel-head"><span>a session of 14 steps; the last 2 wrecked the repo</span><span class="tl"><svg class="ruler" width="82" height="16" viewBox="0 0 82 16" aria-hidden="true"><rect x="0" y="14" width="68.0" height="1" fill="#B9C2BB"/><rect x="68.0" y="14" width="14.0" height="1" fill="#55605A"/><rect x="1.5" y="10" width="1" height="5" fill="#B9C2BB"/><rect x="7.5" y="10" width="1" height="5" fill="#B9C2BB"/><rect x="13.5" y="10" width="1" height="5" fill="#B9C2BB"/><rect x="19.5" y="10" width="1" height="5" fill="#B9C2BB"/><rect x="25.5" y="10" width="1" height="5" fill="#B9C2BB"/><rect x="31.5" y="10" width="1" height="5" fill="#B9C2BB"/><rect x="37.5" y="10" width="1" height="5" fill="#B9C2BB"/><rect x="43.5" y="10" width="1" height="5" fill="#B9C2BB"/><rect x="49.5" y="10" width="1" height="5" fill="#B9C2BB"/><rect x="55.5" y="10" width="1" height="5" fill="#B9C2BB"/><rect x="61.5" y="10" width="1" height="5" fill="#B9C2BB"/><rect x="73.5" y="10" width="1" height="5" fill="#55605A"/><rect x="79.5" y="10" width="1" height="5" fill="#55605A"/><path d="M65.0 1H71.0V4L69.0 6.5V15H67.0V6.5L65.0 4Z" fill="#B82A16"/></svg><span>rewind 12</span></span></div><pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">rewindagents replay</span></span>
+<span class="l"><span class="c">    ...</span></span>
+<span class="l i21">   11  Bash          git status --short</span>
+<span class="l i21">   12  Read          tests/test_server.py</span>
+<span class="l i21">   <span class="x">13  Bash          rm -rf tests  [3 checkpointed]</span></span>
+<span class="l i21">   <span class="x">14  Write         app/config.py  [1 checkpointed]</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents rewind 12</span></span>
+<span class="l i2">session demo: rewind to step 12 of 14 (did change 4 files)</span>
+<span class="l i11"><span class="hit">  restore  tests/test_config.py</span></span>
+<span class="l i11"><span class="hit">  restore  tests/test_server.py</span></span>
+<span class="l i11"><span class="hit">  restore  tests/test_timeout.py</span></span>
+<span class="l i11"><span class="hit">  restore  app/config.py</span></span>
+<span class="l i4">  this rewind is step 15; undo it with: rewindagents rewind 14 --session demo</span></code></pre></div>
+<p class="caption">Lines the session behind the clip printed, unedited. The strike-through is ours: it marks the two steps the rewind undid. A test replays the session and fails if a line changes; see <a href="#tested">Tested</a>.</p>
 <ul class="facts"><li>standard library only</li><li>no network, no account</li><li>never stops or changes a call</li><li>Apache-2.0</li></ul>
 </div>
 <div class="hero-install">
@@ -73,35 +75,8 @@
 <div class="agents"><span class="ag-label">Hooks for</span><ul><li class="ag"><img src="vendor/logos/claude-code.svg" alt="" width="22" height="22"><span>Claude Code</span></li><li class="ag"><span class="ag-glyph" aria-hidden="true">&gt;_</span><span>Codex</span></li><li class="ag"><img src="vendor/logos/cursor.svg" alt="" width="22" height="22"><span>Cursor</span></li><li class="ag"><img src="vendor/logos/gemini.svg" alt="" width="22" height="22"><span>Gemini CLI</span></li><li class="ag"><img src="vendor/logos/github-copilot.svg" alt="" width="22" height="22"><span>GitHub Copilot</span></li><li class="ag"><span class="ag-glyph" aria-hidden="true">&gt;_</span><span>Factory Droid</span></li><li class="ag"><img src="vendor/logos/qwen.svg" alt="" width="22" height="22"><span>Qwen Code</span></li></ul></div>
 </div></section>
 
-<section class="sec" id="fork" aria-labelledby="h-fork"><div class="wrap">
-<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="2.0" height="1" fill="#121412"/><rect x="2.0" y="16" width="82.0" height="1" fill="#838C86"/><rect x="10.4" y="12" width="1" height="5" fill="#838C86"/><rect x="19.3" y="12" width="1" height="5" fill="#838C86"/><rect x="28.2" y="12" width="1" height="5" fill="#838C86"/><rect x="37.1" y="12" width="1" height="5" fill="#838C86"/><rect x="45.9" y="12" width="1" height="5" fill="#838C86"/><rect x="54.8" y="12" width="1" height="5" fill="#838C86"/><rect x="63.7" y="12" width="1" height="5" fill="#838C86"/><rect x="72.6" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M-1.0 1H5.0V4L3.0 6.5V17H1.0V6.5L-1.0 4Z" fill="#B82A16"/></svg><span class="n">01</span><span>Fork and compare</span></p>
-<div class="head"><h2 id="h-fork">Rewind to a step, fork it, compare.</h2>
-<p class="lede">Rewind to any step, fork it, let another agent take it from there, compare. A recorded step is a starting point you can hand to another agent, another model, another prompt or a person, and the runs that follow can be compared on what they actually did to the files and on your own check.</p></div>
-<div class="cmdlist">
-<div class="cmdrow"><div><h3>Fork any recorded step</h3><p><code>rewindagents fork 12 --name try2</code> makes a new directory holding the project as <code>rewind 12</code> would leave it. Run any agent there, or edit by hand.</p></div><pre class="term"><code><span class="l"><span class="c"># pick the step to start from, say 12</span></span>
-<span class="l"><span class="p">$ </span><span class="sel">rewindagents replay</span></span>
-<span class="l"><span class="c"># <span class="nb">../&lt;project&gt;-try2</span> with step 12&#x27;s files</span></span>
-<span class="l"><span class="p">$ </span><span class="sel">rewindagents fork 12 <span class="nb">--name try2</span></span></span>
-<span class="l"><span class="c"># run any agent with a hook here, or edit by hand</span></span>
-<span class="l"><span class="p">$ </span><span class="sel">cd <span class="nb">../your-project-try2</span></span></span>
-<span class="l"><span class="p">$ </span><span class="sel">cd - &amp;&amp; rewindagents compare <span class="nb">--check &quot;python3</span> -m pytest -q&quot;</span></span>
-<span class="l"><span class="c"># how two runs differ, as a git diff</span></span>
-<span class="l"><span class="p">$ </span><span class="sel">rewindagents compare <span class="nb">--diff your-project</span> try2</span></span></code></pre></div>
-<div class="cmdrow"><div><h3>Compare the runs</h3><p><code>rewindagents compare</code> lines up the project and every run forked from the same step: files changed, lines added and removed. <code>--check</code> runs your own check in each run and reports pass or the exit code.</p></div><pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">rewindagents compare <span class="nb">--diff shop</span> clamp</span></span>
-<span class="l i2">diff --git a/cart.py b/cart.py</span>
-<span class="l i2">--- a/cart.py</span>
-<span class="l i2">+++ b/cart.py</span>
-<span class="l i2">@@ -1,2 +1,2 @@</span>
-<span class="l i3"> def total(prices, discount=0):</span>
-<span class="l i5">-    return sum(prices) - discount  # TODO clamp</span>
-<span class="l i5"><span class="hit">+    return max(0, sum(prices) - discount)</span></span></code></pre></div>
-<div class="cmdrow"><div><h3>What it will not do</h3></div><ul class="plain-list"><li><code>fork</code> refuses a step it cannot rebuild exactly (a stored copy missing, a command whose scan did not finish, a log that does not verify) and leaves nothing behind when it fails half-way.</li><li><code>compare</code> writes nothing; the command <code>--check</code> runs may write in the run it runs in.</li><li>Runs from different steps are not mixed.</li></ul></div>
-</div>
-<p class="small more">Every option, and how a fork works in a git repository, is on the <a href="docs/#fork">docs page</a>.</p>
-</div></section>
-
 <section class="sec" id="demo" aria-labelledby="h-demo"><div class="wrap">
-<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="10.9" height="1" fill="#121412"/><rect x="10.9" y="16" width="73.1" height="1" fill="#838C86"/><rect x="1.5" y="12" width="1" height="5" fill="#121412"/><rect x="19.3" y="12" width="1" height="5" fill="#838C86"/><rect x="28.2" y="12" width="1" height="5" fill="#838C86"/><rect x="37.1" y="12" width="1" height="5" fill="#838C86"/><rect x="45.9" y="12" width="1" height="5" fill="#838C86"/><rect x="54.8" y="12" width="1" height="5" fill="#838C86"/><rect x="63.7" y="12" width="1" height="5" fill="#838C86"/><rect x="72.6" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M7.9 1H13.9V4L11.9 6.5V17H9.9V6.5L7.9 4Z" fill="#B82A16"/></svg><span class="n">02</span><span>Undo, the base</span></p>
+<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="2.0" height="1" fill="#121412"/><rect x="2.0" y="16" width="82.0" height="1" fill="#838C86"/><rect x="10.4" y="12" width="1" height="5" fill="#838C86"/><rect x="19.3" y="12" width="1" height="5" fill="#838C86"/><rect x="28.2" y="12" width="1" height="5" fill="#838C86"/><rect x="37.1" y="12" width="1" height="5" fill="#838C86"/><rect x="45.9" y="12" width="1" height="5" fill="#838C86"/><rect x="54.8" y="12" width="1" height="5" fill="#838C86"/><rect x="63.7" y="12" width="1" height="5" fill="#838C86"/><rect x="72.6" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M-1.0 1H5.0V4L3.0 6.5V17H1.0V6.5L-1.0 4Z" fill="#B82A16"/></svg><span class="n">01</span><span>Undo</span></p>
 <div class="head"><h2 id="h-demo">A wrecked repo, put back in one command.</h2>
 <p class="lede">An agent works in a small project for 14 steps. Steps 13 and 14 delete the tests and overwrite the config. <code>rewindagents rewind 12</code> puts the files back the way they were right after step 12. The first 12 steps stay.</p></div>
 </div>
@@ -157,6 +132,44 @@
 <span class="l i3"> M app/server.py</span>
 <span class="l i2">?? tests/test_timeout.py</span></code></pre></div>
 </div>
+</div></section>
+
+<section class="sec" id="fork" aria-labelledby="h-fork"><div class="wrap">
+<p class="label"><svg class="ruler" width="84" height="18" viewBox="0 0 84 18" aria-hidden="true"><rect x="0" y="16" width="10.9" height="1" fill="#121412"/><rect x="10.9" y="16" width="73.1" height="1" fill="#838C86"/><rect x="1.5" y="12" width="1" height="5" fill="#121412"/><rect x="19.3" y="12" width="1" height="5" fill="#838C86"/><rect x="28.2" y="12" width="1" height="5" fill="#838C86"/><rect x="37.1" y="12" width="1" height="5" fill="#838C86"/><rect x="45.9" y="12" width="1" height="5" fill="#838C86"/><rect x="54.8" y="12" width="1" height="5" fill="#838C86"/><rect x="63.7" y="12" width="1" height="5" fill="#838C86"/><rect x="72.6" y="12" width="1" height="5" fill="#838C86"/><rect x="81.5" y="12" width="1" height="5" fill="#838C86"/><path d="M7.9 1H13.9V4L11.9 6.5V17H9.9V6.5L7.9 4Z" fill="#B82A16"/></svg><span class="n">02</span><span>Fork and compare</span></p>
+<div class="head"><h2 id="h-fork">Rewind to a step, fork it, compare.</h2>
+<p class="lede">Rewind to any step, fork it, let another agent take it from there, compare. A recorded step is a starting point you can hand to another agent, another model, another prompt or a person, and the runs that follow can be compared on what they actually did to the files and on your own check.</p></div>
+<div class="cmdlist">
+<div class="cmdrow"><div><h3>Fork any recorded step</h3><p><code>rewindagents fork 12 --name try2</code> makes a new directory holding the project as <code>rewind 12</code> would leave it. Run any agent there, or edit by hand.</p></div><pre class="term"><code><span class="l"><span class="c"># pick the step to start from, say 12</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents replay</span></span>
+<span class="l"><span class="c"># <span class="nb">../&lt;project&gt;-try2</span> with step 12&#x27;s files</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents fork 12 <span class="nb">--name try2</span></span></span>
+<span class="l"><span class="c"># run any agent with a hook here, or edit by hand</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">cd <span class="nb">../your-project-try2</span></span></span>
+<span class="l"><span class="p">$ </span><span class="sel">cd - &amp;&amp; rewindagents compare <span class="nb">--check &quot;python3</span> -m pytest -q&quot;</span></span>
+<span class="l"><span class="c"># how two runs differ, as a git diff</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents compare <span class="nb">--diff your-project</span> try2</span></span></code></pre></div>
+<div class="cmdrow"><div><h3>A session, and a second try from step 2</h3><p>What <code>ux-review/try-runs.sh</code> printed against an installed build, unedited; lines naming its temporary folder are left out. <code>shop</code> is the agent&#x27;s run, recorded through the real hook; <code>clamp</code> is a second attempt made by hand in the fork.</p></div><pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">rewindagents fork 2 <span class="nb">--name clamp</span></span></span>
+<span class="l i4">  2 files as they were right after step 2 of session <span class="nb">demo-0001;</span> git worktree on branch rewindagents/run/clamp</span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents compare <span class="nb">--check &quot;python3</span> test_cart.py&quot;</span></span>
+<span class="l i2">runs from session <span class="nb">demo-000</span> step 2 of shop (2 files at the start)</span>
+<span class="l i2"></span>
+<span class="l t">  run       agents         steps  files  lines                 check</span>
+<span class="l t">  shop      claude             1      1  +1 -1                 FAIL (exit 1)</span>
+<span class="l t"><span class="hit">  clamp     -                  0      1  +1 -1                 pass</span></span>
+<span class="l i2"></span>
+<span class="l t">  file     shop         clamp</span>
+<span class="l t">  cart.py  changed A    changed B</span></code></pre></div>
+<div class="cmdrow"><div><h3>Compare the runs</h3><p><code>rewindagents compare</code> lines up the project and every run forked from the same step: files changed, lines added and removed. <code>--check</code> runs your own check in each run and reports pass or the exit code.</p></div><pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">rewindagents compare <span class="nb">--diff shop</span> clamp</span></span>
+<span class="l i2">diff --git a/cart.py b/cart.py</span>
+<span class="l i2">--- a/cart.py</span>
+<span class="l i2">+++ b/cart.py</span>
+<span class="l i2">@@ -1,2 +1,2 @@</span>
+<span class="l i3"> def total(prices, discount=0):</span>
+<span class="l i5">-    return sum(prices) - discount  # TODO clamp</span>
+<span class="l i5"><span class="hit">+    return max(0, sum(prices) - discount)</span></span></code></pre></div>
+<div class="cmdrow"><div><h3>What it will not do</h3></div><ul class="plain-list"><li><code>fork</code> refuses a step it cannot rebuild exactly (a stored copy missing, a command whose scan did not finish, a log that does not verify) and leaves nothing behind when it fails half-way.</li><li><code>compare</code> writes nothing; the command <code>--check</code> runs may write in the run it runs in.</li><li>Runs from different steps are not mixed.</li></ul></div>
+</div>
+<p class="small more">Every option, and how a fork works in a git repository, is on the <a href="docs/#fork">docs page</a>.</p>
 </div></section>
 
 <section class="sec" id="timeline" aria-labelledby="h-timeline"><div class="wrap">

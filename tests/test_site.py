@@ -336,28 +336,36 @@ class TestSite(unittest.TestCase):
                                 "%s: %r is outside the fonts' latin range" % (p, ch))
 
     def test_hero_panel_shows_lines_the_session_printed(self):
-        # The hero leads with the course (John, 2026-11-13): fork and compare, quoted from brand/demo/runs.json, which
-        # tests/test_runs_demo.py proves try-runs.sh still prints. The rewind session stays on the page as the base:
-        # tests/test_demo.py proves brand/demo/manifest.json is what the CLI prints today, and the page quotes it all.
+        # The hero leads with the launch headline (John, 2026-11-18): the wrecked-repo rewind, quoted from
+        # brand/demo/manifest.json, which tests/test_demo.py proves is what the CLI prints today. Fork and compare
+        # (brand/demo/runs.json, proved by tests/test_runs_demo.py) is the second section and must stay on the page.
         m = manifest()
         build = load_build()
         self.assertEqual(m["course"], build.COURSE)
         self.assertIn(build.COURSE, read("BRAND.md", BRAND))
-        self.assertIn('<h1 id="h1">%s</h1>' % build.COURSE, read("index.html"))
+        index = read("index.html")
+        h1 = re.search(r'<h1 id="h1">(.*?)</h1>', index, re.S).group(1)
+        self.assertEqual(unesc(re.sub(r"<[^>]+>", "", h1)), build.COURSE)
+        self.assertIn('<span class="nw">rm -rf</span>', h1)   # never wraps as "rm -" / "rf"
+        hero = index[index.index('<section class="hero"'):index.index("</section>", index.index('<section class="hero"'))]
+        hero_text = unesc(re.sub(r"<[^>]+>", "", hero))
+        demo_lines = {ln for b in json.loads(read(os.path.join("demo", "manifest.json"), BRAND))["beats"]
+                      for ln in [b["command"]] + b["output"].rstrip("\n").split("\n")}
+        rewind = m["rewind_rows"]
+        self.assertEqual([k for k, _ in rewind][0], "cmd")
+        for kind, text in rewind:
+            if kind in ("out", "hit"):
+                self.assertIn(text, demo_lines, text)
+            if kind != "gap":
+                self.assertIn(text, hero_text, text)
+        self.assertNotIn("fork 2", hero_text)
         runs = json.loads(read(os.path.join("demo", "runs.json"), BRAND))
         printed = {ln for lines in runs["output"].values() for ln in lines}
-        kinds = [k for k, _ in m["hero"]]
         self.assertEqual([t for k, t in m["hero"] if k == "cmd"], [runs["commands"]["fork"], runs["commands"]["compare"]])
+        shown = unesc(re.sub(r"<[^>]+>", "", index))
         for kind, text in m["hero"]:
             if kind in ("out", "hit", "tab", "tabhit"):
                 self.assertIn(text, printed, text)
-        hits = [t for k, t in m["hero"] if k in ("hit", "tabhit")]
-        self.assertEqual(len(hits), 1)
-        self.assertTrue(hits[0].strip().startswith("clamp") and hits[0].endswith("pass"), hits)
-        self.assertIn("cmd", kinds)
-        index = read("index.html")
-        shown = unesc(re.sub(r"<[^>]+>", "", index))
-        for _, text in m["hero"]:
             self.assertIn(text, shown, text)
         # the clip's four commands and every line they printed are on the page as text too
         demo = json.loads(read(os.path.join("demo", "manifest.json"), BRAND))

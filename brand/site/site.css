@@ -714,4 +714,6 @@ pre.term .l:empty::before { content: "\200b"; }
 @media (max-width: 600px) {
   pre.term .l:has(> .c), .hero-panel pre.term .l:not(.t), .hero-install pre.term .l, #fork pre.term .l:not(.t) { white-space: pre-wrap; overflow-wrap: anywhere; padding-left: 2ch; text-indent: -2ch; }
 }
-@media (max-width: 600px) { .hero-panel .caption::before { content: "The table scrolls sideways to its check column. "; color: var(--reel); } }
+
+/* a command in a headline never breaks at its hyphen ("rm -" / "rf") */
+.nw { white-space: nowrap; }

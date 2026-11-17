@@ -27,9 +27,13 @@ We write for the person at the terminal, not for a buyer.
 A paid tier may come later (cloud sync, shareable replay links, long retention, session search). Nothing
 in the identity depends on it, and nothing is sold before it exists.
 
-## Course (John, 2026-11-13)
+## Course (John, 2026-11-13; headline changed 2026-11-18)
 
-Rewind to any step. Let another agent take it from there.
+Your coding agent ran rm -rf. Take it back.
+
+Launch headline (John approved 2026-11-18): lead with the gap the agents' own checkpoints leave, files changed by
+shell commands. The 2026-11-13 line "Rewind to any step. Let another agent take it from there." is now the
+second section (fork and compare), not the headline.
 
 rewindagents becomes the neutral proving ground for coding agents: rewind to any step, fork it, let another
 agent take it from there, compare. Rewind is the verb that makes it possible, so the name and the domain stay

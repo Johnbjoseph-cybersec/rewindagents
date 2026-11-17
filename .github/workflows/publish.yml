@@ -1,0 +1,36 @@
+# Publishes rewindagents to PyPI when a GitHub release is published (tag vX.Y.Z), with PyPI Trusted Publishing:
+# no API token is stored anywhere. One-time setup on pypi.org (account owner): Account -> Publishing -> Add a new
+# pending publisher -> PyPI project name "rewindagents", owner "Johnbjoseph-cybersec", repository "rewindagents",
+# workflow "publish.yml", environment "pypi".
+# The job refuses to publish when the tag does not match the package version.
+# Actions are pinned to commit SHAs (the version tag is the comment).
+name: publish
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pypi:
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/rewindagents
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: tag matches the package version
+        if: github.event_name == 'release'
+        run: |
+          v=$(PYTHONPATH=src python3 -c "import rewindagents; print(rewindagents.__version__)")
+          test "${GITHUB_REF_NAME}" = "v$v" || { echo "tag ${GITHUB_REF_NAME} != v$v"; exit 1; }
+      - name: tests
+        run: PYTHONPATH=src python3 -m unittest discover -s tests
+      - name: build sdist and wheel
+        run: python3 -m pip install --quiet build==1.2.2.post1 && python3 -m build
+      - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
