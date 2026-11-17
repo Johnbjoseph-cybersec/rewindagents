@@ -108,27 +108,27 @@
       }
     },
     "ph-5.png": {
-      "png_sha256": "eec30753ce2bfb9004544991fd65a57c38ffd0de0090b3e7a8161b8a9f745edf",
+      "png_sha256": "6dff35bb2f633220acfbf2c9b8da99e42c7906b1d80d6a216321d705611fd92e",
       "scores": {
         "first_read": {
-          "score": 8.5,
-          "evidence": "Re-reviewed 2026-11-18, full-res and gallery-sheet. Headline x58-893; two dark strips y250-362 and y441-553; orange 'rewindagents install' is the single lit item. Commands still about 7 px at 320 wide."
+          "score": 9,
+          "evidence": "Re-reviewed 2026-11-18 round 4, full-res, 320 px and gallery-sheet. Headline x58-893; bands y216-344 and y424-552; mono about 64 px, so commands read at about 16 px at 320 wide; orange rewindagents install is the single lit item."
         },
         "legibility": {
-          "score": 8.5,
-          "evidence": "Mono about 27.5 px, longest line ends x703 of 1270; labels and notes about 30 px white on red read well. Commands remain the smallest text."
+          "score": 9,
+          "evidence": "Mono 64 px, longest line ends x1090 of 1270; labels and notes about 30 px white on red. Smallest text is the 16 px credit, same as the set."
         },
         "brand_fidelity": {
-          "score": 8.5,
-          "evidence": "Record, Spool, Leader, one Rewind accent, Playhead prompt, left aligned on x56, no chrome."
+          "score": 9,
+          "evidence": "Spool bands, Leader text, one Rewind accent, Playhead prompt, left aligned x56, no chrome. Command type is now larger than ph-2 to ph-4 (25-40 px), a deliberate step for a two-line shot."
         },
         "composition": {
-          "score": 8.5,
-          "evidence": "No overlap or overflow; strips y250-362/441-553, notes y595/640, credit y715. Remaining weakness: about 100 px red gap under the headline and small commands inside tall strips."
+          "score": 9,
+          "evidence": "No overlap or overflow. Headline-to-band red gap closed: label y180 sits between headline and band. Bands start y216 not y250 as on ph-2 to ph-4, a small set inconsistency; about 50 px of red between notes (y640) and credit (y715)."
         },
         "truthfulness": {
           "score": 9,
-          "evidence": "Label now 'From PyPI' (x56-192, y213), true for 'pipx install rewindagents' (README line 107-110). 'rewindagents install' matches README Install/hook section; notes 'Python 3.10 or newer' and 'No dependencies beyond the standard library.' match README lines 105-107. Nothing implied beyond that."
+          "evidence": "pipx install rewindagents (README line 110), rewindagents install (line 125), Python 3.10 or newer and No dependencies beyond the standard library (lines 105-107) all verbatim. From PyPI and In the project labels are true."
         }
       }
     }

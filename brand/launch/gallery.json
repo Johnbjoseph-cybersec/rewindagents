@@ -321,7 +321,7 @@
    "headline_px": 72,
    "item": "Install in two commands: pipx from PyPI, then `rewindagents install` in the project.",
    "kind": "term",
-   "mono_px": 40,
+   "mono_px": 64,
    "notes": [
     "Python 3.10 or newer",
     "No dependencies beyond the standard library."
@@ -363,22 +363,22 @@
    "samples": [
     [
      4,
-     306,
+     280,
      "Spool"
     ],
     [
      1266,
-     306,
+     280,
      "Spool"
     ],
     [
      4,
-     498,
+     488,
      "Spool"
     ],
     [
      1266,
-     498,
+     488,
      "Spool"
     ],
     [
@@ -392,7 +392,7 @@
      "Record"
     ]
    ],
-   "sha256": "eec30753ce2bfb9004544991fd65a57c38ffd0de0090b3e7a8161b8a9f745edf"
+   "sha256": "6dff35bb2f633220acfbf2c9b8da99e42c7906b1d80d6a216321d705611fd92e"
   }
  ],
  "width": 1270

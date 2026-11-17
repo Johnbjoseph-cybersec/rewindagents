@@ -1237,7 +1237,8 @@ def cards(out):
             % (n, f["wreck_steps"], ruler(good, n=n, w=4 + 6 * (n - 1), h=16, dark=True), good))
     short = rows
     pipx, _ = split_comment(f["blocks"]["install"][0])
-    meta = '<b>v%s</b> &middot; open source, %s<br>%s' % (e(f["version"]), e(LICENCE), e(eyebrow(f)))
+    # no version on share cards (John, 2026-11-18): an uploaded social preview must not go stale with each release
+    meta = '<b>open source</b>, %s<br>%s' % (e(LICENCE), e(eyebrow(f)))
     sub = "Undo for AI coding agents, including what they do in the shell. Seven agents, local, open source."
     h1 = e(COURSE).replace("rm -rf", '<span class="nw">rm -rf</span>')
     def doc(body, w, h):

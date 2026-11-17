@@ -55,6 +55,9 @@ HEAD_LH = 78
 HEAD_LINES = 2
 BLOCK_TOP = 250                  # every terminal shot's first band starts here (review RB5e round 1: one rhythm)
 MONO_MIN, MONO_MAX = 24, 40      # terminal text: the largest size that fits each shot, on a half-pixel grid
+# ph-5 only (review RB5f, cs-iris-kapoor): two short install lines, so its commands may run far above MONO_MAX and its
+# block starts closer under the one-line headline (no red void there); the other shots keep BLOCK_TOP and MONO_MAX
+OWN_LAYOUT = {"ph-5.png": {"block_top": 216, "mono_max": 64}}   # 64: a clear right margin past the longer line
 PAD = 30                         # least band padding above and below the text
 PAD_MAX = 52                     # a band shorter than its room grows its padding and leading up to these
 LEAD, LEAD_MAX = 1.36, 1.9       # line height as a multiple of the mono size: natural, and the most it grows to
@@ -196,6 +199,14 @@ def headline_lines(kit, shot):
     return best[1]
 
 
+def block_top(shot):
+    return OWN_LAYOUT.get(shot["file"], {}).get("block_top", BLOCK_TOP)
+
+
+def mono_max(shot):
+    return OWN_LAYOUT.get(shot["file"], {}).get("mono_max", MONO_MAX)
+
+
 def label_space(i):
     return LABEL + 18 if i else 0               # the first label sits above BLOCK_TOP, in the headline's gap
 
@@ -215,8 +226,8 @@ def fit(kit, shot):
     leading (up to PAD_MAX and LEAD_MAX), so a band whose longest line sets its size still fills its room
     instead of leaving red void under it (review RB5e round 1). Returns (size, pad, line height)."""
     longest = max(sum(len(t) for t, _ in segs) for p in shot["panels"] for segs in p["rows"])
-    room = REGION_BOTTOM - BLOCK_TOP
-    size = MONO_MAX
+    room = REGION_BOTTOM - block_top(shot)
+    size = mono_max(shot)
     while (longest * kit.mono.width("x", size) > W - 2 * M
            or block_height(shot, size, PAD, round(size * LEAD)) > room):
         size -= 0.5
@@ -295,9 +306,9 @@ def draw_term(cv, kit, shot):
     for line in lines:
         cv.text(kit.disp, line, HEAD, M, base, "Leader", tracking=-0.02)
         base += HEAD_LH
-    if base - HEAD_LH + 0.25 * HEAD > BLOCK_TOP - (LABEL + 18 if shot["panels"][0]["label"] else 0):
+    if base - HEAD_LH + 0.25 * HEAD > block_top(shot) - (LABEL + 18 if shot["panels"][0]["label"] else 0):
         raise SystemExit("%s: the headline runs into the first band" % shot["file"])
-    y, pts = BLOCK_TOP, []
+    y, pts = block_top(shot), []
     for i, p in enumerate(shot["panels"]):
         y += 32 if i else 0
         if p["label"]:
