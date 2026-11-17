@@ -1,0 +1,23 @@
+**Scope.** I looked at all four sheets, 11 of the 11 k1440 frames, 6 of the 9 k390 frames, and the 1440 and 390 part00 images for before and after. I did not open k390-4.5, 5.5 or 6.5, the 834 parts, or the 1440 part01 and part02. Rows 4 and 7 are therefore less certain.
+
+**Scores (AFTER)**
+1. **Identity kept: 9.0.** Paper, black terminals, one red and the ruler/playhead motif all hold. Nothing from the rejected redesign appears, though the paper card inside the dark film band (k1440-9.5) is a new shape.
+2. **Hero: 8.2.** The three-line headline is bold and the install line sits on the first screen at 1440 and 390 (k1440-1.0, k390-1.0). But the "Install." panel text starts at x=815 while the second lede paragraph starts at x=841, so two left edges collide. The area right of headline line 1 is empty. The first screen also shows no motion: the terminal is just "$ rewindagents replay".
+3. **Stage: 8.3.** The story reads clearly: steps 1–14, red `rm -rf` row, struck rows, then restore (k1440-5.0 to 7.0). Three weaknesses remain.
+   - A dead 90 px paper band sits above the stage rule while pinned.
+   - The terminal is about 60% empty until step 11.
+   - The struck rows and their tags bleed to x=138, outside the 152 px grid, and the "restore" chips look clipped on the left (k1440-7.0).
+4. **Transitions: 8.0.** The scrubbed film-card expansion (k1440-9.5 to 10.0) is the one truly cinematic moment. Below it, the film's player controls are a bare black bar with no poster (k1440-10.5), which reads as broken. Sheet 1 row 5 still shows a heading cut off at the frame bottom mid-reveal. I can't judge jank from stills.
+5. **Counters: 8.4.** Big numerals, sources shown, and the build-time note is there. Every frame I saw is mid-count (5/302/11/3, 7/477/14/4, 7/542/14/4). I never saw the final 723 and 15, so those values are unverified. The "0" counter counts from 0 to 0. The "Tested" source line is pale grey and small.
+6. **Typography, grid and rhythm: 8.5.** The display, body and mono hierarchy is strong. Spacing is generous, but there is slack paper after the counters and the grid breaks noted above.
+7. **Mobile 390: 7.9.** At step 1 the terminal is about 400 px of black with one line (k390-4.0). It runs edge to edge while everything else has 16 px margins. In k390-5.0 the red "Bash 13" tags overflow the tree column (the third reaches x=363 against a 374 column edge). The hero install panel is cut off at the fold, with its first command line visible.
+8. **Overall premium vs before: 8.3.** It is clearly bolder and more alive than before. It still reads as a very good dev landing page rather than "unmistakably premium", mainly because the hero is static type and the stage starts below the fold.
+
+**OVERALL: 8.3.** This is below the bar of 9.0 overall with no row under 8. Row 7 (7.9) misses it.
+
+**Ranked fixes**
+1. **Mobile stage.** Size the terminal to its content, or pre-seed it with the first 3–4 lines. Inset it to the 16 px margin. Clamp the struck-row tags inside the tree column (shorten the label to "13", or let the filename truncate).
+2. **Pinned stage on desktop.** Remove the 90 px dead band above the rule (pin from the rule), and give the terminal a stable height that matches its final content so it isn't 60% empty. Keep the struck rows and "restore" chips inside the 152 px grid with whole chips, not clipped ones.
+3. **Hero.** Align the install panel and the second lede paragraph to one left edge. Put something alive in the first screen, for example a faint ruler playhead already moving or the terminal pre-typing. Use the empty space right of headline line 1.
+4. **Film band.** Give the player a poster frame (the restore terminal) or merge the controls into the card, so no bare black bar appears. Check that no reveal is mid-state at 50% viewport height.
+5. **Counters.** Capture a frame showing the final values 723 and 15 and confirm them. Drop the animated "0", or show it as a static "0" with a "none" caption. Raise the source-line contrast to 4.5:1.

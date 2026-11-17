@@ -1099,3 +1099,20 @@ pre.term.copied .sel { animation: copied .7s var(--ease); }
 @media (max-width: 600px) { .hero-install pre.term, .hero-install pre.term.has-copy { padding: 52px 14px 14px; } }
 /* the counters' wrap under the stage is not the hero grid */
 .hero .stage + .wrap { display: block; }
+
+/* ==== bold round, review 2 (cs-iris-kapoor, 8.3) ==== */
+/* the hero grid keeps its gutter from 1200 (the gap reset above zeroed it, so the install panel sat 26 px left of
+   the paragraph under it); now the panel, the second paragraph and the buttons share one left edge */
+@media (min-width: 1200px) { .hero .wrap { column-gap: var(--gap); } }
+/* a filled tag centres its word, so the chip reads as whole */
+.stage.live .ff.wreck .ftg, .stage.live .ff.home .ftg, .stage.live .ff.fly .ftg, .ff.back .ftg { text-align: center; }
+@media (max-width: 600px) {
+  /* the stage terminal sits on the 16 px page margin like every other block */
+  .st-term { margin: 0; }
+  .st-term pre.term { border-radius: 4px; }
+}
+@media (max-width: 600px) {
+  /* "test_timeout.py" and a filled tag fit the 174 px tree column */
+  .ftree { font-size: 11px; }
+  .ff { gap: 4px; padding: 4px 2px 4px 6px; }
+}

@@ -28,20 +28,33 @@ What changed:
    scroll position. Desktop only: the label rulers and terminals drift (parallax), the agent row drifts with scroll,
    primary buttons are magnetic, terminals lift/tilt under a pointer; the copy button morphs to "Copied" with a check.
 5. Reduced motion: none of it runs; the page is the complete still. Measured: CLS 0 in Lighthouse and 0 across both
-   recordings; Lighthouse mobile perf 95 / a11y 100, desktop 100 / 100.
+   recordings; Lighthouse mobile perf 91-92 / a11y 100, desktop 100 / 100.
+
+ROUND 2. Round 1 scored 8.0 (rows 2, 4, 6 under 8). Its five ranked fixes, all applied:
+ a. Hero: install panel moved beside headline lines 2-3 at >=1200 px (fills the dead right quarter); the stage ruler
+    and first tree row are now on the 1440 first screen; install line still on the 390 first screen.
+ b. Stage on the page grid (152 px edge at 1440), sized to its content, centred in the free viewport while pinned;
+    the terminal holds a stable height from step 1; tags on the struck rows are solid (no colour fades).
+ c. Transitions: heading, lede, rule and terminal reveals are scrubbed with clamped ends and finish by 50-80% of the
+    viewport, so nothing sits half-revealed mid-screen; the playhead no longer covers the section number; the stray
+    edge tick is clipped.
+ d. Mobile: headline 44 px at 390; no blank strip under the pinned stage; the "0" counter spans both columns.
+ e. Counters: one-line sources plus the note "Counted from the repository when this page was built."
+The recordings, sheets and key frames below were re-recorded after these fixes.
 
 Images (absolute paths):
 RECORDINGS as frame sheets, frames 0.5 s apart in reading order, from real-time scroll-through screen recordings
 (page held 3 s on the first screen, then ~1100 px/s, ~550 px/s through the pinned stage):
   /Users/johnbommeravenijoseph/fire/rewindagent-site/ux-review/bold/frames/sheet-1440-1.png and sheet-1440-2.png
   /Users/johnbommeravenijoseph/fire/rewindagent-site/ux-review/bold/frames/sheet-390-1.png and sheet-390-2.png
-Full-size frames from the 1440 recording (pinned stage scrubbing, then the counters and next section):
-  /Users/johnbommeravenijoseph/fire/rewindagent-site/ux-review/bold/frames/k1440-1.0.png, k1440-5.2.png, k1440-6.2.png,
-  k1440-6.8.png, k1440-7.4.png, k1440-7.9.png, k1440-8.4.png, k1440-9.0.png
-Full-size frames from the 390 recording: same folder, k390-1.0.png, k390-5.6.png, k390-6.4.png, k390-7.0.png, k390-7.6.png, k390-8.2.png
+Full-size frames from the 1440 recording (first screen, pinned stage scrubbing 3.5-7.5 s, counters, section 02, film):
+  /Users/johnbommeravenijoseph/fire/rewindagent-site/ux-review/bold/frames/k1440-1.0.png, k1440-3.5.png, k1440-5.0.png,
+  k1440-6.0.png, k1440-6.5.png, k1440-7.0.png, k1440-7.5.png, k1440-8.0.png, k1440-9.5.png, k1440-10.0.png, k1440-10.5.png
+Full-size frames from the 390 recording: same folder, k390-1.0.png, k390-4.0.png, k390-4.5.png, k390-5.0.png,
+  k390-5.5.png, k390-6.0.png, k390-6.5.png, k390-7.0.png, k390-7.5.png
 BEFORE full page parts: /Users/johnbommeravenijoseph/fire/rewindagent-site/ux-review/magic/before/index-1440.part00.png.. , index-834.part*, index-390.part*
 AFTER full page parts (stage shown as its built still): /Users/johnbommeravenijoseph/fire/rewindagent-site/ux-review/bold/after/index-1440.part00.png.. , index-834.part*, index-390.part*
-At minimum look at: all four sheets, all k* frames, before+after 1440 part00-02, 834 part00-01, 390 part00-03.
+At minimum look at: all four sheets, every k* frame listed (all 20), before+after 1440 part00-02, 834 part00-01, 390 part00-03.
 
 Score AFTER (0-10, one decimal), one sentence of evidence each, and the specific fix if under 9:
 1 Identity kept (paper, black terminals, ruler motif, one red; nothing from the rejected redesign)

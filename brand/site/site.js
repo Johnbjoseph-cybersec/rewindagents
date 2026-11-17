@@ -220,8 +220,7 @@
         cls(f.li, "fly", back && fb < 1);
         text(f.tag, back ? f.still : last ? last[1] + " " + last[0] : "");
         var tx = 0, ty = 0;
-        if (back) { var e = 1 - Math.pow(1 - fb, 3); if (shift) tx = (1 - e) * 220; else ty = (1 - e) * 48; }
-        else if (gone) tx = -14 * clamp((p - f.gone) / 0.3);
+        if (back) { var e = 1 - Math.pow(1 - fb, 3); if (shift) tx = (1 - e) * 220; }  // phone: rows stack tight, so a file coming back changes colour in place
         else if (f.born > 0 && s >= f.born) tx = 28 * (1 - clamp((p - f.born) / 0.35));
         var tr = tx || ty ? "translate(" + tx.toFixed(1) + "px," + ty.toFixed(1) + "px)" : "";
         if (f.li.style.transform !== tr) f.li.style.transform = tr;
@@ -319,8 +318,8 @@
       var end = parseInt(k.getAttribute("data-to"), 10), obj = { v: 0 };
       if (!(end > 0)) return;
       k.textContent = "0";
-      ScrollTrigger.create({ trigger: k, start: "top 92%", once: true, onEnter: function () {
-        gsap.to(obj, { v: end, duration: Math.min(2.2, 0.9 + end / 600), ease: "power3.out", onUpdate: function () { k.textContent = String(Math.round(obj.v)); } });
+      ScrollTrigger.create({ trigger: k, start: "top 98%", once: true, onEnter: function () {
+        gsap.to(obj, { v: end, duration: Math.min(1.3, 0.6 + end / 1000), ease: "power3.out", onUpdate: function () { k.textContent = String(Math.round(obj.v)); } });
       } });
     });
   });
