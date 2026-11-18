@@ -1,0 +1,19 @@
+rewindagents hook: not recorded: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+..usage: rewindagents install [-h]
+                            [--agent {claude,codex,copilot,cursor,droid,gemini,qwen}]
+                            [--settings SETTINGS]
+rewindagents install: error: argument --agent: invalid choice: 'no-such-agent' (choose from 'claude', 'codex', 'copilot', 'cursor', 'droid', 'gemini', 'qwen')
+....................................................................................................................................................s..............sss...............................................................................................................rewindagents hook: not recorded: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+.........................................sssssssssssss............................................................rewindagents: no log at /var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/tmpidouhuh6/none.jsonl
+rewindagents: no log at /var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/tmpidouhuh6/none.jsonl
+.rewindagents: stdin is not JSON: Expecting value: line 1 column 1 (char 0)
+rewindagents: stdin must be an object with a 'tool' key
+..installed in /var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/tmpt1qy4pmn/.claude/settings.json
+..................................................................................................................................................................................................................................................../Users/johnbommeravenijoseph/fire/rewindagent-perf/brand/demo/runs.py:25: ResourceWarning: unclosed file <_io.TextIOWrapper name='/Users/johnbommeravenijoseph/fire/rewindagent-perf/ux-review/try-runs.sh' mode='r' encoding='utf-8'>
+  heads = set(re.findall(r'^echo "--- (.*)"$', open(SCRIPT, encoding="utf-8").read(), re.M))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+................................................................................................................................................................................s.......s....sssss......................
+----------------------------------------------------------------------
+Ran 856 tests in 62.650s
+
+OK (skipped=24)

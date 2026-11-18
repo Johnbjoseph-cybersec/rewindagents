@@ -35,7 +35,7 @@ floor for a call is two Python starts, about 20 ms.
 
 ## Proof
 - Tests: `python3 -m unittest discover -s tests` (the CI command). Baseline 1ac5f23: 851 tests OK (24 skipped).
-  Branch: see the commit message / final report; outputs `tests_run1.txt`, `tests_run2.txt` (and `tests_final_*`).
+  Branch: 856 tests, OK (24 skipped), twice from cleared __pycache__ (`tests_final_1.txt`, `tests_final_2.txt`; the two earlier runs failed only on the site counter before the rebuild).
   New: `tests/test_hook_fastpath.py` (5 tests: no cli/rewind/argparse/subprocess imported by the hook; four
   invocation forms record and exit 0; Gemini answer `{}`; bad agent still argparse exit 2; package attributes).
   Adding tests moves the site's test counter; `brand/site/index.html` was rebuilt with `brand/site/build.py`
