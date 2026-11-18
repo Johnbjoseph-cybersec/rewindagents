@@ -408,7 +408,8 @@ class TestInitWithoutHomeDirectoryCallsHookEphemeralSafely(unittest.TestCase):
         self.root, self.bindir = t / "proj", t / "bin"
         self.root.mkdir()
         self.bindir.mkdir()
-        claude = self.bindir / "claude"
+        # Windows' shutil.which only matches a PATHEXT extension (npm installs claude.cmd there)
+        claude = self.bindir / ("claude.cmd" if os.name == "nt" else "claude")
         claude.write_text("#!/bin/sh\n")
         claude.chmod(0o755)
         self.home_patch = mock.patch.object(Path, "home", side_effect=RuntimeError("no HOME/USERPROFILE"))

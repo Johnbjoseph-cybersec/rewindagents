@@ -14,6 +14,11 @@ sys.path.insert(0, str(SRC))
 from rewindagents import agents, hook, init  # noqa: E402
 
 
+# The stand-in agent binary, named the way the OS finds a command: Windows' shutil.which only matches a
+# name with a PATHEXT extension (an npm-installed agent there is claude.cmd), POSIX one with the exec bit.
+STAND_IN_SUFFIX = ".cmd" if os.name == "nt" else ""
+
+
 class Tty(io.StringIO):
     def isatty(self):
         return True
@@ -32,7 +37,7 @@ class Base(unittest.TestCase):
 
     def on_path(self, *names):
         for n in names:
-            f = self.bin / n
+            f = self.bin / (n + STAND_IN_SUFFIX)
             f.write_text("#!/bin/sh\n")
             f.chmod(0o755)
 
@@ -204,7 +209,8 @@ class TestInit(Base):
 class TestCli(Base):
     def test_cli_init_end_to_end_with_home_and_path(self):
         self.on_path("claude")
-        env = {"HOME": str(self.home), "PATH": str(self.bin), "PYTHONPATH": str(SRC)}
+        # USERPROFILE is where Windows' Path.home() looks (it ignores HOME); POSIX ignores USERPROFILE
+        env = {"HOME": str(self.home), "USERPROFILE": str(self.home), "PATH": str(self.bin), "PYTHONPATH": str(SRC)}
         r = subprocess.run([sys.executable, "-m", "rewindagents", "init"], cwd=self.root, env=env,
                            capture_output=True, text=True, stdin=subprocess.DEVNULL)
         self.assertEqual(r.returncode, 0, r.stderr)
