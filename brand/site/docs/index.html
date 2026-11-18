@@ -31,7 +31,7 @@
 <link rel="preload" href="../fonts/commit-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../site.min.css">
 <script src="../site.js" defer></script>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "applicationCategory": "DeveloperApplication", "author": {"@type": "Person", "name": "John B Joseph"}, "codeRepository": "https://github.com/Johnbjoseph-cybersec/rewindagents", "description": "Getting started with rewindagents: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, fork a step and compare the runs, export, find a session, verify the log.", "license": "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE", "name": "rewindagents", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "operatingSystem": "macOS, Linux", "softwareVersion": "1.1.1", "url": "https://rewindagents.com/docs/"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "applicationCategory": "DeveloperApplication", "author": {"@type": "Person", "name": "John B Joseph"}, "codeRepository": "https://github.com/Johnbjoseph-cybersec/rewindagents", "description": "Getting started with rewindagents: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, fork a step and compare the runs, export, find a session, verify the log.", "license": "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE", "name": "rewindagents", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "operatingSystem": "macOS, Linux", "softwareVersion": "1.2.0", "url": "https://rewindagents.com/docs/"}</script>
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -54,7 +54,7 @@
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents <span class="nb">--version</span></span></span></code></pre>
 <p>The last command prints the version it installed:</p>
 <pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">rewindagents <span class="nb">--version</span></span></span>
-<span class="l i2">rewindagents 1.1.1</span></code></pre>
+<span class="l i2">rewindagents 1.2.0</span></code></pre>
 <p>Or from a clone, <code>pip install .</code>. Without installing, <code>PYTHONPATH=src python3 -m rewindagents</code> runs the same CLI from a clone; then the undo hint says <code>python3 -m rewindagents</code> instead of <code>rewindagents</code>.</p>
 <p>Other ways to install the same CLI, and the plugin for Claude Code:</p>
 <pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">brew install <span class="nb">johnbjoseph-cybersec/rewindagents/rewindagents</span></span></span>
@@ -326,7 +326,7 @@
 <li>In a git repository the scan follows <code>git ls-files --cached --others --exclude-standard</code>, plus the files git ignores one by one (<code>.env</code>, <code>*.log</code>), so a <code>rm .env</code> can be rewound; directories git ignores as a whole (<code>node_modules/</code>, <code>build/</code>) are not saved. Outside git, every file under the project except under <code>.git</code>, <code>.rewindagents</code>, <code>.venv</code>, <code>__pycache__</code>, <code>node_modules</code>, <code>venv</code>.</li>
 <li>Symlinks are not saved. File permissions are: a deleted script comes back executable. Files over 20 MB are not copied. A project with more than 20,000 files is not scanned around <code>Bash</code> commands; the call is still recorded and <code>rewind</code> reports the step as not scanned.</li>
 <li>Directories created by later steps stay, empty, after a rewind. If anything could not be restored, <code>rewind</code> lists it and exits 1.</li>
-<li>Needs a Unix for now: the log lock has a Windows path (<code>msvcrt</code>), but the tests have not run on Windows yet. The Claude Code, Codex, Cursor, Gemini CLI and Copilot CLI hooks were verified in a live session on 2026-11-18; the Droid and Qwen Code hooks are tested with the documented payloads, not yet in a live session.</li>
+<li>Windows: the full test suite passes on Windows CI (windows-latest), but the hooks have been verified in live sessions on macOS only, not yet on Windows, and hook commands under PowerShell are untested. On Windows a patch from <code>diff</code> saved with <code>&gt;</code> gets CRLF line endings and will not <code>git apply</code>. The Claude Code, Codex, Cursor, Gemini CLI and Copilot CLI hooks were verified in a live session on 2026-11-18; the Droid and Qwen Code hooks are tested with the documented payloads, not yet in a live session.</li>
 </ul>
 
 <h2 id="remove">Remove it</h2>

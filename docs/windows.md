@@ -9,8 +9,10 @@ were still red in this run.
 
 Branch `win/green` addresses all 87: 84 fixed, 3 skipped with a stated reason (rows below; 1 of the 84 passes
 by a Windows-specific expectation, also stated). **First Windows run (PR #1, 859 tests): `FAILED (failures=1, skipped=38)`;** the one left is fixed by W11, which has
-not run on Windows yet. `continue-on-error` stays on
-the Windows matrix row and README.md keeps "Windows is not supported" until a green windows-latest run is seen.
+run on Windows since. **On `main` after PR #1 and PR #4 (run 44275227200, commit 06a0c0d): `Ran 868 tests ... OK (skipped=38)`.** Since
+1.2.0 the Windows matrix row is a normal one (no `continue-on-error`), and README.md states that result together
+with what it does not cover: the live hook sessions ran on macOS only, the hook commands under PowerShell are
+untested, and the diff-to-file CRLF issue below.
 
 ## How each fix was checked here (macOS)
 

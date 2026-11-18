@@ -111,7 +111,8 @@ evidence.
 
 Windows, read on 2026-11-14: which shell runs the hook command string there, per vendor page (this decides the
 form hook.hook_command writes for a Windows interpreter path: Agent.win_shell and Agent.win_command_key). The
-hook has not run on Windows; the README keeps "Windows is not supported".
+Windows form runs under Git Bash on windows-latest CI (tests/test_agents_more.py); it has not run under
+PowerShell, and no live agent session has run on Windows (the live sessions were on macOS).
 
 - Claude Code (https://code.claude.com/docs/en/hooks): a command hook without `args` is in "shell form": "The
   `command` string is passed to a shell: `sh -c` on macOS and Linux, Git Bash on Windows, or PowerShell when

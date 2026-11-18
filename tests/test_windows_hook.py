@@ -8,8 +8,8 @@ PowerShell quoting, and a double-quoted path on its own is a string in PowerShel
 
 Here the form is chosen from the interpreter path's own shape (C:/... or C:\\...), never from the OS running
 the test, so every Windows string below is produced and checked on this machine. What cannot be driven here:
-running the string under Git Bash, PowerShell or cmd.exe on Windows. The README keeps "Windows is not
-supported" until a Windows CI run is green."""
+running the string under Git Bash, PowerShell or cmd.exe on Windows. Git Bash runs it on windows-latest CI
+(test_agents_more.py); PowerShell and cmd.exe do not, and the README says so."""
 import json
 import os
 import shlex
@@ -280,10 +280,56 @@ class TestDocs(unittest.TestCase):
         self.assertIn("Gemini CLI", doc.split(agents.DOCS_READ_3, 1)[1])
         self.assertIn("Droid", doc.split(agents.DOCS_READ_3, 1)[1])
 
-    def test_readme_still_says_windows_is_not_supported(self):
-        text = (SRC.parent / "README.md").read_text(encoding="utf-8")
-        self.assertIn("Windows is not supported", text)
+    def test_readme_states_the_windows_ci_result_and_what_it_does_not_cover(self):
+        # The README may not call Windows supported, or unsupported, without the evidence: the windows-latest
+        # result, that the live hook sessions were macOS only, that PowerShell is untested, and the CRLF gap.
+        raw = (SRC.parent / "README.md").read_text(encoding="utf-8")
+        text = " ".join(raw.split())
+        self.assertNotIn("Windows is not supported", text)
+        self.assertNotIn("Needs a Unix", text)
         self.assertIn("`src/rewindagents/__main__.py` by path", text)
+        status = text.split("**Status: v", 1)[1].split("## Install", 1)[0]
+        for fact in ("windows-latest", "`Ran 868 tests ... OK (skipped=38)`", "[docs/windows.md](docs/windows.md)",
+                     "The live hook sessions ran on macOS only, not yet on Windows",
+                     "tested under Git Bash, not under PowerShell"):
+            self.assertIn(fact, status, fact)
+        recorder = text.split("## Recorder", 1)[1].split("## Use it", 1)[0]
+        for fact in ("the full test suite passes on windows-latest CI", "`Ran 868 tests ... OK (skipped=38)`",
+                     "verified in live sessions on macOS, not yet on Windows", "under PowerShell",
+                     "are not tested", "gets CRLF line endings and will not `git apply`"):
+            self.assertIn(fact, recorder, fact)
+        for word in ("Windows is supported", "supports Windows", "Windows support"):
+            self.assertNotIn(word, text, word)
+
+    def test_the_site_states_the_same_windows_facts(self):
+        site = (SRC.parent / "brand" / "site" / "build.py").read_text(encoding="utf-8")
+        self.assertNotIn("Needs a Unix", site)
+        self.assertNotIn("tests have not run on Windows", site)
+        limit = site.split("<li>Windows: ", 1)[1].split("</li>", 1)[0]
+        for fact in ("the full test suite passes on Windows CI (windows-latest)",
+                     "verified in live sessions on macOS only, not yet on Windows",
+                     "hook commands under PowerShell are untested", "will not <code>git apply</code>"):
+            self.assertIn(fact, limit, fact)
+
+    def test_no_user_facing_text_says_windows_is_unsupported(self):
+        root = SRC.parent
+        files = [root / "README.md", root / "CONTRIBUTING.md", root / "brand" / "site" / "build.py",
+                 *sorted((SRC / "rewindagents").glob("*.py"))]
+        for f in files:
+            text = " ".join(f.read_text(encoding="utf-8").split())
+            for old in ("Windows is not supported", "Needs a Unix", "Not on Windows yet"):
+                self.assertNotIn(old, text, "%s: %s" % (f.name, old))
+
+    def test_windows_is_a_normal_ci_row(self):
+        wf = (SRC.parent / ".github" / "workflows" / "tests.yml").read_text(encoding="utf-8")
+        self.assertIn("- os: windows-latest", wf)
+        self.assertNotIn("continue-on-error", wf)
+        self.assertNotIn("experimental", wf)
+        self.assertIn("permissions:\n  contents: read", wf)
+        for line in wf.splitlines():
+            if "uses:" in line:
+                ref = line.split("@", 1)[1].split()[0]
+                self.assertRegex(ref, r"^[0-9a-f]{40}$", line)
 
 
 if __name__ == "__main__":

@@ -18,8 +18,8 @@ pass first. Nobody pushes to `main` directly, maintainers included.
 4. Push the branch and open a pull request against `main`. CI runs on Linux, macOS and Windows.
 5. Merge when the required checks are green. Delete the branch after the merge.
 
-The Windows job does not block a merge yet: Windows is not supported until that job is green (see
-`docs/windows.md`).
+The Windows job is a normal matrix row (no `continue-on-error`), so a red Windows job fails the run. It is not
+yet a required check on `main`; only the Linux and macOS jobs are. Known Windows limits are in `docs/windows.md`.
 
 ## Releases
 
