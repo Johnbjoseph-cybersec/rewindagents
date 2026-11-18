@@ -102,8 +102,12 @@ Amp (https://ampcode.com/docs/plugin-api) are JavaScript/TypeScript plugins, not
 Warp and Replit document no tool hooks.
 
 What is and is not verified: the Codex, Cursor, Gemini CLI, Copilot CLI, Droid and Qwen Code payloads in
-tests/test_agents*.py are the documented ones, and the hook has not yet run inside a live session of any of
-them. The README says so.
+tests/test_agents*.py are the documented ones. Separately, harness/live/run.py drove each agent's real CLI in a
+scratch project on 2026-11-18; harness/live/evidence/<agent>.json records what it observed, and is the only
+source for a live-status sentence. Claude Code, Codex, Cursor, Gemini CLI and Copilot CLI were verified in a
+live session on 2026-11-18. Droid and Qwen Code are not yet in a live session: both CLIs ran but made no tool
+call (no model plan or API key). The README says the same, and tests/test_agents*.py check it against the
+evidence.
 
 Windows, read on 2026-11-14: which shell runs the hook command string there, per vendor page (this decides the
 form hook.hook_command writes for a Windows interpreter path: Agent.win_shell and Agent.win_command_key). The

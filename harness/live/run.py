@@ -68,7 +68,7 @@ from rewindagents import agents as ra_agents  # noqa: E402
 from rewindagents import init as ra_init  # noqa: E402
 
 AGENT_KEYS: tuple[str, ...] = tuple(ra_agents.AGENTS)  # claude, codex, cursor, gemini, copilot, droid, qwen
-HARD_TIMEOUT = 120.0
+HARD_TIMEOUT = 300  # was 120; 2026-11-18 Gemini API 503s with retry backoff pushed a passing run past 120 s
 INSTALL_TIMEOUT = 30.0
 REWIND_TIMEOUT = 30.0
 VERSION_TIMEOUT = 10.0
@@ -162,8 +162,10 @@ def _run_isolated(cmd: list[str], *, cwd: Path | str | None = None, env: dict[st
 
     Raises subprocess.TimeoutExpired on timeout, with .stdout/.stderr attached same as subprocess.run, so
     every existing `except subprocess.TimeoutExpired` call site below needs no other change."""
-    proc = subprocess.Popen(cmd, cwd=cwd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
-                             start_new_session=True)
+    # stdin is closed: `codex exec` (0.170) otherwise waits for "additional input from stdin" and hangs to the
+    # hard timeout when the harness itself runs without a terminal (found live 2026-11-18).
+    proc = subprocess.Popen(cmd, cwd=cwd, env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE, text=True, start_new_session=True)
     try:
         stdout, stderr = proc.communicate(timeout=timeout)
         return subprocess.CompletedProcess(cmd, proc.returncode, stdout, stderr)
@@ -212,12 +214,10 @@ def _read_log(path: Path) -> list[dict]:
     return out
 
 
-# Headless ("print and exit") forms, one per agent. claude's is run live on this machine and verified by this
-# harness every time it runs. The other six are written from each vendor's published CLI docs the same way
-# rewindagents.agents module sources its hook payloads, but -- unlike that module's forms -- they have never
-# been run here: no binary for them exists on this machine (checked below with shutil.which). If one is later
-# installed, the harness will actually run the command below, read the real log and report VERIFIED_LIVE,
-# RAN_NO_LOG or FAILED from what it observes -- never a status assumed in advance.
+# Headless ("print and exit") forms, one per agent, written from each vendor's published CLI docs and then run
+# against the real CLIs on 2026-11-18 (versions in harness/live/evidence/<agent>.json). The flags each one needed
+# in that run are explained beside it. The harness reports VERIFIED_LIVE, RAN_NO_LOG or FAILED from what it
+# observes on every run -- never a status assumed in advance.
 def _claude_cmd(binary: str, prompt: str) -> list[str]:
     # claude --help (read 2026-11-18): -p/--print for a non-interactive run; --permission-mode bypassPermissions
     # skips the interactive approval prompt for the Write/Edit/Bash tools; --setting-sources project loads only
@@ -227,39 +227,49 @@ def _claude_cmd(binary: str, prompt: str) -> list[str]:
 
 
 def _codex_cmd(binary: str, prompt: str) -> list[str]:
-    # developers.openai.com/codex/cli, read 2026-11-18 (NOT run on this machine: codex is not installed here).
-    # `codex exec PROMPT` runs one prompt non-interactively; --full-auto grants the sandboxed run file writes
-    # without an interactive approval.
-    return [binary, "exec", prompt, "--full-auto"]
+    # developers.openai.com/codex/cli, read 2026-11-18.
+    # `codex exec PROMPT` runs one prompt non-interactively. Run live 2026-11-18 (codex-cli 0.170.0): --full-auto
+    # is gone (use -s workspace-write); project config, including .codex/hooks.json, loads only with --trust; and
+    # a hook runs only after it has been reviewed, which a user does once interactively. A fresh scratch project
+    # has no review on record, so this run passes --dangerously-bypass-hook-trust (that one invocation only).
+    return [binary, "exec", "--trust", "--dangerously-bypass-hook-trust", "--skip-git-repo-check",
+            "-s", "workspace-write", prompt]  # the scratch project is not a git repository
 
 
 def _cursor_cmd(binary: str, prompt: str) -> list[str]:
-    # cursor.com/docs/cli, read 2026-11-18 (NOT run here: cursor-agent is not installed). `-p` prints and exits;
+    # cursor.com/docs/cli, read 2026-11-18, run live the same day. `-p` prints and exits;
     # --force skips the confirmation a file-writing command would otherwise ask for.
     return [binary, "-p", prompt, "--force"]
 
 
 def _gemini_cmd(binary: str, prompt: str) -> list[str]:
-    # geminicli.com/docs, read 2026-11-18 (NOT run here: gemini is not installed). `-p` prints and exits;
-    # --yolo auto-accepts every tool call instead of prompting.
-    return [binary, "-p", prompt, "--yolo"]
+    # geminicli.com/docs, read 2026-11-18. `-p` prints and exits;
+    # --yolo auto-accepts every tool call instead of prompting. Run live 2026-11-18 (gemini 0.68.0): a headless run
+    # refuses an untrusted folder, and --skip-trust runs it WITHOUT loading the project's .gemini/settings.json, so
+    # the project hook never fires. GEMINI_CLI_TRUST_WORKSPACE=true trusts the scratch folder, which is what a user
+    # does once interactively; with it the hook ran and recorded the step.
+    return ["env", "GEMINI_CLI_TRUST_WORKSPACE=true", binary, "-p", prompt, "--yolo"]
 
 
 def _copilot_cmd(binary: str, prompt: str) -> list[str]:
-    # docs.github.com/en/copilot, read 2026-11-18 (NOT run here: copilot is not installed). `-p` prints and
-    # exits; --allow-all-tools removes the interactive approval for every tool the run might use.
-    return [binary, "-p", prompt, "--allow-all-tools"]
+    # docs.github.com/en/copilot, read 2026-11-18. `-p` prints and
+    # exits; --allow-all-tools removes the interactive approval for every tool the run might use. Run live
+    # 2026-11-18 (copilot 1.0.114): without --trust-folder an untrusted scratch project's .github/hooks are not
+    # loaded and nothing is recorded; --trust-folder trusts it for this one prompt-mode session only.
+    return [binary, "-p", prompt, "--allow-all-tools", "--trust-folder"]
 
 
 def _droid_cmd(binary: str, prompt: str) -> list[str]:
-    # docs.factory.com/cli, read 2026-11-18 (NOT run here: droid is not installed). `droid exec PROMPT` is the
-    # headless form; --auto medium lets file edits through without an interactive approval.
+    # docs.factory.com/cli, read 2026-11-18. `droid exec PROMPT` is the headless form;
+    # --auto medium lets file edits through without an interactive approval. Run 2026-11-18 (droid 1.14.0):
+    # signed in, but with no model plan or API key the CLI made no tool call, so the result was RAN_NO_LOG.
     return [binary, "exec", prompt, "--auto", "medium"]
 
 
 def _qwen_cmd(binary: str, prompt: str) -> list[str]:
-    # github.com/QwenLM/qwen-code docs, read 2026-11-18 (NOT run here: qwen is not installed). Qwen Code forked
-    # Gemini CLI and keeps the same flags: `-p` prints and exits, --yolo auto-accepts every tool call.
+    # github.com/QwenLM/qwen-code docs, read 2026-11-18. Qwen Code forked Gemini CLI and keeps
+    # the same flags: `-p` prints and exits, --yolo auto-accepts every tool call. Run 2026-11-18 (qwen 0.28.0):
+    # signed in, but with no model plan or API key the CLI made no tool call, so the result was RAN_NO_LOG.
     return [binary, "-p", prompt, "--yolo"]
 
 

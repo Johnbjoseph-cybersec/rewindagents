@@ -23,6 +23,8 @@ sys.path.insert(0, str(SRC))
 
 from rewindagents import agents, hook, read, rewind  # noqa: E402
 from rewindagents.cli import main  # noqa: E402
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import live_evidence  # noqa: E402
 
 ROOT = SRC.parent
 TS = "2026-11-12T10:00:00Z"
@@ -433,8 +435,10 @@ class TestCliAndDocs(unittest.TestCase):
         doc = agents.__doc__
         for s in (agents.GEMINI_DOCS, agents.COPILOT_DOCS, agents.DROID_DOCS, agents.QWEN_DOCS, agents.DOCS_READ_2,
                   "BeforeTool", "AfterTool", "tool_result", "PostToolUseFailure", "fail-closed", "if hooks.json is absent",
-                  "Not supported, and why", "not yet run inside a live session"):
+                  "Not supported, and why", "harness/live/evidence"):
             self.assertIn(s, doc, s)
+        # the module's own live-status sentences follow harness/live/evidence/*.json, both directions
+        self.assertEqual(live_evidence.mismatches(doc, live_evidence.load()), [])
 
     def test_readme_names_each_new_agent_its_file_and_its_unscanned_tools(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
@@ -449,8 +453,48 @@ class TestCliAndDocs(unittest.TestCase):
         low = readme.lower()
         for name in ("gemini cli", "copilot cli", "droid", "qwen code"):
             self.assertIn(name, low)
-        self.assertIn("not yet in a live", low)
+        evidence = live_evidence.load()
+        self.assertEqual(live_evidence.mismatches(readme, evidence), [])
+        self.assertEqual(live_evidence.versions_missing(readme, evidence), [])
 
+
+
+class TestLiveStatusCheck(unittest.TestCase):
+    """The live-status check itself: it reads one evidence file per agent and it can fail in both directions, so a
+    green README/site check above is not a check that could never fail."""
+
+    def setUp(self):
+        self.readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.evidence = live_evidence.load()
+
+    def test_one_evidence_file_per_agent_with_a_known_status(self):
+        self.assertEqual(sorted(self.evidence), sorted(agents.AGENTS))
+        for key, ev in self.evidence.items():
+            self.assertEqual(ev["agent"], key)
+            self.assertIn(ev["status"], ("VERIFIED_LIVE", "NOT_INSTALLED", "INSTALL_BLOCKED", "RAN_NO_LOG", "FAILED"))
+
+    def test_an_agent_that_ran_live_but_is_called_not_live_fails(self):
+        for key, ev in self.evidence.items():
+            if live_evidence.verified(ev):
+                flipped = dict(self.evidence, **{key: dict(ev, status="RAN_NO_LOG")})
+                self.assertTrue(live_evidence.mismatches(self.readme, flipped), key)
+
+    def test_an_agent_that_did_not_run_live_but_is_called_live_fails(self):
+        for key, ev in self.evidence.items():
+            if not live_evidence.verified(ev):
+                flipped = dict(self.evidence, **{key: dict(ev, status="VERIFIED_LIVE")})
+                self.assertTrue(live_evidence.mismatches(self.readme, flipped), key)
+
+    def test_the_old_wording_fails(self):
+        old = ("The Claude Code hook has run in real sessions; the other six hooks are built from the vendors' hook "
+               "documentation and tested with the documented payloads, not yet in a live session.")
+        problems = live_evidence.mismatches(old, self.evidence)
+        self.assertTrue(problems)
+        self.assertTrue(any("without the date" in p for p in problems), problems)
+
+    def test_a_live_claim_names_the_date_of_the_run(self):
+        text = self.readme.replace("2026-11-18", "2026-01-01")
+        self.assertTrue(any("without the date" in p for p in live_evidence.mismatches(text, self.evidence)))
 
 if __name__ == "__main__":
     unittest.main()
