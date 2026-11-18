@@ -114,8 +114,8 @@ Status on 2026-11-18:
   (`brew install johnbjoseph-cybersec/rewindagents/rewindagents`). That repository's CI installs the formula
   from source and runs `brew test` on `macos-latest` and `ubuntu-latest`; both passed and printed
   `rewindagents 1.1.0`.
-- npm: published as `rewindagents` 1.1.0 (`npx rewindagents`). Checked from an empty home and npm cache:
-  `npx --yes rewindagents --version` printed `rewindagents 1.1.0`.
+- npm: published as `rewindagents` 1.1.1 (`npx rewindagents`). Checked from an empty home and npm cache:
+  `npx --yes rewindagents --version` printed `rewindagents 1.1.1`.
 
 ## What neither channel does
 
