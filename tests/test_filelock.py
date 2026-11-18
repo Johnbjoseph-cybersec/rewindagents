@@ -66,6 +66,17 @@ class TestUnixPath(unittest.TestCase):
             filelock.release(b)
 
     def test_shared_holders_coexist_and_keep_exclusive_out(self):
+        if os.name == "nt":
+            # msvcrt has no shared lock: a shared request takes the exclusive one there (module docstring),
+            # so on the real Windows backend a second shared holder is refused rather than admitted.
+            with self.path.open("a+") as a, self.path.open("a+") as b:
+                filelock.acquire(a, exclusive=False)
+                with self.assertRaises(BlockingIOError):
+                    filelock.acquire(b, exclusive=False, blocking=False)
+                filelock.release(a)
+                filelock.acquire(b, exclusive=False, blocking=False)
+                filelock.release(b)
+            return
         with self.path.open("a+") as a, self.path.open("a+") as b, self.path.open("a+") as c:
             filelock.acquire(a, exclusive=False)
             filelock.acquire(b, exclusive=False, blocking=False)
