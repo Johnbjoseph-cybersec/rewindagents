@@ -1,19 +1,23 @@
 {
   "agent": "qwen",
-  "agent_version": null,
+  "agent_version": "0.28.0",
   "asserted": {
     "checkpoint_restored": false,
     "post_event": false,
     "pre_event": false
   },
-  "commands": [],
+  "commands": [
+    "~/fire/agent-clis/node_modules/.bin/qwen --version",
+    "PYTHONPATH=~/fire/rewindagent-live/src ~/fire/rewindagent-live/.venv/bin/python -m rewindagents install --agent qwen --settings /var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/rewindagents-live-qwen-7gkivlkg/.qwen/settings.json",
+    "~/fire/agent-clis/node_modules/.bin/qwen -p 'Create a file named rewindagents-live-check.txt in the current directory containing exactly one line of text: live check for qwen. Do not create, edit or delete any other file.' --yolo"
+  ],
   "log_records": 0,
-  "notes": "no binary found on PATH among: qwen",
-  "ran_at": "2026-11-17T22:07:28+00:00",
+  "notes": "agent invocation finished but .rewindagents/log.jsonl in the scratch project has no records: either the hook never fired or the agent made no tool call",
+  "ran_at": "2026-11-18T08:45:32+00:00",
   "real_config_check": {
     "path": "~/.qwen/settings.json",
-    "unchanged": true
+    "unchanged": false
   },
-  "scratch_dir": null,
-  "status": "NOT_INSTALLED"
+  "scratch_dir": "/var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/rewindagents-live-qwen-7gkivlkg",
+  "status": "RAN_NO_LOG"
 }

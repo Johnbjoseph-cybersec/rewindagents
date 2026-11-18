@@ -1,19 +1,24 @@
 {
   "agent": "copilot",
-  "agent_version": null,
+  "agent_version": "GitHub Copilot CLI 1.0.114.",
   "asserted": {
-    "checkpoint_restored": false,
-    "post_event": false,
-    "pre_event": false
+    "checkpoint_restored": true,
+    "post_event": true,
+    "pre_event": true
   },
-  "commands": [],
-  "log_records": 0,
-  "notes": "no binary found on PATH among: copilot",
-  "ran_at": "2026-11-17T22:07:28+00:00",
+  "commands": [
+    "~/fire/agent-clis/node_modules/.bin/copilot --version",
+    "PYTHONPATH=~/fire/rewindagent-live/src ~/fire/rewindagent-live/.venv/bin/python -m rewindagents install --agent copilot --settings /var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/rewindagents-live-copilot-0kzaoir1/.github/hooks/rewindagents.json",
+    "~/fire/agent-clis/node_modules/.bin/copilot -p 'Create a file named rewindagents-live-check.txt in the current directory containing exactly one line of text: live check for copilot. Do not create, edit or delete any other file.' --allow-all-tools --trust-folder",
+    "PYTHONPATH=~/fire/rewindagent-live/src ~/fire/rewindagent-live/.venv/bin/python -m rewindagents rewind 0 --dry-run --session 8d1253be-d574-4350-b5a1-559e6072bd7f"
+  ],
+  "log_records": 2,
+  "notes": "",
+  "ran_at": "2026-11-18T08:45:16+00:00",
   "real_config_check": {
     "path": "~/.copilot/hooks/rewindagents.json",
     "unchanged": true
   },
-  "scratch_dir": null,
-  "status": "NOT_INSTALLED"
+  "scratch_dir": "/var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/rewindagents-live-copilot-0kzaoir1",
+  "status": "VERIFIED_LIVE"
 }

@@ -8,17 +8,17 @@
   },
   "commands": [
     "~/.local/bin/claude --version",
-    "PYTHONPATH=~/fire/rewindagent/src ~/fire/rewindagent/.venv/bin/python -m rewindagents install --agent claude --settings /var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/rewindagents-live-claude-8j8jkf_i/.claude/settings.json",
+    "PYTHONPATH=~/fire/rewindagent-live/src ~/fire/rewindagent-live/.venv/bin/python -m rewindagents install --agent claude --settings /var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/rewindagents-live-claude-ifr6gtum/.claude/settings.json",
     "~/.local/bin/claude -p 'Create a file named rewindagents-live-check.txt in the current directory containing exactly one line of text: live check for claude. Do not create, edit or delete any other file.' --permission-mode bypassPermissions --setting-sources project --output-format json",
-    "PYTHONPATH=~/fire/rewindagent/src ~/fire/rewindagent/.venv/bin/python -m rewindagents rewind 0 --dry-run --session 3e0b1324-c8cc-45f3-a925-5e412f3f1b6d"
+    "PYTHONPATH=~/fire/rewindagent-live/src ~/fire/rewindagent-live/.venv/bin/python -m rewindagents rewind 0 --dry-run --session 32300290-0ba4-499f-a657-8d3d02f7f8c8"
   ],
   "log_records": 2,
   "notes": "",
-  "ran_at": "2026-11-17T22:07:04+00:00",
+  "ran_at": "2026-11-18T08:42:42+00:00",
   "real_config_check": {
     "path": "~/.claude/settings.json",
     "unchanged": true
   },
-  "scratch_dir": "/var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/rewindagents-live-claude-8j8jkf_i",
+  "scratch_dir": "/var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/rewindagents-live-claude-ifr6gtum",
   "status": "VERIFIED_LIVE"
 }

@@ -1,19 +1,24 @@
 {
   "agent": "codex",
-  "agent_version": null,
+  "agent_version": "codex-cli 0.170.0",
   "asserted": {
-    "checkpoint_restored": false,
-    "post_event": false,
-    "pre_event": false
+    "checkpoint_restored": true,
+    "post_event": true,
+    "pre_event": true
   },
-  "commands": [],
-  "log_records": 0,
-  "notes": "no binary found on PATH among: codex",
-  "ran_at": "2026-11-17T22:07:28+00:00",
+  "commands": [
+    "~/fire/agent-clis/node_modules/.bin/codex --version",
+    "PYTHONPATH=~/fire/rewindagent-live/src ~/fire/rewindagent-live/.venv/bin/python -m rewindagents install --agent codex --settings /var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/rewindagents-live-codex-yxsy3py_/.codex/hooks.json",
+    "~/fire/agent-clis/node_modules/.bin/codex exec --trust --dangerously-bypass-hook-trust --skip-git-repo-check -s workspace-write 'Create a file named rewindagents-live-check.txt in the current directory containing exactly one line of text: live check for codex. Do not create, edit or delete any other file.'",
+    "PYTHONPATH=~/fire/rewindagent-live/src ~/fire/rewindagent-live/.venv/bin/python -m rewindagents rewind 0 --dry-run --session 01a1edd2-ca8f-74a0-8bc4-93eaf0def628"
+  ],
+  "log_records": 2,
+  "notes": "",
+  "ran_at": "2026-11-18T08:42:56+00:00",
   "real_config_check": {
     "path": "~/.codex/hooks.json",
     "unchanged": true
   },
-  "scratch_dir": null,
-  "status": "NOT_INSTALLED"
+  "scratch_dir": "/var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/rewindagents-live-codex-yxsy3py_",
+  "status": "VERIFIED_LIVE"
 }
