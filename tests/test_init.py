@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 import unittest
+from unittest import mock
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -204,6 +205,34 @@ class TestInit(Base):
         self.assertEqual(code, 1)
         self.assertIn("No supported agent found", out)
         self.assertEqual(sum("not found" in l for l in out.splitlines()), 7)
+
+
+class TestIsTerminal(unittest.TestCase):
+    """windows-latest: `rewindagents init < NUL` prompted, because isatty() is True for the NUL device on
+    Windows, and answered "Nothing written." instead of the dry run. Driven here with the Windows branch on
+    and a stand-in for GetConsoleMode."""
+
+    def test_nul_on_windows_is_not_a_terminal(self):
+        with open(os.devnull) as nul, mock.patch.object(init, "_WINDOWS", True), \
+                mock.patch.object(init, "_windows_console", return_value=False), \
+                mock.patch.object(nul, "isatty", return_value=True, create=True):
+            self.assertFalse(init.is_terminal(nul))
+
+    def test_a_windows_console_is_a_terminal(self):
+        with open(os.devnull) as f, mock.patch.object(init, "_WINDOWS", True), \
+                mock.patch.object(init, "_windows_console", return_value=True), \
+                mock.patch.object(f, "isatty", return_value=True, create=True):
+            self.assertTrue(init.is_terminal(f))
+
+    def test_a_stream_without_a_descriptor_is_judged_by_isatty(self):
+        with mock.patch.object(init, "_WINDOWS", True):
+            self.assertTrue(init.is_terminal(Tty()))
+            self.assertFalse(init.is_terminal(io.StringIO()))
+
+    def test_posix_is_unchanged(self):
+        with mock.patch.object(init, "_WINDOWS", False), open(os.devnull) as nul:
+            self.assertEqual(init.is_terminal(nul), nul.isatty())
+            self.assertTrue(init.is_terminal(Tty()))
 
 
 class TestCli(Base):
