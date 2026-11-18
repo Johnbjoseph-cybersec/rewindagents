@@ -43,6 +43,8 @@ PROMISE = "Ctrl+Z for AI coding agents: record, replay, rewind."
 # Headline John approved 2026-11-18 (launch: lead with the shell gap; fork/compare stays as the second section). BRAND.md carries
 # it word for word (tests/test_site.py); the promise above stays the base it is built on.
 COURSE = "Your coding agent ran rm -rf. Take it back."
+# The hero sets the headline on three lines at display size (2026-11-18, bold round); they must join back to COURSE.
+COURSE_LINES = ("Your coding agent", "ran rm -rf.", "Take it back.")
 FORK = "Fork a step, compare the runs"      # the README section the fork-and-compare panels come from
 CREDIT = "made by John B Joseph"
 LICENCE = "Apache-2.0"
@@ -351,6 +353,139 @@ def panel(rows, cls="", struck=()):
     return '<pre class="term%s"><code>%s</code></pre>' % (" " + cls if cls else "", term(rows, struck))
 
 
+STAGE_TOOLS = ("Read", "Edit", "Write", "MultiEdit", "NotebookEdit")
+
+
+def replay_steps(beats):
+    """The replay lines as (step, tool, target, line), parsed from what the CLI printed."""
+    out = []
+    for ln in beats[0]["output"].rstrip("\n").split("\n"):
+        m = re.match(r"^\s*(\d+)\s+(\w+)\s+(.*?)(?:\s+\[\d+ checkpointed\])?$", ln)
+        if not m:
+            raise SystemExit("replay line changed shape: %r" % ln)
+        out.append((int(m.group(1)), m.group(2), m.group(3), ln))
+    return out
+
+
+def stage_rows(beats):
+    """The hero stage's terminal: the whole `replay` (every step as printed), then the whole `rewind`."""
+    replay, rewind = beats[0], beats[2]
+    rows = [("cmd", replay["command"])] + [("out", ln) for ln in replay["output"].rstrip("\n").split("\n")]
+    rows.append(("cmd", rewind["command"]))
+    for i, ln in enumerate(rewind["output"].rstrip("\n").split("\n")):
+        rows.append(("hit" if i in rewind["accent_rows"] else "out", ln))
+    return rows
+
+
+def stage_tree(beats, wreck_steps):
+    """The project's files as the session saw them, derived from the recorded lines, never typed:
+    - a file is on the tree when a replay line names it as a file tool's target or the rewind restores it;
+    - a file is born at its first Write when the final `git status` lists it as untracked (`??`), else it was there
+      before step 1;
+    - `rm -rf DIR` (a Bash step) deletes every file under DIR that exists at that step;
+    - a file comes back at the rewind output row that restores it.
+    Returns [(dir, [(path, born, gone, back_row, touches)])], dirs in `ls` order (root first)."""
+    steps = replay_steps(beats)
+    files = {}
+    for step, tool, target, _ in steps:
+        if tool in STAGE_TOOLS:
+            files.setdefault(target, []).append((step, tool))
+    rew = beats[2]["output"].rstrip("\n").split("\n")
+    back = {}
+    for i, ln in enumerate(rew):
+        m = re.match(r"^\s+restore\s+(\S+)$", ln)
+        if m:
+            back[m.group(1)] = i
+            files.setdefault(m.group(1), [])
+    untracked = {ln[3:] for ln in beats[3]["output"].rstrip("\n").split("\n") if ln.startswith("?? ")}
+    born = {f: (min(s for s, t in files[f] if t == "Write") if f in untracked else 0) for f in files}
+    gone = {}
+    for step, tool, target, _ in steps:
+        m = re.match(r"^rm -rf (\S+)$", target) if tool == "Bash" else None
+        if m:
+            d = m.group(1).rstrip("/") + "/"
+            for f in files:
+                if f.startswith(d) and born[f] <= step:
+                    gone[f] = step
+                    files[f].append((step, tool))
+    for f in files:
+        wrecked = [s for s, _ in files[f] if s in wreck_steps]
+        if wrecked and f not in back:
+            raise SystemExit("stage: %s was wrecked at step %s and the rewind does not restore it" % (f, wrecked))
+    groups = {}
+    for f in sorted(files):
+        groups.setdefault(f.rsplit("/", 1)[0] + "/" if "/" in f else "", []).append(
+            (f, born[f], gone.get(f, 0), back.get(f, -1), sorted(files[f])))
+    return [(d, groups[d]) for d in sorted(groups)]
+
+
+def stage_html(f):
+    """The hero stage: a big ruler of the session's steps, the project's files, and the terminal that printed it.
+    Built as the still (after the rewind), complete without a script. site.js plays it from the data attributes and,
+    on scroll, scrubs it both ways; it shows and hides rows by visibility only, so nothing on the page moves."""
+    beats, n, good, wreck = f["beats"], f["steps"], f["good_step"], f["wreck_steps"]
+    rows = stage_rows(beats)
+    wreck_lines = {ln for i, ln in enumerate(beats[0]["output"].rstrip("\n").split("\n")) if i in beats[0]["accent_rows"]}
+    struck = {i for i, (k, t) in enumerate(rows) if k == "out" and t in wreck_lines}
+    first_wreck = n - wreck + 1
+    ticks = "".join('<span class="sr-tk%s" data-n="%d"><i>%d</i></span>'
+                    % (" w" if k >= first_wreck else (" at" if k == good else ""), k, k) for k in range(1, n + 1))
+    restore_word = re.match(r"^\s+(\w+)\s", next(ln for ln in beats[2]["output"].split("\n") if ln.strip().startswith("restore"))).group(1)
+    groups = []
+    for d, items in stage_tree(beats, set(range(first_wreck, n + 1))):
+        lis = []
+        for path, born, gone, back, touches in items:
+            still = restore_word if back >= 0 else "%s %d" % (touches[-1][1], touches[-1][0]) if touches else ""
+            cls = "ff" + (" back" if back >= 0 else "")
+            lis.append('<li class="%s" data-born="%d" data-gone="%d" data-back="%d" data-touch="%s" data-still="%s">'
+                       '<span class="fn"><span class="fd">%s</span>%s</span><span class="ftg">%s</span></li>'
+                       % (cls, born, gone, back, ",".join("%d:%s" % t for t in touches), e(still), e(d), e(path[len(d):]), e(still)))
+        groups.append('<div class="fgrp"><p class="fdir">%s</p><ul>%s</ul></div>' % (e(d or "./"), "".join(lis)))
+    return """<div class="stage" id="stage">
+<div class="stage-pin">
+<div class="st-head"><span class="st-name">%(n)d steps; the last %(w)d wrecked the repo</span><span class="st-at">rewind %(good)d</span><span class="st-ctl"></span></div>
+<div class="sruler" aria-hidden="true"><span class="sr-base"><span class="sr-fill"></span></span>%(ticks)s<span class="sr-phw"><span class="sr-ph"></span></span></div>
+<div class="st-body">
+<div class="ftree" role="group" aria-label="The project's files after the rewind">%(groups)s</div>
+<div class="st-term">%(term)s</div>
+</div>
+</div>
+<p class="caption st-cap">Lines the recorded session printed, unedited; the files are the ones those lines name. The strike-through is ours: it marks the two steps the rewind undid. A test replays the session and fails if a line changes; see <a href="#tested">Tested</a>.</p>
+</div>""" % {"n": n, "w": wreck, "good": good, "ticks": ticks, "groups": "".join(groups),
+             "term": panel(rows, struck=struck)}
+
+
+def test_function_count():
+    """`def test_` across tests/*.py, counted statically (unittest runs more cases, through inherited classes, so the
+    page says "test functions", never "tests pass")."""
+    d = os.path.join(ROOT, "tests")
+    return sum(len(re.findall(r"^\s*def test_", read("tests", name), re.M)) for name in sorted(os.listdir(d)) if name.endswith(".py"))
+
+
+def counters(cfg, f):
+    """Numbers from the repository, counted when the site is built, each with where it comes from. No live fetches:
+    the CSP is connect-src 'none' and the footer promises no trackers."""
+    deps = re.search(r"^dependencies = \[(.*?)\]", read("pyproject.toml"), re.M | re.S)
+    if deps is None:
+        raise SystemExit("pyproject.toml has no dependencies list")
+    n_deps = len([x for x in deps.group(1).split(",") if x.strip()])
+    restored = len([ln for ln in f["beats"][2]["output"].split("\n") if ln.strip().startswith("restore ")])
+    repo, br = e(cfg["repo_url"]), e(cfg["branch"])
+    items = [
+        (len(agents.AGENTS), "coding agents with a hook", '<a href="%s/blob/%s/src/rewindagents/agents.py"><code>src/rewindagents/agents.py</code></a>' % (repo, br)),
+        (test_function_count(), "test functions in the repository", '<code>def test_</code> in <a href="%s/tree/%s/tests"><code>tests/</code></a>' % (repo, br)),
+        (len(PROOF), "claims on this page, each checked by a named test", 'the <a href="#tested">Tested</a> section'),
+        (restored, "files back from one rewind, in the session above", "<code>brand/demo/manifest.json</code>"),
+        (n_deps, "dependencies beyond the standard library", '<code>pyproject.toml</code>'),
+    ]
+    def slashes(src):        # a path breaks only after a slash on a phone
+        return re.sub(r"<code>([^<]*)</code>", lambda m: "<code>%s</code>" % m.group(1).replace("/", "/<wbr>"), src)
+    cells = "".join('<li><b class="cnt" data-to="%d">%d</b><span class="cnt-l">%s</span><span class="cnt-s">%s</span></li>'
+                    % (v, v, e(lbl), slashes(src)) for v, lbl, src in items)
+    return ('<ul class="counts" aria-labelledby="counts-note">%s</ul>'
+            '<p class="small counts-note" id="counts-note">Counted from the repository when this page was built.</p>' % cells)
+
+
 def split_comment(line):
     """A README sh line as (command, trailing `# comment` or None), the split code() makes."""
     m = re.match(r"^(.*?)(?:\s+(# .*))?$", line)
@@ -498,10 +633,12 @@ def film_poster():
             % (srcset("avif"), POSTER_SIZES, srcset("webp"), POSTER_SIZES))
 
 
-def ruler(at, n=8, w=84, h=18, dark=False):
+def ruler(at, n=8, w=84, h=18, dark=False, live=False):
     """The brand motif as a small inline SVG: n short ticks on a rule, the playhead on tick `at` (1-based) in
     Record; ticks and rule after it in Rule grey (the rewound part). `dark` draws it for a Spool ground: Playhead
-    before the playhead, Tape after it. Decorative: aria-hidden."""
+    before the playhead, Tape after it. Decorative: aria-hidden. `live` (the hero's panel head) also draws the tick
+    under the playhead and writes the geometry as data, so site.js can move the playhead step by step during the
+    replay without making SVG nodes; the still it draws is the same picture."""
     ink, after = (C["Playhead"], C["Tape"]) if dark else (C["Reel"], C["Rule"])
     pitch = (w - 4) / (n - 1)
     parts = []
@@ -510,17 +647,19 @@ def ruler(at, n=8, w=84, h=18, dark=False):
     parts.append('<rect x="0" y="%d" width="%.1f" height="1" fill="%s"/>' % (h - 2, px, ink))
     parts.append('<rect x="%.1f" y="%d" width="%.1f" height="1" fill="%s"/>' % (px, h - 2, w - px, after))
     for i, x in enumerate(xs, 1):
-        if i == at:
+        if i == at and not live:
             continue
         parts.append('<rect x="%.1f" y="%d" width="1" height="5" fill="%s"/>'
-                     % (x - 0.5, h - 6, ink if i < at else after))
+                     % (x - 0.5, h - 6, ink if i <= at else after))
     parts.append('<path d="M%.1f 1H%.1fV4L%.1f 6.5V%dH%.1fV6.5L%.1f 4Z" fill="%s"/>'
                  % (px - 3, px + 3, px + 1, h - 1, px - 1, px - 3, C["Record"]))
-    return ('<svg class="ruler" width="%d" height="%d" viewBox="0 0 %d %d" aria-hidden="true">%s</svg>'
-            % (w, h, w, h, "".join(parts)))
+    data = (' data-at="%d" data-n="%d" data-x0="2" data-pitch="%g" data-ink="%s" data-after="%s"'
+            % (at, n, pitch, ink, after)) if live else ""
+    return ('<svg class="ruler%s" width="%d" height="%d" viewBox="0 0 %d %d" aria-hidden="true"%s>%s</svg>'
+            % (" live" if live else "", w, h, w, h, data, "".join(parts)))
 
 
-SECTIONS = 10   # numbered sections on the landing page; the label ruler has one tick per section (UX audit F12)
+SECTIONS = 11   # numbered sections on the landing page; the label ruler has one tick per section (UX audit F12)
 
 
 def label(n, text):
@@ -698,6 +837,87 @@ def proof_rows(cfg):
     return "".join(rows)
 
 
+# The gap a Claude Code user asks about first (2026-11-18): the README's comparison table, its first two rows (the
+# third names the other agents, which the strip under the hero already shows), with the README's own words around it.
+# Every phrase below is checked against README.md at build time, so the section cannot say more than the README does.
+GAP_LEDE = ("Claude Code&#x27;s own %s name the gap this fills.",
+            "rewindagents copies the project's files before every shell command and scans them after, so a `sed -i` or an `rm` is one more step you can rewind")
+GAP_NUANCE = "its `/rewind` does undo Bash changes to a file Claude had already edited"
+GAP_READ = "(read 2026-11-12)"
+GAP_LIVE = "A live session in which a subagent"
+
+
+def md_cell(s):
+    """A README table cell as HTML: escaped, `code` spans, [text](url) links."""
+    s = md_inline(s)
+    return re.sub(r"\[([^\]]+)\]\((https://[^)\s]+)\)", r'<a href="\2">\1</a>', s)
+
+
+def readme_table(readme, first_header):
+    """The README's markdown table whose first header cell is `first_header`: (header cells, rows of cells)."""
+    m = re.search(r"^\| %s \|.*?(?=^\s*$)" % re.escape(first_header), readme, re.S | re.M)
+    if not m:
+        raise SystemExit("README has no table starting %r" % first_header)
+    lines = [ln.strip() for ln in m.group(0).strip().split("\n")]
+    cells = [[c.strip() for c in ln.strip("|").split(" | ")] for ln in lines if not re.match(r"^\|[-| ]+\|$", ln)]
+    return cells[0], cells[1:]
+
+
+def gap_html(cfg, f):
+    readme = read("README.md")
+    flat = " ".join(readme.split())
+    for phrase in (GAP_LEDE[1], GAP_NUANCE, GAP_READ, "Claude Code's own [checkpointing docs]", "name the gap this fills"):
+        if phrase not in flat:
+            raise SystemExit("gap section: README no longer says %r" % phrase)
+    head, rows = readme_table(readme, "After your agent...")
+    if len(head) != 3 or len(rows) < 2 or "shell command" not in rows[0][0] or "subagent" not in rows[1][0]:
+        raise SystemExit("README comparison table changed shape: update gap_html()")
+    docs = re.search(r"\[checkpointing docs\]\((https://[^)]+)\)", readme).group(1)
+    replay = f["beats"][0]
+    wreck = [ln for i, ln in enumerate(replay["output"].rstrip("\n").split("\n")) if i in replay["accent_rows"]]
+    rm_line = next(ln for ln in wreck if "rm -rf" in ln)
+    step = int(rm_line.split()[0])
+    proof = ['<span class="gap-ev"><span class="gap-src">step %d of the session above, as replay printed it</span>'
+             '<code class="gap-line">%s</code></span>' % (step, re.sub(r"(\[\d+ checkpointed\])", r'<span class="hit">\1</span>', e(rm_line.strip()))),
+             '<span class="gap-ev">%s</span>' % md_inline(readme_sentence(readme, GAP_LIVE)).replace(
+                 "<code>ux-review/DOGFOOD.md</code>",
+                 '<a href="%s/blob/%s/ux-review/DOGFOOD.md"><code>ux-review/DOGFOOD.md</code></a>' % (e(cfg["repo_url"]), e(cfg["branch"])))]
+
+    def said(cell):
+        """'"quoted words" ([docs](url))' as the quote and its source link, the quote marks left to <q>."""
+        m = re.match(r'^"([^"]+)" \(\[docs\]\((https://[^)]+)\)\)$', cell)
+        if not m:
+            raise SystemExit("README comparison cell changed shape: %r" % cell)
+        return '<q>%s</q> <a class="gap-doc" href="%s">docs</a>' % (e(m.group(1)), e(m.group(2)))
+    body = "".join(
+        '<li><span class="gap-l"><span class="gap-when">%s</span>'
+        '<span class="gap-cc"><span class="gap-k">%s</span>%s</span></span>'
+        '<span class="gap-ra"><span class="gap-k">%s</span><b>%s</b>%s</span></li>'
+        % (md_cell(r[0]), e(head[1]), said(r[1]), e(head[2]), md_cell(r[2]), proof[i])
+        for i, r in enumerate(rows[:2]))
+    return """
+<section class="sec" id="gap" aria-labelledby="h-gap"><div class="wrap">
+%(label)s
+<div class="head"><h2 id="h-gap">What Claude Code&#x27;s checkpoints miss.</h2>
+<p class="lede">%(lede0)s %(lede1)s.</p></div>
+<div class="gap-grid">
+<div class="gap-cols" aria-hidden="true"><span class="gap-l"><span>%(h0)s</span><span>%(h1)s</span></span><span>%(h2)s</span></div>
+<ul class="gap">%(rows)s</ul>
+</div>
+<p class="small gap-note">Quotes from Claude Code&#x27;s <a href="%(docs)s">checkpointing docs</a> %(read)s. One exception they name: %(nuance)s.</p>
+</div></section>
+""" % {"label": label(1, "The gap"), "lede0": GAP_LEDE[0] % ('<a href="%s">checkpointing docs</a>' % e(docs)),
+       "lede1": md_inline(GAP_LEDE[1]), "h0": e(head[0]), "h1": e(head[1]), "h2": e(head[2]), "rows": body,
+       "docs": e(docs), "read": e(GAP_READ), "nuance": md_inline(GAP_NUANCE)}
+
+
+def course_h1():
+    """The headline as three line spans (one space between them, so its text is COURSE exactly)."""
+    if " ".join(COURSE_LINES) != COURSE:
+        raise SystemExit("COURSE_LINES do not join to COURSE")
+    return " ".join('<span class="h1l">%s</span>' % e(ln).replace("rm -rf", '<span class="nw">rm -rf</span>') for ln in COURSE_LINES)
+
+
 def index_html(cfg, f, hero, open_all=False):
     rel = ""
     b = f["blocks"]
@@ -705,33 +925,29 @@ def index_html(cfg, f, hero, open_all=False):
     desc = ("Undo for AI coding agents, including what they do in the shell: rm -rf, sed -i, a script. rewindagents saves "
             "each file before every step and takes back the whole session, one step or one file. Open source, local, "
             "standard library only. Hooks for Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid and Qwen Code.")
-    replay = f["beats"][0]
-    wreck = {ln for i, ln in enumerate(replay["output"].rstrip("\n").split("\n")) if i in replay["accent_rows"]}
-    struck = {i for i, (k, t) in enumerate(hero) if k == "out" and t in wreck}
     runs = f["runs"]
     hero_s = """
 <section class="hero" aria-labelledby="h1"><div class="wrap">
-<div class="hero-text">
 <p class="eyebrow"><b>v%(v)s</b> %(eyebrow)s</p>
 <h1 id="h1">%(course_h1)s</h1>
-<p class="lede">rewindagents records every step your coding agent takes and saves each file before it changes, including files only a shell command touched. When a run goes wrong, take back the whole session, one step, or one file.</p>
-<p class="lede base">Then fork any recorded step, let another agent continue from there, and compare the runs, within the <a href="#limits">limits</a>.</p>
-<div class="cta"><a class="btn btn-primary" href="#install">Install</a><a class="btn btn-ghost" href="%(repo)s">Source on GitHub</a></div>
-</div>
-<div class="hero-panel">
-<div class="panel"><div class="panel-head"><span>a session of %(n)d steps; the last %(wreck)d wrecked the repo</span><span class="tl">%(tl)s<span>rewind %(good)d</span></span></div>%(hero)s</div>
-<p class="caption">Lines the session behind the clip printed, unedited. The strike-through is ours: it marks the two steps the rewind undid. A test replays the session and fails if a line changes; see <a href="#tested">Tested</a>.</p>
-<ul class="facts"><li>standard library only</li><li>no network, no account</li><li>never stops or changes a call</li><li>%(licence)s</li></ul>
-</div>
 <div class="hero-install">
 <p class="small"><b>Install.</b> From PyPI; then add the hook in a project. One click on a command selects all of it, without the prompt.</p>
 %(install)s
 </div>
-%(agents)s
-</div></section>
-""" % {"v": e(f["version"]), "eyebrow": e(eyebrow(f)), "licence": LICENCE, "course": e(COURSE), "course_h1": e(COURSE).replace("rm -rf", '<span class="nw">rm -rf</span>'), "n": n, "wreck": f["wreck_steps"],
-       "good": good, "tl": ruler(good, n=n, w=4 + 6 * (n - 1), h=16, dark=True), "repo": e(cfg["repo_url"]),
-       "hero": panel(hero, struck=struck), "install": hero_install(b), "agents": agent_strip()}
+<div class="hero-row">
+<p class="lede">rewindagents records every step your coding agent takes and saves each file before it changes, including files only a shell command touched. When a run goes wrong, take back the whole session, one step, or one file.</p>
+<p class="lede base">Then fork any recorded step, let another agent continue from there, and compare the runs, within the <a href="#limits">limits</a>.</p>
+<div class="cta"><a class="btn btn-primary" href="#install">Install</a><a class="btn btn-ghost" href="%(repo)s">Source on GitHub</a></div>
+<ul class="facts"><li>standard library only</li><li>no network, no account</li><li>never stops or changes a call</li><li>%(licence)s</li></ul>
+</div>
+</div>
+%(stage)s
+<div class="wrap">%(counts)s
+%(agents)s</div>
+</section>
+""" % {"v": e(f["version"]), "eyebrow": e(eyebrow(f)), "licence": LICENCE, "course_h1": course_h1(),
+       "repo": e(cfg["repo_url"]), "install": hero_install(b), "agents": agent_strip(), "stage": stage_html(f),
+       "counts": counters(cfg, f)}
 
     fork = """
 <section class="sec" id="fork" aria-labelledby="h-fork"><div class="wrap">
@@ -746,7 +962,7 @@ def index_html(cfg, f, hero, open_all=False):
 </div>
 <p class="small more">Every option, and how a fork works in a git repository, is on the <a href="docs/#fork">docs page</a>.</p>
 </div></section>
-""" % {"label": label(2, "Fork and compare"), "lead": md_inline(f["fork_lead"]), "says0": md_inline(f["fork_says"][0]),
+""" % {"label": label(3, "Fork and compare"), "lead": md_inline(f["fork_lead"]), "says0": md_inline(f["fork_says"][0]),
        "fork_says": " ".join(md_inline(x) for x in FORK_SHORT),
        "compare_says": " ".join(md_inline(x) for x in COMPARE_SHORT),
        "limits": "".join("<li>%s</li>" % md_inline(x) for x in f["fork_limits"]),
@@ -766,7 +982,7 @@ def index_html(cfg, f, hero, open_all=False):
 <div><p class="small">Then the damage, the rewind, and the project after it.</p>%(right)s</div>
 </div>
 </div></section>
-""" % {"film": film(srt_cues("brand/vsl/%s.srt" % FILM)), "label": label(1, "Undo"), "n": n, "good": good, "s13": n - 1, "s14": n, "gw": f["gif"]["width"],
+""" % {"film": film(srt_cues("brand/vsl/%s.srt" % FILM)), "label": label(2, "Undo"), "n": n, "good": good, "s13": n - 1, "s14": n, "gw": f["gif"]["width"],
        "gh": f["gif"]["height"], "secs": ("%.1f" % f["gif"]["seconds"]).rstrip("0").rstrip("."), "frames": f["gif"]["frames"],
        "left": panel(beat_rows(f["beats"][0], lit=False), "fill"), "right": panel(right, "fill")}
 
@@ -784,7 +1000,7 @@ def index_html(cfg, f, hero, open_all=False):
 <div><h3>Take back exactly what you mean</h3><p>Preview a rewind as a diff, then take back the whole session or a single file. Every rewind is a new step, so it can be undone.</p>%(precise)s</div>
 </div>
 </div></section>
-""" % {"label": label(3, "The timeline"), "quick": code(b["quick"][:1]), "ui": code(b["ui"][:1]),
+""" % {"label": label(4, "The timeline"), "quick": code(b["quick"][:1]), "ui": code(b["ui"][:1]),
        "precise": code([ln for ln in f["quick_use"] if ln.lstrip().startswith(("rewindagents diff", "rewindagents rewind"))])}
 
     install = """
@@ -796,7 +1012,7 @@ def index_html(cfg, f, hero, open_all=False):
 <div class="pair"><div><h3>Add the Claude Code hook</h3>%(hook)s</div><div><h3>Codex and Cursor hooks</h3>%(agents)s</div></div>
 <div class="pair-note"><p><code>install</code> keeps everything already in the file and does nothing if the hook is already there. For Codex the file is <code>%(codex)s</code> and for Cursor <code>%(cursor)s</code>; those two hooks are tested with the payloads in the vendors&#x27; documentation, not yet in a live session. <code>.rewindagents/</code> gets its own <code>.gitignore</code>, so the log and the copies stay out of your commits.</p></div>
 </div></section>
-""" % {"label": label(4, "Install"), "py": e(f["py_req"]), "tested": e(f["tested_on"]), "install": code(b["install"]), "hook": code(b["hook"]),
+""" % {"label": label(5, "Install"), "py": e(f["py_req"]), "tested": e(f["tested_on"]), "install": code(b["install"]), "hook": code(b["hook"]),
        "agents": code(b["agents"]), "codex": e(f["agents"]["codex"]["settings"]), "cursor": e(f["agents"]["cursor"]["settings"])}
 
     how = """
@@ -810,7 +1026,7 @@ def index_html(cfg, f, hero, open_all=False):
 <li>%(r3)s<h3>Rewind</h3><p><code>rewind N</code> puts back every file a later step changed and deletes the files later steps created. It first checks the hash chain and the hash of every stored copy; if the chain is broken it changes nothing. A rewind saves the current files and records itself as a new step, so a rewind is undone with another rewind.</p></li>
 </ol>
 </div></section>
-""" % {"label": label(5, "How it works"), "r1": ruler(2, n=5, w=60, h=16), "r2": ruler(3, n=5, w=60, h=16), "r3": ruler(4, n=5, w=60, h=16)}
+""" % {"label": label(6, "How it works"), "r1": ruler(2, n=5, w=60, h=16), "r2": ruler(3, n=5, w=60, h=16), "r3": ruler(4, n=5, w=60, h=16)}
 
     tested = """
 <section class="sec" id="tested" aria-labelledby="h-tested"><div class="wrap">
@@ -820,7 +1036,7 @@ def index_html(cfg, f, hero, open_all=False):
 <ul class="ledger proof">%(rows)s</ul>
 <div class="cmdrow plain"><p class="small">Run every test from a clone, with the README&#x27;s command. The <a href="docs/#tests">docs</a> say which tests need the installed command.</p>%(run)s</div>
 </div></section>
-""" % {"label": label(6, "Tested"), "rows": proof_rows(cfg), "run": code(b["tests"])}
+""" % {"label": label(7, "Tested"), "rows": proof_rows(cfg), "run": code(b["tests"])}
 
     limits = """
 <section class="sec" id="limits" aria-labelledby="h-limits"><div class="wrap">
@@ -836,7 +1052,7 @@ def index_html(cfg, f, hero, open_all=False):
 <li><span class="k">the end of the log</span><span>A hash chain proves the records are unchanged relative to each other. It cannot tell that records were cut off the end or that the whole file was rewritten and re-hashed. Pin the head hash somewhere the agent cannot write and check against it with <code>verify --head</code>.</span></li>
 </ul>
 </div></section>
-""" % {"label": label(7, "Limits"), "chars": "{:,}".format(f["result_chars"]), "mb": f["file_mb"],
+""" % {"label": label(8, "Limits"), "chars": "{:,}".format(f["result_chars"]), "mb": f["file_mb"],
        "files": "{:,}".format(f["scan_files"]), "skip": ", ".join("<code>%s</code>" % e(d) for d in f["skip_dirs"])}
 
     commands = """
@@ -851,7 +1067,7 @@ def index_html(cfg, f, hero, open_all=False):
 <div class="cmdrow"><div><h3>Verify the chain</h3><p>Checks every record against the one before it and names the first bad one. With <code>--head</code>, also catches records cut from the end.</p></div>%(verify)s</div>
 </div>
 </div></section>
-""" % {"label": label(8, "Commands"), "replay": code(b["replay"]), "export": code(b["export"]), "sessions": code(b["sessions"]),
+""" % {"label": label(9, "Commands"), "replay": code(b["replay"]), "export": code(b["export"]), "sessions": code(b["sessions"]),
        "verify": code(b["verify"]), "kb": f["diff_kb"], "lines": f["diff_lines"]}
 
     pricing = """
@@ -862,7 +1078,7 @@ def index_html(cfg, f, hero, open_all=False):
 %(plans)s
 <p class="small more">Details on the <a href="pricing.html">pricing page</a>.</p>
 </div></section>
-""" % {"label": label(9, "Pricing"), "licence": LICENCE, "plans": plans(cfg, rel)}
+""" % {"label": label(10, "Pricing"), "licence": LICENCE, "plans": plans(cfg, rel)}
 
     faq_items = [
         ("Does it stop or change what the agent does?",
@@ -884,7 +1100,7 @@ def index_html(cfg, f, hero, open_all=False):
 <div class="head"><h2 id="h-faq">Questions.</h2></div>
 %(items)s
 </div></section>
-""" % {"label": label(10, "Questions"), "items": faq_html(faq_items, open_all)}
+""" % {"label": label(11, "Questions"), "items": faq_html(faq_items, open_all)}
 
     closing = """
 <section class="sec close" aria-labelledby="h-close"><div class="wrap">
@@ -894,7 +1110,7 @@ def index_html(cfg, f, hero, open_all=False):
 </div></section>
 """ % {"install": code(b["install"][:1])}
 
-    body = hero_s + demo + fork + timeline + install + how + tested + limits + commands + pricing + faq + closing
+    body = hero_s + gap_html(cfg, f) + demo + fork + timeline + install + how + tested + limits + commands + pricing + faq + closing
     return page(cfg, "index.html", "%s: %s" % (NAME, COURSE.rstrip(".")), desc, body, "home")
 
 

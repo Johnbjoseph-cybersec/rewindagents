@@ -1,0 +1,30 @@
+**Iris Kapoor: AFTER review, not shipping yet.** I looked at all four sheets, k1440 (8 frames), k390 (5 of 6), AFTER 1440 part00 and part01, and BEFORE 1440 part00. I did not open the 834 parts or 390 full-page parts, or k390-7.6. I also skipped 1440 part02 and the BEFORE 834 and 390 parts, so row 7 rests on the k390 frames and sheets only.
+
+**Scores**
+1. **Identity kept: 9.0.** Paper, black terminals, ruler, the single red (Record) and the same three typefaces carry through. Nothing from the rejected redesign has come back.
+2. **Hero: 7.8.** The three-line headline is bold and the install panel sits at y 630–750 on 1440. Two problems:
+   - The headline stops at x≈1165, leaving a dead right quarter, and the hero itself is type only.
+   - The animated stage starts at y≈1020, below the fold. BEFORE had the rewind proof on the first screen; AFTER pushes it down.
+3. **The stage: 8.0.** The story reads clearly from step 5 through the red wipe at 13 to the black "restore" tags (k1440-5.2, 6.2, 7.4, 7.9). Three weaknesses:
+   - k1440-6.2 shows the "Bash 13" tags as pink text on pink, which is illegible.
+   - Early frames show a 500 px black terminal that is mostly empty.
+   - The stage sits at x=40 while the rest of the page sits at x=152, and about 170 px of dead paper sits under it while pinned.
+4. **Transitions: 7.4.** Mid-scroll frames show half-states on screen:
+   - Headings are clipped mid-mask: "The flight…", "Install, then add the hook to", and "Questions." in the sheet-1440-2 frames.
+   - The red closing band shows "hook, ca" clipped, and ledes are half-faded.
+   - In k1440-9.0 the playhead sits on top of the "01" label.
+   - A stray red tick fragment shows at the right edge of the rule (k1440-7.9, x≈1435).
+   - Sections are left with large empty gaps while they reveal.
+5. **Counters: 8.3.** The sources are visible and the numbers read well. 7/723/15/4/0 are the final values, and the mid-count frames (6/412/13) are fine. The source line under 723 wraps to two lines while the others take one.
+6. **Typography, grid, spacing: 7.8.** The display type is strong. The 40 px versus 152 px edge mismatch, the uneven vertical gaps and the 723 source wrap pull it down.
+7. **Mobile 390: 8.0.** The install line is on the first screen and the stage collapses to two tree columns cleanly. Weak points: the headline is only about 34 px, so it is not bold at that width, and a 140 px blank paper strip shows under the pinned terminal (k390-5.6, 6.4). The counters run 2×3 with a lone "0" orphaned.
+8. **Overall premium vs BEFORE: 8.0.** It is bolder and more distinctive, but BEFORE was tighter and showed proof above the fold.
+
+**OVERALL: 8.0.** This misses the 9.0 bar, and rows 2, 4 and 6 are under 8.
+
+**Fixes, ranked**
+1. **Hero (row 2).** Put the stage's top (ruler and first tree rows) in the first 900 px. Alternatively, put the live rewind terminal in the dead right of the headline. Keep the install panel where it is.
+2. **Transitions (row 4).** Finish heading, lede and rule reveals before the element passes about 70% of viewport height, and never let a heading sit clipped mid-screen. Pad the sections that currently show empty gaps. Stop the playhead overlapping the "01" label, and clip the stray tick at the right edge.
+3. **Stage (row 3).** Align it to the 152 px page grid. Size the stage to its content, with no empty paper below. Show the terminal at a stable height from step 1. Make the tag text on the pink strike rows solid and legible before the wipe ends.
+4. **Mobile (row 7).** Scale the headline to at least 44 px at 390, remove the blank strip under the pinned stage, and span the "0" counter across both columns.
+5. **Counters (row 6).** Shorten the 723 source line to one line and give every counter a fixed baseline.

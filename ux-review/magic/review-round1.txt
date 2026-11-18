@@ -1,0 +1,25 @@
+**AFTER scores (looked at: after and before 1440 part00-01, after 1440 part02-03, after 834 part00-01, after 390 part00-02, both sheets, the tape shot. I did not open before 834/390, after 834 part02 or after 390 part03-04.)**
+
+1. **Identity kept: 9.0.** Paper, black terminals, ruler and one red are intact. Nothing from the rejected redesign came back. The one doubt is that the solid red flash bars on steps 13 and 14 (frames 2100-2800 ms) are the heaviest red on the page.
+2. **Hero: 8.5.** The sheet shows a clear story: record, damage, rewind, strike-through, restore. It is calm and nothing jumps. Two weaknesses:
+   - The panel goes blank black for about 700 ms at each loop start.
+   - The final frame is the same as BEFORE, so it explains better only if the reader waits.
+3. **Gap section: 8.0.** The ledger reads quickly and the quotes link to the docs. Its column edges are 152, 517 and 882, while the intro text above it starts at 752 and the hero panel at 663. That is three different grids on one page. Row 2's rewindagents cell is prose rather than a command.
+4. **Typography and spacing: 8.3.** The hierarchy is good. The gap between the Install block and the "Hooks for" strip is loose. The tiny `replay` inline code in "as replay printed it" looks inconsistent.
+5. **Mobile 390: 8.3.** The gap section stacks well. Two problems:
+   - The hero replay panel sits about 1,700 px down, after the install block, so the best proof is far below the fold.
+   - Its header wraps to two lines, and the playhead drops to line two.
+6. **Motion restraint: 8.6.** Three passes then still, a Stop button, and reduced-motion off are all right. The 10 s loop is slightly long. The tape playhead is only 1-2 px wide and barely registers (tape-mid-1440).
+7. **Claims honesty: 8.2.** The quotes are sourced and dated, and the `/rewind` exception is stated, which is good. But `ux-review/DOGFOOD.md` is an internal repo path offered as public evidence. "Scans them after" is a mechanism claim I can't verify from the images.
+8. **Overall "world-class vs BEFORE": 8.0.** A screenshot of the AFTER hero is almost identical to BEFORE, so the magic exists only in motion. The gap section is the only visible static upgrade.
+
+**OVERALL: 8.4. It does not meet the 9.0 bar. No row is under 8, but rows 3 and 8 sit exactly at 8.0.**
+
+Pre-existing and untouched: in the light film poster the "One command…" headline has no left padding, and the "1" under the ruler is clipped against the panel edge. A developer will see this right below the new section.
+
+**Ranked fixes**
+1. Align the gap ledger to the page grid. Put the quote column at 663 or 752 and the rewindagents column at 752 or 882, so it shares edges with the hero panel and intro.
+2. Give the static hero a visible upgrade. Freeze the first paint on the strike-through frame with a small playhead, make the panel-head ruler about 160 px wide, and add a "Replay" label. Don't flash a blank panel at loop start; hold the previous frame for 300 ms and fade the text.
+3. Replace the DOGFOOD path in row 2 with a public, checkable artefact, such as a replay line for a subagent step or a link to the test. Otherwise cut the row.
+4. On mobile, move the replay panel above the install block, or put the "rewind 12" state in the header on one line (shorten the label to "14 steps, last 2 wrecked").
+5. Soften the flash. Use a 30% red tint instead of the solid #B92A19 bars, and shorten the loop to about 8 s. Also fix the poster's left padding and clipped "1".
