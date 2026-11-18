@@ -129,7 +129,7 @@ claude plugin marketplace add Johnbjoseph-cybersec/rewindagents
 claude plugin install rewindagents@rewindagents
 ```
 
-In VS Code, search "rewindagents" in the Extensions view: it shows the steps the hook recorded as a timeline in the editor. In Cursor, until Open VSX (the store Cursor uses) lists it, download `rewindagents-1.1.0.vsix` from the [latest release](https://github.com/Johnbjoseph-cybersec/rewindagents/releases/latest) and run "Extensions: Install from VSIX..." (VS Code installs that file; we have not yet tried it in Cursor).
+In VS Code or Cursor, search "rewindagents" in the Extensions view: it shows the steps the hook recorded as a timeline in the editor. VS Code installs it from the VS Code Marketplace and Cursor from Open VSX (we have not yet tried it in Cursor).
 
 Or from a clone, `pip install .`. Without installing, `PYTHONPATH=src python3 -m rewindagents` runs the same
 CLI from a clone.
@@ -398,8 +398,8 @@ stdout; without `--json` the output is unchanged): [docs/json-output.md](docs/js
 - **VS Code / Cursor extension** (`vscode/`): the session timeline in the editor, with each step's diff,
   preview rewind and rewind to here. It calls the CLI's `--json` commands and has no runtime npm
   dependencies. Install from the VS Code Marketplace: `code --install-extension rewindagents.rewindagents`
-  (or search "rewindagents" in the Extensions view). Not yet on Open VSX, and not yet clicked through by hand
-  in a real VS Code window. See [docs/vscode.md](docs/vscode.md).
+  (or search "rewindagents" in the Extensions view). Also on Open VSX (namespace `rewindagents`, verified),
+  the store Cursor installs from. Not yet clicked through by hand in a real VS Code or Cursor window. See [docs/vscode.md](docs/vscode.md).
 - Homebrew: `brew install johnbjoseph-cybersec/rewindagents/rewindagents` (tap
   [homebrew-rewindagents](https://github.com/Johnbjoseph-cybersec/homebrew-rewindagents); its CI installs and
   tests the formula on macOS and Linux). npm: `npx rewindagents` (a launcher that installs the matching PyPI

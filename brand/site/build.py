@@ -198,7 +198,7 @@ def facts():
             ("record", "Use it"), ("tests", "Tests"), ("quick", "Quick start"), ("ui", "Timeline UI"), ("mcp", MCP_HEADING))},
         "quick_use": readme_blocks(readme, "Quick start")[1],
         "channels": readme_blocks(readme, "Install")[1],
-        "editors": readme_sentence(readme, "In VS Code, search"),
+        "editors": readme_sentence(readme, "In VS Code or Cursor, search"),
         "rescue": readme_block(readme, RESCUE),
         "rescue_says": [readme_sentence(readme, s) for s in RESCUE_SENTENCES],
         "init_says": [readme_sentence(readme, s) for s in INIT_SENTENCES],
