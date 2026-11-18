@@ -122,7 +122,7 @@ claude plugin marketplace add Johnbjoseph-cybersec/rewindagents
 claude plugin install rewindagents@rewindagents
 ```
 
-In VS Code, search "rewindagents" in the Extensions view: it shows the steps the hook recorded as a timeline in the editor. The same extension is under review on Open VSX, the store Cursor uses.
+In VS Code, search "rewindagents" in the Extensions view: it shows the steps the hook recorded as a timeline in the editor. In Cursor, until Open VSX (the store Cursor uses) lists it, download `rewindagents-1.1.0.vsix` from the [latest release](https://github.com/Johnbjoseph-cybersec/rewindagents/releases/latest) and run "Extensions: Install from VSIX..." (VS Code installs that file; we have not yet tried it in Cursor).
 
 Or from a clone, `pip install .`. Without installing, `PYTHONPATH=src python3 -m rewindagents` runs the same
 CLI from a clone.
