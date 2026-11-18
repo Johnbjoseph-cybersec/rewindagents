@@ -6,3 +6,4 @@ tsconfig.json
 vitest.config.ts
 package-lock.json
 **/*.map
+dist/**
