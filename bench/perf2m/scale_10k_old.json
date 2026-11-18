@@ -1,0 +1,38 @@
+{
+ "label": "10k-old-scan",
+ "repo": "/private/tmp/claude-501/-Users-johnbommeravenijoseph/adf68013-ef09-4df8-829c-694b84f6df92/scratchpad/t10k",
+ "path": "full",
+ "tracked": null,
+ "load": 12.08544921875,
+ "first_bash_ms": 435.3,
+ "bash_ms": [
+  128.6,
+  127.3,
+  135.8,
+  141.2,
+  138.4,
+  131.1,
+  126.1
+ ],
+ "bash_median_ms": 131.1,
+ "read_median_ms": 37.6,
+ "edit_median_ms": 38.1,
+ "proof_call_ms": 349.9,
+ "proof": {
+  "rm": "d001/s01/f0010.txt",
+  "sed": "d001/s01/f0011.txt",
+  "after_command_rm_exists": false,
+  "restored_equal": true,
+  "rewind_rc": 0,
+  "rewind_out": [
+   "session proof: rewind to step 0 of 1 (did change 2 files)",
+   "  restore  d001/s01/f0010.txt",
+   "  restore  d001/s01/f0011.txt",
+   "  this rewind is step 2; undo it with: python3 -m rewindagents rewind 1 --session proof"
+  ],
+  "checkpoints": [
+   "f0010.txt",
+   "f0011.txt"
+  ]
+ }
+}

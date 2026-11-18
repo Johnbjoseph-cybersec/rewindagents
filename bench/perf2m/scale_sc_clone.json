@@ -1,0 +1,38 @@
+{
+ "label": "sc-clone-646k",
+ "repo": "/private/tmp/claude-501/-Users-johnbommeravenijoseph/adf68013-ef09-4df8-829c-694b84f6df92/scratchpad/sc-clone",
+ "path": "git",
+ "tracked": null,
+ "load": 7.75732421875,
+ "first_bash_ms": 11283.5,
+ "bash_ms": [
+  5855.3,
+  5639.6,
+  5722.3,
+  5788.5,
+  13214.1,
+  6618.5,
+  11104.2
+ ],
+ "bash_median_ms": 5855.3,
+ "read_median_ms": 41.6,
+ "edit_median_ms": 60.9,
+ "proof_call_ms": 11603.8,
+ "proof": {
+  "rm": "ACHIEVEMENTS_PLAN.md",
+  "sed": "HANDOFF-a48fcfce9d30.md",
+  "after_command_rm_exists": false,
+  "restored_equal": true,
+  "rewind_rc": 0,
+  "rewind_out": [
+   "session proof: rewind to step 0 of 1 (did change 2 files)",
+   "  restore  ACHIEVEMENTS_PLAN.md",
+   "  restore  HANDOFF-a48fcfce9d30.md",
+   "  this rewind is step 2; undo it with: python3 -m rewindagents rewind 1 --session proof"
+  ],
+  "checkpoints": [
+   "ACHIEVEMENTS_PLAN.md",
+   "HANDOFF-a48fcfce9d30.md"
+  ]
+ }
+}

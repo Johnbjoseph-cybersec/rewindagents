@@ -32,6 +32,7 @@ from .log import sha256
 
 SKIP_DIRS = {".git", ".rewindagents", "node_modules", ".venv", "venv", "__pycache__"}
 MAX_SCAN_FILES = 20000
+GIT_KEY = "\0git"      # in a pending scan made by gitscan: a key no path can have (gc reads only string values)
 
 
 def _ls(root: Path, *args: str) -> list[str] | None:
@@ -124,20 +125,20 @@ def _scan(root: Path, ignored_files: bool) -> list[tuple[str, os.stat_result]] |
     return out
 
 
-def _load_index(store: Path) -> dict:
+def _load_index(store: Path, name: str = "index.json") -> dict:
     try:
-        idx = json.loads((store / "index.json").read_text(encoding="utf-8"))
+        idx = json.loads((store / name).read_text(encoding="utf-8"))
         return idx if isinstance(idx, dict) else {}
     except (OSError, ValueError):
         return {}
 
 
-def _save_index(store: Path, idx: dict, old: dict | None = None) -> None:
+def _save_index(store: Path, idx: dict, old: dict | None = None, name: str = "index.json") -> None:
     if old is not None and idx == old:      # nothing changed since it was read: no need to write 10k entries again
         return
     tmp = store / f".index.{os.getpid()}.tmp"
     tmp.write_text(json.dumps(idx), encoding="utf-8")
-    os.replace(tmp, store / "index.json")
+    os.replace(tmp, store / name)
 
 
 def snapshot(root: Path, store: Path, save: bool) -> dict[str, Any] | None:
@@ -148,7 +149,13 @@ def snapshot(root: Path, store: Path, save: bool) -> dict[str, Any] | None:
     found = _scan(root, ignored_files=True)
     if found is None:
         return None
-    idx, new_idx = _load_index(store), {}
+    return snapshot_found(root, store, found, save)
+
+
+def snapshot_found(root: Path, store: Path, found: list, save: bool, index_name: str = "index.json") -> dict[str, Any]:
+    """snapshot() for a list of (relative path, lstat result) already found: the same entries, the same stat
+    cache (a file of another name per caller: `index_name`)."""
+    idx, new_idx = _load_index(store, index_name), {}
     objects = store / "objects"
     have: set[str] = set()
     if save:        # one directory read instead of a stat per file to learn which objects are stored
@@ -183,7 +190,7 @@ def snapshot(root: Path, store: Path, save: bool) -> dict[str, Any] | None:
             out[r] = sha
         new_idx[r] = [st.st_mtime_ns, st.st_size, mode, out[r]]
         out[r] = "%s:%o" % (out[r], mode)
-    _save_index(store, new_idx, idx)
+    _save_index(store, new_idx, idx, index_name)
     return out
 
 
@@ -203,6 +210,11 @@ def _key(payload: dict) -> str:
 def before(payload: dict, root: Path, store: Path) -> dict:
     """PreToolUse: save every project file and remember the list. Returns what goes in the pre record:
     the file count and the pending scan's name, so `gc` can say which command a stale scan belongs to."""
+    if not os.environ.get("REWINDAGENTS_BASH_SCAN") == "full":
+        from . import gitscan
+        res = gitscan.before(payload, root, store)
+        if res is not None:        # a git work tree whose top is the project: ask git what is dirty instead
+            return res
     snap = snapshot(root, store, save=True)
     if snap is None:
         return {"skipped": f"more than {MAX_SCAN_FILES} files"}
@@ -226,6 +238,9 @@ def after(payload: dict, root: Path, store: Path, afters: list | None = None) ->
     except (OSError, ValueError):
         return {"skipped": "no scan from before the command"}, []
     pend.unlink(missing_ok=True)
+    if GIT_KEY in old:
+        from . import gitscan
+        return gitscan.after(payload, root, store, afters, old)
     new = snapshot(root, store, save=False)
     if new is None:
         return {"skipped": f"more than {MAX_SCAN_FILES} files"}, []
