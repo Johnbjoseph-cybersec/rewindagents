@@ -142,6 +142,15 @@
   // only what the reader has not reached yet: anything on screen, or scrolled past, stays exactly where it is
   function below(el) { return el.getBoundingClientRect().top > window.innerHeight; }
 
+  // Line splits are measured at the width they were made at. When the width changes, undo them so the text
+  // wraps normally again (a stale split leaves short, ragged lines); the reveal has already run or is skipped.
+  var lineSplits = [], splitWidth = window.innerWidth;
+  window.addEventListener("resize", function () {
+    if (window.innerWidth === splitWidth || !lineSplits.length) return;
+    lineSplits.forEach(function (sp) { try { sp.revert(); } catch (err) {} });
+    lineSplits = [];
+  }, { passive: true });
+
   function motion() {
   var EASE = "expo.out", SNAP = "power4.inOut";
   var wide = window.matchMedia("(min-width: 961px)").matches, fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
@@ -294,7 +303,9 @@
         tl.from(words, { yPercent: 110, duration: 0.7, stagger: 0.025 }, 0.12);
       }
       if (lede) {
-        var lines = window.SplitText ? new SplitText(lede, { type: "lines", mask: "lines", aria: "none" }).lines : [lede];
+        var split = window.SplitText ? new SplitText(lede, { type: "lines", mask: "lines", aria: "none" }) : null;
+        if (split) lineSplits.push(split);
+        var lines = split ? split.lines : [lede];
         tl.from(lines, { yPercent: 100, duration: 0.7, stagger: 0.05 }, 0.3);
       }
       // locked to the scroll position: the cut and the heading are complete before the heading passes ~two thirds
