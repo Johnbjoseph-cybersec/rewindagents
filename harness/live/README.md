@@ -48,7 +48,8 @@ hardcoded default list uses.
    the evidence file itself as `real_config_check: {"path": ..., "unchanged": bool}`, so the safety check's
    result is part of the durable artifact, not only a conditional line of console output.
 4. Drives the agent non-interactively with one tiny file-writing prompt, cwd set to the scratch project,
-   under a hard 120-second timeout, using that agent's own documented headless ("print and exit") form. The
+   under a hard 300-second timeout (it was 120; on 2026-11-18 Gemini API 503s and the CLI's retry backoff
+   pushed a run that passed past 120 s), using that agent's own documented headless ("print and exit") form. The
    agent process is started as the leader of its own process group (`run._run_isolated`); if it times out,
    the harness kills the *whole* group (`os.killpg(SIGKILL)`), not just that one process, so a CLI that
    forked a background worker of its own does not leave that worker running as an orphan after the harness
@@ -61,10 +62,11 @@ hardcoded default list uses.
 
 ## On this machine
 
-Only `claude` is on PATH here. The other six come out `NOT_INSTALLED`, which is the correct, honest result --
-not a weaker check pretending otherwise. If one of those CLIs is later installed, re-running the harness
-drives it for real and reports exactly what it observed (`VERIFIED_LIVE`, `RAN_NO_LOG`, `INSTALL_BLOCKED` or
-`FAILED`), never an assumed result.
+The run of 2026-11-18 had all seven CLIs installed. Claude Code, Codex, Cursor, Gemini CLI and Copilot CLI came
+out `VERIFIED_LIVE`; Droid and Qwen Code came out `RAN_NO_LOG` (signed in, but with no model plan or API key the
+agent made no tool call). The table, the exact commands and why each flag is there are in
+`docs/live-verification.md`. Re-running the harness reports exactly what that run observed (`VERIFIED_LIVE`,
+`RAN_NO_LOG`, `NOT_INSTALLED`, `INSTALL_BLOCKED` or `FAILED`), never an assumed result.
 
 ## Scratch projects
 

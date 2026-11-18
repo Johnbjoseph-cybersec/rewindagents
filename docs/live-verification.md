@@ -3,16 +3,64 @@
 rewindagents supports seven coding-agent CLIs (`rewindagents.agents.AGENTS`: claude, codex, cursor, gemini,
 copilot, droid, qwen). Before this harness existed, six of those seven were tested only against *documented*
 hook payloads -- fixtures built from each vendor's own docs (`tests/test_agents.py`), never from a real
-process the agent itself started. Only Claude Code's hook had run inside a real session. `agents.py` and the
-README both say so plainly, and `tests/test_launch.py` pins that exact wording until it stops being true for
-a given agent.
+process the agent itself started. Only Claude Code's hook had run inside a real session.
 
-`harness/live/run.py` is the mechanism that can make that wording stop being true, one agent at a time, by
-actually running the agent CLI -- not by asserting that it would probably work. This page is the method and
-the ground rules; the per-agent *results* live in `harness/live/evidence/*.json`, not here, and this
-campaign's wording rule means those results are not restated as prose claims anywhere else yet (see
-`docs/CLAIMS_DELTA.md`, owned by the coordinating session, for how a verified result turns into updated
-README/agents.py text later).
+`harness/live/run.py` changes that one agent at a time, by actually running the agent CLI -- not by asserting
+that it would probably work. The per-agent results live in `harness/live/evidence/*.json`; the table below is a
+copy of them, and every live-status sentence in README.md, `src/rewindagents/agents.py` and the site follows
+those files: `tests/live_evidence.py` loads them, and `tests/test_agents.py`, `tests/test_agents_more.py` and
+`tests/test_site.py` fail if a page calls a `VERIFIED_LIVE` agent not yet live, or calls any other agent live.
+(`brand/launch/` and `brand/vsl/` are dated launch drafts and a recorded video; their status lines stay as they
+were written.)
+
+## Results: the run of 2026-11-18
+
+| Agent | CLI version (`--version`) | Status | Log records | Notes |
+|---|---|---|---|---|
+| Claude Code | 2.1.294 (Claude Code) | `VERIFIED_LIVE` | 2 | |
+| Codex | codex-cli 0.170.0 | `VERIFIED_LIVE` | 2 | |
+| Cursor | 2026.11.17-f532c45 | `VERIFIED_LIVE` | 3 | |
+| Gemini CLI | 0.68.0 | `VERIFIED_LIVE` | 4 | |
+| Copilot CLI | GitHub Copilot CLI 1.0.114 | `VERIFIED_LIVE` | 2 | |
+| Droid | 1.14.0 | `RAN_NO_LOG` | 0 | signed in, no model plan or API key: the agent made no tool call |
+| Qwen Code | 0.28.0 | `RAN_NO_LOG` | 0 | signed in, no model plan or API key: the agent made no tool call |
+
+`VERIFIED_LIVE` means: the agent made a real tool call in a scratch project, the hook wrote a pre and a post
+record to that project's log, and `rewindagents rewind 0 --dry-run` printed a restore plan. For every agent the
+real home-directory config was byte-identical before and after (`real_config_check.unchanged: true`).
+`RAN_NO_LOG` is not a hook failure that was observed; it is the absence of a test: with no tool call there was
+nothing for the hook to see. Droid and Qwen Code stay "tested with the documented payloads, not yet in a live
+session" until a run with a model plan or API key produces their evidence
+(`PYTHONPATH=src .venv/bin/python harness/live/run.py --agent droid --agent qwen`).
+
+The Claude Code plugin (`plugin/`) has its own record, `harness/live/evidence/claude-plugin.json`, from a
+`claude -p --plugin-dir plugin` session the same day; it is not one of the seven hook keys and
+`validate.py` does not check it.
+
+### The headless command per agent, and why each flag is there
+
+Exactly as `harness/live/run.py`'s `HEADLESS` table builds them (`PROMPT` is the one-file prompt):
+
+| Agent | Command | Why |
+|---|---|---|
+| Claude Code | `claude -p PROMPT --permission-mode bypassPermissions --setting-sources project --output-format json` | `-p` prints and exits; `bypassPermissions` skips the approval prompt for the write; `--setting-sources project` loads only the scratch project's `.claude/settings.json`, never the user's own settings; `--output-format json` keeps the printed result machine-readable. (The rewind check takes its session id from the recorded log, for every agent.) |
+| Codex | `codex exec --trust --dangerously-bypass-hook-trust --skip-git-repo-check -s workspace-write PROMPT` | `exec` is the headless form. Codex loads a project's `.codex/` config, hooks included, only in a trusted project (`--trust`), and runs a project hook only after it has been reviewed once (`/hooks`), which a fresh scratch project has never had, so this one invocation bypasses the review. The scratch project is not a git repository (`--skip-git-repo-check`). `--full-auto` is gone in 0.170.0; `-s workspace-write` lets the write through. The harness also closes stdin: without a terminal, `codex exec` otherwise waits for more input until the timeout. |
+| Cursor | `cursor-agent -p PROMPT --force` | `-p` prints and exits; `--force` skips the confirmation a file write would otherwise ask for. |
+| Gemini CLI | `env GEMINI_CLI_TRUST_WORKSPACE=true gemini -p PROMPT --yolo` | `-p` prints and exits; `--yolo` accepts every tool call. A headless run refuses an untrusted folder, and `--skip-trust` runs without loading the project's `.gemini/settings.json`, so the hook never fires; the environment variable trusts the scratch folder, the same thing a user does once in the interactive trust prompt. |
+| Copilot CLI | `copilot -p PROMPT --allow-all-tools --trust-folder` | `-p` prints and exits; `--allow-all-tools` removes the approval per tool. Without `--trust-folder` an untrusted project's `.github/hooks/` are not loaded and nothing is recorded. |
+| Droid | `droid exec PROMPT --auto medium` | `exec` is the headless form; `--auto medium` lets file edits through without an approval. |
+| Qwen Code | `qwen -p PROMPT --yolo` | Qwen Code forked Gemini CLI and keeps its flags. |
+
+What this means for a user: Gemini CLI and Copilot CLI run a project's hooks only in a folder you have
+trusted, and Codex runs a project hook only after you review it once (`/hooks`) and loads project config only
+in a trusted project. The README says the same.
+
+### The timeout: 300 seconds
+
+Each agent invocation runs under a hard 300-second timeout (`HARD_TIMEOUT` in `run.py`; it was 120). On
+2026-11-18 a Gemini CLI run that went on to pass met API 503 responses, and the CLI's own retry backoff pushed
+it past 120 seconds; a timeout that kills a run which would have passed reports `FAILED` for a reason that has
+nothing to do with the hook. 300 seconds leaves room for that and still bounds a CLI that hangs.
 
 ## The method
 
@@ -41,7 +89,7 @@ For one agent key:
 4. **Drive it headlessly.** One tiny, single-purpose prompt ("create this one file with this one line of
    text"), through the agent's own documented non-interactive form (`claude -p ...`, and so on -- see
    `harness/live/run.py`'s `HEADLESS` table for the exact argv and the doc each one is read from), under a
-   hard 120-second timeout. A prompt that writes exactly one small file is enough to exercise the whole
+   hard 300-second timeout (see "The timeout" above). A prompt that writes exactly one small file is enough to exercise the whole
    pre-record / checkpoint / post-record path without needing the agent to do anything agent-specific. The
    agent process is launched as the leader of its own new process group and session (`run._run_isolated`,
    `start_new_session=True`); on timeout the harness kills that *whole group* (`os.killpg(..., SIGKILL)`)
@@ -118,7 +166,6 @@ evidence file by hand is not a legitimate way to change it.
 - **Every tool an agent can call**, not just file writes. The one-line prompt exercises the write/checkpoint
   path (the one every agent integration most needs to get right); it does not exhaustively drive every tool
   name each vendor's docs list.
-- **Turning a result into a claim.** A `VERIFIED_LIVE` evidence file is the fact; updating README.md,
-  agents.py's own comments, or the pinned wording in `tests/test_launch.py` to say so is deliberately a
-  separate step (`docs/CLAIMS_DELTA.md`), owned elsewhere, so that a provable claim and the sentence that
-  states it never drift apart.
+- **Keeping real payloads as fixtures.** The live runs prove the hooks fire and checkpoint; the payloads
+  those sessions sent are not yet saved as test fixtures beside the documented ones. That, and the Droid and
+  Qwen Code runs, are on the README's Roadmap.

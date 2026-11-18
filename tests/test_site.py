@@ -24,6 +24,8 @@ sys.path.insert(0, BRAND)
 from contrast_check import PALETTE  # noqa: E402
 import rewindagents  # noqa: E402
 from rewindagents import agents, bashscan, export, hook  # noqa: E402
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import live_evidence  # noqa: E402
 
 PAGES = ["index.html", "pricing.html", "docs/index.html"]
 SKIP_DIRS = {".git", ".venv", ".brandcache", "node_modules", "__pycache__", "build", "dist", "assets", "frames", "fonts"}
@@ -720,9 +722,10 @@ class TestSite(unittest.TestCase):
                 if "pypi" in low:
                     # on PyPI since v0.0.8 (2026-11-18): a page may not still say it is not
                     self.assertNotRegex(low, r"not on pypi|no package on pypi", "%s: %s" % (p, sentence))
-        # the pages carry the same caveat the README does, and name the unscanned tools from the code
+        # the pages' live-status sentences follow harness/live/evidence/*.json in both directions, as the README's do
+        evidence = live_evidence.load()
         for p in ("index.html", "docs/index.html"):
-            self.assertIn("not yet in a live session", text_of(p), p)
+            self.assertEqual(live_evidence.mismatches(text_of(p), evidence), [], p)
         docs = text_of("docs/index.html")
         for t in sorted(agents.AGENTS["cursor"].read_only | agents.AGENTS["codex"].read_only):
             self.assertIn(t, docs, t)

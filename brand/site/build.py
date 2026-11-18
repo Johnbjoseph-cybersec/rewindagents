@@ -545,7 +545,9 @@ def more_agents_html(block):
     if named != others:
         raise SystemExit("README '## %s' installs %s, agents.AGENTS has %s" % (MORE_AGENTS, named, others))
     return ("<p>The other agents with a hook, each built from the vendor&#x27;s hook documentation and tested with the "
-            "documented payloads, not yet in a live session:</p>\n%s" % code(block))
+            "documented payloads. The Gemini CLI and Copilot CLI hooks were also verified in a live session on 2026-11-18 "
+            "(Gemini CLI 0.68.0, Copilot CLI 1.0.114); both run a project&#x27;s hooks only in a folder you have trusted. "
+            "The Droid and Qwen Code hooks are not yet in a live session. To install any of them:</p>\n%s" % code(block))
 
 
 def agent_strip(rel=""):
@@ -1016,7 +1018,7 @@ def index_html(cfg, f, hero, open_all=False):
 <div class="install-row"><div><h3>Get the command</h3><p><code>pipx</code> installs it from PyPI, as in the panel. From a clone, <code>pip install .</code> works too; without installing, <code>PYTHONPATH=src python3 -m rewindagents</code> runs the same CLI.</p></div>%(install)s</div>
 <div class="install-row"><div><h3>Or with Homebrew, npm, or as a Claude Code plugin</h3><p>The same CLI from another package manager, or the plugin that brings the hook, the MCP server and the slash commands into Claude Code. %(editors)s</p></div>%(channels)s</div>
 <div class="pair"><div><h3>Add the Claude Code hook</h3>%(hook)s</div><div><h3>Codex and Cursor hooks</h3>%(agents)s</div></div>
-<div class="pair-note"><p><code>install</code> keeps everything already in the file and does nothing if the hook is already there. For Codex the file is <code>%(codex)s</code> and for Cursor <code>%(cursor)s</code>; those two hooks are tested with the payloads in the vendors&#x27; documentation, not yet in a live session. <code>.rewindagents/</code> gets its own <code>.gitignore</code>, so the log and the copies stay out of your commits.</p></div>
+<div class="pair-note"><p><code>install</code> keeps everything already in the file and does nothing if the hook is already there. For Codex the file is <code>%(codex)s</code> and for Cursor <code>%(cursor)s</code>; those two hooks are tested with the payloads in the vendors&#x27; documentation and were verified in a live session on 2026-11-18. <code>.rewindagents/</code> gets its own <code>.gitignore</code>, so the log and the copies stay out of your commits.</p></div>
 </div></section>
 """ % {"label": label(5, "Install"), "py": e(f["py_req"]), "tested": e(f["tested_on"]), "install": code(b["install"]), "hook": code(b["hook"]),
        "channels": code(f["channels"]), "editors": md_inline(f["editors"]),
@@ -1093,7 +1095,7 @@ def index_html(cfg, f, hero, open_all=False):
         ("Does anything leave my machine?",
          "No. rewindagents makes no outbound network connections: a test checks that no module under <code>src/</code> imports <code>socket</code>, <code>http</code> or <code>urllib</code>, except the timeline UI, which serves <code>rewindagents ui</code> on 127.0.0.1 only and checks a one-time token on every request. The log and the file copies live in <code>.rewindagents/</code> inside your project, and nothing reads them but you."),
         ("Which agents does it work with?",
-         "Claude Code, through its <code>PreToolUse</code> and <code>PostToolUse</code> hooks; Codex, through the same hook file shape in <code>%s</code>; Cursor, through <code>%s</code>. The Claude Code hook has run in real sessions. The Codex and Cursor hooks are built from the vendors&#x27; hook documentation and tested with the documented payloads, not yet in a live session; the README says the same." % (f["agents"]["codex"]["settings"], f["agents"]["cursor"]["settings"])),
+         "Claude Code, through its <code>PreToolUse</code> and <code>PostToolUse</code> hooks; Codex, through the same hook file shape in <code>%s</code>; Cursor, through <code>%s</code>; and Gemini CLI, Copilot CLI, Droid and Qwen Code, each through its own project hook file (the docs page names them). The Claude Code, Codex and Cursor hooks were verified in a live session on 2026-11-18, and so were the Gemini CLI and Copilot CLI hooks. The Codex and Cursor hooks are also tested with the payloads in the vendors&#x27; hook documentation. The Droid and Qwen Code hooks are tested with the documented payloads, not yet in a live session; the README says the same." % (f["agents"]["codex"]["settings"], f["agents"]["cursor"]["settings"])),
         ("Does it need git?",
          "No. Recording, replay and rewind work in any directory. Git changes two things: around <code>Bash</code> commands the scan follows <code>git ls-files</code>, so git-ignored files are left alone, and <code>branch</code> commits the current files to a git branch. Outside git, <code>branch</code> keeps them in the log only."),
         ("What happens if the log is tampered with?",
@@ -1192,7 +1194,7 @@ def docs_html(cfg, f):
 %(hook)s
 <p><code>install</code> adds a <code>PreToolUse</code>, a <code>PostToolUse</code> and a <code>PostToolUseFailure</code> hook (a command that fails is checkpointed too) to the settings file, keeps everything already in it, and does nothing if the hook is already there. The command it writes names the Python that rewindagents was installed into by absolute path, so it runs whether or not a virtualenv is active. To remove the hook, run <code>rewindagents uninstall</code> (see <a href="#remove">Remove it</a>).</p>
 %(agents)s
-<p>For Codex the file is <code>%(codex)s</code>, in the same shape as Claude Code&#x27;s settings; Codex asks you to trust the hook once (<code>/hooks</code>) and remembers the trust by the hook&#x27;s hash. For Cursor the file is <code>%(cursor)s</code> with a <code>preToolUse</code> and a <code>postToolUse</code> entry; because Cursor&#x27;s <code>preToolUse</code> is a permission hook that treats an empty answer as a failure, the hook prints <code>{"permission": "allow"}</code> before a call and <code>{}</code> after one, which changes nothing (a deny from another hook still wins). The Codex and Cursor hooks are tested with the payloads in the vendors&#x27; documentation and through the installed command, not yet in a live session.</p>
+<p>For Codex the file is <code>%(codex)s</code>, in the same shape as Claude Code&#x27;s settings; Codex runs a project hook only after you review it once (<code>/hooks</code>), remembers that by the hook&#x27;s hash, and loads a project&#x27;s config only in a trusted project. For Cursor the file is <code>%(cursor)s</code> with a <code>preToolUse</code> and a <code>postToolUse</code> entry; because Cursor&#x27;s <code>preToolUse</code> is a permission hook that treats an empty answer as a failure, the hook prints <code>{"permission": "allow"}</code> before a call and <code>{}</code> after one, which changes nothing (a deny from another hook still wins). The Codex and Cursor hooks are tested with the payloads in the vendors&#x27; documentation and through the installed command, and were verified in a live session on 2026-11-18 (Codex 0.170.0, Cursor 2026.11.17-f532c45).</p>
 %(more_agents)s
 <p>Then use your agent as usual and:</p>
 %(quick_use)s
@@ -1289,7 +1291,7 @@ def docs_html(cfg, f):
 <li>In a git repository the scan follows <code>git ls-files --cached --others --exclude-standard</code>, plus the files git ignores one by one (<code>.env</code>, <code>*.log</code>), so a <code>rm .env</code> can be rewound; directories git ignores as a whole (<code>node_modules/</code>, <code>build/</code>) are not saved. Outside git, every file under the project except under %(skip)s.</li>
 <li>Symlinks are not saved. File permissions are: a deleted script comes back executable. Files over %(mb)d MB are not copied. A project with more than %(files)s files is not scanned around <code>Bash</code> commands; the call is still recorded and <code>rewind</code> reports the step as not scanned.</li>
 <li>Directories created by later steps stay, empty, after a rewind. If anything could not be restored, <code>rewind</code> lists it and exits 1.</li>
-<li>Needs a Unix for now: the log lock has a Windows path (<code>msvcrt</code>), but the tests have not run on Windows yet. The Claude Code hook has run in real sessions; the Codex and Cursor hooks are tested with the documented payloads, not yet in a live session.</li>
+<li>Needs a Unix for now: the log lock has a Windows path (<code>msvcrt</code>), but the tests have not run on Windows yet. The Claude Code, Codex, Cursor, Gemini CLI and Copilot CLI hooks were verified in a live session on 2026-11-18; the Droid and Qwen Code hooks are tested with the documented payloads, not yet in a live session.</li>
 </ul>
 
 <h2 id="remove">Remove it</h2>

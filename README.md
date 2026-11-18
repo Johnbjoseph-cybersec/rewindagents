@@ -93,9 +93,13 @@ session in which a subagent made eight steps, three of them edits, recorded and 
 agents (Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen Code) that record every call and
 checkpoint the files a step changes, `summary`, `replay`, `rewind`, `revert` and `branch`, `fork` and
 `compare`, `export` (a session as one HTML page), `sessions`, `bundle` and `import`, `gc`, a local timeline UI,
-and a package on PyPI with a `rewindagents` command. The Claude Code hook has run in
-real sessions; the other six hooks are built from the vendors' hook documentation and tested with the
-documented payloads, not yet in a live session. macOS and Linux; Windows is not supported (see Recorder).
+and a package on PyPI with a `rewindagents` command. Five of the seven hooks were verified in a live session
+on 2026-11-18 (Claude Code 2.1.294, Codex 0.170.0, Cursor 2026.11.17-f532c45, Gemini CLI 0.68.0, Copilot CLI
+1.0.114): the agent made a real tool call, the hook recorded it before and after, and a rewind plan came back.
+The Droid and Qwen Code hooks are built from the vendors' hook documentation and tested with the documented
+payloads, not yet in a live session: both CLIs ran, but signed in without a model plan or API key they made no
+tool call, so nothing was recorded. The runs, their evidence files and how to repeat them: `harness/live/` and
+[docs/live-verification.md](docs/live-verification.md). macOS and Linux; Windows is not supported (see Recorder).
 What 1.0 does not change is [what it cannot put back](#what-it-cannot-put-back). What stays compatible
 within 1.x: [Stability](#stability).
 
@@ -265,9 +269,9 @@ built from:
 
 - Codex (`.codex/hooks.json`, the same file shape as Claude Code's settings) sends `PreToolUse` and
   `PostToolUse` with `session_id`, `cwd`, `tool_name`, `tool_use_id`, `tool_input` and `tool_response`; shell
-  commands arrive as `Bash` and file edits as `apply_patch`. Codex asks you to trust a new hook before it runs
-  (`/hooks` inside Codex) and remembers the trust by the hook's hash, so a hook command that changes needs
-  trusting again. Project hooks load only when the project's `.codex/` folder is trusted.
+  commands arrive as `Bash` and file edits as `apply_patch`. Codex runs a project hook only after you review
+  it once (`/hooks` inside Codex) and remembers that by the hook's hash, so a hook command that changes needs
+  reviewing again. Codex loads a project's `.codex/` config, hooks included, only in a trusted project.
 - Cursor (`.cursor/hooks.json`) sends `preToolUse` and `postToolUse` with `conversation_id` (used as the
   session), `cwd`, `tool_name`, `tool_input`, `tool_use_id` and, after the call, `tool_output`; its tools are
   `Shell`, `Read`, `Write`, `Grep`, `Delete`, `Task` and `MCP:<name>`. Cursor's `preToolUse` is a permission
@@ -281,8 +285,9 @@ built from:
   changed, created or deleted are checkpointed. The cost is a stat of every project file per call; unchanged
   files are not read again. The same 20 MB and 20,000-file limits apply.
 - Verified so far: the hook driven by the payloads in the vendors' documentation, in `tests/test_agents.py`
-  and through the installed binary in `tests/test_installed.py`. Not yet in a live Codex or Cursor session.
-  If a real session sends something else, open an issue with the payload (`replay --step N` prints what
+  and through the installed binary in `tests/test_installed.py`. The Codex and Cursor hooks were also verified
+  in a live session on 2026-11-18 (Codex 0.170.0, Cursor 2026.11.17-f532c45), see `harness/live/` and
+  [docs/live-verification.md](docs/live-verification.md). If a real session sends something else, open an issue with the payload (`replay --step N` prints what
   was recorded).
 
 ## Gemini CLI, Copilot CLI, Droid and Qwen Code hooks
@@ -296,8 +301,11 @@ rewindagents uninstall --agent qwen     # same flags as install, for every agent
 ```
 
 These are built from the vendors' hook documentation (read 2026-11-12, quoted with URLs in
-`src/rewindagents/agents.py`) and tested with the documented payloads, not yet in a live session of any of
-them. As for Codex and Cursor, the hook never reads a file path out of these payloads: the project is saved
+`src/rewindagents/agents.py`) and tested with the documented payloads. The Gemini CLI and Copilot CLI hooks
+were also verified in a live session on 2026-11-18 (Gemini CLI 0.68.0, Copilot CLI 1.0.114). The Droid and
+Qwen Code hooks are not yet in a live session: both CLIs ran, but without a model plan or API key they made no
+tool call (`harness/live/`, [docs/live-verification.md](docs/live-verification.md)). Gemini CLI and Copilot CLI
+run a project's hooks only in a folder you have trusted, so trust the project when the CLI asks. As for Codex and Cursor, the hook never reads a file path out of these payloads: the project is saved
 before every call and scanned after it, except around the tools each agent's docs name as read-only, which
 are recorded but not scanned.
 
@@ -737,7 +745,8 @@ rewindagents verify --head <pinned-hash>
 
 ## Roadmap
 
-- Run the Codex and Cursor hooks in live sessions and keep the real payloads as test fixtures
+- Run the Droid and Qwen Code hooks in live sessions once a model plan or API key is available
+  (`harness/live/run.py --agent droid --agent qwen`), and keep the real payloads as test fixtures
 - Fork and compare, next: saved starting points (a step plus the check that judges it) and re-running one across
   agents on your machine. See `ux-review/ROADMAP.md`.
 - A paid Cloud tier for teams, opt-in, that the local tool never needs (a shared page per comparison, saved

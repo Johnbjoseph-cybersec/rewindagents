@@ -5,6 +5,32 @@ and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html). 
 minor version may change behaviour; every release is a git tag `vX.Y.Z` that equals `rewindagents.__version__`,
 and only a published GitHub release publishes to PyPI (`.github/workflows/publish.yml` refuses a mismatched tag).
 
+## [Unreleased]
+
+No change to the CLI, the exit codes, the hooks or the on-disk format.
+
+### Added
+- Live verification of the agent hooks (`harness/live/`, method in `docs/live-verification.md`). On 2026-11-18
+  the harness drove each agent's real CLI in a scratch project: the Claude Code (2.1.294), Codex (0.170.0),
+  Cursor (2026.11.17-f532c45), Gemini CLI (0.68.0) and Copilot CLI (1.0.114) hooks recorded a real tool call
+  before and after, and `rewind 0 --dry-run` printed a restore plan (`VERIFIED_LIVE`). Droid (1.14.0) and Qwen
+  Code (0.28.0) ran but, signed in with no model plan or API key, made no tool call (`RAN_NO_LOG`), so they are
+  still tested with the documented payloads only. Evidence: `harness/live/evidence/*.json`.
+- `tests/live_evidence.py`: the README, `agents.py` and the site's live-status sentences are checked against
+  those evidence files in both directions (a `VERIFIED_LIVE` agent must be called verified live, with the
+  date, and never "not yet live"; any other agent must be called not yet live and never live).
+
+### Changed
+- README, docs page and homepage: the live status per agent follows the evidence, with the setup a user needs:
+  Gemini CLI and Copilot CLI run a project's hooks only in a trusted folder; Codex runs a project hook only
+  after you review it once (`/hooks`) and loads project config only in a trusted project.
+- Harness fixes found in the live run: stdin is closed for the agent (`codex exec` otherwise waits on it);
+  Codex runs with `--trust`, `--dangerously-bypass-hook-trust` (the scratch project only) and
+  `--skip-git-repo-check`, and `-s workspace-write` in place of the removed `--full-auto`; Gemini CLI runs with
+  `GEMINI_CLI_TRUST_WORKSPACE=true` (`--skip-trust` skips project hooks); Copilot CLI runs with
+  `--trust-folder`; the hard timeout per agent is 300 s instead of 120 s (Gemini API 503 retries pushed a passing
+  run past 120 s).
+
 ## [1.1.1] - 2026-11-18
 
 No change to the CLI, the hooks or the on-disk format: this release is about where you can get it.

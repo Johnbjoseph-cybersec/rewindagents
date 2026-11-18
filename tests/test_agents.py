@@ -22,6 +22,8 @@ sys.path.insert(0, str(SRC))
 
 from rewindagents import agents, hook, read, rewind  # noqa: E402
 from rewindagents.cli import main  # noqa: E402
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import live_evidence  # noqa: E402
 
 ROOT = SRC.parent
 # A POSIX-shaped interpreter path, used where a test means "assume the interpreter is POSIX": the real
@@ -310,8 +312,9 @@ class TestDocs(unittest.TestCase):
     def test_the_module_cites_the_vendor_docs_and_the_date_they_were_read(self):
         doc = agents.__doc__
         for s in (agents.CURSOR_DOCS, agents.CODEX_DOCS, agents.DOCS_READ, "preToolUse", "postToolUse", "tool_output",
-                  "conversation_id", "apply_patch", "tool_response", "not yet run inside a live"):
+                  "conversation_id", "apply_patch", "tool_response", "harness/live/evidence"):
             self.assertIn(s, doc, s)
+        self.assertEqual(live_evidence.mismatches(doc, live_evidence.load()), [])
 
     def test_readme_describes_the_hooks_as_the_code_has_them(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
@@ -322,7 +325,11 @@ class TestDocs(unittest.TestCase):
         for tool in sorted(agents.AGENTS["cursor"].read_only | agents.AGENTS["codex"].read_only):
             self.assertIn("`%s`" % tool, readme, "the README names every tool the hook does not scan around")
         low = readme.lower()
-        self.assertIn("not yet in a live", low, "the README says the Codex and Cursor hooks have not run in a live session")
+        # live status follows harness/live/evidence/*.json in both directions (tests/live_evidence.py)
+        evidence = live_evidence.load()
+        self.assertEqual(live_evidence.mismatches(readme, evidence), [])
+        self.assertEqual(live_evidence.versions_missing(readme, evidence), [],
+                         "the README names the CLI version each live run used")
         self.assertNotRegex(low, r"planned:\s*hooks for codex", "the hooks exist; the README must not call them planned")
         for line in readme.splitlines():
             if "planned" in line.lower():
