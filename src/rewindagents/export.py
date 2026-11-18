@@ -216,9 +216,13 @@ def scrub(text: str, roots: list[str]) -> str:
     a Cursor working_directory) becomes `.`. A longer path that only starts with the root is left alone."""
     for root in roots:
         for r in ospaths.forms(root):   # a Windows root: C:\proj\a.py and C:/proj/a.py
-            for sep in ospaths.seps(r):
-                text = text.replace(r + sep, "")
-            text = re.sub(r"(?<![\w.-])" + re.escape(r) + r"(?![\w.-])", ".", text)
+            spelled = [(r, ospaths.seps(r))]
+            if "\\" in r:               # ...and inside a JSON-shown input, where each \ prints as \\
+                spelled.append((r.replace("\\", "\\\\"), ("\\\\", "/")))
+            for form, seps in spelled:
+                for sep in seps:
+                    text = text.replace(form + sep, "")
+                text = re.sub(r"(?<![\w.-])" + re.escape(form) + r"(?![\w.-])", ".", text)
     return text
 
 
@@ -383,7 +387,7 @@ def export(log_path: str | Path, session: str | None = None, out: str | Path | N
     path = Path(out) if out else rewind.project_root(log_path) / ".rewindagents" / f"replay-{data['session']}.html"
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(f".{path.name}.rewindagents.tmp")
-    tmp.write_text(page, encoding="utf-8")
+    tmp.write_text(page, encoding="utf-8", newline="")   # the same bytes on every OS: no \r\n on Windows
     os.replace(tmp, path)
     data["out"], data["bytes"] = str(path), len(page.encode("utf-8"))
     return data
