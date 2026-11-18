@@ -372,8 +372,9 @@ stdout; without `--json` the output is unchanged): [docs/json-output.md](docs/js
   the official Claude Code marketplace. See [docs/plugin.md](docs/plugin.md).
 - **VS Code / Cursor extension** (`vscode/`): the session timeline in the editor, with each step's diff,
   preview rewind and rewind to here. It calls the CLI's `--json` commands and has no runtime npm
-  dependencies. Build the `.vsix` from `vscode/`; it is not on the VS Code Marketplace or Open VSX yet
-  and has not yet been clicked through in a real VS Code window. See [docs/vscode.md](docs/vscode.md).
+  dependencies. Install from the VS Code Marketplace: `code --install-extension rewindagents.rewindagents`
+  (or search "rewindagents" in the Extensions view). Not yet on Open VSX, and not yet clicked through by hand
+  in a real VS Code window. See [docs/vscode.md](docs/vscode.md).
 - Homebrew: `brew install johnbjoseph-cybersec/rewindagents/rewindagents` (tap
   [homebrew-rewindagents](https://github.com/Johnbjoseph-cybersec/homebrew-rewindagents); its CI installs and
   tests the formula on macOS and Linux). npm: `npx rewindagents` (a launcher that installs the matching PyPI

@@ -108,7 +108,7 @@ environment fluke. The `package` script therefore runs `mkdir -p dist &&` first;
 
 ```
 vscode/
-  package.json          extension manifest (publisher is a placeholder -- see below)
+  package.json          extension manifest (publisher: rewindagents)
   LICENSE                Apache-2.0, identical to the repo root's
   .vscodeignore          keeps src/, tests/, tsconfig.json, vitest.config.ts, *.map out of the .vsix
   tsconfig.json
@@ -130,13 +130,11 @@ vscode/
 
 ## Honest status
 
-- **Packaged**: `vscode/dist/rewindagents-0.0.1.vsix` exists and was produced by `npm run package`
-  (`vsce package --out dist/`) against this sprint's compiled `out/`, from a clean `npm ci`.
-- **Not published to any marketplace.** `publisher` in `package.json` is the literal placeholder
-  string `rewindagents-publisher-placeholder` -- it is not a registered Visual Studio Marketplace
-  or Open VSX publisher id. Installing the `.vsix` (VS Code: Extensions view -> `...` menu ->
-  "Install from VSIX...", or `code --install-extension dist/rewindagents-0.0.1.vsix`) works
-  without one; publishing to a marketplace would not, until a real publisher is registered.
+- **Published** on the VS Code Marketplace as `rewindagents.rewindagents` 1.1.0 (publisher
+  `rewindagents`, 2026-11-18). Checked the same day: `code --extensions-dir <empty dir>
+  --install-extension rewindagents.rewindagents` installed `rewindagents.rewindagents@1.1.0` from the
+  Marketplace, and the item page answered 200. Not yet on Open VSX. `npm run package` builds
+  `vscode/dist/rewindagents-<version>.vsix`.
 - **Not yet tested inside a live VS Code host.** Every test in `tests/` runs under `vitest` in
   plain Node, against either a mocked `exec` or (in `cli.real-cli.test.ts`) the real
   `rewindagents` CLI spawned as a child process -- none of them load the `vscode` module or launch
