@@ -84,9 +84,9 @@
   "devDependencies": {
     "@types/node": "^20.14.0",
     "@types/vscode": "^1.85.0",
-    "@vscode/vsce": "2.32.0",
+    "@vscode/vsce": "3.9.2",
     "typescript": "^5.4.5",
-    "vitest": "^1.6.0"
+    "vitest": "^4.1.12"
   },
   "icon": "icon.png",
   "homepage": "https://github.com/Johnbjoseph-cybersec/rewindagents",

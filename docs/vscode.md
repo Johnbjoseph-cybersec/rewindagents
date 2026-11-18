@@ -92,16 +92,16 @@ one file that does not mock it: it spawns the actual `rewindagents` CLI from thi
 npm ci
 npm run compile   # tsc -> out/
 npm test          # vitest; fixture-driven tests plus the real-CLI suite (needs python3, no VS Code)
-npm run package   # mkdir -p dist && vsce package --out dist/ -> dist/rewindagents-0.0.1.vsix
+npm run package   # mkdir -p dist && vsce package --out dist/ -> dist/rewindagents-<version>.vsix
 ```
 
 ### Packaging quirk recorded for whoever runs this next
 
-`@vscode/vsce@2.32.0` (pinned exactly in `devDependencies`, not a caret range) with
+`@vscode/vsce@3.9.2` (pinned exactly in `devDependencies`, not a caret range; first seen on 2.32.0) with
 `--out dist/` and no pre-existing `dist/` directory writes a file literally named `dist`
 (not `dist/<name>.vsix`), then fails with `ENOTDIR: not a directory, stat 'dist/'` on its own
-final step. Reproduced by hand, twice, from a directory with no `dist/` anything -- not an
-environment fluke. The `package` script therefore runs `mkdir -p dist &&` first; running the bare
+final step. Reproduced by hand, twice on 2.32.0 and again on 3.9.2, from a directory with no
+`dist/` anything -- not an environment fluke. The `package` script therefore runs `mkdir -p dist &&` first; running the bare
 `npx vsce package --out dist/` without that directory already existing reproduces the failure.
 
 ## Project layout

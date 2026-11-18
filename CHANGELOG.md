@@ -5,6 +5,14 @@ and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html). 
 minor version may change behaviour; every release is a git tag `vX.Y.Z` that equals `rewindagents.__version__`,
 and only a published GitHub release publishes to PyPI (`.github/workflows/publish.yml` refuses a mismatched tag).
 
+## [Unreleased]
+
+### Security
+- VS Code extension dev-only tooling upgraded to clear 17 Dependabot alerts (all development scope):
+  vitest 1.6.1 -> 4.1.12 (drops tinypool and esbuild, vite 5.4.21 -> 8.3.8) and `@vscode/vsce` 2.32.0 -> 3.9.2
+  (pinned exactly; markdown-it 12.3.2 -> 14.3.3, linkify-it 3.0.3 -> 5.0.2). No test or test config changed.
+  The published extension has no runtime dependencies, so the .vsix contents are unaffected.
+
 ## [1.1.1] - 2026-11-18
 
 No change to the CLI, the hooks or the on-disk format: this release is about where you can get it.

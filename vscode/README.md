@@ -93,7 +93,7 @@ npm test          # vitest; fixture-driven tests plus the real-CLI suite (needs 
 npm run package   # mkdir -p dist && vsce package --out dist/ -> dist/rewindagents-<version>.vsix
 ```
 
-`npm run package` pre-creates `dist/` itself: `@vscode/vsce@2.32.0` (pinned exactly) writes a
+`npm run package` pre-creates `dist/` itself: `@vscode/vsce@3.9.2` (pinned exactly) writes a
 file literally named `dist` instead of `dist/<name>.vsix` and then fails if that directory does
 not already exist when `--out dist/` is given -- see [`docs/vscode.md`](https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/docs/vscode.md).
 
