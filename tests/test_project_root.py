@@ -215,8 +215,12 @@ class TestStepDiff(unittest.TestCase):
         work = self.d / "w"
         work.mkdir()
         (work / "app.py").write_text("a\nB\n", newline="")
-        r = subprocess.run(["git", "apply", "-R", "-"], input=patch, text=True, cwd=work, capture_output=True)
-        self.assertEqual(r.returncode, 0, r.stderr)
+        # The patch goes in as bytes: a text-mode pipe on Windows writes every \n as \r\n, and git then
+        # finds no matching context. core.autocrlf=false: Git for Windows is installed with it on, and
+        # git apply would then write the patched files with \r\n.
+        r = subprocess.run(["git", "-c", "core.autocrlf=false", "apply", "-R", "-"], input=patch.encode("utf-8"),
+                           cwd=work, capture_output=True)
+        self.assertEqual(r.returncode, 0, r.stderr.decode("utf-8", "replace"))
         self.assertEqual((work / "app.py").read_text(), "a\nb\n")
 
     def test_diff_needs_a_step(self):

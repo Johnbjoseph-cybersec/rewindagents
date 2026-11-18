@@ -30,7 +30,7 @@ def recorded(d, session="s1"):
 def tree(root):
     """{relative path: text} for the project's files outside .rewindagents/."""
     root = Path(root)
-    return {str(p.relative_to(root)): p.read_text() for p in sorted(root.rglob("*"))
+    return {p.relative_to(root).as_posix(): p.read_text() for p in sorted(root.rglob("*"))
             if p.is_file() and ".rewindagents" not in p.relative_to(root).parts}
 
 
@@ -63,8 +63,9 @@ class TestRoundTrip(unittest.TestCase):
                              [rewind.summary(s, root=Path(src).resolve()) for s in src_steps])
             # every path the records name now lives under the destination, none under the source
             text = dest_log.read_text()
-            self.assertNotIn(src, text)
-            self.assertNotIn(str(Path(src).resolve()), text)
+            for spelled in (src, str(Path(src).resolve())):
+                self.assertNotIn(spelled, text)
+                self.assertNotIn(json.dumps(spelled)[1:-1], text)   # as a JSON log spells it (Windows: \\)
             # rewinding in the destination rebuilds the files there as they were after each step
             self.assertEqual(tree(dst), {})
             rewind.rewind(dest_log, 2, "s1")

@@ -504,7 +504,22 @@ def run_one(scn: Scenario, tool: Tool, verbose: bool = False) -> dict:
             print(json.dumps(res, indent=1), file=sys.stderr)
         return res
     finally:
-        shutil.rmtree(tmp, ignore_errors=True)
+        remove_tree(tmp)
+
+
+def remove_tree(path: Path) -> None:
+    """Delete a scenario's temp dir, best effort. On Windows git leaves its object files read-only, and
+    rmtree cannot delete a read-only file there: clear the flag and retry (the shutil docs' own recipe)."""
+    def writable_then_retry(func, p, _exc):
+        os.chmod(p, stat.S_IWRITE)
+        func(p)
+    try:
+        if sys.version_info >= (3, 12):
+            shutil.rmtree(path, onexc=writable_then_retry)
+        else:
+            shutil.rmtree(path, onerror=writable_then_retry)
+    except OSError:
+        pass
 
 
 def outcome(r: dict) -> str:

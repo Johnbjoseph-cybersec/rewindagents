@@ -72,7 +72,8 @@ def repo_text_files():
             path = os.path.join(dirpath, name)
             try:
                 with open(path, encoding="utf-8") as f:
-                    yield os.path.relpath(path, ROOT), f.read()
+                    # '/'-joined on every OS: HOST_ALLOWED and the other callers name paths that way
+                    yield os.path.relpath(path, ROOT).replace(os.sep, "/"), f.read()
             except (UnicodeDecodeError, OSError):
                 continue
 

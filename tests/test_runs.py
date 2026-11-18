@@ -267,8 +267,12 @@ class TestCompare(unittest.TestCase):
         patch = "".join(out[1:])
         self.assertIn("diff --git a/calc.py b/calc.py", patch)
         self.assertIn("extra.txt", patch)
-        p = subprocess.run(["git", "-C", str(self.s.root), "apply", "-"], input=patch, text=True, capture_output=True)
-        self.assertEqual(p.returncode, 0, p.stderr)
+        # The patch goes in as bytes: a text-mode pipe on Windows writes every \n as \r\n, and git then
+        # finds no matching context. core.autocrlf=false: Git for Windows is installed with it on, and
+        # git apply would then write the patched files with \r\n.
+        p = subprocess.run(["git", "-C", str(self.s.root), "-c", "core.autocrlf=false", "apply", "-"],
+                           input=patch.encode("utf-8"), capture_output=True)
+        self.assertEqual(p.returncode, 0, p.stderr.decode("utf-8", "replace"))
         for rel in ("calc.py", "extra.txt", "test_calc.py"):
             self.assertEqual((self.s.root / rel).read_bytes(), (self.b / rel).read_bytes(), rel)
 

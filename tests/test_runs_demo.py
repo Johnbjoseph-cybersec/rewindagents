@@ -27,6 +27,9 @@ def read(*parts):
 
 
 @unittest.skipUnless(shutil.which("git") and shutil.which("sh"), "needs git and sh")
+@unittest.skipIf(os.name == "nt", "try-runs.sh is a POSIX sh demo (mktemp, /tmp paths, python3) whose POSIX "
+                                  "output the site quotes; Windows has no POSIX sh (windows-latest: the runner's "
+                                  "sh exited 2 on it)")
 class TestRunsDemo(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
