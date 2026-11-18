@@ -1,0 +1,10 @@
+exit codes + stdout old/new equal: True
+records: 12 12 structurally equal: True
+verify old: (0, 'OK: 12 records, chain intact') new: (0, 'OK: 12 records, chain intact')
+stderr heads equal: True
+rewind 3 rc old/new: 1 1
+restored (f3 back, .env back, made.txt present, run.sh mode, f4) old/new: [True, True, False, '0o755', 'x = 4\n'] [True, True, False, '0o755', 'x = 4\n']
+restored trees identical: True (24 files)
+pre-rewind trees identical: True
+RESULT: IDENTICAL
+rewind text identical: True
