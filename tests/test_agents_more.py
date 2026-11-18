@@ -9,6 +9,7 @@ with URLs and the date read). They are not recordings of live sessions; the READ
 import io
 import json
 import os
+import shutil
 import subprocess
 import sys
 import unittest
@@ -25,6 +26,22 @@ from rewindagents.cli import main  # noqa: E402
 
 ROOT = SRC.parent
 TS = "2026-11-12T10:00:00Z"
+
+
+def bash() -> str:
+    """The bash that runs a hook command. On Windows that is Git Bash (what Claude Code uses there, and a shell
+    the Windows command form is written to run under): a bare "bash" there resolves to System32\\bash.exe, the
+    WSL launcher, before PATH is searched, and with no Linux distribution installed it prints a UTF-16 notice
+    and exits 1 (windows-latest CI). Git Bash is found next to git.exe, or on PATH outside System32."""
+    if os.name != "nt":
+        return "bash"
+    git = shutil.which("git")
+    candidates = [Path(git).parent.parent / "bin" / "bash.exe", Path(git).parent / "bash.exe"] if git else []
+    candidates += [Path(d, "bash.exe") for d in os.environ.get("PATH", "").split(os.pathsep) if d]
+    for c in candidates:
+        if c.is_file() and "system32" not in str(c).lower():
+            return str(c)
+    raise unittest.SkipTest("no Git Bash on this Windows machine (only the WSL launcher, or no bash at all)")
 
 
 def gemini(cwd, event, tool, tool_input, tool_response=None, session="gem-1"):
@@ -168,7 +185,7 @@ class Shared:
             # form (no "-m"); "hook --agent X" is the part both forms share (R94).
             self.assertIn("hook --agent %s" % self.agent, cmd)
             Path(d, "f.txt").write_text("1\n")
-            p = subprocess.run(["bash", "-c", cmd], cwd=d, capture_output=True, text=True,
+            p = subprocess.run([bash(), "-c", cmd], cwd=d, capture_output=True, text=True,
                                input=json.dumps(self.pre(d, self.shell, {"command": "ls"})))
             self.assertEqual((p.returncode, p.stdout), (0, self.reply_pre), p.stderr)
             recs = read(log(d))
@@ -294,9 +311,9 @@ class TestCopilot(Shared, unittest.TestCase):
         self.assertEqual(cmd, "/nonexistent/python3 -m rewindagents hook --agent copilot || true")
         self.assertFalse(plain.endswith("|| true"), "only fail-closed agents get the guard")
         payload = json.dumps(copilot("/tmp", "PreToolUse", "bash", {"command": "ls"}))
-        p = subprocess.run(["bash", "-c", cmd], input=payload, capture_output=True, text=True)
+        p = subprocess.run([bash(), "-c", cmd], input=payload, capture_output=True, text=True)
         self.assertEqual((p.returncode, p.stdout), (0, ""), "missing interpreter: still exit 0, still no output")
-        p = subprocess.run(["bash", "-c", cmd[: -len(" || true")]], input=payload, capture_output=True, text=True)
+        p = subprocess.run([bash(), "-c", cmd[: -len(" || true")]], input=payload, capture_output=True, text=True)
         self.assertNotEqual(p.returncode, 0, "without the guard the same command would deny the call")
         self.assertEqual([a for a in sorted(agents.AGENTS) if agents.AGENTS[a].fail_closed], ["copilot"])
 
