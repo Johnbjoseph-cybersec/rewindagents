@@ -5,6 +5,22 @@ and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html). 
 minor version may change behaviour; every release is a git tag `vX.Y.Z` that equals `rewindagents.__version__`,
 and only a published GitHub release publishes to PyPI (`.github/workflows/publish.yml` refuses a mismatched tag).
 
+## [Unreleased]
+
+### Fixed
+- Windows: `bundle` recognises every spelling of the project directory the records use (backslashes,
+  forward slashes, any letter case, a temp dir's 8.3 short name such as `C:\Users\RUNNER~1`). Before, only
+  the resolved path counted, so `import` could leave recorded paths pointing at the source project and a
+  later `rewind` wrote there. macOS and Linux spellings are matched exactly as before.
+- Windows: the `export` page no longer shows the project's location inside step inputs, where JSON prints
+  each `\` of `C:\proj` doubled. The page is written with `\n` line endings on every OS, so the byte count
+  `export` reports is the file's size.
+- `init --yes` and `install` remove a stale Copilot hook whichever key it sits under (`bash` or
+  `powershell`). A stale Windows-path hook under `bash` was reported replaced but stayed in the file.
+- Each of the 87 test failures on windows-latest CI (run 44262918115) has a fix or a skip with a stated
+  reason, listed one by one in `docs/windows.md`. None of it has run on Windows yet; the Windows CI job
+  stays non-blocking until a green Windows run is seen.
+
 ## [1.1.1] - 2026-11-18
 
 No change to the CLI, the hooks or the on-disk format: this release is about where you can get it.
