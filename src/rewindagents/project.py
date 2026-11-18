@@ -15,7 +15,10 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Mapping
+
+TYPE_CHECKING = False   # typing is only for annotations; importing it costs time at every hook start
+if TYPE_CHECKING:
+    from typing import Mapping
 
 STORE = ".rewindagents"
 

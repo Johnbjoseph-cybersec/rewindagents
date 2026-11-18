@@ -17,20 +17,25 @@ deleted script comes back executable.
 """
 from __future__ import annotations
 
-import hashlib
 import json
 import os
-import subprocess
+import stat
+import threading
 from pathlib import Path
-from typing import Any
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from typing import Any
 
 from .hook import MAX_CHECKPOINT_BYTES, checkpoint
+from .log import sha256
 
 SKIP_DIRS = {".git", ".rewindagents", "node_modules", ".venv", "venv", "__pycache__"}
 MAX_SCAN_FILES = 20000
 
 
 def _ls(root: Path, *args: str) -> list[str] | None:
+    import subprocess   # only a Bash call scans; the Read/Edit hook never needs it
     try:
         p = subprocess.run(["git", "-C", str(root), "ls-files", "-z", *args], capture_output=True, timeout=20)
     except (OSError, subprocess.TimeoutExpired):
@@ -40,28 +45,59 @@ def _ls(root: Path, *args: str) -> list[str] | None:
     return [r for r in p.stdout.decode("utf-8", "surrogateescape").split("\0") if r]
 
 
+def _git_lists(root: Path, ignored_files: bool) -> list[list[str] | None]:
+    """The `git ls-files` outputs project_files needs, run at the same time: each is a process start plus a read
+    of the index, and they do not depend on one another."""
+    argsets = [("--cached",), ("--others", "--exclude-standard")]
+    if ignored_files:
+        argsets.append(("--others", "--ignored", "--exclude-standard", "--directory"))
+    results: list[list[str] | None] = [None] * len(argsets)
+
+    def work(i: int) -> None:
+        results[i] = _ls(root, *argsets[i])
+
+    threads = [threading.Thread(target=work, args=(i,)) for i in range(1, len(argsets))]
+    for t in threads:
+        t.start()
+    work(0)
+    for t in threads:
+        t.join()
+    return results
+
+
+def _under_skip(rel: str) -> bool:
+    """True when a git-style (forward-slash) relative path has a SKIP_DIRS name in any position."""
+    return not SKIP_DIRS.isdisjoint(rel.split("/"))
+
+
 def project_files(root: Path, ignored_files: bool = False) -> list[str] | None:
     """Relative paths of the project's regular files, or None when there are more than MAX_SCAN_FILES.
 
     ignored_files=True adds the files git ignores one by one, never the contents of a directory it ignores as
     a whole, nor anything under SKIP_DIRS (the Bash scan uses this; `fork` does not, as a fresh worktree
     would not have them)."""
-    rels = _ls(root, "--cached")
+    found = _scan(root, ignored_files)
+    return None if found is None else [r for r, _ in found]
+
+
+def _scan(root: Path, ignored_files: bool) -> list[tuple[str, os.stat_result]] | None:
+    """project_files with each file's lstat result (one stat call per file, which also tells a symlink from a
+    regular file), sorted by path."""
+    lists = _git_lists(root, ignored_files)
+    rels = lists[0]
     if rels is not None:
         # untracked files under SKIP_DIRS (a __pycache__ or venv the .gitignore does not name) are rebuilt
         # output, as in the walk below: scanning them turned every `python` command into .pyc "changes"
-        others = _ls(root, "--others", "--exclude-standard")
-        rels += [r for r in others or [] if not set(Path(r).parts) & SKIP_DIRS]
+        rels += [r for r in lists[1] or [] if not _under_skip(r)]
     if rels is not None and ignored_files:
-        extra = _ls(root, "--others", "--ignored", "--exclude-standard", "--directory")
-        rels += [r for r in extra or [] if not r.endswith("/") and not set(Path(r).parts) & SKIP_DIRS]
+        rels += [r for r in lists[2] or [] if not r.endswith("/") and not _under_skip(r)]
     if rels is None:
         rels = []
         for dirpath, dirnames, filenames in os.walk(root):
             dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
             for f in filenames:
                 # forward-slash, like the git-ls-files branch above and rewind.relative()'s as_posix():
-                # on Windows os.path.relpath returns '\'-separated paths, which would otherwise be a
+                # on Windows os.path.relpath returns '\\'-separated paths, which would otherwise be a
                 # different dict key from the same file's path elsewhere in this project (runs.start_state
                 # keys one dict partly from this, partly from rewind.relative()). Replacing the literal
                 # backslash (not os.sep, which is "/" here on POSIX and would make this a no-op even when
@@ -71,14 +107,21 @@ def project_files(root: Path, ignored_files: bool = False) -> list[str] | None:
                 if len(rels) > MAX_SCAN_FILES:
                     return None
     out = []
+    base = str(root)
+    lstat, S_ISREG = os.lstat, stat.S_ISREG
     for r in rels:
-        if Path(r).parts[0] in (".git", ".rewindagents"):
+        if r.split("/", 1)[0] in (".git", ".rewindagents"):
             continue
-        full = root / r
-        if full.is_symlink() or not full.is_file():
+        try:
+            st = lstat(os.path.join(base, r))
+        except OSError:
             continue
-        out.append(r)
-    return None if len(out) > MAX_SCAN_FILES else sorted(out)
+        if S_ISREG(st.st_mode):      # a symlink's lstat is S_IFLNK, a directory (submodule) S_IFDIR: both skipped
+            out.append((r, st))
+    if len(out) > MAX_SCAN_FILES:
+        return None
+    out.sort(key=lambda t: t[0])
+    return out
 
 
 def _load_index(store: Path) -> dict:
@@ -89,7 +132,9 @@ def _load_index(store: Path) -> dict:
         return {}
 
 
-def _save_index(store: Path, idx: dict) -> None:
+def _save_index(store: Path, idx: dict, old: dict | None = None) -> None:
+    if old is not None and idx == old:      # nothing changed since it was read: no need to write 10k entries again
+        return
     tmp = store / f".index.{os.getpid()}.tmp"
     tmp.write_text(json.dumps(idx), encoding="utf-8")
     os.replace(tmp, store / "index.json")
@@ -100,18 +145,20 @@ def snapshot(root: Path, store: Path, save: bool) -> dict[str, Any] | None:
 
     With save=True every file's bytes are put in the object store (unchanged files are already there).
     """
-    rels = project_files(root, ignored_files=True)
-    if rels is None:
+    found = _scan(root, ignored_files=True)
+    if found is None:
         return None
     idx, new_idx = _load_index(store), {}
     objects = store / "objects"
-    out: dict[str, Any] = {}
-    for r in rels:
-        full = root / r
+    have: set[str] = set()
+    if save:        # one directory read instead of a stat per file to learn which objects are stored
         try:
-            st = full.stat()
+            have = set(os.listdir(objects))
         except OSError:
-            continue
+            pass
+    base = str(root)
+    out: dict[str, Any] = {}
+    for r, st in found:
         if st.st_size > MAX_CHECKPOINT_BYTES:
             out[r] = {"skipped": f"larger than {MAX_CHECKPOINT_BYTES} bytes",
                       "stat": [st.st_mtime_ns, st.st_size]}
@@ -120,14 +167,15 @@ def snapshot(root: Path, store: Path, save: bool) -> dict[str, Any] | None:
         cached = idx.get(r)
         sha = cached[3] if (isinstance(cached, list) and len(cached) == 4
                             and cached[:3] == [st.st_mtime_ns, st.st_size, mode]) else None
-        if sha and (not save or (objects / sha).is_file()):
+        if sha and (not save or sha in have):
             out[r] = sha
         else:
+            full = Path(base, r)
             try:
                 if save:
                     sha = checkpoint(full, objects).get("sha256")
                 else:
-                    sha = hashlib.sha256(full.read_bytes()).hexdigest()
+                    sha = sha256(full.read_bytes()).hexdigest()
             except OSError:
                 continue
             if sha is None:
@@ -135,7 +183,7 @@ def snapshot(root: Path, store: Path, save: bool) -> dict[str, Any] | None:
             out[r] = sha
         new_idx[r] = [st.st_mtime_ns, st.st_size, mode, out[r]]
         out[r] = "%s:%o" % (out[r], mode)
-    _save_index(store, new_idx)
+    _save_index(store, new_idx, idx)
     return out
 
 
@@ -149,7 +197,7 @@ def _key(payload: dict) -> str:
     tid = payload.get("tool_use_id")
     basis = str(tid) if tid else json.dumps([payload.get("session_id"), payload.get("tool_input")],
                                             sort_keys=True, default=str)
-    return hashlib.sha256(basis.encode("utf-8")).hexdigest()[:32]
+    return sha256(basis.encode("utf-8")).hexdigest()[:32]
 
 
 def before(payload: dict, root: Path, store: Path) -> dict:
