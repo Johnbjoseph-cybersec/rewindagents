@@ -114,9 +114,8 @@ Status on 2026-11-18:
   (`brew install johnbjoseph-cybersec/rewindagents/rewindagents`). That repository's CI installs the formula
   from source and runs `brew test` on `macos-latest` and `ubuntu-latest`; both passed and printed
   `rewindagents 1.1.0`.
-- npm: not published. `npm pack` of `packaging/npm` and `npx ./rewindagents-1.1.0.tgz --version` print
-  `rewindagents 1.1.0` (the shim installed 1.1.0 from PyPI into its own venv), but no `rewindagents` package
-  is on the npm registry yet.
+- npm: published as `rewindagents` 1.1.0 (`npx rewindagents`). Checked from an empty home and npm cache:
+  `npx --yes rewindagents --version` printed `rewindagents 1.1.0`.
 
 ## What neither channel does
 

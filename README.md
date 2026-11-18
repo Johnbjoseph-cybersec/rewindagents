@@ -376,8 +376,8 @@ stdout; without `--json` the output is unchanged): [docs/json-output.md](docs/js
   and has not yet been clicked through in a real VS Code window. See [docs/vscode.md](docs/vscode.md).
 - Homebrew: `brew install johnbjoseph-cybersec/rewindagents/rewindagents` (tap
   [homebrew-rewindagents](https://github.com/Johnbjoseph-cybersec/homebrew-rewindagents); its CI installs and
-  tests the formula on macOS and Linux). An npm shim is written (`packaging/npm/`) but not published yet. Both
-  wrap the PyPI package. See [docs/install-channels.md](docs/install-channels.md).
+  tests the formula on macOS and Linux). npm: `npx rewindagents` (a launcher that installs the matching PyPI
+  release into its own virtualenv; needs Python 3.10+). Both wrap the PyPI package. See [docs/install-channels.md](docs/install-channels.md).
 
 ## Replay, rewind, branch
 
