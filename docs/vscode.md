@@ -133,7 +133,9 @@ vscode/
 - **Published** on the VS Code Marketplace as `rewindagents.rewindagents` 1.1.0 (publisher
   `rewindagents`, 2026-11-18). Checked the same day: `code --extensions-dir <empty dir>
   --install-extension rewindagents.rewindagents` installed `rewindagents.rewindagents@1.1.0` from the
-  Marketplace, and the item page answered 200. Not yet on Open VSX. `npm run package` builds
+  Marketplace, and the item page answered 200. Also on Open VSX: namespace `rewindagents` granted
+  (EclipseFdn/open-vsx.org#15907) and `https://open-vsx.org/api/rewindagents/rewindagents` reports 1.1.0,
+  `verified: true` (checked 2026-11-18). `npm run package` builds
   `vscode/dist/rewindagents-<version>.vsix`.
 - **Not yet tested inside a live VS Code host.** Every test in `tests/` runs under `vitest` in
   plain Node, against either a mocked `exec` or (in `cli.real-cli.test.ts`) the real

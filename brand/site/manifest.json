@@ -193,7 +193,7 @@
   ],
   "diff_kb": 256,
   "diff_lines": 400,
-  "editors": "In VS Code, search \"rewindagents\" in the Extensions view: it shows the steps the hook recorded as a timeline in the editor.",
+  "editors": "In VS Code or Cursor, search \"rewindagents\" in the Extensions view: it shows the steps the hook recorded as a timeline in the editor.",
   "file_mb": 20,
   "file_tools": [
    "Write",
