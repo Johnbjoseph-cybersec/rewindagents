@@ -3,22 +3,19 @@
 import io
 import json
 import os
+import re
 import shlex
 import subprocess
 import sys
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from unittest import mock
 
 SRC = Path(__file__).resolve().parent.parent / "src"
 sys.path.insert(0, str(SRC))
 
 from rewindagents import agents, hook, init  # noqa: E402
 
-# A POSIX-shaped interpreter path, used where a test means "assume the interpreter is POSIX": the real
-# sys.executable is itself a Windows path on windows-latest CI, same stand-in test_windows_hook.py uses (R94).
-POSIX_PY = "/usr/bin/python3"
 
 
 def write_hooks(path: Path, name: str, commands: list[str]) -> None:
@@ -98,30 +95,30 @@ class StaleTest(unittest.TestCase):
         self.assertEqual(f.read_bytes(), before)
 
     def test_init_yes_replaces_the_stale_hook_in_every_config_shape_and_keeps_the_users_hooks(self):
-        # Patched to a POSIX stand-in for the whole subTest: `dead` below is built assuming a POSIX-shaped
-        # stale hook (it always was, on every OS: the dead interpreter is simulated, not real), and the
-        # replacement init.main() writes (through hook.hook_command()'s default python=sys.executable) must
-        # be computed from that same stand-in too, or the two sides compare a POSIX guess against whatever
-        # hook_command() would really take the Windows branch for on windows-latest CI (R94).
-        with mock.patch.object(sys, "executable", POSIX_PY):
-            for name in ("claude", "cursor", "copilot", "droid"):
-                ag = agents.AGENTS[name]
-                with self.subTest(agent=name):
-                    f = self.root / ag.settings
-                    dead = self.dead + (f" --agent {name}" if name != "claude" else "") + \
-                        (" || true" if ag.fail_closed else "")
-                    write_hooks(f, name, ["my-own-hook", dead])
-                    code, out = self.run_init(yes=True)
-                    self.assertEqual(code, 0, out)
-                    self.assertIn("replaced", self.line(out, name))
-                    self.assertIn(f"was stale: {self.gone} no longer exists", self.line(out, name))
-                    got = agents.commands_in(ag, f)
-                    self.assertEqual(set(got), set(ag.events + ag.also_post))
-                    for event, cmds in got.items():
-                        self.assertEqual(cmds, ["my-own-hook", hook.hook_command(name)], (name, event))
-                    self.assertEqual(hook.stale_hooks(f, name), [])
-                    code, out = self.run_init(yes=True)
-                self.assertIn("already there", self.line(out, name))
+        # The real interpreter, on every OS. `dead` is shaped like the interpreter path of this OS (a Windows
+        # path on Windows), and init replaces it with hook_command()'s form for this OS. (Patching
+        # sys.executable to /usr/bin/python3 here, tried for R94, made the replacement itself stale on
+        # Windows, where that file does not exist. The copilot failure it was meant to fix was a real bug:
+        # agents.uninstall looked only under the key install would pick, `powershell` for a Windows
+        # command, so a stale one under `bash` stayed.)
+        for name in ("claude", "cursor", "copilot", "droid"):
+            ag = agents.AGENTS[name]
+            with self.subTest(agent=name):
+                f = self.root / ag.settings
+                dead = self.dead + (f" --agent {name}" if name != "claude" else "") + \
+                    (" || true" if ag.fail_closed else "")
+                write_hooks(f, name, ["my-own-hook", dead])
+                code, out = self.run_init(yes=True)
+                self.assertEqual(code, 0, out)
+                self.assertIn("replaced", self.line(out, name))
+                self.assertIn(f"was stale: {self.gone} no longer exists", self.line(out, name))
+                got = agents.commands_in(ag, f)
+                self.assertEqual(set(got), set(ag.events + ag.also_post))
+                for event, cmds in got.items():
+                    self.assertEqual(cmds, ["my-own-hook", hook.hook_command(name)], (name, event))
+                self.assertEqual(hook.stale_hooks(f, name), [])
+                code, out = self.run_init(yes=True)
+            self.assertIn("already there", self.line(out, name))
 
     def test_a_stale_hook_next_to_a_runnable_other_one_is_removed_and_nothing_is_added(self):
         f = self.root / ".claude/settings.json"
@@ -148,7 +145,7 @@ class StaleTest(unittest.TestCase):
         self.assertEqual(code, 1, out)
         self.assertRegex(self.line(out, "claude"), r"claude\s+ok\s+\.claude/settings\.json$")
         self.assertRegex(self.line(out, "cursor"),
-                         rf"cursor\s+STALE\s+\.cursor/hooks\.json  \({self.gone} no longer exists\)$")
+                         rf"cursor\s+STALE\s+\.cursor/hooks\.json  \({re.escape(str(self.gone))} no longer exists\)$")
         self.assertRegex(self.line(out, "gemini"), r"gemini\s+no hook\s+")
         self.assertRegex(self.line(out, "qwen"), r"qwen\s+PARTIAL\s+")
         self.assertNotIn("codex", out)                    # no file, no line

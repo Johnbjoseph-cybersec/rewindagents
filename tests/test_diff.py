@@ -101,8 +101,12 @@ class TestDiff(unittest.TestCase):
     @unittest.skipUnless(shutil.which("git"), "git not installed")
     def test_git_apply_of_the_diff_does_what_rewind_does(self):
         _, patch, _ = cli("--log", self.log, "diff", "1")
-        r = subprocess.run(["git", "apply", "-"], input=patch, text=True, cwd=self.d, capture_output=True)
-        self.assertEqual(r.returncode, 0, r.stderr)
+        # The patch goes in as bytes: a text-mode pipe on Windows writes every \n as \r\n, and git then
+        # finds no matching context. core.autocrlf=false: Git for Windows is installed with it on, and
+        # git apply would then write the patched files with \r\n.
+        r = subprocess.run(["git", "-c", "core.autocrlf=false", "apply", "-"], input=patch.encode("utf-8"),
+                           cwd=self.d, capture_output=True)
+        self.assertEqual(r.returncode, 0, r.stderr.decode("utf-8", "replace"))
         got = {p: (self.d / p).read_text() if (self.d / p).exists() else None for p in ("app.py", "README", "new.py")}
         self.assertEqual(got, {"app.py": "a\nb\nc\n", "README": None, "new.py": None})
 

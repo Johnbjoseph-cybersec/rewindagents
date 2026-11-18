@@ -33,7 +33,9 @@ class Agent:
         inp = {"file_path": str(self.cwd / name), "content": text}
         hook.handle(self._p("PreToolUse", "Write", inp))
         (self.cwd / name).parent.mkdir(parents=True, exist_ok=True)
-        (self.cwd / name).write_text(text)
+        # An agent's Write tool puts `content` on disk byte for byte. write_text's defaults would not
+        # on Windows: newline=None turns every \n into \r\n and the locale codec is not UTF-8.
+        (self.cwd / name).write_text(text, encoding="utf-8", newline="")
         hook.handle(self._p("PostToolUse", "Write", inp, {"ok": True}))
 
     def bash(self, command, action=None, post=True):

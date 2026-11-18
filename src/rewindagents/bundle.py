@@ -39,6 +39,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import ntpath
 import os
 import re
 from pathlib import Path
@@ -91,6 +92,14 @@ def named_objects(obj: Any) -> set[str]:
     return out
 
 
+def _same_tail(spelled: str, tail: str, sep: str) -> bool:
+    """spelled (the end of a recorded path) names tail (a '/'-joined relative path). A Windows spelling
+    may use either separator and any letter case, since its file system ignores case."""
+    if sep == "/":
+        return spelled == tail
+    return spelled.replace("\\", "/").casefold() == tail.casefold()
+
+
 def root_spellings(records: list[dict], root: Path) -> list[str]:
     """Every spelling of the project directory the records' args use, longest first."""
     found = {str(root)}
@@ -102,10 +111,12 @@ def root_spellings(records: list[dict], root: Path) -> list[str]:
                 rel = Path(os.path.realpath(s)).relative_to(root)
             except ValueError:
                 continue
-            tail = "" if str(rel) == "." else str(rel)
+            tail = "" if str(rel) == "." else rel.as_posix()
+            sep = ospaths.seps(s)                  # a Windows spelling may use \ or / (or both)
             if not tail:
-                found.add(s.rstrip("/") or "/")
-            elif s.endswith("/" + tail):
+                bare = s.rstrip(sep)
+                found.add(bare if len(bare) > len(ntpath.splitdrive(s)[0]) else s)   # "/" and "C:\\" stay whole
+            elif len(s) > len(tail) and s[-len(tail) - 1] in sep and _same_tail(s[-len(tail):], tail, sep):
                 found.add(s[: -len(tail) - 1])
     return sorted(found, key=len, reverse=True)
 

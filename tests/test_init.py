@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 import unittest
+from unittest import mock
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -12,6 +13,11 @@ SRC = Path(__file__).resolve().parent.parent / "src"
 sys.path.insert(0, str(SRC))
 
 from rewindagents import agents, hook, init  # noqa: E402
+
+
+# The stand-in agent binary, named the way the OS finds a command: Windows' shutil.which only matches a
+# name with a PATHEXT extension (an npm-installed agent there is claude.cmd), POSIX one with the exec bit.
+STAND_IN_SUFFIX = ".cmd" if os.name == "nt" else ""
 
 
 class Tty(io.StringIO):
@@ -32,7 +38,7 @@ class Base(unittest.TestCase):
 
     def on_path(self, *names):
         for n in names:
-            f = self.bin / n
+            f = self.bin / (n + STAND_IN_SUFFIX)
             f.write_text("#!/bin/sh\n")
             f.chmod(0o755)
 
@@ -201,10 +207,39 @@ class TestInit(Base):
         self.assertEqual(sum("not found" in l for l in out.splitlines()), 7)
 
 
+class TestIsTerminal(unittest.TestCase):
+    """windows-latest: `rewindagents init < NUL` prompted, because isatty() is True for the NUL device on
+    Windows, and answered "Nothing written." instead of the dry run. Driven here with the Windows branch on
+    and a stand-in for GetConsoleMode."""
+
+    def test_nul_on_windows_is_not_a_terminal(self):
+        with open(os.devnull) as nul, mock.patch.object(init, "_WINDOWS", True), \
+                mock.patch.object(init, "_windows_console", return_value=False), \
+                mock.patch.object(nul, "isatty", return_value=True, create=True):
+            self.assertFalse(init.is_terminal(nul))
+
+    def test_a_windows_console_is_a_terminal(self):
+        with open(os.devnull) as f, mock.patch.object(init, "_WINDOWS", True), \
+                mock.patch.object(init, "_windows_console", return_value=True), \
+                mock.patch.object(f, "isatty", return_value=True, create=True):
+            self.assertTrue(init.is_terminal(f))
+
+    def test_a_stream_without_a_descriptor_is_judged_by_isatty(self):
+        with mock.patch.object(init, "_WINDOWS", True):
+            self.assertTrue(init.is_terminal(Tty()))
+            self.assertFalse(init.is_terminal(io.StringIO()))
+
+    def test_posix_is_unchanged(self):
+        with mock.patch.object(init, "_WINDOWS", False), open(os.devnull) as nul:
+            self.assertEqual(init.is_terminal(nul), nul.isatty())
+            self.assertTrue(init.is_terminal(Tty()))
+
+
 class TestCli(Base):
     def test_cli_init_end_to_end_with_home_and_path(self):
         self.on_path("claude")
-        env = {"HOME": str(self.home), "PATH": str(self.bin), "PYTHONPATH": str(SRC)}
+        # USERPROFILE is where Windows' Path.home() looks (it ignores HOME); POSIX ignores USERPROFILE
+        env = {"HOME": str(self.home), "USERPROFILE": str(self.home), "PATH": str(self.bin), "PYTHONPATH": str(SRC)}
         r = subprocess.run([sys.executable, "-m", "rewindagents", "init"], cwd=self.root, env=env,
                            capture_output=True, text=True, stdin=subprocess.DEVNULL)
         self.assertEqual(r.returncode, 0, r.stderr)

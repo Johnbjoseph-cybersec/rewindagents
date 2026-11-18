@@ -166,6 +166,8 @@ class TestBashLimits(unittest.TestCase):
             self.assertEqual(Path(d, "src", "local.log").read_text(), "log\n")
             self.assertEqual(Path(d, "build", "out.js").read_text(), "new")
 
+    @unittest.skipIf(os.name == "nt", "no POSIX mode bits on NTFS: os.chmod there only toggles read-only, "
+                                       "so a chmod-only change or 0o700/0o750 cannot round-trip")
     def test_a_deleted_script_comes_back_executable(self):
         """takeback-bench S11: the bytes came back, the executable bit did not, and rewind exited 0."""
         with TemporaryDirectory() as d:
@@ -189,6 +191,8 @@ class TestBashLimits(unittest.TestCase):
             self.assertEqual(s.read_text(), "#!/bin/sh\necho hi\n")
             self.assertEqual(Path(d, "tool.sh").stat().st_mode & 0o777, 0o750)
 
+    @unittest.skipIf(os.name == "nt", "no POSIX mode bits on NTFS: os.chmod there only toggles read-only, "
+                                       "so a chmod-only change or 0o700/0o750 cannot round-trip")
     def test_a_file_the_write_tool_replaced_gets_its_mode_back(self):
         with TemporaryDirectory() as d:
             s = Path(d, "deploy.sh")

@@ -122,9 +122,12 @@ class ServerCase(unittest.TestCase):
     def setUp(self):
         self.tmp = TemporaryDirectory()
         self.d = Path(self.tmp.name)
+        # Cleanups run last-in, first-out: the directory's cleanup is registered first so it runs
+        # after the server is killed. A live process holding its cwd inside the directory makes
+        # Windows refuse to remove it (WinError 32); POSIX does not care either way.
+        self.addCleanup(self.tmp.cleanup)
         self.server = Server(self.d)
         self.addCleanup(self.server.kill)
-        self.addCleanup(self.tmp.cleanup)
 
     def log_path(self) -> Path:
         return self.d / ".rewindagents" / "log.jsonl"

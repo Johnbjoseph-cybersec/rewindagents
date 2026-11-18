@@ -130,6 +130,39 @@ def _tracked(path: Path) -> bool:
     return _git(path.parent, "ls-files", "--error-unmatch", path.name) is not None
 
 
+_WINDOWS = os.name == "nt"
+
+
+def _windows_console(fd: int) -> bool:
+    """True when fd is a Windows console handle (GetConsoleMode succeeds on consoles only). The fd's handle
+    comes from the C runtime CPython itself uses (ucrtbase _get_osfhandle): msvcrt stays filelock.py's."""
+    import ctypes
+    crt = ctypes.CDLL("ucrtbase")
+    crt._get_osfhandle.restype = ctypes.c_void_p
+    crt._get_osfhandle.argtypes = [ctypes.c_int]
+    handle = crt._get_osfhandle(fd)
+    mode = ctypes.c_uint32()
+    return bool(ctypes.windll.kernel32.GetConsoleMode(ctypes.c_void_p(handle), ctypes.byref(mode)))
+
+
+def is_terminal(stream) -> bool:
+    """True when stream is a terminal to ask on. On Windows isatty() is also True for NUL (a character
+    device: `< NUL`, subprocess.DEVNULL), which can never answer; there only a console handle counts.
+    A stream without a file descriptor is judged by its own isatty()."""
+    if not (hasattr(stream, "isatty") and stream.isatty()):
+        return False
+    if not _WINDOWS:
+        return True
+    try:
+        fd = stream.fileno()
+    except (AttributeError, OSError, ValueError):
+        return True
+    try:
+        return _windows_console(fd)
+    except (OSError, AttributeError, ImportError):
+        return True
+
+
 def target(name: str, root: Path, home: Path | None, global_: bool) -> Path | None:
     """The config file init writes for this agent, or None when global_ is requested but no home directory
     is known (Path.home() could not tell: no HOME/USERPROFILE, seen on windows-latest CI) -- there is
@@ -443,7 +476,7 @@ def main(yes: bool = False, global_: bool = False, root: Path | None = None, hom
     if not yes:
         for r in rows:
             say(*r)
-        if not (hasattr(stdin, "isatty") and stdin.isatty()):
+        if not is_terminal(stdin):
             print("Dry run: nothing written (no --yes, and no terminal to ask on). "
                   f"To install: {run} init --yes" + (" --global" if global_ else ""), file=out)
             return 0
