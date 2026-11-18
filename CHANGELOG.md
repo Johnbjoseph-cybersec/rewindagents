@@ -7,6 +7,11 @@ and only a published GitHub release publishes to PyPI (`.github/workflows/publis
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-18
+
+The full test suite passes on Windows CI, five agent hooks are verified in live sessions on macOS, and Windows
+becomes a normal CI row.
+
 No change to the CLI, the exit codes, the hooks or the on-disk format.
 
 ### Added
@@ -21,6 +26,12 @@ No change to the CLI, the exit codes, the hooks or the on-disk format.
   date, and never "not yet live"; any other agent must be called not yet live and never live).
 
 ### Changed
+- Windows status: README, docs page, homepage and `CONTRIBUTING.md` no longer say "Windows is not supported".
+  They state what is known: the full test suite passes on windows-latest CI (run 44275227200 on `main` at 06a0c0d:
+  `Ran 868 tests ... OK (skipped=38)`); the agent hooks were verified in live sessions on macOS, not yet on
+  Windows; hook commands under PowerShell are untested (only Git Bash is); and a patch from `diff`,
+  `replay --diff` or `compare --diff` saved with `>` on Windows gets CRLF line endings and will not
+  `git apply`. The Windows CI job is a normal matrix row now (no `continue-on-error`).
 - README, docs page and homepage: the live status per agent follows the evidence, with the setup a user needs:
   Gemini CLI and Copilot CLI run a project's hooks only in a trusted folder; Codex runs a project hook only
   after you review it once (`/hooks`) and loads project config only in a trusted project.
@@ -44,8 +55,7 @@ No change to the CLI, the exit codes, the hooks or the on-disk format.
 - `init --yes` and `install` remove a stale Copilot hook whichever key it sits under (`bash` or
   `powershell`). A stale Windows-path hook under `bash` was reported replaced but stayed in the file.
 - Each of the 87 test failures on windows-latest CI (run 44262918115) has a fix or a skip with a stated
-  reason, listed one by one in `docs/windows.md`. None of it has run on Windows yet; the Windows CI job
-  stays non-blocking until a green Windows run is seen.
+  reason, listed one by one in `docs/windows.md`. The windows-latest job on `main` then passed.
 
 ### Security
 - VS Code extension dev-only tooling upgraded to clear 17 Dependabot alerts (all development scope):
@@ -148,6 +158,7 @@ Pre-release, GitHub only.
 - `fork` any recorded step and `compare` the runs (files, lines, and your own check).
 - Hooks for seven agents: Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Factory Droid, Qwen Code.
 
+[1.2.0]: https://github.com/Johnbjoseph-cybersec/rewindagents/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/Johnbjoseph-cybersec/rewindagents/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/Johnbjoseph-cybersec/rewindagents/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Johnbjoseph-cybersec/rewindagents/compare/v0.0.9...v1.0.0

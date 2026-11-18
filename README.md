@@ -89,7 +89,7 @@ runs the same hooks for a subagent's tool calls ([hooks docs](https://code.claud
 session in which a subagent made eight steps, three of them edits, recorded and checkpointed all of them
 (`ux-review/DOGFOOD.md`). Every tool call goes into a tamper-evident, hash-chained log you can verify later.
 
-**Status: v1.1.1, stable.** What 1.0 covers: the recorder and its CLI, hooks for seven coding
+**Status: v1.2.0, stable.** What 1.0 covers: the recorder and its CLI, hooks for seven coding
 agents (Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen Code) that record every call and
 checkpoint the files a step changes, `summary`, `replay`, `rewind`, `revert` and `branch`, `fork` and
 `compare`, `export` (a session as one HTML page), `sessions`, `bundle` and `import`, `gc`, a local timeline UI,
@@ -99,7 +99,10 @@ on 2026-11-18 (Claude Code 2.1.294, Codex 0.170.0, Cursor 2026.11.17-f532c45, Ge
 The Droid and Qwen Code hooks are built from the vendors' hook documentation and tested with the documented
 payloads, not yet in a live session: both CLIs ran, but signed in without a model plan or API key they made no
 tool call, so nothing was recorded. The runs, their evidence files and how to repeat them: `harness/live/` and
-[docs/live-verification.md](docs/live-verification.md). macOS and Linux; Windows is not supported (see Recorder).
+[docs/live-verification.md](docs/live-verification.md). Platforms: macOS, Linux and Windows run the full test
+suite in CI (on windows-latest: `Ran 868 tests ... OK (skipped=38)`, skips listed in
+[docs/windows.md](docs/windows.md)). The live hook sessions ran on macOS only, not yet on Windows; on Windows
+the hook commands are tested under Git Bash, not under PowerShell (see Recorder).
 What 1.0 does not change is [what it cannot put back](#what-it-cannot-put-back). What stays compatible
 within 1.x: [Stability](#stability).
 
@@ -149,7 +152,9 @@ whether or not a virtualenv is active; from an uninstalled clone it carries the 
 Windows Python the command has no such prefix: a bare forward-slash path, which Git Bash, PowerShell and
 cmd.exe all run, or, when the path has a space, a quoted one in the form of the shell the agent's docs name
 (`src/rewindagents/agents.py` quotes them); from a clone it runs `src/rewindagents/__main__.py` by path. That
-form is produced and checked by the tests on Unix; it has not been run on Windows (see Recorder).
+form is produced and checked by the tests on every OS, and on windows-latest CI the installed command runs
+under Git Bash and records; it has not been run under PowerShell or cmd.exe, nor in a live agent session on
+Windows (see Recorder).
 
 If that Python goes away later (the venv is deleted, Python is upgraded, the clone is moved), the agent still
 runs the hook, the hook fails, and nothing is recorded. `status` checks for that:
@@ -165,7 +170,8 @@ hook in the file as it is.
 Each hook that is in place is also run once, the way the agent runs it, in a new temporary folder, and must
 write a record there: one that runs but records nothing (a broken install the stale check cannot see) is
 `FAILING`, with the hook's own error message, and `status` exits 1. Your agent does not show a failing hook,
-so this is the only place you find out. (Not on Windows yet.)
+so this is the only place you find out. (On Windows `status` does not run this check yet,
+so a hook that runs but records nothing still shows `ok` there.)
 
 After the hooks come this project's log: how many records it holds, when the last one was written, and
 whether the chain verifies; then the store: how much disk `.rewindagents/` takes. A log that does not verify
@@ -710,8 +716,12 @@ of messages (exit codes, not text, are what scripts should test).
   record makes `verify` fail and name the first bad record.
 - Several processes can write to the same log at once; appends are locked, so the chain stays single.
 - Plain JSONL. No server, no database, no dependencies beyond the Python standard library.
-  Needs a Unix for now. The write lock has a Windows path (`msvcrt`) and the hook command has a Windows form,
-  but the test suite has not passed on Windows yet, so Windows is not supported.
+  Windows: the full test suite passes on windows-latest CI (`Ran 868 tests ... OK (skipped=38)`; the write
+  lock uses `msvcrt` there, and the skips are listed in [docs/windows.md](docs/windows.md)). The agent hooks
+  were verified in live sessions on macOS, not yet on Windows. Hook commands under PowerShell (Cursor's
+  Windows shell, Copilot's `powershell` key) are not tested; only Git Bash is. Known gap: `diff`,
+  `replay --diff` and `compare --diff` write the patch in text mode, so on Windows a patch saved with `>`
+  gets CRLF line endings and will not `git apply`.
 
 ## Use it
 

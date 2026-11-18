@@ -1,6 +1,6 @@
 {
   "name": "rewindagents",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Undo for AI coding agents: record every tool call, see what changed, take back a step, a file or a whole session -- through its own MCP server, five slash commands and the same hook the CLI installs.",
   "author": {
     "name": "John B Joseph"
