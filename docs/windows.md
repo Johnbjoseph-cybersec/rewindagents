@@ -8,7 +8,8 @@ SW1-SW10, summarised at the end); this document supersedes their 101-row map, se
 were still red in this run.
 
 Branch `win/green` addresses all 87: 84 fixed, 3 skipped with a stated reason (rows below; 1 of the 84 passes
-by a Windows-specific expectation, also stated). **None of this has run on Windows.** `continue-on-error` stays on
+by a Windows-specific expectation, also stated). **First Windows run (PR #1, 859 tests): `FAILED (failures=1, skipped=38)`;** the one left is fixed by W11, which has
+not run on Windows yet. `continue-on-error` stays on
 the Windows matrix row and README.md keeps "Windows is not supported" until a green windows-latest run is seen.
 
 ## How each fix was checked here (macOS)
@@ -50,15 +51,21 @@ the Windows matrix row and README.md keeps "Windows is not supported" until a gr
 | W8 | b4586b0 | `tests/test_filelock.py` | `TestUnixPath` runs on the real backend; msvcrt has no shared lock (documented in `filelock.py`). | **Windows-specific expectation**: on Windows a second shared holder is refused while the first holds, granted after release. POSIX assertions unchanged. |
 | W9 | 0503da9 | `tests/test_site.py` `repo_text_files` | `os.path.relpath` is `\`-joined on Windows; `HOST_ALLOWED` names `brand/site/config.json`. | `'/'`-joined relative path. |
 | W10 | 11d0904 | `bench/takeback/takeback.py` `run_one` | `rmtree(ignore_errors=True)` cannot delete read-only files on Windows (git's objects), so a `takeback-*` dir stayed. | `remove_tree`: clear the read-only flag and retry. |
+| W11 | d3c4b88 | `src/rewindagents/init.py` `is_terminal` | Found by the first Windows run of PR #1 (859 tests, 1 failure): with stdin=DEVNULL, init prompted `[y/N]` and printed "Nothing written." instead of the dry run. On Windows `isatty()` is True for the NUL device (a character device), so init thought it had a terminal. | Keep `isatty()` first; on Windows also require a console handle (kernel32 `GetConsoleMode` on the handle from ucrtbase `_get_osfhandle`, via ctypes; msvcrt stays filelock-only). A stream with no descriptor is judged by its `isatty()`. POSIX unchanged. Windows branch tested here with a stand-in for `GetConsoleMode` (`test_init.TestIsTerminal`); the real call is reasoning only. |
 
 ## Skips added (each with its reason string in the code)
 
 | # | Commit | Test | Reason |
 |---|---|---|---|
 | S1 | 24ef82c | `test_bashscan.TestBashLimits.test_a_deleted_script_comes_back_executable`, `test_bashscan.TestBashLimits.test_a_file_the_write_tool_replaced_gets_its_mode_back` | No POSIX mode bits on NTFS: `os.chmod` only toggles read-only, so a chmod-only change or 0o700/0o750 cannot round-trip (CI read back 0o666). |
-| S2 | 24ef82c | `test_runs_demo.TestRunsDemo` (whole class) | `ux-review/try-runs.sh` is a POSIX sh demo (mktemp, /tmp paths, python3) whose POSIX output the site quotes; on windows-latest the runner's sh exited 2 on it. |
+| S2 | 24ef82c | `test_runs_demo.TestRunsDemo` (whole class: 4 tests) | `ux-review/try-runs.sh` is a POSIX sh demo (mktemp, /tmp paths, python3) whose POSIX output the site quotes; on windows-latest the runner's sh exited 2 on it. |
 
 | S3 | 6b82ee6 | `test_agents_more`: the four `test_the_installed_command_runs_and_records` and `TestCopilot.test_the_command_cannot_fail_closed` | Conditional, Windows only: skipped only when no Git Bash is found (only the WSL launcher, or no bash). Git for Windows is on windows-latest, so CI is expected to run them. |
+
+The first Windows run of PR #1 reported `skipped=38`: these 6 (S1: 2, S2: 4), none from S3 (Git Bash was found, so
+the five `test_agents_more` tests ran and passed), plus the 32 that run 44262918115 already skipped: 13 + 1
+`REWINDAGENTS_BIN` not set, 3 `REWINDAGENTS_DIST` not set, 5 no fontTools, 3 POSIX-shell probes (`test_usable.TestStatus`),
+2 no ffmpeg, 1 no audio Python, 1 no WAVs on disk, 1 no film review, 1 no claude CLI, 1 SW5 (`test_revert` exec bit).
 
 Skips that were already there and stay: `test_revert...test_a_file_the_step_deleted_comes_back_with_its_mode`
 (SW5, same NTFS reason), and the environment skips the CI log lists (no `REWINDAGENTS_BIN`/`REWINDAGENTS_DIST`,
@@ -91,7 +98,7 @@ no ffmpeg, no fontTools, POSIX-shell probes, no claude CLI).
 | `test_filelock.TestUnixPath.test_shared_holders_coexist_and_keep_exclusive_out` | ERROR | fixed (W8, b4586b0) | Windows-specific expectation: a shared request takes the exclusive lock (documented) |
 | `test_gc.TestGc.test_a_scan_no_record_names_is_listed_and_an_unreadable_old_one_can_be_dropped` | FAIL | fixed (W2, bdd7cb5) | test Agent writes content byte for byte (no CRLF) |
 | `test_gc.TestGc.test_deletes_only_unnamed_copies_measures_bytes_and_rewind_still_works` | FAIL | fixed (W2, bdd7cb5) | test Agent writes content byte for byte (no CRLF) |
-| `test_init.TestCli.test_cli_init_end_to_end_with_home_and_path` | FAIL | fixed (W5, 37df761) | stand-in binary is <name>.cmd on Windows; USERPROFILE set for the CLI test |
+| `test_init.TestCli.test_cli_init_end_to_end_with_home_and_path` | FAIL | fixed (W5, 37df761; W11, d3c4b88) | W5: stand-in is <name>.cmd, USERPROFILE set. Still red on the first PR #1 Windows run: W11 |
 | `test_init.TestDetect.test_config_dir_in_project_user_dir_or_binary_on_path` | FAIL | fixed (W5, 37df761) | stand-in binary is <name>.cmd on Windows; USERPROFILE set for the CLI test |
 | `test_init.TestInit.test_global_writes_the_user_files` | FAIL | fixed (W5, 37df761) | stand-in binary is <name>.cmd on Windows; USERPROFILE set for the CLI test |
 | `test_init.TestInit.test_terminal_prompt_empty_answer_means_no` | FAIL | fixed (W5, 37df761) | stand-in binary is <name>.cmd on Windows; USERPROFILE set for the CLI test |

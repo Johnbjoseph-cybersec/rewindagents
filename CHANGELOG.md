@@ -15,6 +15,8 @@ and only a published GitHub release publishes to PyPI (`.github/workflows/publis
 - Windows: the `export` page no longer shows the project's location inside step inputs, where JSON prints
   each `\` of `C:\proj` doubled. The page is written with `\n` line endings on every OS, so the byte count
   `export` reports is the file's size.
+- Windows: `rewindagents init` with no input (`< NUL`, a CI job) shows the dry run instead of a `[y/N]` prompt
+  that reads end of input as no. `isatty()` is true for the NUL device there; a console handle is now required.
 - `init --yes` and `install` remove a stale Copilot hook whichever key it sits under (`bash` or
   `powershell`). A stale Windows-path hook under `bash` was reported replaced but stayed in the file.
 - Each of the 87 test failures on windows-latest CI (run 44262918115) has a fix or a skip with a stated
