@@ -347,7 +347,9 @@ def uninstall(agent: Agent, settings_path: str | Path, command: str) -> bool:
     if hooks is None:
         return False
     changed = False
-    k = command_key(agent, command)
+    # Every key the agent reads a command from, not only the one install would pick today: a Windows command
+    # written under Copilot's `bash` key (before it had a `powershell` one, or by hand) must still come out.
+    keys = _command_keys(agent)
     for event in agent.events + agent.also_post:
         entries = hooks.get(event)
         if not isinstance(entries, list):
@@ -355,7 +357,7 @@ def uninstall(agent: Agent, settings_path: str | Path, command: str) -> bool:
         kept = []
         for e in entries:
             if agent.shape == "cursor":
-                if isinstance(e, dict) and e.get(k) == command:
+                if isinstance(e, dict) and any(e.get(k) == command for k in keys):
                     changed = True
                     continue
             elif isinstance(e, dict) and isinstance(e.get("hooks"), list):

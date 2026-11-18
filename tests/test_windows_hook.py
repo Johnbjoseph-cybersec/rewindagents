@@ -246,6 +246,21 @@ class TestCopilotWindowsKey(unittest.TestCase):
             self.assertEqual(hook.replace_stale(f, "copilot"), [(self.win, f"{PY_FWD} no longer exists")])
             self.assertEqual(json.loads(f.read_text(encoding="utf-8")), {"version": 1})
 
+    def test_a_stale_windows_command_under_the_bash_key_is_removed_too(self):
+        # windows-latest CI: init --yes reported "replaced" for a stale Windows-path copilot hook stored under
+        # `bash` (as written before the `powershell` key existed, or by hand), but uninstall looked only under
+        # `powershell`, so the dead entry stayed beside the new one.
+        dead = r"C:\Users\dev\gone-venv\Scripts\python.exe -m rewindagents hook --agent copilot || true"
+        with TemporaryDirectory() as d:
+            f = Path(d, "rewindagents.json")
+            mine = {"type": "command", "bash": "my-own-hook"}
+            f.write_text(json.dumps({"version": 1, "hooks": {
+                e: [mine, {"type": "command", "bash": dead}] for e in ("PreToolUse", "PostToolUse", "PostToolUseFailure")}}),
+                encoding="utf-8")
+            self.assertEqual([c for c, _ in hook.replace_stale(f, "copilot")], [dead])
+            self.assertEqual(hook.stale_hooks(f, "copilot"), [])
+            self.assertEqual(agents.commands_in(self.ag, f)["PreToolUse"], ["my-own-hook"])
+
     def test_every_other_agent_has_one_key(self):
         self.assertEqual([n for n, a in agents.AGENTS.items() if a.win_command_key], ["copilot"])
         self.assertEqual(self.ag.win_command_key, "powershell")
