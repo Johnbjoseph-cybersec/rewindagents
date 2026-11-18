@@ -24,6 +24,9 @@ from rewindagents import agents, hook, read, rewind  # noqa: E402
 from rewindagents.cli import main  # noqa: E402
 
 ROOT = SRC.parent
+# A POSIX-shaped interpreter path, used where a test means "assume the interpreter is POSIX": the real
+# sys.executable is itself a Windows path on windows-latest CI, same stand-in test_windows_hook.py uses (R94).
+POSIX_PY = "/usr/bin/python3"
 
 
 def cursor(cwd, event, tool, tool_input, tool_output=None, conv="conv-1", tid="abc123"):
@@ -175,7 +178,9 @@ class TestCursor(unittest.TestCase):
             cmds = agents.commands_in(agents.AGENTS["cursor"], f)
             self.assertEqual(cmds["preToolUse"], cmds["postToolUse"])
             cmd = cmds["preToolUse"][0]
-            self.assertTrue(cmd.endswith(" -m rewindagents hook --agent cursor"), cmd)
+            # Not "-m rewindagents hook ...": from a clone, a Windows interpreter path takes the file-path
+            # form (no "-m"); "hook --agent cursor" is the part both forms share (R94).
+            self.assertTrue(cmd.endswith("hook --agent cursor"), cmd)
             Path(d, "f.txt").write_text("1\n")
             payload = cursor(d, "preToolUse", "Shell", {"command": "ls", "working_directory": d})
             p = subprocess.run(cmd, shell=True, cwd=d, capture_output=True, text=True, input=json.dumps(payload))
@@ -246,7 +251,9 @@ class TestCodex(unittest.TestCase):
             self.assertEqual(len(cmds["PreToolUse"]), 2)
             self.assertEqual(cmds["PostToolUse"], [cmds["PreToolUse"][1]])
             cmd = cmds["PostToolUse"][0]
-            self.assertTrue(cmd.endswith(" -m rewindagents hook --agent codex"), cmd)
+            # Not "-m rewindagents hook ...": from a clone, a Windows interpreter path takes the file-path
+            # form (no "-m"); "hook --agent codex" is the part both forms share (R94).
+            self.assertTrue(cmd.endswith("hook --agent codex"), cmd)
             self.assertEqual(got["hooks"]["PostToolUse"][0]["matcher"], "*")
             self.assertFalse(hook.install(f, agent="codex"))
             p = subprocess.run(cmd, shell=True, cwd=d, capture_output=True, text=True,
@@ -277,14 +284,17 @@ class TestCli(unittest.TestCase):
 
     def test_hook_command_carries_the_agent_and_claude_codes_is_unchanged(self):
         import shlex
-        py = shlex.quote(sys.executable)
+        # A POSIX stand-in, not the real sys.executable: on windows-latest CI the real interpreter path is
+        # a Windows path, which hook.hook_command() correctly takes the Windows branch for (R42/R94) -- a
+        # literal "-m rewindagents" comparison is a POSIX-form assertion and needs a POSIX-shaped interpreter.
+        py = shlex.quote(POSIX_PY)
         with patch.object(hook, "installed", return_value=True):
-            self.assertEqual(hook.hook_command(), f"{py} -m rewindagents hook")
-            self.assertEqual(hook.hook_command("claude"), f"{py} -m rewindagents hook")
-            self.assertEqual(hook.hook_command("cursor"), f"{py} -m rewindagents hook --agent cursor")
-            self.assertEqual(hook.hook_command("codex"), f"{py} -m rewindagents hook --agent codex")
+            self.assertEqual(hook.hook_command(python=POSIX_PY), f"{py} -m rewindagents hook")
+            self.assertEqual(hook.hook_command("claude", python=POSIX_PY), f"{py} -m rewindagents hook")
+            self.assertEqual(hook.hook_command("cursor", python=POSIX_PY), f"{py} -m rewindagents hook --agent cursor")
+            self.assertEqual(hook.hook_command("codex", python=POSIX_PY), f"{py} -m rewindagents hook --agent codex")
         with patch.object(hook, "installed", return_value=False):
-            self.assertEqual(hook.hook_command("codex"),
+            self.assertEqual(hook.hook_command("codex", python=POSIX_PY),
                              f"PYTHONPATH={shlex.quote(str(SRC))} {py} -m rewindagents hook --agent codex")
 
     def test_claude_code_records_carry_their_agent_and_still_print_nothing(self):

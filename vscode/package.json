@@ -1,0 +1,92 @@
+{
+  "name": "rewindagents",
+  "displayName": "Rewind Agents",
+  "description": "Per-step session timeline, diff view, and preview/rewind commands for rewindagents, the flight recorder for coding agents.",
+  "version": "0.0.1",
+  "publisher": "rewindagents-publisher-placeholder",
+  "license": "Apache-2.0",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Johnbjoseph-cybersec/rewindagents.git",
+    "directory": "vscode"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "workspaceContains:.rewindagents/log.jsonl"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "rewindagents.refresh",
+        "title": "Rewind Agents: Refresh Timeline"
+      },
+      {
+        "command": "rewindagents.previewRewind",
+        "title": "Rewind Agents: Preview Rewind"
+      },
+      {
+        "command": "rewindagents.rewindToHere",
+        "title": "Rewind Agents: Rewind To Here"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "rewindagentsTimeline",
+          "name": "Rewind Timeline"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "rewindagents.refresh",
+          "when": "view == rewindagentsTimeline",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "rewindagents.previewRewind",
+          "when": "view == rewindagentsTimeline && viewItem == rewindStep",
+          "group": "inline"
+        },
+        {
+          "command": "rewindagents.rewindToHere",
+          "when": "view == rewindagentsTimeline && viewItem == rewindStep",
+          "group": "inline"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Rewind Agents",
+      "properties": {
+        "rewindagents.cliPath": {
+          "type": "string",
+          "default": "rewindagents",
+          "description": "Path to the rewindagents command. Set this if the executable is not on PATH."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -w -p ./",
+    "test": "vitest run",
+    "package": "mkdir -p dist && vsce package --out dist/"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "2.32.0",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
+  }
+}

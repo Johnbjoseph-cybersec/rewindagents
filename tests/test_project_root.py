@@ -132,7 +132,7 @@ class TestCliFromAnywhere(unittest.TestCase):
         with TemporaryDirectory() as d:
             d = Path(d).resolve()
             Agent(d).write("a.txt", "1")
-            (d / "blocker").write_text("a file, not a directory")
+            (d / "blocker").write_text("a file, not a directory", newline="")
             code, out, err = cli("--log", str(d / ".rewindagents/log.jsonl"), "bundle", "--out", str(d / "blocker/x.bundle"))
         self.assertEqual(code, 1)
         self.assertTrue(err.startswith("rewindagents: "), err)
@@ -214,7 +214,7 @@ class TestStepDiff(unittest.TestCase):
         patch = out[out.index("diff --git"):]
         work = self.d / "w"
         work.mkdir()
-        (work / "app.py").write_text("a\nB\n")
+        (work / "app.py").write_text("a\nB\n", newline="")
         r = subprocess.run(["git", "apply", "-R", "-"], input=patch, text=True, cwd=work, capture_output=True)
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertEqual((work / "app.py").read_text(), "a\nb\n")

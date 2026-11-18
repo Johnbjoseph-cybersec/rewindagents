@@ -8,11 +8,12 @@ import sys
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest import mock
 
 SRC = Path(__file__).resolve().parent.parent / "src"
 sys.path.insert(0, str(SRC))
 
-from rewindagents import gc, log, rewind, runs  # noqa: E402
+from rewindagents import bashscan, gc, log, rewind, runs  # noqa: E402
 from test_rewind import Agent, cli, git  # noqa: E402
 
 
@@ -43,13 +44,13 @@ class Session:
     def __init__(self, base, use_git=True):
         self.root = Path(base) / "proj"
         self.root.mkdir()
-        (self.root / "calc.py").write_text("def add(a, b):\n    return a + b\n")
-        (self.root / "README.md").write_text("calc\n")
+        (self.root / "calc.py").write_text("def add(a, b):\n    return a + b\n", newline="")
+        (self.root / "README.md").write_text("calc\n", newline="")
         if use_git:
             git(self.root, "init", "-q")
             git(self.root, "add", ".")
             git(self.root, "commit", "-qm", "init")
-        (self.root / "notes.txt").write_text("mine, untracked\n")
+        (self.root / "notes.txt").write_text("mine, untracked\n", newline="")
         self.agent = Agent(self.root, "sess-aaaa-1111")
         self.agent.write("calc.py", "def add(a, b):\n    return a + b\n\n\ndef div(a, b):\n    return a / b\n")
         self.agent.write("test_calc.py", "from calc import div\nassert div(4, 2) == 2\n")
@@ -122,13 +123,45 @@ class TestFork(unittest.TestCase):
 
     def test_a_project_in_a_subdirectory_of_a_repository_is_forked_as_a_plain_directory(self):
         git(self.base, "init", "-q")
-        (self.base / "top.txt").write_text("repository file\n")
+        (self.base / "top.txt").write_text("repository file\n", newline="")
         git(self.base, "add", "top.txt")
         git(self.base, "commit", "-qm", "outer")
         s = Session(self.base, use_git=False)                   # proj/ is a subdirectory of the repository
         d = runs.fork(s.log, 2, "sub")
         self.assertIsNone(d["git_branch"])
         self.assertEqual(sorted(files_of(d["dir"])), ["README.md", "calc.py", "notes.txt", "test_calc.py"])
+
+    def test_nested_file_keys_match_between_project_files_and_rewind_relative_on_windows_shaped_paths(self):
+        """Windows-shaped regression: runs.start_state() keys one dict partly from bashscan.project_files()
+        (the "now" entries, line 69) and partly from rewind.relative() (the plan's restore/delete entries,
+        lines 71/73) -- the SAME dict. Outside a git repository, project_files() falls back to os.walk +
+        os.path.relpath, which on Windows returns '\\'-separated paths, while rewind.relative() always
+        returns '/'-separated ones (.as_posix()). Before bashscan's fix those were two different strings
+        for the same nested file: a restore would add a second dict key instead of overwriting the "now"
+        one (both versions could land on disk, non-deterministically, depending on dict iteration order),
+        and a delete's state.pop(key, None) would never find a match. This cannot be reproduced end-to-end
+        through a real fork() on this machine: POSIX pathlib never treats '\\' as a separator, so
+        `root / "sub\\a.py"` is a path to a literally-named nonexistent file, and project_files()'s own
+        existence check (`full.is_file()`) silently drops that entry before it ever reaches the dict --
+        masking the bug here in a way a real Windows run (where both spellings address the one real file)
+        would not. So this proves the fix at its exact source: the two key-producing paths must agree,
+        simulated by making os.path.relpath -- used nowhere else in this package -- return a
+        backslash-joined path, the shape a real Windows os.path.relpath call on this project would
+        produce."""
+        orig_relpath = os.path.relpath
+
+        def win_relpath(path, start=os.curdir):
+            return orig_relpath(path, start).replace("/", "\\")
+
+        with TemporaryDirectory() as d:
+            root = Path(d).resolve() / "proj"
+            (root / "sub").mkdir(parents=True)
+            full = root / "sub" / "a.py"
+            full.write_text("v1\n", newline="")
+            with mock.patch("os.path.relpath", win_relpath):
+                rels = bashscan.project_files(root)
+            self.assertEqual(rels, ["sub/a.py"])                         # not "sub\\a.py"
+            self.assertEqual(rels[0], rewind.relative(full, root))       # the exact two call sites agree
 
     def test_refusals_leave_nothing_behind(self):
         s = Session(self.base)
@@ -159,7 +192,7 @@ class TestFork(unittest.TestCase):
         rec = json.loads(lines[0])
         rec["tool"] = "Edit"
         lines[0] = json.dumps(rec, sort_keys=True)
-        s.log.write_text("\n".join(lines) + "\n")
+        s.log.write_text("\n".join(lines) + "\n", newline="")
         with self.assertRaises(rewind.RewindError):
             runs.fork(s.log, 1, "x")
         self.assertFalse((self.base / "proj-x").exists())
@@ -197,7 +230,7 @@ class TestCompare(unittest.TestCase):
         Agent(self.a, "sess-a").write("calc.py", good)
         ag_b = Agent(self.b, "sess-b")
         ag_b.write("calc.py", good)                             # same bytes as run a
-        ag_b.bash("touch extra.txt", action=lambda c: (c / "extra.txt").write_text("x\n"))
+        ag_b.bash("touch extra.txt", action=lambda c: (c / "extra.txt").write_text("x\n", newline=""))
 
     def tearDown(self):
         self.tmp.cleanup()

@@ -1,0 +1,19 @@
+{
+  "agent": "droid",
+  "agent_version": null,
+  "asserted": {
+    "checkpoint_restored": false,
+    "post_event": false,
+    "pre_event": false
+  },
+  "commands": [],
+  "log_records": 0,
+  "notes": "no binary found on PATH among: droid",
+  "ran_at": "2026-11-17T22:07:28+00:00",
+  "real_config_check": {
+    "path": "~/.factory/settings.json",
+    "unchanged": true
+  },
+  "scratch_dir": null,
+  "status": "NOT_INSTALLED"
+}

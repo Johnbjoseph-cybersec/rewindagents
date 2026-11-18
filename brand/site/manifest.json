@@ -129,6 +129,9 @@
     "pipx install rewindagents     # or: pip install rewindagents",
     "rewindagents --version"
    ],
+   "mcp": [
+    "rewindagents mcp        # stdio MCP server for the project in the working directory"
+   ],
    "quick": [
     "pipx install rewindagents && cd your-project && rewindagents init"
    ],
@@ -240,6 +243,10 @@
    "In a git repository the config files `init` creates are listed in `.git/info/exclude`, this clone's own ignore list, because they name this machine's Python and would not run on a teammate's; a file git already tracks is changed and named instead.",
    "`rewindagents init --undo` takes it all out again and keeps what was recorded."
   ],
+  "mcp_says": [
+   "The agent then gets seven tools: `rewind_sessions`, `rewind_summary`, `rewind_diff`, `rewind_replay` and `rewind_preview` read the log and change nothing; `rewind_to_step` and `rewind_revert_step` change files and run only with `confirm: true`, which the agent is told to set only after asking you.",
+   "They refuse, and never retry, where the CLI refuses: a broken hash chain, or a file you changed after the agent's step."
+  ],
   "more_agents": [
    "rewindagents install --agent gemini     # adds the hook to .gemini/settings.json in this project",
    "rewindagents install --agent copilot    # adds the hook to .github/hooks/rewindagents.json in this repository",
@@ -347,7 +354,7 @@
    "rewindagents uninstall          # removes the hook from .claude/settings.json in this project",
    "rewindagents uninstall --agent cursor --settings ~/.cursor/hooks.json   # same flags as install"
   ],
-  "version": "1.0.0",
+  "version": "1.1.0",
   "wreck_steps": 2
  },
  "hero": [

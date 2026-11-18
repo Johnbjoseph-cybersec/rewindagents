@@ -106,7 +106,8 @@ def term_frame(kit, logo_mono, static, lines, caption):
 
 def end_frame(kit, cfg):
     cv = render.Canvas(W, H, "Reel")
-    render.draw_end(cv, kit, render.LAYOUT["16:9"], cfg)
+    # draw_end animates the card; a still is the settled card: start 0, line at 0, read well after it lands
+    render.draw_end(cv, kit, render.LAYOUT["16:9"], cfg, {"start": 0, "hs": 0}, 10000)
     return cv.svg()
 
 

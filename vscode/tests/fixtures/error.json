@@ -1,0 +1,1 @@
+{"format": "rewindagents-error", "version": 1, "error": "step 99 is out of range: session 2026-11-17-abcd1234 has 2 steps, so use 0-2 (0 = before the first step); `replay` lists them"}

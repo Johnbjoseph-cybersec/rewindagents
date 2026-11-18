@@ -130,24 +130,35 @@ def _tracked(path: Path) -> bool:
     return _git(path.parent, "ls-files", "--error-unmatch", path.name) is not None
 
 
-def target(name: str, root: Path, home: Path, global_: bool) -> Path:
-    """The config file init writes for this agent."""
+def target(name: str, root: Path, home: Path | None, global_: bool) -> Path | None:
+    """The config file init writes for this agent, or None when global_ is requested but no home directory
+    is known (Path.home() could not tell: no HOME/USERPROFILE, seen on windows-latest CI) -- there is
+    nowhere to write a global file, same as "not found" rather than a path to dereference."""
     ag = agents.AGENTS[name]
     if not global_:
         return root / agents.config_path(ag, root)
+    if home is None:
+        return None
     if name == "copilot":
         return home / ".copilot" / "hooks" / "rewindagents.json"
     return home / agents.config_path(ag, home)
 
 
-def detect(root: Path, home: Path, global_: bool = False, path: str | None = None) -> list[dict]:
-    """One entry per supported agent: {"agent", "found": [why], "target"}. `found` is empty when absent."""
+def detect(root: Path, home: Path | None, global_: bool = False, path: str | None = None) -> list[dict]:
+    """One entry per supported agent: {"agent", "found": [why], "target"}. `found` is empty when absent.
+
+    `home` is None when Path.home() could not tell (no HOME/USERPROFILE: seen on windows-latest CI); the
+    home-directory half of detection is then simply skipped, same as project.py's find_store_root. A
+    --global request with no home to search finds nothing at all (there is nowhere to write a user-level
+    file): no agent is listed, the same per-agent skip status() and undo() already apply."""
     out = []
     for name in agents.AGENTS:
+        if global_ and home is None:
+            continue   # cannot find, or write, a user config file without a home directory to look in
         found = []
         if not global_ and (root / PROJECT_DIRS[name]).is_dir():
             found.append(f"{PROJECT_DIRS[name]}/")
-        if (home / USER_DIRS[name]).is_dir():
+        if home is not None and (home / USER_DIRS[name]).is_dir():
             found.append(f"~/{USER_DIRS[name]}/")
         found += [f"{b} on PATH" for b in BINARIES[name] if shutil.which(b, path=path)]
         out.append({"agent": name, "found": found, "target": target(name, root, home, global_)})
@@ -266,16 +277,24 @@ def status(global_: bool = False, root: Path | None = None, home: Path | None = 
     then one line for this project's log: records, time of the last one, and whether the chain verifies.
     Writes nothing. Exit 1 when any file holds a stale hook (or cannot be read) or the log does not verify."""
     root = Path(root or Path.cwd()).resolve()
-    home = Path(home or Path.home())
+    if home is None:
+        try:
+            home = Path.home()
+        except RuntimeError:  # no HOME/USERPROFILE in this environment (seen on windows-latest CI); see
+            home = None       # project.py's find_store_root -- a non-global status still works without it
+    else:
+        home = Path(home)
     out = out or sys.stdout
     run = "rewindagents" if hook.installed() else "python3 -m rewindagents"
     bad, shown, hooked, failing, partial, unprobed = 0, 0, 0, 0, 0, 0
     for name in agents.AGENTS:
+        if global_ and home is None:
+            continue   # cannot find a user config file without a home directory to look in
         t = target(name, root, home, global_)
         if not t.is_file():
             continue
         shown += 1
-        where = str(t.relative_to(home if global_ else root))
+        where = t.relative_to(home if global_ else root).as_posix()
         where = ("~/" if global_ else "") + where
         st, detail = state(name, t, hook.hook_command(name))
         if st == "stale":
@@ -327,7 +346,7 @@ def status(global_: bool = False, root: Path | None = None, home: Path | None = 
     if str(log_path or default) != default:
         run = f"{run} --log {log_path}"
     try:
-        where = str(lp.relative_to(root))
+        where = lp.relative_to(root).as_posix()
     except ValueError:
         where = str(lp)
     rec, detail = recording(lp)
@@ -356,13 +375,20 @@ def main(yes: bool = False, global_: bool = False, root: Path | None = None, hom
          path: str | None = None, stdin=None, out=None, only: list[str] | None = None) -> int:
     """`only`: the agents named with --agent; they are set up even when not detected, and no other is."""
     root = Path(root or Path.cwd()).resolve()
-    home = Path(home or Path.home())
+    if home is None:
+        try:
+            home = Path.home()
+        except RuntimeError:  # no HOME/USERPROFILE in this environment (seen on windows-latest CI); see
+            home = None       # project.py's find_store_root -- a project-local init still works without it
+    else:
+        home = Path(home)
     stdin, out = stdin or sys.stdin, out or sys.stdout
 
     def show(p: Path) -> str:
-        for base, label in ((root, ""), (home, "~/")):
+        bases = [(root, "")] + ([(home, "~/")] if home is not None else [])
+        for base, label in bases:
             try:
-                return label + str(p.relative_to(base))
+                return label + p.relative_to(base).as_posix()
             except ValueError:
                 pass
         return str(p)
@@ -371,7 +397,10 @@ def main(yes: bool = False, global_: bool = False, root: Path | None = None, hom
         line = f"  {name:<8} {status:<14} {where}"
         print((line + (f"  ({why})" if why else "")).rstrip(), file=out)
 
-    kind = hook.ephemeral()
+    try:
+        kind = hook.ephemeral()
+    except RuntimeError:  # hook.ephemeral()'s own Path.home() call, unguarded (hook.py, a different squad's
+        kind = None       # file): no HOME/USERPROFILE means the cache-location check just can't run here
     if kind:
         print(f"rewindagents init: nothing written: {hook.ephemeral_message(kind)}", file=out)
         return 2
@@ -437,7 +466,9 @@ def main(yes: bool = False, global_: bool = False, root: Path | None = None, hom
             if dead and state(name, t, hook.hook_command(name))[0] == "other":
                 say(name, "removed stale", where, "another rewindagents hook, which can run, is left as is")
                 continue
-            changed = hook.install(t, agent=name)
+            # Pass the already-computed command: hook.install() only calls the unguarded hook.ephemeral()
+            # itself when `command` is omitted, and the `kind` check above already covers that for this run.
+            changed = hook.install(t, command=hook.hook_command(name), agent=name)
         except (ValueError, OSError) as e:
             errors += 1
             say(name, "error", where, f"not written: {e}")
@@ -485,7 +516,13 @@ def undo(global_: bool = False, root: Path | None = None, home: Path | None = No
     empty hook containers is deleted, with the agent directory when that is then empty, and its line in
     .git/info/exclude goes too. The recorded history (.rewindagents/) is never touched."""
     root = Path(root or Path.cwd()).resolve()
-    home = Path(home or Path.home())
+    if home is None:
+        try:
+            home = Path.home()
+        except RuntimeError:  # no HOME/USERPROFILE in this environment (seen on windows-latest CI); see
+            home = None       # project.py's find_store_root -- a project-local undo still works without it
+    else:
+        home = Path(home)
     out = out or sys.stdout
     removed, deleted, errors = 0, [], 0
     print(f"rewindagents init --undo: {'your user config (every project)' if global_ else 'project ' + str(root)}",
@@ -493,8 +530,10 @@ def undo(global_: bool = False, root: Path | None = None, home: Path | None = No
     for name in agents.AGENTS:
         if only and name not in only:
             continue
+        if global_ and home is None:
+            continue   # cannot find a user config file without a home directory to look in
         t = target(name, root, home, global_)
-        where = ("~/" if global_ else "") + str(t.relative_to(home if global_ else root))
+        where = ("~/" if global_ else "") + t.relative_to(home if global_ else root).as_posix()
         if not t.is_file():
             continue
         try:
@@ -529,8 +568,9 @@ def undo(global_: bool = False, root: Path | None = None, home: Path | None = No
         set_excluded(root, remove=deleted)
     if not removed and not errors:
         print("No rewindagents hook found; nothing changed.", file=out)
-    store = (home if global_ else root) / ".rewindagents"
-    if not global_ and store.is_dir():
+    if not global_ and (root / ".rewindagents").is_dir():
+        # the project's recorded history is per-project either way (a global hook still records into the
+        # project the agent runs in): there is no "home" half of this to guard against home being None.
         print("Your recorded history in .rewindagents/ is kept: replay and rewind still work. "
               "To delete it too: rm -rf .rewindagents", file=out)
     return 1 if errors else 0

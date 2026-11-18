@@ -1,0 +1,38 @@
+{
+  "description": "Checkpoints the project's files before every tool call and records the result after it -- the same hook `rewindagents install --agent claude` writes into .claude/settings.json, registered here on PreToolUse, PostToolUse and PostToolUseFailure (a failed call can still have changed files, so it closes the scan too). Never blocks: it always exits 0.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "rewindagents hook --agent claude"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "rewindagents hook --agent claude"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "rewindagents hook --agent claude"
+          }
+        ]
+      }
+    ]
+  }
+}

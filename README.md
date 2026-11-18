@@ -89,7 +89,7 @@ runs the same hooks for a subagent's tool calls ([hooks docs](https://code.claud
 session in which a subagent made eight steps, three of them edits, recorded and checkpointed all of them
 (`ux-review/DOGFOOD.md`). Every tool call goes into a tamper-evident, hash-chained log you can verify later.
 
-**Status: v1.0.0, stable.** What 1.0 covers: the recorder and its CLI, hooks for seven coding
+**Status: v1.1.0, stable.** What 1.0 covers: the recorder and its CLI, hooks for seven coding
 agents (Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen Code) that record every call and
 checkpoint the files a step changes, `summary`, `replay`, `rewind`, `revert` and `branch`, `fork` and
 `compare`, `export` (a session as one HTML page), `sessions`, `bundle` and `import`, `gc`, a local timeline UI,
@@ -345,6 +345,35 @@ diff and the step's input and result (`d` hides or shows the diffs).
   page itself. No fonts, scripts or images are fetched from anywhere, so it works offline.
 - Diffs are cut as `export` cuts them (400 lines per file, files over 256 KB described). An input or
   result longer than 20,000 characters is cut on the page, with the count left out.
+
+## The agent can undo its own steps: MCP server
+
+```sh
+rewindagents mcp        # stdio MCP server for the project in the working directory
+```
+
+Register it in any MCP client that runs a local command (`"command": "rewindagents", "args": ["mcp"]`).
+The agent then gets seven tools: `rewind_sessions`, `rewind_summary`, `rewind_diff`, `rewind_replay` and
+`rewind_preview` read the log and change nothing; `rewind_to_step` and `rewind_revert_step` change files
+and run only with `confirm: true`, which the agent is told to set only after asking you. They refuse, and
+never retry, where the CLI refuses: a broken hash chain, or a file you changed after the agent's step.
+Full contract: [docs/mcp.md](docs/mcp.md).
+
+`sessions`, `summary`, `diff`, `replay` and `rewind --dry-run` also take `--json` (one JSON object on
+stdout; without `--json` the output is unchanged): [docs/json-output.md](docs/json-output.md).
+
+## Claude Code plugin and VS Code extension
+
+- **Claude Code plugin** (`plugin/`): the MCP server, the same hook `install --agent claude` writes, and
+  five slash commands (`/rewind-status`, `/rewind-replay`, `/rewind-diff`, `/rewind-preview`,
+  `/rewind-to-step`). It passes `claude plugin validate`; it is not in a marketplace yet and has not yet
+  been run inside a live Claude Code session. See [docs/plugin.md](docs/plugin.md).
+- **VS Code / Cursor extension** (`vscode/`): the session timeline in the editor, with each step's diff,
+  preview rewind and rewind to here. It calls the CLI's `--json` commands and has no runtime npm
+  dependencies. Build the `.vsix` from `vscode/`; it is not on the VS Code Marketplace or Open VSX yet
+  and has not yet been clicked through in a real VS Code window. See [docs/vscode.md](docs/vscode.md).
+- A Homebrew formula and an npm shim are written (`packaging/`), both wrappers around the PyPI package;
+  neither is published yet. See [docs/install-channels.md](docs/install-channels.md).
 
 ## Replay, rewind, branch
 

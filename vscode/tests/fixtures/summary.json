@@ -1,0 +1,31 @@
+{
+  "format": "rewindagents-summary",
+  "version": 1,
+  "session": "2026-11-17-abcd1234",
+  "steps": [
+    {
+      "seq": 1,
+      "ts": "2026-11-17T10:00:00Z",
+      "actor": "agent",
+      "event": "post",
+      "tool": "Write",
+      "files": ["src/app.py"]
+    },
+    {
+      "seq": 2,
+      "ts": "2026-11-17T10:02:00Z",
+      "actor": "agent",
+      "event": "post",
+      "tool": "Edit",
+      "files": ["src/app.py", "README.md"]
+    },
+    {
+      "seq": 3,
+      "ts": "2026-11-17T10:05:00Z",
+      "actor": "agent",
+      "event": "post",
+      "tool": "Bash",
+      "files": []
+    }
+  ]
+}

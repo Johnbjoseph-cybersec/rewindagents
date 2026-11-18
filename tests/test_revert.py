@@ -56,7 +56,7 @@ class Case(unittest.TestCase):
 
     def put(self, name, text):
         (self.root / name).parent.mkdir(parents=True, exist_ok=True)
-        (self.root / name).write_text(text)
+        (self.root / name).write_text(text, newline="")
 
     def edit(self, name, old, new):
         """An Edit tool call through the real hook."""
@@ -104,7 +104,7 @@ class TestRevertKeepsLaterWork(Case):
 
     def test_a_later_agent_edit_to_another_line_of_the_same_file_stays(self):
         self.put("config.yaml", CONFIG)
-        self.a.bash("sed debug", lambda cwd: (cwd / "config.yaml").write_text(BAD))               # step 1
+        self.a.bash("sed debug", lambda cwd: (cwd / "config.yaml").write_text(BAD, newline=""))               # step 1
         self.edit("config.yaml", "retries: 3\n", "retries: 5\n")                                    # step 2
         code, out, err = cli("revert", "1")
         self.assertEqual(code, 0, out + err)
@@ -119,6 +119,8 @@ class TestRevertKeepsLaterWork(Case):
         self.assertIn("delete   helper.py", out)
         self.assertEqual(self.f("other.py"), "x\n")
 
+    @unittest.skipIf(os.name == "nt", "no POSIX exec bit on NTFS: os.chmod there only toggles read-only, "
+                                       "so 0o755 cannot round-trip")
     def test_a_file_the_step_deleted_comes_back_with_its_mode(self):
         self.put("run.sh", "#!/bin/sh\necho hi\n")
         os.chmod(self.root / "run.sh", 0o755)
@@ -187,8 +189,8 @@ class TestConflict(Case):
     def test_one_conflicting_file_blocks_the_clean_ones_too(self):
         self.put("config.yaml", CONFIG)
         self.put("b.txt", "b\n")
-        self.a.bash("both", lambda cwd: (cwd.joinpath("config.yaml").write_text(BAD),
-                                         cwd.joinpath("b.txt").write_text("B\n")))
+        self.a.bash("both", lambda cwd: (cwd.joinpath("config.yaml").write_text(BAD, newline=""),
+                                         cwd.joinpath("b.txt").write_text("B\n", newline="")))
         self.put("config.yaml", "debug: maybe\nport: 8080\nretries: 3\n")
         code, out, err = cli("revert", "1")
         self.assertEqual(code, 1)
@@ -254,7 +256,7 @@ class TestLimits(Case):
         self.edit("config.yaml", "debug: false\n", "debug: true\n")
         lines = self.a.log.read_text().splitlines(True)
         lines[0] = lines[0].replace("Edit", "Edyt")
-        self.a.log.write_text("".join(lines))
+        self.a.log.write_text("".join(lines), newline="")
         code, _, err = cli("revert", "1")
         self.assertEqual(code, 1)
         self.assertIn("does not verify", err)
@@ -263,10 +265,10 @@ class TestLimits(Case):
     def test_a_file_outside_the_project_is_cannot(self):
         with TemporaryDirectory() as other:
             target = Path(other, "x.txt")
-            target.write_text("1\n")
+            target.write_text("1\n", newline="")
             inp = {"file_path": str(target), "content": "2\n"}
             hook.handle(self.a._p("PreToolUse", "Write", inp))
-            target.write_text("2\n")
+            target.write_text("2\n", newline="")
             hook.handle(self.a._p("PostToolUse", "Write", inp, {"ok": True}))
             code, out, _ = cli("revert", "1")
             self.assertEqual(code, 1)
@@ -278,7 +280,7 @@ class TestLimits(Case):
         self.edit("config.yaml", "debug: false\n", "debug: true\n")
         self.put("config.yaml", BAD + "# hand\n")
         obj = self.root / ".rewindagents" / "objects" / hashlib.sha256(CONFIG.encode()).hexdigest()
-        obj.write_text("tampered")
+        obj.write_text("tampered", newline="")
         code, out, _ = cli("revert", "1")
         self.assertEqual(code, 1)
         self.assertIn("stored copy missing or altered", out)
@@ -305,7 +307,7 @@ class TestHookKeepsTheAfterCopy(Case):
     def test_edit_and_bash_post_records_name_a_stored_copy_that_gc_keeps(self):
         self.put("config.yaml", CONFIG)
         self.edit("config.yaml", "debug: false\n", "debug: true\n")
-        self.a.bash("sed", lambda cwd: (cwd / "config.yaml").write_text(BAD + "# 2\n"))
+        self.a.bash("sed", lambda cwd: (cwd / "config.yaml").write_text(BAD + "# 2\n", newline=""))
         posts = [r for r in log.read(self.a.log) if r["event"] == "post"]
         for rec, text in zip(posts, (BAD, BAD + "# 2\n")):
             (entry,) = rec["args"]["after"]

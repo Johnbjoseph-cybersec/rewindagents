@@ -58,7 +58,7 @@ class TestDiff(unittest.TestCase):
 
     def test_same_files_with_paths_and_after_a_cannot(self):
         obj = self.d / ".rewindagents" / "objects" / rewind.steps(self.log)[2]["checkpoints"][0]["sha256"]
-        obj.write_text("tampered\n")               # step 3's copy of app.py ("a b c") no longer matches
+        obj.write_text("tampered\n", newline="")               # step 3's copy of app.py ("a b c") no longer matches
         for args in ([], [str(self.d / "app.py")], [str(self.d / "new.py"), str(self.d / "README")]):
             code_r, out_r, _ = cli("--log", self.log, "rewind", "2", "--dry-run",
                                    *[x for p in args for x in ("--only", p)])

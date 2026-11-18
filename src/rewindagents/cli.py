@@ -7,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import __version__, agents, bundle, export, gc, hook, log, project, rewind, runs, sessions
+from . import __version__, agents, bundle, export, gc, hook, jsonout, log, project, rewind, runs, sessions
 from . import diff as diffs, init as setup, revert as reverts, summary as summaries
 
 
@@ -31,6 +31,8 @@ def main(argv: list[str] | None = None) -> int:
                                   "directory that has one, as git finds a repository)")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
+    sub.add_parser("mcp", help="run an MCP server over stdio (newline-delimited JSON-RPC on stdin/stdout, "
+                               "seven tools); runs until stdin ends, then exits 0")
     r = sub.add_parser("record", help="append one tool call, read as JSON from stdin")
     r.add_argument("--session", required=True)
     v = sub.add_parser("verify", help="check the hash chain")
@@ -54,6 +56,9 @@ def main(argv: list[str] | None = None) -> int:
     sm = sub.add_parser("summary", help="what the agent just did: each file it created, changed or deleted (lines "
                                         "added and removed, which steps), and the commands that take it back")
     sm.add_argument("--session", help="default: the session that wrote the last record")
+    sm.add_argument("--json", action="store_true",
+                    help="print one JSON object instead (format rewindagents-summary): every step, its actor "
+                         "and the files it touched")
     rp = sub.add_parser("replay", help="list a session's steps, or show one step in full (replay N)")
     rp.add_argument("n", nargs="?", type=int, metavar="STEP", help="show this step's full input, checkpoints and "
                                                                     "result (same as --step)")
@@ -65,6 +70,10 @@ def main(argv: list[str] | None = None) -> int:
     rp.add_argument("--no-redact", action="store_true",
                     help="show secrets (API keys, tokens, private keys, .env values) as recorded; by default they "
                          "are replaced, as in export")
+    rp.add_argument("--json", action="store_true",
+                    help="print one JSON object instead (format rewindagents-replay): the session's steps (or "
+                         "just the one named by N / --step), each with its result; not with --diff. Secrets in "
+                         "a step's result are replaced unless --no-redact")
     rw = sub.add_parser("rewind", help="put the files back the way they were right after step N")
     rw.add_argument("step", type=int, help="step number from `replay` (0 = before the first step)")
     rw.add_argument("--session", help="default: the session that wrote the last record")
@@ -74,6 +83,10 @@ def main(argv: list[str] | None = None) -> int:
     rw.add_argument("--force", action="store_true",
                     help="rewind even when a file changed after the steps it takes back (by hand or another "
                          "session); those bytes are kept as a step, so the rewind can be undone")
+    rw.add_argument("--json", action="store_true",
+                    help="with --dry-run: print the plan as one JSON object instead (format "
+                         "rewindagents-rewind-plan); needs --dry-run (a real rewind is not printed as JSON on "
+                         "the CLI -- the MCP tool rewind_to_step does that, and it needs confirm:true)")
     rv = sub.add_parser("revert", help="take back step K alone and keep every later step and hand edit: a three-way "
                                        "merge per file; on a conflict nothing changes (exit 1)")
     rv.add_argument("step", type=int, help="step number from `replay`")
@@ -83,6 +96,9 @@ def main(argv: list[str] | None = None) -> int:
     dfp.add_argument("step", type=int, help="step number from `replay` (0 = before the first step)")
     dfp.add_argument("paths", nargs="*", metavar="PATH", help="only these files (or the files under these directories)")
     dfp.add_argument("--session", help="default: the session that wrote the last record")
+    dfp.add_argument("--json", action="store_true",
+                     help="print one JSON object instead (format rewindagents-diff): one entry per file, with "
+                          "its change (created, modified or deleted) and its unified diff")
     ini = sub.add_parser("init", help="find the coding agents you use and add the hook to each (asks first)")
     ini.add_argument("--yes", "-y", action="store_true", help="install without asking")
     ini.add_argument("--global", dest="global_", action="store_true",
@@ -131,6 +147,9 @@ def main(argv: list[str] | None = None) -> int:
     se.add_argument("--grep", metavar="TEXT",
                     help="only sessions with a step whose command, file or input mentions TEXT (any case); "
                          "the matching steps are listed")
+    se.add_argument("--json", action="store_true",
+                    help="print one JSON object instead (format rewindagents-sessions): each session's id, "
+                         "step count and first/last time")
     bu = sub.add_parser("bundle", help="write one session and the file copies it names to one file, "
                                        "to replay and rewind it on another machine or clone")
     bu.add_argument("--session", help="default: the session that wrote the last record")
@@ -169,6 +188,9 @@ def main(argv: list[str] | None = None) -> int:
 def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
     if getattr(a, "session", None) and a.cmd not in ("record", "hook") and Path(a.log).exists():
         a.session = sessions.resolve(a.log, a.session)     # exact id, or a unique prefix of one
+    if a.cmd == "mcp":
+        from . import mcp as mcp_server            # imported lazily: most invocations never need it
+        return mcp_server.serve()
     if a.cmd == "ui":
         from . import ui
         return ui.run(a.log, a.session, a.port, open_browser=not a.no_open)
@@ -176,12 +198,17 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
         return hook.run(agent=a.agent)
     if a.cmd == "install":
         target = a.settings or agents.config_path(agents.AGENTS[a.agent])
-        kind = hook.ephemeral()
+        try:
+            kind = hook.ephemeral()
+        except RuntimeError:  # hook.ephemeral()'s own Path.home() call, unguarded (hook.py, a different
+            kind = None       # squad's file): no HOME/USERPROFILE means that check just can't run here
         if kind:
             print(f"rewindagents: not installed: {hook.ephemeral_message(kind)}", file=sys.stderr)
             return 2
         dead = hook.replace_stale(target, agent=a.agent)
-        changed = hook.install(target, agent=a.agent)
+        # Pass the already-computed command: hook.install() only calls the unguarded hook.ephemeral()
+        # itself when `command` is omitted, and the `kind` check above already covers that for this run.
+        changed = hook.install(target, command=hook.hook_command(a.agent), agent=a.agent)
         print(f"{'installed in' if changed else 'already installed in'} {target}")
         for _, why in dead:
             print(f"  replaced a stale rewindagents hook: {why}")
@@ -271,8 +298,12 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
                 return 1
         return 0
     if a.cmd == "diff":
+        if a.json:
+            return _diff_json(a)
         return diffs.run(a.log, a.step, a.session, a.paths)
     if a.cmd == "summary":
+        if a.json:
+            return _summary_json(a)
         try:
             d = summaries.summarize(a.log, a.session)
         except rewind.RewindError as e:
@@ -288,6 +319,8 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
                       file=sys.stderr)
                 return 2
             a.step = a.n
+        if a.json:
+            return _replay_json(a)
         if a.diff and a.step is None:
             print("rewindagents: --diff needs a step: replay N --diff, or --step N --diff (diff N compares now with "
                   "step N)",
@@ -296,6 +329,9 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
         return _replay(a.log, a.session, a.step, a.diff, redact=not a.no_redact)
     if a.cmd == "sessions":
         found = sessions.sessions(a.log, a.grep)
+        if a.json:
+            print(json.dumps(jsonout.sessions_payload_from(found), ensure_ascii=False))
+            return 1 if a.grep and not found else 0
         for line in sessions.lines(found, root=rewind.project_root(a.log)):
             print(line)
         if a.grep and not found:
@@ -317,6 +353,8 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
         return 0
     if a.cmd == "revert":
         return _revert(a)
+    if a.cmd == "rewind" and a.json:
+        return _rewind_json(a)
     if a.cmd in ("rewind", "branch"):
         try:
             if a.cmd == "rewind":
@@ -422,6 +460,85 @@ def _revert_conflict(p: dict, root, out=None, dry_run: bool = False) -> None:
           f"{'they were' if n != 1 else 'it was'} before step {k}, losing the later changes in "
           f"{'them' if n != 1 else 'it'} (kept as a step, so it can be undone): "
           f"{invocation()} rewind {k - 1} {only} --force --session {sid}", file=out)
+
+
+def _summary_json(a: argparse.Namespace) -> int:
+    try:
+        payload = jsonout.summary_payload(a.log, a.session)
+    except rewind.RewindError as e:
+        print(json.dumps(jsonout.error_payload(str(e)), ensure_ascii=False))
+        return 1
+    print(json.dumps(payload, ensure_ascii=False))
+    return 0
+
+
+def _diff_json(a: argparse.Namespace) -> int:
+    """`diff --json`: the same plan `diff` (without --json) reads, as one JSON object on stdout instead of a
+    diff on stdout and warnings on stderr; the warnings still go to stderr (CANNOT, drift, an unfinished
+    scan), and the exit code is the same diff.run already returns for this plan."""
+    try:
+        payload, p = jsonout.diff_payload(a.log, a.step, a.session, a.paths)
+    except rewind.StepRangeError as e:
+        print(json.dumps(jsonout.error_payload(str(e)), ensure_ascii=False))
+        return 2
+    except rewind.RewindError as e:
+        print(json.dumps(jsonout.error_payload(str(e)), ensure_ascii=False))
+        return 1
+    print(json.dumps(payload, ensure_ascii=False))
+    root = rewind.project_root(a.log)
+    for path_s, why in p["cannot"]:
+        print(f"rewindagents: CANNOT {rewind.relative(path_s, root)}: {why}", file=sys.stderr)
+    for q in p["unmatched"]:
+        print(f"rewindagents: {q}: no step after step {a.step} changed it", file=sys.stderr)
+    for d in p.get("drift") or []:
+        print(f"rewindagents: WARNING {rewind.relative(d['path'], root)}: {rewind.drift_why(d)}; rewind {a.step} "
+              f"would overwrite that, so it refuses without --force", file=sys.stderr)
+    if p["bash_uncovered"]:
+        print(f"rewindagents: note: {p['bash_uncovered']} step(s) after step {a.step} were not scanned before "
+              f"and after; files they changed are not in this diff", file=sys.stderr)
+    if p["scan_early"]:
+        print(f"rewindagents: note: {p['scan_early']} step(s) after step {a.step} ran a command in the "
+              f"background, so their after-scan may have run before it finished; files it changed later may "
+              f"not be in this diff", file=sys.stderr)
+    if p.get("torn"):
+        print(f"rewindagents: note: the log has a torn write ({p['torn']}); the call it was recording is not "
+              f"in the log, so files it changed may not be in this diff", file=sys.stderr)
+    return jsonout.diff_exit_code(p)
+
+
+def _replay_json(a: argparse.Namespace) -> int:
+    if a.diff:
+        print("rewindagents: --diff and --json are not supported together; `diff --json` shows a step's changes "
+              "as JSON", file=sys.stderr)
+        return 2
+    try:
+        payload = jsonout.replay_payload(a.log, a.session, step=a.step, redact_secrets=not a.no_redact)
+    except rewind.StepRangeError as e:
+        print(json.dumps(jsonout.error_payload(str(e)), ensure_ascii=False))
+        return 2
+    except rewind.RewindError as e:
+        print(json.dumps(jsonout.error_payload(str(e)), ensure_ascii=False))
+        return 1
+    print(json.dumps(payload, ensure_ascii=False))
+    return 0
+
+
+def _rewind_json(a: argparse.Namespace) -> int:
+    if not a.dry_run:
+        print("rewindagents: --json needs --dry-run (a real rewind is not printed as JSON on the CLI; the MCP "
+              "tool rewind_to_step does that, and it needs confirm:true)", file=sys.stderr)
+        return 2
+    try:
+        p = rewind.rewind(a.log, a.step, a.session, dry_run=True, only=a.only, force=a.force)
+    except rewind.StepRangeError as e:
+        print(json.dumps(jsonout.error_payload(str(e)), ensure_ascii=False))
+        return 2
+    except rewind.RewindError as e:
+        print(json.dumps(jsonout.error_payload(str(e)), ensure_ascii=False))
+        return 1
+    root = rewind.project_root(a.log)
+    print(json.dumps(jsonout.rewind_plan_payload(p, root), ensure_ascii=False))
+    return jsonout.rewind_dry_run_exit_code(p, a.force)
 
 
 def _compare(a: argparse.Namespace) -> int:

@@ -130,6 +130,8 @@ GC_SENTENCES = ("`gc` deletes every stored copy that no", "Every step of every s
                 "Scans younger than 1 day are never dropped")
 # Under "Timeline in a browser" and "Attach to a PR" (R27). Sentences with **bold** labels are left out
 # (md_inline renders code spans only). "It has not run on GitHub yet" must stay while the action has not run (R18b).
+MCP_HEADING = "The agent can undo its own steps: MCP server"
+MCP_SENTENCES = ("The agent then gets seven tools", "They refuse, and")
 UI_SENTENCES = ("A local page over the log", "Click a step, or move with", "It listens on 127.0.0.1 only",
                 "The link it prints carries a random token", "Rewinds are POST only",
                 "No fonts, scripts or images are fetched")
@@ -193,7 +195,7 @@ def facts():
             ("install", "Install"), ("hook", "Claude Code hook"), ("agents", "Codex and Cursor hooks"),
             ("replay", "Replay, rewind, branch"),
             ("export", "Export a replay"), ("sessions", "Find a session"), ("verify", "What the chain does not catch"),
-            ("record", "Use it"), ("tests", "Tests"), ("quick", "Quick start"), ("ui", "Timeline UI"))},
+            ("record", "Use it"), ("tests", "Tests"), ("quick", "Quick start"), ("ui", "Timeline UI"), ("mcp", MCP_HEADING))},
         "quick_use": readme_blocks(readme, "Quick start")[1],
         "rescue": readme_block(readme, RESCUE),
         "rescue_says": [readme_sentence(readme, s) for s in RESCUE_SENTENCES],
@@ -207,6 +209,7 @@ def facts():
         "gc": next(blk for blk in readme_blocks(readme, "Clean up stored copies") if blk[0].startswith("rewindagents gc")),
         "gc_says": [readme_sentence(readme, s) for s in GC_SENTENCES],
         "ui_says": [readme_sentence(readme, s) for s in UI_SENTENCES],
+        "mcp_says": [readme_sentence(readme, s) for s in MCP_SENTENCES],
         "attach": next(blk for blk in readme_blocks(readme, "Attach a replay to a pull request")
                        if blk[0].startswith("rewindagents bundle")),
         "attach_yaml": readme_blocks(readme, "Attach a replay to a pull request", "yaml")[0],
@@ -1150,7 +1153,7 @@ def docs_html(cfg, f):
     b = f["blocks"]
     desc = "Getting started with rewindagents: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, fork a step and compare the runs, export, find a session, verify the log."
     toc = [("install", "Install"), ("hook", "Add the hook"), ("after", "After a bad run"), ("first", "A first session"), ("recorded", "What gets recorded"),
-           ("replay", "Replay and rewind"), ("branch", "Branch"), ("fork", "Fork and compare"), ("ui", "Timeline in a browser"), ("export", "Export"),
+           ("replay", "Replay and rewind"), ("branch", "Branch"), ("fork", "Fork and compare"), ("ui", "Timeline in a browser"), ("mcp", "MCP server"), ("export", "Export"),
            ("sessions", "Find a session"), ("bundle", "Move a session"), ("attach", "Attach to a PR"),
            ("verify", "Verify"), ("status", "Is it recording?"), ("gc", "Free space"),
            ("overhead", "Overhead"), ("limits", "Limits"),
@@ -1228,6 +1231,10 @@ def docs_html(cfg, f):
 %(ui)s
 <p>%(ui_says)s</p>
 
+<h2 id="mcp">MCP server</h2>
+%(mcp)s
+<p>%(mcp_says)s</p>
+
 <h2 id="export">Export</h2>
 %(export)s
 <p>One HTML file with the whole session: every step with its tool, input and result, and for every file a step checkpointed, the change that step made as a unified diff (the file before the step against the file after it: its next checkpoint in the session, or the file as it is now). Inline CSS only, no scripts, nothing fetched. Paths are shown relative to the project; where the project lives on disk is not in the page.</p>
@@ -1300,6 +1307,7 @@ def docs_html(cfg, f):
        "fork_limits": "".join("<li>%s</li>" % md_inline(x) for x in f["fork_limits"]),
        "runs": panel(runs_rows(f["runs"], "hero")), "diff": panel(runs_rows(f["runs"], "diff")),
        "ui": code(b["ui"]), "ui_says": " ".join(md_inline(s) for s in f["ui_says"]),
+       "mcp": code(b["mcp"]), "mcp_says": " ".join(md_inline(s) for s in f["mcp_says"]),
        "attach": code(f["attach"]), "attach_says": " ".join(md_inline(s) for s in f["attach_says"]),
        "attach_yaml": plain(f["attach_yaml"]), "action_says": " ".join(md_inline(s) for s in f["action_says"]),
        "codex": e(f["agents"]["codex"]["settings"]),

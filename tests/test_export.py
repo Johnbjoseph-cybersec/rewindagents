@@ -45,7 +45,10 @@ def wrecked(d, session="s1"):
     a.write("app.py", "def main():\n    return 2\n")                       # 2 edits
     a.write("junk.py", "x = 1\n")                                          # 3 creates
     a.write("app.py", "def main():\n    raise SystemExit('wrecked')\n")    # 4 breaks
-    a.bash("mv junk.py moved.py", action=lambda cwd: os.rename(cwd / "junk.py", cwd / "moved.py"))  # 5
+    # os.replace, not os.rename: POSIX rename() silently replaces an existing destination, but Windows's
+    # rename() raises FileExistsError (WinError 183) when the destination is already there; os.replace is
+    # the one call both platforms do the same (`mv junk.py moved.py`, simulated).
+    a.bash("mv junk.py moved.py", action=lambda cwd: os.replace(cwd / "junk.py", cwd / "moved.py"))  # 5
     return a
 
 
@@ -132,7 +135,7 @@ class TestPage(unittest.TestCase):
         with TemporaryDirectory() as d:
             a = wrecked(d)
             a.bash('echo "<script>alert(1)</script>" > x.html',
-                   action=lambda cwd: (cwd / "x.html").write_text("<script>alert(1)</script>\n"))
+                   action=lambda cwd: (cwd / "x.html").write_text("<script>alert(1)</script>\n", newline=""))
             page = export.render(export.build(a.log))
             b = Balance()
             b.feed(page)
@@ -198,7 +201,7 @@ class TestPage(unittest.TestCase):
             rec = json.loads(lines[1])
             rec["tool"] = "Edit"
             lines[1] = json.dumps(rec, sort_keys=True)
-            a.log.write_text("\n".join(lines) + "\n")
+            a.log.write_text("\n".join(lines) + "\n", newline="")
             page = export.render(export.build(a.log))
             self.assertIn("This log does not verify", page)
             self.assertIn("record 2: contents altered", page)
@@ -273,7 +276,7 @@ class TestCli(unittest.TestCase):
             rec = json.loads(lines[0])
             rec["tool"] = "Edit"
             lines[0] = json.dumps(rec, sort_keys=True)
-            a.log.write_text("\n".join(lines) + "\n")
+            a.log.write_text("\n".join(lines) + "\n", newline="")
             code, out, err = cli("--log", str(a.log), "export")
             self.assertEqual(code, 1)
             self.assertIn("wrote", out)                 # the page is still written

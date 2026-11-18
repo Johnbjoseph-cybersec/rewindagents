@@ -1,0 +1,24 @@
+{
+  "agent": "claude",
+  "agent_version": "2.1.294 (Claude Code)",
+  "asserted": {
+    "checkpoint_restored": true,
+    "post_event": true,
+    "pre_event": true
+  },
+  "commands": [
+    "~/.local/bin/claude --version",
+    "PYTHONPATH=~/fire/rewindagent/src ~/fire/rewindagent/.venv/bin/python -m rewindagents install --agent claude --settings /var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/rewindagents-live-claude-8j8jkf_i/.claude/settings.json",
+    "~/.local/bin/claude -p 'Create a file named rewindagents-live-check.txt in the current directory containing exactly one line of text: live check for claude. Do not create, edit or delete any other file.' --permission-mode bypassPermissions --setting-sources project --output-format json",
+    "PYTHONPATH=~/fire/rewindagent/src ~/fire/rewindagent/.venv/bin/python -m rewindagents rewind 0 --dry-run --session 3e0b1324-c8cc-45f3-a925-5e412f3f1b6d"
+  ],
+  "log_records": 2,
+  "notes": "",
+  "ran_at": "2026-11-17T22:07:04+00:00",
+  "real_config_check": {
+    "path": "~/.claude/settings.json",
+    "unchanged": true
+  },
+  "scratch_dir": "/var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/rewindagents-live-claude-8j8jkf_i",
+  "status": "VERIFIED_LIVE"
+}

@@ -31,6 +31,11 @@ VENV = r"C:\Users\dev\proj\.venv\Scripts\python.exe"
 SPACED = r"C:\Program Files\Python312\python.exe"
 SPACED_FWD = "C:/Program Files/Python312/python.exe"
 MAIN = SRC / "rewindagents" / "__main__.py"
+# A stand-in for "the interpreter is a POSIX path", driven the same way the Windows paths above are: by the
+# path's own shape, not by which OS runs the test. `sys.executable` is NOT this on windows-latest CI (R42
+# found it there: the real interpreter path IS a Windows one, so hook.hook_command() takes the Windows branch
+# for it too), so a test that wants "the POSIX form is unchanged" must say so with a POSIX path of its own.
+POSIX_PY = "/usr/bin/python3"
 
 
 def agent_tail(name):
@@ -57,10 +62,14 @@ class TestWindowsForm(unittest.TestCase):
 
     def test_copilots_fail_closed_guard_is_powershell_not_bash(self):
         # Copilot's Windows key is `powershell`; `|| true` is bash (and `true` is not a PowerShell command).
+        # Driven by the interpreter path's own shape (module docstring), not by the OS running this test: on
+        # windows-latest CI the real `sys.executable` IS a Windows path, so a POSIX stand-in proves the POSIX
+        # form separately from proving the Windows one above (R94, CI run 44161605918).
         with patch.object(hook, "installed", return_value=True):
             self.assertEqual(hook.hook_command("copilot", python=PY),
                              f"{PY_FWD} -m rewindagents hook --agent copilot; exit 0")
-            self.assertEqual(hook.hook_command("copilot"), f"{shlex.quote(sys.executable)} -m rewindagents hook --agent copilot || true")
+            self.assertEqual(hook.hook_command("copilot", python=POSIX_PY),
+                             f"{shlex.quote(POSIX_PY)} -m rewindagents hook --agent copilot || true")
 
     def test_a_path_with_a_space_is_quoted_for_the_agents_documented_windows_shell(self):
         with patch.object(hook, "installed", return_value=True):
@@ -91,18 +100,23 @@ class TestWindowsForm(unittest.TestCase):
                 patch.object(hook, "source_dir", return_value=Path(r"C:\my clone\src")):
             self.assertEqual(hook.hook_command("claude", python=PY),
                              f'{PY_FWD} "C:/my clone/src/rewindagents/__main__.py" hook')
-        # The POSIX clone form is unchanged.
+        # The POSIX clone form is unchanged. A POSIX stand-in, not the real `sys.executable`: on windows-latest
+        # CI that is a Windows path, and this block means to prove the *other* branch (R94).
         with patch.object(hook, "installed", return_value=False):
-            self.assertEqual(hook.hook_command("codex"),
-                             f"PYTHONPATH={shlex.quote(str(SRC))} {shlex.quote(sys.executable)} -m rewindagents hook --agent codex")
+            self.assertEqual(hook.hook_command("codex", python=POSIX_PY),
+                             f"PYTHONPATH={shlex.quote(str(SRC))} {shlex.quote(POSIX_PY)} -m rewindagents hook --agent codex")
 
     def test_the_posix_form_is_unchanged_for_every_agent(self):
-        py = shlex.quote(sys.executable)
+        # A POSIX stand-in, not the real `sys.executable`: the form is chosen from the interpreter path's own
+        # shape (module docstring), and on windows-latest CI the real interpreter IS a Windows path, so asking
+        # for "the POSIX form" must say so explicitly rather than ride on whatever OS happens to run this (R94,
+        # CI run 44161605918: this test failed there comparing a Windows hook_command() output to a POSIX one).
+        py = shlex.quote(POSIX_PY)
         with patch.object(hook, "installed", return_value=True):
             for name, ag in agents.AGENTS.items():
-                self.assertEqual(hook.hook_command(name),
+                self.assertEqual(hook.hook_command(name, python=POSIX_PY),
                                  f"{py} -m rewindagents hook{agent_tail(name)}" + (" || true" if ag.fail_closed else ""))
-                self.assertFalse(agents.windows_command(hook.hook_command(name)))
+                self.assertFalse(agents.windows_command(hook.hook_command(name, python=POSIX_PY)))
 
     def test_windows_command_is_told_by_the_paths_own_shape(self):
         for cmd in (PY, f"{PY_FWD} -m rewindagents hook", f'& "{SPACED_FWD}" -m x', f'"{SPACED}" -m x',

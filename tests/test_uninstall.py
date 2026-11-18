@@ -35,7 +35,7 @@ class TestUninstall(unittest.TestCase):
         for agent, before in (("claude", OTHER_GROUPS), ("codex", OTHER_GROUPS), ("cursor", OTHER_CURSOR)):
             with self.subTest(agent=agent), TemporaryDirectory() as d:
                 f = Path(d, "settings.json")
-                f.write_text(json.dumps(before))
+                f.write_text(json.dumps(before), newline="")
                 self.assertTrue(hook.install(f, command="rw", agent=agent))
                 self.assertIn("rw", agents.commands_in(agents.AGENTS[agent], f)[agents.AGENTS[agent].events[1]])
                 self.assertTrue(hook.uninstall(f, command="rw", agent=agent))
@@ -47,7 +47,7 @@ class TestUninstall(unittest.TestCase):
         with TemporaryDirectory() as d:
             f = Path(d, "settings.json")
             f.write_text(json.dumps({"hooks": {"PreToolUse": [{"matcher": "*", "hooks": [
-                {"type": "command", "command": "other"}, {"type": "command", "command": "rw"}]}]}}))
+                {"type": "command", "command": "other"}, {"type": "command", "command": "rw"}]}]}}), newline="")
             self.assertTrue(hook.uninstall(f, command="rw"))
             self.assertEqual(json.loads(f.read_text()), {"hooks": {"PreToolUse": [
                 {"matcher": "*", "hooks": [{"type": "command", "command": "other"}]}]}})
@@ -58,7 +58,7 @@ class TestUninstall(unittest.TestCase):
             f = Path(d, "hooks.json")
             body = json.dumps({"version": 1, "hooks": {"preToolUse": [{"command": "rw --agent cursor x"},
                                                                       {"command": "/other/python rw"}]}})
-            f.write_text(body)
+            f.write_text(body, newline="")
             self.assertFalse(hook.uninstall(f, command="rw", agent="cursor"))
             self.assertEqual(f.read_text(), body)
 
@@ -67,13 +67,13 @@ class TestUninstall(unittest.TestCase):
             for agent, before in (("claude", OTHER_GROUPS), ("cursor", OTHER_CURSOR)):
                 f = Path(d, agent + ".json")
                 raw = json.dumps(before, indent=4) + "\n\n"        # formatting install would not write
-                f.write_text(raw)
+                f.write_text(raw, newline="")
                 mtime = f.stat().st_mtime_ns
                 self.assertFalse(hook.uninstall(f, command="rw", agent=agent))
                 self.assertEqual(f.read_bytes(), raw.encode())
                 self.assertEqual(f.stat().st_mtime_ns, mtime, "not rewritten")
             f = Path(d, "empty.json")
-            f.write_text("")
+            f.write_text("", newline="")
             self.assertFalse(hook.uninstall(f, command="rw"))
             self.assertEqual(f.read_text(), "")
             self.assertFalse(hook.uninstall(Path(d, "missing.json"), command="rw"))
@@ -82,7 +82,7 @@ class TestUninstall(unittest.TestCase):
     def test_not_a_json_object_is_refused_and_unchanged(self):
         with TemporaryDirectory() as d:
             f = Path(d, "s.json")
-            f.write_text("[1]")
+            f.write_text("[1]", newline="")
             with self.assertRaises(ValueError):
                 hook.uninstall(f, command="rw")
             self.assertEqual(f.read_text(), "[1]")
@@ -104,7 +104,7 @@ class TestCli(unittest.TestCase):
             try:
                 store = Path(d, ".rewindagents")
                 store.mkdir()
-                Path(store, "log.jsonl").write_text("{}\n")
+                Path(store, "log.jsonl").write_text("{}\n", newline="")
                 for agent, path in (("cursor", ".cursor/hooks.json"), ("codex", ".codex/hooks.json"),
                                     ("claude", ".claude/settings.json")):
                     self.assertEqual(cli("uninstall", "--agent", agent),

@@ -1,0 +1,8 @@
+# Scratch projects the live harness creates belong in the system temp directory (see harness/live/run.py),
+# never in the repo -- but ignore the common local names anyway, in case a future run or a manual debug
+# session points --scratch somewhere under here.
+live/.scratch/
+live/scratch/
+**/*.scratch/
+__pycache__/
+*.pyc

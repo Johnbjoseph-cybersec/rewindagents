@@ -458,7 +458,7 @@ class TestActions(UICase):
         rec = json.loads(lines[1])
         rec["args"]["input"]["content"] = "tampered"
         lines[1] = json.dumps(rec, sort_keys=True) + "\n"
-        self.a.log.write_text("".join(lines))
+        self.a.log.write_text("".join(lines), newline="")
         m = self.s.json("/api/sessions")[1]
         self.assertFalse(m["chain"]["ok"])
         for p in ("/api/preview", "/api/rewind"):

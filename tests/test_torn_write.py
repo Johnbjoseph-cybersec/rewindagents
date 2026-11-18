@@ -37,7 +37,7 @@ class TornWrite(unittest.TestCase):
         self.d = Path(self.tmp.name).resolve()
         self.lp = self.d / ".rewindagents" / "log.jsonl"
         self.app = self.d / "app.py"
-        self.app.write_text("print('v1')\n")
+        self.app.write_text("print('v1')\n", newline="", encoding="utf-8")
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -53,7 +53,10 @@ class TornWrite(unittest.TestCase):
         """One Write of app.py through the real hook: pre (checkpoint), the write, post."""
         args = {"tool": "Write", "tool_input": {"file_path": str(self.app), "content": text}}
         self.hook("pre", **args)
-        self.app.write_text(text)
+        # encoding="utf-8": Path.write_text()'s own default is the locale-preferred encoding (cp1252 on a
+        # default windows-latest run), which cannot even represent this file's multibyte test content
+        # (café, 日本) and would raise UnicodeEncodeError instead of writing it.
+        self.app.write_text(text, newline="", encoding="utf-8")
         self.hook("post", **args)
 
     def tear(self, cut=0.5):
@@ -165,7 +168,7 @@ class TornWrite(unittest.TestCase):
         """Put a copy nothing names into the store, as a Bash pre-scan leaves an unchanged file; its name."""
         name = hashlib.sha256(text.encode()).hexdigest()
         (self.lp.parent / "objects").mkdir(exist_ok=True)
-        (self.lp.parent / "objects" / name).write_text(text)
+        (self.lp.parent / "objects" / name).write_text(text, newline="")
         return name
 
     def objects(self):
@@ -237,14 +240,14 @@ class TornWrite(unittest.TestCase):
         self.addCleanup(tmp.cleanup)
         src = Path(tmp.name).resolve()
         lib = src / "lib.py"
-        lib.write_text("A = 1\n")
+        lib.write_text("A = 1\n", newline="")
         for when in ("pre", "post"):
             p = payload("claude", src, when, tool="Write", tool_input={"file_path": str(lib), "content": "A = 2\n"})
             p["session_id"] = session
             r = run_hook(json.dumps(p), src, "claude")
             self.assertEqual(r.returncode, 0, r.stderr)
             if when == "pre":
-                lib.write_text("A = 2\n")
+                lib.write_text("A = 2\n", newline="")
         out = src / f"{session}.bundle"
         p = cli(src, "bundle", "--out", str(out))
         self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
@@ -287,7 +290,7 @@ class TornWrite(unittest.TestCase):
         bad = json.loads(b.read_text())
         bad["records"][0]["result"] = "edited"                    # altered after bundling
         alt = b.with_name("altered.bundle")
-        alt.write_text(json.dumps(bad))
+        alt.write_text(json.dumps(bad), newline="")
         p = cli(self.d, "import", str(alt))
         self.assertEqual(p.returncode, 1)
         self.assertIn("bundle altered", p.stderr)

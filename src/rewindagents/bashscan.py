@@ -60,7 +60,14 @@ def project_files(root: Path, ignored_files: bool = False) -> list[str] | None:
         for dirpath, dirnames, filenames in os.walk(root):
             dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
             for f in filenames:
-                rels.append(os.path.relpath(os.path.join(dirpath, f), root))
+                # forward-slash, like the git-ls-files branch above and rewind.relative()'s as_posix():
+                # on Windows os.path.relpath returns '\'-separated paths, which would otherwise be a
+                # different dict key from the same file's path elsewhere in this project (runs.start_state
+                # keys one dict partly from this, partly from rewind.relative()). Replacing the literal
+                # backslash (not os.sep, which is "/" here on POSIX and would make this a no-op even when
+                # a path was built with Windows semantics, e.g. under test) matches PureWindowsPath's own
+                # as_posix(): POSIX filenames essentially never contain one.
+                rels.append(os.path.relpath(os.path.join(dirpath, f), root).replace("\\", "/"))
                 if len(rels) > MAX_SCAN_FILES:
                     return None
     out = []

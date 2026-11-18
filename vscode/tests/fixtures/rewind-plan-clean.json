@@ -1,0 +1,11 @@
+{
+  "format": "rewindagents-rewind-plan",
+  "version": 1,
+  "session": "2026-11-17-abcd1234",
+  "to": 1,
+  "restores": [
+    { "path": "src/app.py", "action": "restore" },
+    { "path": "README.md", "action": "delete" }
+  ],
+  "drift": []
+}

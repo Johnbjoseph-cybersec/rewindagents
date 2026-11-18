@@ -313,8 +313,24 @@ def run(stdin=None, agent: str = agents.DEFAULT) -> int:
         print(f"rewindagents hook: not recorded: {e}", file=sys.stderr)
     reply = agents.AGENTS[agent].reply.get(event, agents.AGENTS[agent].reply.get("unknown", ""))
     if reply:
-        print(reply)
+        _write_reply_line(reply)
     return 0
+
+
+def _write_reply_line(reply: str) -> None:
+    """Print `reply` followed by exactly one '\\n', never '\\r\\n'. Every agent's docs give the reply as a
+    bare line; `print()` alone would write '\\r\\n' on Windows (sys.stdout is a TextIOWrapper with
+    newline=None there, which translates '\\n' on write same as on read), and a reply an agent's own JSON
+    parser does not expect turns into a parse error (R94, CI run 44161605918: test_hook_hardening's `reply()`
+    fixture compares against the bare '\\n' form). Writing straight to the binary buffer skips that
+    translation; stdout replaced by something without one (tests that capture it as a plain stream) falls
+    back to print()."""
+    buf = getattr(sys.stdout, "buffer", None)
+    if buf is None:
+        print(reply)
+        return
+    buf.write(reply.encode("utf-8") + b"\n")
+    buf.flush()
 
 
 def installed() -> bool:
@@ -436,8 +452,9 @@ def _windows_command(ag: agents.Agent, python: str, src: Path | None, tail: str)
 
 
 # `... -m rewindagents hook`, `rewindagents hook` (on PATH), or the clone-by-file form `.../rewindagents/__main__.py hook`
-# (a quote may close the path first).
-_OURS = re.compile(r"rewindagents(?:[/\\]__main__\.py)?\"?\s+hook\b")
+# (a quote may close the path first: double on Windows's own quoting, single when a Windows-shaped path reaches
+# here through shlex.quote's POSIX quoting, as a real Windows interpreter path does on windows-latest CI).
+_OURS = re.compile(r"rewindagents(?:[/\\]__main__\.py)?['\"]?\s+hook\b")
 
 
 def ours(command: str) -> bool:

@@ -29,7 +29,7 @@ class DriftCase(unittest.TestCase):
     def setUp(self):
         self.tmp = TemporaryDirectory()
         self.root = Path(self.tmp.name).resolve()
-        (self.root / "calc.py").write_text(ORIGINAL)
+        (self.root / "calc.py").write_text(ORIGINAL, newline="")
         self.old = os.getcwd()
         os.chdir(self.root)
         self.a = Agent(self.root, "aaaaaaaa-1111")
@@ -47,7 +47,7 @@ class DriftCase(unittest.TestCase):
 class TestHandEdit(DriftCase):
     def setUp(self):
         super().setUp()
-        (self.root / "calc.py").write_text(BY_HAND)       # by hand, after the session's last step
+        (self.root / "calc.py").write_text(BY_HAND, newline="")       # by hand, after the session's last step
 
     def test_the_post_record_holds_the_hash_right_after_the_step(self):
         post = [r for r in log.read(self.log) if r["event"] == "post"][-1]
@@ -125,7 +125,7 @@ class TestLaterSession(DriftCase):
 
     def setUp(self):
         super().setUp()
-        (self.root / "calc.py").write_text(BY_HAND)
+        (self.root / "calc.py").write_text(BY_HAND, newline="")
         self.b = Agent(self.root, "bbbbbbbb-2222")
         self.b.write("calc.py", BY_B)
 
@@ -158,10 +158,10 @@ class TestLaterSession(DriftCase):
 class TestBash(DriftCase):
     def test_a_file_a_command_changed_then_edited_by_hand_is_caught(self):
         self.a.bash("sed -i s/add/plus/ calc.py",
-                    lambda cwd: (cwd / "calc.py").write_text(BY_A.replace("add", "plus")))
+                    lambda cwd: (cwd / "calc.py").write_text(BY_A.replace("add", "plus"), newline=""))
         post = [r for r in log.read(self.log) if r["event"] == "post"][-1]
         self.assertEqual([x["path"] for x in post["args"]["after"]], [str(self.root / "calc.py")])
-        (self.root / "calc.py").write_text("# mine\n")
+        (self.root / "calc.py").write_text("# mine\n", newline="")
         p = rewind.plan(self.log, 1)
         self.assertEqual([(rewind.relative(d["path"], self.root), d["outside"]) for d in p["drift"]],
                          [("calc.py", True)])
@@ -170,7 +170,7 @@ class TestBash(DriftCase):
         self.assertEqual(self.calc(), "# mine\n")
 
     def test_a_hand_edit_between_two_steps_of_the_same_session_is_caught(self):
-        (self.root / "calc.py").write_text(BY_HAND)
+        (self.root / "calc.py").write_text(BY_HAND, newline="")
         self.a.write("calc.py", BY_B)                            # the agent edits on top of the hand edit
         p = rewind.plan(self.log, 0)
         self.assertEqual(len(p["drift"]), 1)

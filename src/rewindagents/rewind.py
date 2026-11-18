@@ -136,7 +136,7 @@ def relative(path: str | Path, root: Path | None) -> str:
     if root is None:
         return str(path)
     try:
-        return str(Path(path).resolve().relative_to(root))
+        return Path(path).resolve().relative_to(root).as_posix()
     except (ValueError, OSError):
         return str(path)
 

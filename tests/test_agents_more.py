@@ -164,7 +164,9 @@ class Shared:
             self.assertEqual(len({c for v in cmds.values() for c in v}), 1, "one command for every event")
             self.assertTrue(all(len(v) == 1 for v in cmds.values()), cmds)
             cmd = cmds[ag.events[0]][0]
-            self.assertIn(" -m rewindagents hook --agent %s" % self.agent, cmd)
+            # Not "-m rewindagents hook ...": from a clone, a Windows interpreter path takes the file-path
+            # form (no "-m"); "hook --agent X" is the part both forms share (R94).
+            self.assertIn("hook --agent %s" % self.agent, cmd)
             Path(d, "f.txt").write_text("1\n")
             p = subprocess.run(["bash", "-c", cmd], cwd=d, capture_output=True, text=True,
                                input=json.dumps(self.pre(d, self.shell, {"command": "ls"})))

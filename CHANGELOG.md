@@ -5,6 +5,29 @@ and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html). 
 minor version may change behaviour; every release is a git tag `vX.Y.Z` that equals `rewindagents.__version__`,
 and only a published GitHub release publishes to PyPI (`.github/workflows/publish.yml` refuses a mismatched tag).
 
+## [1.1.0] - 2026-11-18
+
+### Added
+- `rewindagents mcp`: a stdio MCP server (JSON-RPC 2.0, standard library only) with seven tools:
+  `rewind_sessions`, `rewind_summary`, `rewind_diff`, `rewind_replay`, `rewind_preview` (read only) and
+  `rewind_to_step`, `rewind_revert_step` (each needs `confirm: true` and refuses, never retries, where the
+  CLI refuses). See `docs/mcp.md`.
+- `--json` on `sessions`, `summary`, `diff`, `replay` and `rewind --dry-run`; output without `--json` is
+  unchanged. See `docs/json-output.md`.
+- A Claude Code plugin at `plugin/`: the MCP server, the hook and five slash commands. Passes
+  `claude plugin validate`; not in a marketplace yet, not yet run in a live Claude Code session.
+- A VS Code / Cursor extension at `vscode/` over the CLI's `--json` commands, no runtime npm dependencies.
+  Not published to a marketplace yet, not yet run in a real VS Code window.
+- A Homebrew formula and an npm shim at `packaging/`, both wrappers around the PyPI package; not published.
+- `harness/live/`, a harness that drives a real agent in a scratch project and checks the recorded log.
+  Run on 2026-11-18: Claude Code verified live; the other six agents were not installed, so their status is
+  unchanged (tested with the documented payloads, not live).
+
+### Fixed
+- Windows: local fixes for most of the 101 failures the Windows CI job reported; the rest are listed in
+  `docs/windows.md`. Windows is still not supported, and the Windows CI job stays experimental until it
+  runs green.
+
 ## [1.0.0] - 2026-11-18
 
 ### Changed
@@ -59,6 +82,7 @@ Pre-release, GitHub only.
 - `fork` any recorded step and `compare` the runs (files, lines, and your own check).
 - Hooks for seven agents: Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Factory Droid, Qwen Code.
 
+[1.1.0]: https://github.com/Johnbjoseph-cybersec/rewindagents/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Johnbjoseph-cybersec/rewindagents/compare/v0.0.9...v1.0.0
 [0.0.9]: https://github.com/Johnbjoseph-cybersec/rewindagents/compare/v0.0.8...v0.0.9
 [0.0.8]: https://github.com/Johnbjoseph-cybersec/rewindagents/compare/v0.0.7...v0.0.8

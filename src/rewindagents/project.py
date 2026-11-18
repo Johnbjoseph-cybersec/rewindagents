@@ -33,10 +33,15 @@ def find_store_root(start: str | Path, home: str | Path | None = None) -> Path |
     # Walk the path as given (not resolved): recorded paths keep the spelling the agent used, and a resolved
     # root (/private/var/... on macOS) would name the same files differently. Compare resolved forms only.
     start = Path(os.path.abspath(start))
-    home = _resolve(home if home is not None else Path.home())
+    if home is None:
+        try:
+            home = Path.home()
+        except RuntimeError:  # no HOME/USERPROFILE in this environment (seen on windows-latest CI): the walk
+            home = None       # still works, it just cannot tell "inside the home directory" from anywhere else
+    home = _resolve(home) if home is not None else None
     for d in (start, *start.parents):
         rd = _resolve(d)
-        if d != start and (rd == home or rd in home.parents):
+        if home is not None and d != start and (rd == home or rd in home.parents):
             break                       # never adopt ~/.rewindagents (or one above it) from a subdirectory
         if (d / STORE).is_dir():
             return d

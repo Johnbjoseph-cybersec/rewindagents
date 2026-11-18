@@ -577,6 +577,8 @@ class TestSite(unittest.TestCase):
         build = load_build()
         cmds = self.check_docs_answer("ui", "Timeline in a browser", "Timeline UI", "rewindagents ui", build.UI_SENTENCES)
         self.assertEqual(cmds[0], "rewindagents ui")
+        cmds = self.check_docs_answer("mcp", "MCP server", build.MCP_HEADING, "rewindagents mcp", build.MCP_SENTENCES)
+        self.assertEqual(cmds[0], "rewindagents mcp")
         cmds = self.check_docs_answer("attach", "Attach to a PR", "Attach a replay to a pull request",
                                       "rewindagents bundle", build.ATTACH_SENTENCES)
         self.assertEqual(cmds[0], "rewindagents bundle --out .rewindagents-pr.bundle")

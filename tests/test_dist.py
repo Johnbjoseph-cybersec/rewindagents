@@ -111,7 +111,27 @@ class EphemeralPythonTest(unittest.TestCase):
             target = Path(d) / "settings.json"
             with mock.patch.dict(os.environ, {"UV_CACHE_DIR": str(Path(d) / "uvcache")}):
                 self.assertTrue(hook.install(target))
-            self.assertIn("rewindagents hook", target.read_text())
+            # Two separate checks, not one "rewindagents hook" substring: from a clone, a Windows interpreter
+            # path takes the file-path form (.../rewindagents/__main__.py hook), so "rewindagents" and "hook"
+            # are not adjacent there the way they are in the POSIX "-m rewindagents hook" form (R94).
+            written = target.read_text()
+            self.assertIn("rewindagents", written)
+            self.assertIn(" hook", written)
+
+    def test_cli_install_completes_when_path_home_raises(self):
+        """Review-round finding: `hook.ephemeral()` (hook.py, a different squad's file) calls
+        `Path.home()` completely unguarded. `cli.py`'s `install` command (the `rewindagents install`
+        entry point) called it unconditionally, so a host with no HOME/USERPROFILE (windows-latest
+        CI's F3 trigger) crashed here too, even once every `init.py`-owned `Path.home()` call was
+        guarded. `hook.ephemeral` is NOT patched out (unlike the uvx/pipx cases above): this proves the
+        real function, called for real with `Path.home()` raising, no longer crashes `cli.main()`.
+        Fails with the uncaught `RuntimeError` before this fix; passes after."""
+        with TemporaryDirectory() as d:
+            target = Path(d) / ".claude" / "settings.json"
+            with mock.patch.object(Path, "home", side_effect=RuntimeError("no HOME/USERPROFILE")):
+                rc = cli.main(["install", "--settings", str(target)])
+            self.assertEqual(rc, 0)
+            self.assertTrue(target.is_file())
 
     def test_init_refuses_before_its_plan_and_writes_nothing(self):
         from rewindagents import init

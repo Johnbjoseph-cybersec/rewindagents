@@ -31,8 +31,8 @@ def project(d):
     a = Agent(d)
     a.write("keep.txt", "v1\n")
     a.write("keep.txt", "v2\n")
-    Path(d, "x.txt").write_text("x" * 100)
-    Path(d, "y.txt").write_text("y" * 50)
+    Path(d, "x.txt").write_text("x" * 100, newline="")
+    Path(d, "y.txt").write_text("y" * 50, newline="")
     a.bash("ls")
     return a
 
@@ -67,13 +67,13 @@ class TestGc(unittest.TestCase):
     def test_a_pending_scan_keeps_its_copies_until_the_command_finishes(self):
         with TemporaryDirectory() as d:
             a = Agent(d)
-            Path(d, "app.py").write_text("x = 1\n")
-            Path(d, "other.py").write_text("o\n")
+            Path(d, "app.py").write_text("x = 1\n", newline="")
+            Path(d, "other.py").write_text("o\n", newline="")
             a.bash("sed -i s/1/2/ app.py", post=False)          # the command is still running
             got = gc.gc(a.log)
             self.assertEqual((got["deleted"], got["kept"], got["pending"]), ([], 2, 1))
             self.assertIn("1 pending scan(s)", "\n".join(gc.lines(got)))
-            Path(d, "app.py").write_text("x = 2\n")
+            Path(d, "app.py").write_text("x = 2\n", newline="")
             hook.handle(a._p("PostToolUse", "Bash", {"command": "sed -i s/1/2/ app.py"}, {"stdout": ""}))
             got = gc.gc(a.log)                                   # now only app.py's before and after copies
             self.assertEqual((got["deleted"], got["kept"], got["pending"]), ([sha("o\n")], 2, 0))
@@ -87,7 +87,7 @@ class TestGc(unittest.TestCase):
             a = project(d)
             gc.gc(a.log)
             self.assertNotIn(sha("x" * 100), objects(d))
-            a.bash("sed -i s/x/z/g x.txt", action=lambda cwd: (cwd / "x.txt").write_text("z" * 100))
+            a.bash("sed -i s/x/z/g x.txt", action=lambda cwd: (cwd / "x.txt").write_text("z" * 100, newline=""))
             p = rewind.rewind(a.log, 3)
             self.assertEqual(p["cannot"], [])
             self.assertEqual(Path(d, "x.txt").read_text(), "x" * 100)
@@ -97,7 +97,7 @@ class TestGc(unittest.TestCase):
             a = project(d)
             lines = a.log.read_text().splitlines()
             lines[0] = lines[0].replace("keep.txt", "kept.txt")
-            a.log.write_text("\n".join(lines) + "\n")
+            a.log.write_text("\n".join(lines) + "\n", newline="")
             before = objects(d)
             with self.assertRaisesRegex(gc.GcError, "does not verify"):
                 gc.gc(a.log)
@@ -108,7 +108,7 @@ class TestGc(unittest.TestCase):
             a = project(d)
             pend = Path(d, ".rewindagents", "pending")
             pend.mkdir(exist_ok=True)
-            (pend / "broken.json").write_text("{not json")
+            (pend / "broken.json").write_text("{not json", newline="")
             before = objects(d)
             with self.assertRaisesRegex(gc.GcError, "broken.json"):
                 gc.gc(a.log)
@@ -118,7 +118,7 @@ class TestGc(unittest.TestCase):
         with TemporaryDirectory() as d:
             a = project(d)
             odd = Path(d, ".rewindagents", "objects", ".abc.123.tmp")
-            odd.write_text("half-written")
+            odd.write_text("half-written", newline="")
             gc.gc(a.log)
             self.assertTrue(odd.exists())
 
@@ -135,7 +135,7 @@ class TestGc(unittest.TestCase):
     def test_lists_each_pending_scan_with_its_age_and_command(self):
         with TemporaryDirectory() as d:
             a = Agent(d)
-            Path(d, "app.py").write_text("x = 1\n")
+            Path(d, "app.py").write_text("x = 1\n", newline="")
             a.bash("sed -i s/1/2/ app.py", post=False)          # the agent was killed before the after-scan
             (scan,) = Path(d, ".rewindagents", "pending").glob("*.json")
             got = gc.gc(a.log, dry_run=True, now=scan.stat().st_mtime + 3 * 86400)
@@ -151,11 +151,11 @@ class TestGc(unittest.TestCase):
     def test_drop_removes_only_scans_older_than_days_then_collects_their_copies(self):
         with TemporaryDirectory() as d:
             a = Agent(d)
-            Path(d, "app.py").write_text("x = 1\n")
+            Path(d, "app.py").write_text("x = 1\n", newline="")
             a.bash("sed -i s/1/2/ app.py", post=False)          # killed half way: app.py changed, no after-scan
             pend = Path(d, ".rewindagents", "pending")
             (old,) = pend.glob("*.json")
-            Path(d, "app.py").write_text("x = 2\n")
+            Path(d, "app.py").write_text("x = 2\n", newline="")
             a.bash("cat app.py", post=False)                    # still running
             (new,) = set(pend.glob("*.json")) - {old}
             now = time.time()
@@ -174,7 +174,7 @@ class TestGc(unittest.TestCase):
     def test_drop_with_dry_run_reports_and_removes_nothing(self):
         with TemporaryDirectory() as d:
             a = Agent(d)
-            Path(d, "app.py").write_text("x = 1\n")
+            Path(d, "app.py").write_text("x = 1\n", newline="")
             a.bash("sed -i s/1/2/ app.py", post=False)
             (scan,) = Path(d, ".rewindagents", "pending").glob("*.json")
             before = objects(d)
@@ -188,7 +188,7 @@ class TestGc(unittest.TestCase):
     def test_never_drops_a_scan_younger_than_a_day(self):
         with TemporaryDirectory() as d:
             a = Agent(d)
-            Path(d, "app.py").write_text("x = 1\n")
+            Path(d, "app.py").write_text("x = 1\n", newline="")
             a.bash("sed -i s/1/2/ app.py", post=False)
             (scan,) = Path(d, ".rewindagents", "pending").glob("*.json")
             for days in (0.5, 0, -1, float("nan")):
@@ -205,9 +205,9 @@ class TestGc(unittest.TestCase):
             pend = Path(d, ".rewindagents", "pending")
             pend.mkdir(exist_ok=True)
             orphan = pend / ("0" * 32 + ".json")              # e.g. written before the pre record named it
-            orphan.write_text(json.dumps({"keep.txt": sha("v2\n")}))
+            orphan.write_text(json.dumps({"keep.txt": sha("v2\n")}), newline="")
             broken = pend / "broken.json"
-            broken.write_text("{not json")
+            broken.write_text("{not json", newline="")
             now = time.time()
             os.utime(broken, (now - 5 * 86400, now - 5 * 86400))
             got = gc.gc(a.log, drop_older_than=4, now=now)     # without the drop it refuses (test above)
@@ -238,7 +238,7 @@ class TestGcCli(unittest.TestCase):
             code, out, _ = cli("--log", str(a.log), "gc")
             self.assertEqual((code, out), (0, "deleted 2 stored copies (150 bytes freed); kept 2 that the log or a "
                                               "pending scan names\n"))
-            a.log.write_text(a.log.read_text().replace("keep.txt", "kept.txt", 1))
+            a.log.write_text(a.log.read_text().replace("keep.txt", "kept.txt", 1), newline="")
             code, _, err = cli("--log", str(a.log), "gc")
             self.assertEqual(code, 1)
             self.assertIn("refusing to delete anything", err)
@@ -248,7 +248,7 @@ class TestGcCli(unittest.TestCase):
     def test_cli_drops_stale_pending_scans_and_refuses_under_a_day(self):
         with TemporaryDirectory() as d:
             a = Agent(d)
-            Path(d, "app.py").write_text("x = 1\n")
+            Path(d, "app.py").write_text("x = 1\n", newline="")
             a.bash("sed -i s/1/2/ app.py", post=False)
             (scan,) = Path(d, ".rewindagents", "pending").glob("*.json")
             code, _, err = cli("--log", str(a.log), "gc", "--drop-pending-older-than", "0.5")

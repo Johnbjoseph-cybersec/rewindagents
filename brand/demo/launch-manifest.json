@@ -57,13 +57,13 @@
  ],
  "mp4": "launch-demo.mp4",
  "mp4_facts": {
-  "bytes": 567010,
+  "bytes": 561386,
   "faststart": true,
   "fps": 25.0,
   "frames": 492,
   "height": 1080,
   "seconds": 19.68,
-  "sha256": "2b6be14a5b9235c99344035873114454aa5efafb920f0e43b654d2ca6e955754",
+  "sha256": "dc2213ef000aa2927c5207f50e9d1ac9b3501130d855ebd6c89820fc2049da8b",
   "video_codec": "avc1",
   "video_seconds": 19.68,
   "width": 1920
@@ -73,6 +73,6 @@
  "srt": "launch-demo.srt",
  "terminal_seconds": 16.68,
  "unique_frames": 66,
- "version": "1.0.0",
+ "version": "1.1.0",
  "width": 1920
 }

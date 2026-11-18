@@ -13,6 +13,10 @@ sys.path.insert(0, str(SRC))
 
 from rewindagents import hook, read, verify  # noqa: E402
 
+# A POSIX-shaped interpreter path, used where a test means "assume the interpreter is POSIX": the real
+# sys.executable is itself a Windows path on windows-latest CI, same stand-in test_windows_hook.py uses (R94).
+POSIX_PY = "/usr/bin/python3"
+
 
 def payload(cwd, event, tool, tool_input, response=None, session="s1"):
     p = {"session_id": session, "cwd": str(cwd), "hook_event_name": event,
@@ -32,17 +36,17 @@ class TestCheckpoint(unittest.TestCase):
     def test_edit_checkpoints_the_bytes_before_the_change(self):
         with TemporaryDirectory() as d:
             f = Path(d, "app.py")
-            f.write_text("print('v1')\n")
+            f.write_text("print('v1')\n", newline="")
             rec = hook.handle(payload(d, "PreToolUse", "Edit", {"file_path": str(f)}))
             cp = rec["args"]["checkpoint"]
             self.assertEqual(cp["sha256"], hashlib.sha256(b"print('v1')\n").hexdigest())
-            f.write_text("print('broken')\n")   # the agent's change happens after the hook
+            f.write_text("print('broken')\n", newline="")   # the agent's change happens after the hook
             saved = Path(d, ".rewindagents", "objects", cp["sha256"]).read_bytes()
             self.assertEqual(saved, b"print('v1')\n")
 
     def test_relative_path_resolved_against_cwd(self):
         with TemporaryDirectory() as d:
-            Path(d, "a.txt").write_text("x")
+            Path(d, "a.txt").write_text("x", newline="")
             rec = hook.handle(payload(d, "PreToolUse", "Write", {"file_path": "a.txt"}))
             self.assertEqual(rec["args"]["checkpoint"]["path"], str(Path(d, "a.txt")))
             self.assertIsNotNone(rec["args"]["checkpoint"]["sha256"])
@@ -56,14 +60,14 @@ class TestCheckpoint(unittest.TestCase):
     def test_notebook_edit_uses_notebook_path(self):
         with TemporaryDirectory() as d:
             nb = Path(d, "n.ipynb")
-            nb.write_text("{}")
+            nb.write_text("{}", newline="")
             rec = hook.handle(payload(d, "PreToolUse", "NotebookEdit", {"notebook_path": str(nb)}))
             self.assertEqual(rec["args"]["checkpoint"]["path"], str(nb))
 
     def test_identical_content_stored_once(self):
         with TemporaryDirectory() as d:
             for name in ("a.txt", "b.txt"):
-                Path(d, name).write_text("same")
+                Path(d, name).write_text("same", newline="")
                 hook.handle(payload(d, "PreToolUse", "Edit", {"file_path": name}))
             objs = [p for p in Path(d, ".rewindagents", "objects").iterdir()]
             self.assertEqual(len(objs), 1)
@@ -117,7 +121,7 @@ class TestNeverBlocks(unittest.TestCase):
 
     def test_real_process_records_and_prints_nothing(self):
         with TemporaryDirectory() as d:
-            Path(d, "f.txt").write_text("v1")
+            Path(d, "f.txt").write_text("v1", newline="")
             p = run_hook_process(json.dumps(payload(d, "PreToolUse", "Edit", {"file_path": "f.txt"})), d)
             self.assertEqual((p.returncode, p.stdout), (0, ""))
             self.assertEqual(len(read(Path(d, ".rewindagents", "log.jsonl"))), 1)
@@ -131,7 +135,7 @@ class TestNeverBlocks(unittest.TestCase):
 
     def test_unwritable_store_exits_zero(self):
         with TemporaryDirectory() as d:
-            Path(d, ".rewindagents").write_text("a file where the store directory should be")
+            Path(d, ".rewindagents").write_text("a file where the store directory should be", newline="")
             p = run_hook_process(json.dumps(payload(d, "PreToolUse", "Bash", {"command": "ls"})), d)
             self.assertEqual((p.returncode, p.stdout), (0, ""))
             self.assertIn("not recorded", p.stderr)
@@ -147,7 +151,7 @@ class TestInstall(unittest.TestCase):
             s.parent.mkdir()
             existing = {"model": "x", "hooks": {"PreToolUse": [
                 {"matcher": "Bash", "hooks": [{"type": "command", "command": "other"}]}]}}
-            s.write_text(json.dumps(existing))
+            s.write_text(json.dumps(existing), newline="")
             self.assertTrue(hook.install(s, command="rw"))
             got = json.loads(s.read_text())
             self.assertEqual(got["model"], "x")
@@ -178,16 +182,18 @@ class TestInstall(unittest.TestCase):
     def test_hook_command_from_a_clone_carries_pythonpath(self):
         import shlex
         from unittest.mock import patch
+        # python=POSIX_PY, not the real sys.executable: on windows-latest CI the real interpreter path is a
+        # Windows path, which takes hook.hook_command()'s Windows branch (R42/R94), not this POSIX form.
         with patch.object(hook, "installed", return_value=False):
-            cmd = hook.hook_command()
-        self.assertEqual(cmd, f"PYTHONPATH={shlex.quote(str(SRC))} {shlex.quote(sys.executable)} -m rewindagents hook")
+            cmd = hook.hook_command(python=POSIX_PY)
+        self.assertEqual(cmd, f"PYTHONPATH={shlex.quote(str(SRC))} {shlex.quote(POSIX_PY)} -m rewindagents hook")
 
     def test_hook_command_when_installed_needs_no_pythonpath(self):
         import shlex
         from unittest.mock import patch
         with patch.object(hook, "installed", return_value=True):
-            cmd = hook.hook_command()
-        self.assertEqual(cmd, f"{shlex.quote(sys.executable)} -m rewindagents hook")
+            cmd = hook.hook_command(python=POSIX_PY)
+        self.assertEqual(cmd, f"{shlex.quote(POSIX_PY)} -m rewindagents hook")
 
     def test_installed_means_this_file_lives_in_site_packages(self):
         import site

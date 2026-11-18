@@ -67,8 +67,8 @@ class TestSummary(unittest.TestCase):
         self.tmp = TemporaryDirectory()
         self.d = Path(self.tmp.name)
         (self.d / "src").mkdir()
-        (self.d / "src" / "app.py").write_text("a\nb\nc\n")
-        (self.d / "tests.py").write_text("t1\nt2\n")
+        (self.d / "src" / "app.py").write_text("a\nb\nc\n", newline="")
+        (self.d / "tests.py").write_text("t1\nt2\n", newline="")
         self.a = Agent(self.d)
 
     def tearDown(self):
@@ -135,8 +135,8 @@ class TestNotScannedIsVisible(unittest.TestCase):
     def test_replay_marks_the_step_and_status_warns(self):
         with TemporaryDirectory() as d:
             d = Path(d).resolve()
-            (d / "a.txt").write_text("a")
-            (d / "b.txt").write_text("b")
+            (d / "a.txt").write_text("a", newline="")
+            (d / "b.txt").write_text("b", newline="")
             a = Agent(d)
             with mock.patch.object(bashscan, "MAX_SCAN_FILES", 1):
                 a.bash("rm a.txt", lambda c: (c / "a.txt").unlink())
@@ -209,7 +209,7 @@ class TestStatus(unittest.TestCase):
         data = json.loads(cfg.read_text())
         self.assertIn("PostToolUseFailure", data["hooks"])
         del data["hooks"]["PostToolUseFailure"]
-        cfg.write_text(json.dumps(data))
+        cfg.write_text(json.dumps(data), newline="")
         code, out = self.status(probe=False)
         self.assertEqual(code, 1, out)
         self.assertRegex(out, r"claude\s+PARTIAL\s+\.claude/settings\.json  \(not on every event")
@@ -259,7 +259,7 @@ class TestInitAgentAndExclude(unittest.TestCase):
     def test_created_files_are_kept_out_of_git_and_a_tracked_one_is_named(self):
         git_repo(self.root)
         (self.root / ".gemini").mkdir()
-        (self.root / ".gemini/settings.json").write_text('{"theme": "x"}\n')
+        (self.root / ".gemini/settings.json").write_text('{"theme": "x"}\n', newline="")
         git(self.root, "add", ".gemini/settings.json")
         code, out = self.run_init(yes=True)
         self.assertEqual(code, 0, out)
@@ -305,7 +305,7 @@ class TestInitUndo(unittest.TestCase):
         (self.root / ".claude").mkdir()
         mine = {"model": "x", "hooks": {"PreToolUse": [{"matcher": "Bash", "hooks": [
             {"type": "command", "command": "my-linter"}]}]}}
-        (self.root / ".claude/settings.json").write_text(json.dumps(mine))
+        (self.root / ".claude/settings.json").write_text(json.dumps(mine), newline="")
         init.main(yes=True, root=self.root, home=self.home, path="", out=io.StringIO())
         Agent(self.root).write("a.txt", "1")                        # some recorded history
         self.assertTrue((self.root / ".codex/hooks.json").is_file())
@@ -339,6 +339,97 @@ class TestInitUndo(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn("removed", out)
         self.assertFalse((self.root / ".claude/settings.json").exists())
+
+
+class TestInitGlobalWithNoHomeDirectory(unittest.TestCase):
+    """SW4 regression: --global when Path.home() cannot tell (no HOME/USERPROFILE, seen on windows-latest
+    CI) must report a clean skip, not crash. status() already caught the RuntimeError and skipped each
+    agent; main() and undo() caught it too, but each still dereferenced `home` afterwards: detect()
+    (called from main()) ran target()'s global_ branch unconditionally (None / "...": TypeError), and
+    undo()'s own closing "store" line built `(home if global_ else root) / ".rewindagents"` after its
+    per-agent loop had already skipped every agent for the same reason. Every test here fails on the code
+    before that fix (a TypeError instead of an int exit code)."""
+
+    def setUp(self):
+        self.tmp = TemporaryDirectory()
+        self.root = Path(self.tmp.name).resolve()
+        self.root.mkdir(exist_ok=True)
+        # hook.ephemeral() also calls Path.home() unguarded, uncatchable here (hook.py, a different
+        # squad's file, not this fix): patched out so the test isolates init.py's own home=None handling
+        # instead of failing on that unrelated, pre-existing crash.
+        self.ephemeral_patch = mock.patch.object(hook, "ephemeral", return_value=None)
+        self.ephemeral_patch.start()
+        self.home_patch = mock.patch.object(Path, "home", side_effect=RuntimeError("no HOME/USERPROFILE"))
+        self.home_patch.start()
+        self.addCleanup(self.home_patch.stop)
+        self.addCleanup(self.ephemeral_patch.stop)
+        self.addCleanup(self.tmp.cleanup)
+
+    def test_detect_lists_no_agent_rather_than_dereferencing_home(self):
+        found = init.detect(self.root, home=None, global_=True, path="")
+        self.assertEqual(found, [])
+
+    def test_main_global_with_no_home_returns_an_exit_code(self):
+        code = init.main(yes=True, global_=True, root=self.root, home=None, path="",
+                          stdin=io.StringIO(""), out=io.StringIO())
+        self.assertIsInstance(code, int)
+        self.assertEqual(code, 1)   # nothing can be found or written without a home directory to search
+
+    def test_undo_global_with_no_home_returns_an_exit_code(self):
+        out = io.StringIO()
+        code = init.undo(global_=True, root=self.root, home=None, out=out)
+        self.assertIsInstance(code, int)
+        self.assertEqual(code, 0)
+        self.assertIn("No rewindagents hook found; nothing changed.", out.getvalue())
+
+
+class TestInitWithoutHomeDirectoryCallsHookEphemeralSafely(unittest.TestCase):
+    """Review-round finding: `hook.ephemeral()` (hook.py, a different squad's file) does its own
+    `Path.home()` call completely unguarded, with no try/except anywhere up to __main__.py's bare
+    `sys.exit(main())`. `init.main()` and `cli.py`'s `install` command both called it unconditionally,
+    so even with every init.py-owned Path.home() guard in place (F3's pattern, SW4, SW4-fix below), a
+    real `rewindagents init` run on a host with no HOME/USERPROFILE still crashed -- the exact
+    windows-latest trigger docs/windows.md's own F3 row describes, reached through
+    test_init.TestCli.test_cli_init_end_to_end_with_home_and_path's exact env shape ({HOME, PATH,
+    PYTHONPATH}, no USERPROFILE; that test is out of this campaign's write scope, so it cannot be
+    edited or run with a mock -- this reproduces the same crash directly against init.main() instead).
+
+    `hook.ephemeral()` itself is unchanged here (hook.py is outside this squad's write scope): both
+    call sites it is reached from now catch the `RuntimeError` it can raise, and the later
+    `hook.install()` call is given its `command` explicitly so it never re-enters `hook.ephemeral()` a
+    second time (that function already skips its own ephemeral check when `command` is given). Unlike
+    `TestInitGlobalWithNoHomeDirectory` above, `hook.ephemeral` is NOT patched out here: this proves the
+    real function, called for real, no longer crashes `init.main()`. Fails with the uncaught
+    `RuntimeError` from inside `hook.py`'s `ephemeral()` before this fix; passes after."""
+
+    def setUp(self):
+        self.tmp = TemporaryDirectory()
+        t = Path(self.tmp.name).resolve()
+        self.root, self.bindir = t / "proj", t / "bin"
+        self.root.mkdir()
+        self.bindir.mkdir()
+        claude = self.bindir / "claude"
+        claude.write_text("#!/bin/sh\n")
+        claude.chmod(0o755)
+        self.home_patch = mock.patch.object(Path, "home", side_effect=RuntimeError("no HOME/USERPROFILE"))
+        self.home_patch.start()
+        self.addCleanup(self.home_patch.stop)
+        self.addCleanup(self.tmp.cleanup)
+
+    def test_project_init_completes_and_installs_with_hook_ephemeral_called_for_real(self):
+        out = io.StringIO()
+        code = init.main(yes=True, global_=False, root=self.root, home=None, path=str(self.bindir),
+                          stdin=io.StringIO(""), out=out)
+        self.assertEqual(code, 0, out.getvalue())
+        self.assertRegex(out.getvalue(), r"claude\s+installed")
+        self.assertTrue((self.root / ".claude/settings.json").is_file())
+
+    def test_dry_run_also_completes(self):
+        out = io.StringIO()
+        code = init.main(yes=False, global_=False, root=self.root, home=None, path=str(self.bindir),
+                          stdin=io.StringIO(""), out=out)
+        self.assertEqual(code, 0, out.getvalue())
+        self.assertIn("Dry run", out.getvalue())
 
 
 if __name__ == "__main__":

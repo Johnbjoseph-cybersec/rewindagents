@@ -96,7 +96,7 @@ def root_spellings(records: list[dict], root: Path) -> list[str]:
     found = {str(root)}
     for rec in records:
         for s in _strings(rec.get("args")):
-            if not s.startswith("/") or "\n" in s:
+            if not ospaths.isabs(s) or "\n" in s:
                 continue
             try:
                 rel = Path(os.path.realpath(s)).relative_to(root)

@@ -68,12 +68,16 @@ class TestBundleFromWindows(unittest.TestCase):
             self.assertEqual(tree(dst), {"a.txt": "v1\n"})
 
     def test_move_paths_takes_both_windows_separators_and_this_machines_separator_out(self):
+        # bundle.move_paths joins the moved part onto `dest` with os.sep: "this machine's business" (module
+        # docstring). `dest` is given here as a POSIX-looking string; on a real Windows run `Path` renders it
+        # (and os.sep) the Windows way, so the expectation is built the same way move_paths builds it, not
+        # hardcoded to '/' (R94: this literal comparison was the CI failure on windows-latest).
         dest = Path("/home/me/proj")
-        self.assertEqual(bundle.move_paths(WIN + "\\src\\a.py", [WIN], dest), "/home/me/proj/src/a.py")
-        self.assertEqual(bundle.move_paths("C:/Users/dev/proj/src/a.py", [WIN], dest), "/home/me/proj/src/a.py")
-        self.assertEqual(bundle.move_paths(WIN, [WIN], dest), "/home/me/proj")
+        self.assertEqual(bundle.move_paths(WIN + "\\src\\a.py", [WIN], dest), str(dest / "src" / "a.py"))
+        self.assertEqual(bundle.move_paths("C:/Users/dev/proj/src/a.py", [WIN], dest), str(dest / "src" / "a.py"))
+        self.assertEqual(bundle.move_paths(WIN, [WIN], dest), str(dest))
         self.assertEqual(bundle.move_paths(WIN + "2\\a.py", [WIN], dest), WIN + "2\\a.py")   # a sibling stays
-        self.assertEqual(bundle.move_paths("/src/proj/a/b.py", ["/src/proj"], dest), "/home/me/proj/a/b.py")
+        self.assertEqual(bundle.move_paths("/src/proj/a/b.py", ["/src/proj"], dest), str(dest / "a" / "b.py"))
 
     def test_check_still_refuses_a_relative_root(self):
         with TemporaryDirectory() as src:
