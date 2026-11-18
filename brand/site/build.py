@@ -197,6 +197,8 @@ def facts():
             ("export", "Export a replay"), ("sessions", "Find a session"), ("verify", "What the chain does not catch"),
             ("record", "Use it"), ("tests", "Tests"), ("quick", "Quick start"), ("ui", "Timeline UI"), ("mcp", MCP_HEADING))},
         "quick_use": readme_blocks(readme, "Quick start")[1],
+        "channels": readme_blocks(readme, "Install")[1],
+        "editors": readme_sentence(readme, "In VS Code, search"),
         "rescue": readme_block(readme, RESCUE),
         "rescue_says": [readme_sentence(readme, s) for s in RESCUE_SENTENCES],
         "init_says": [readme_sentence(readme, s) for s in INIT_SENTENCES],
@@ -1012,10 +1014,12 @@ def index_html(cfg, f, hero, open_all=False):
 <div class="head"><h2 id="h-install">Install, then add the hook to a project.</h2>
 <p class="lede">Python %(py)s. No dependencies beyond the standard library. Tested on %(tested)s. Install it from PyPI. The <a href="docs/">docs</a> walk through a first session.</p></div>
 <div class="install-row"><div><h3>Get the command</h3><p><code>pipx</code> installs it from PyPI, as in the panel. From a clone, <code>pip install .</code> works too; without installing, <code>PYTHONPATH=src python3 -m rewindagents</code> runs the same CLI.</p></div>%(install)s</div>
+<div class="install-row"><div><h3>Or with Homebrew, npm, or as a Claude Code plugin</h3><p>The same CLI from another package manager, or the plugin that brings the hook, the MCP server and the slash commands into Claude Code. %(editors)s</p></div>%(channels)s</div>
 <div class="pair"><div><h3>Add the Claude Code hook</h3>%(hook)s</div><div><h3>Codex and Cursor hooks</h3>%(agents)s</div></div>
 <div class="pair-note"><p><code>install</code> keeps everything already in the file and does nothing if the hook is already there. For Codex the file is <code>%(codex)s</code> and for Cursor <code>%(cursor)s</code>; those two hooks are tested with the payloads in the vendors&#x27; documentation, not yet in a live session. <code>.rewindagents/</code> gets its own <code>.gitignore</code>, so the log and the copies stay out of your commits.</p></div>
 </div></section>
 """ % {"label": label(5, "Install"), "py": e(f["py_req"]), "tested": e(f["tested_on"]), "install": code(b["install"]), "hook": code(b["hook"]),
+       "channels": code(f["channels"]), "editors": md_inline(f["editors"]),
        "agents": code(b["agents"]), "codex": e(f["agents"]["codex"]["settings"]), "cursor": e(f["agents"]["cursor"]["settings"])}
 
     how = """
@@ -1177,6 +1181,9 @@ def docs_html(cfg, f):
 <p>The last command prints the version it installed:</p>
 %(version)s
 <p>Or from a clone, <code>pip install .</code>. Without installing, <code>PYTHONPATH=src python3 -m rewindagents</code> runs the same CLI from a clone; then the undo hint says <code>python3 -m rewindagents</code> instead of <code>rewindagents</code>.</p>
+<p>Other ways to install the same CLI, and the plugin for Claude Code:</p>
+%(channels)s
+<p>%(editors)s</p>
 
 <h2 id="hook">Add the hook</h2>
 %(init)s
@@ -1307,6 +1314,7 @@ def docs_html(cfg, f):
        "fork_limits": "".join("<li>%s</li>" % md_inline(x) for x in f["fork_limits"]),
        "runs": panel(runs_rows(f["runs"], "hero")), "diff": panel(runs_rows(f["runs"], "diff")),
        "ui": code(b["ui"]), "ui_says": " ".join(md_inline(s) for s in f["ui_says"]),
+       "channels": code(f["channels"]), "editors": md_inline(f["editors"]),
        "mcp": code(b["mcp"]), "mcp_says": " ".join(md_inline(s) for s in f["mcp_says"]),
        "attach": code(f["attach"]), "attach_says": " ".join(md_inline(s) for s in f["attach_says"]),
        "attach_yaml": plain(f["attach_yaml"]), "action_says": " ".join(md_inline(s) for s in f["action_says"]),

@@ -180,6 +180,12 @@
    "`import` writes nothing until everything checks out: the file's own SHA-256, every record's hash, that every record belongs to the session and is in log order, every stored copy against its SHA-256, that no copy a record names is missing, that this project's log verifies, and that it does not already hold the session.",
    "Nothing goes over a network; carry the file however you like."
   ],
+  "channels": [
+   "brew install johnbjoseph-cybersec/rewindagents/rewindagents",
+   "npx rewindagents --version          # npm launcher; needs Python 3.10+",
+   "claude plugin marketplace add Johnbjoseph-cybersec/rewindagents",
+   "claude plugin install rewindagents@rewindagents"
+  ],
   "compare_says": [
    "Back in the project, `rewindagents compare` lines up the project and every run forked from the same step: per run, the agents and their number of tool calls since the start, the files changed, created or deleted and the lines added and removed; per file, which runs ended with the same bytes (the same letter).",
    "`rewindagents compare --check \"python3 -m pytest -q\"` runs your command in each run and reports pass or the exit code, with the last lines of a failing one.",
@@ -187,6 +193,7 @@
   ],
   "diff_kb": 256,
   "diff_lines": 400,
+  "editors": "In VS Code, search \"rewindagents\" in the Extensions view: it shows the steps the hook recorded as a timeline in the editor.",
   "file_mb": 20,
   "file_tools": [
    "Write",
@@ -354,7 +361,7 @@
    "rewindagents uninstall          # removes the hook from .claude/settings.json in this project",
    "rewindagents uninstall --agent cursor --settings ~/.cursor/hooks.json   # same flags as install"
   ],
-  "version": "1.1.0",
+  "version": "1.1.1",
   "wreck_steps": 2
  },
  "hero": [

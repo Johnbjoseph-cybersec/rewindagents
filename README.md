@@ -89,7 +89,7 @@ runs the same hooks for a subagent's tool calls ([hooks docs](https://code.claud
 session in which a subagent made eight steps, three of them edits, recorded and checkpointed all of them
 (`ux-review/DOGFOOD.md`). Every tool call goes into a tamper-evident, hash-chained log you can verify later.
 
-**Status: v1.1.0, stable.** What 1.0 covers: the recorder and its CLI, hooks for seven coding
+**Status: v1.1.1, stable.** What 1.0 covers: the recorder and its CLI, hooks for seven coding
 agents (Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Droid, Qwen Code) that record every call and
 checkpoint the files a step changes, `summary`, `replay`, `rewind`, `revert` and `branch`, `fork` and
 `compare`, `export` (a session as one HTML page), `sessions`, `bundle` and `import`, `gc`, a local timeline UI,
@@ -112,6 +112,17 @@ standard library. From PyPI:
 pipx install rewindagents     # or: pip install rewindagents
 rewindagents --version
 ```
+
+Other ways to install the same CLI, and the plugin for Claude Code:
+
+```sh
+brew install johnbjoseph-cybersec/rewindagents/rewindagents
+npx rewindagents --version          # npm launcher; needs Python 3.10+
+claude plugin marketplace add Johnbjoseph-cybersec/rewindagents
+claude plugin install rewindagents@rewindagents
+```
+
+In VS Code, search "rewindagents" in the Extensions view: it shows the steps the hook recorded as a timeline in the editor. The same extension is under review on Open VSX, the store Cursor uses.
 
 Or from a clone, `pip install .`. Without installing, `PYTHONPATH=src python3 -m rewindagents` runs the same
 CLI from a clone.

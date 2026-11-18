@@ -779,3 +779,15 @@ class TestSite(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestInstallChannels(unittest.TestCase):
+    """The Homebrew, npm and plugin commands on both pages are the README's second Install block, word for word."""
+
+    def test_channels_block_is_on_home_and_docs(self):
+        build = load_build()
+        readme = read("README.md", ROOT)
+        block = build.readme_blocks(readme, "Install")[1]
+        self.assertTrue(block[0].startswith("brew install"), block)
+        for page in ("index.html", "docs/index.html"):
+            self.assertIn(build.code(block), read(page), page)

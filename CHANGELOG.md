@@ -5,13 +5,22 @@ and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html). 
 minor version may change behaviour; every release is a git tag `vX.Y.Z` that equals `rewindagents.__version__`,
 and only a published GitHub release publishes to PyPI (`.github/workflows/publish.yml` refuses a mismatched tag).
 
-## [Unreleased]
+## [1.1.1] - 2026-11-18
+
+No change to the CLI, the hooks or the on-disk format: this release is about where you can get it.
 
 ### Added
-- The repository is its own Claude Code plugin marketplace: `claude plugin marketplace add
-  Johnbjoseph-cybersec/rewindagents`, then `claude plugin install rewindagents@rewindagents`.
-- The plugin has run in a live Claude Code session (2026-11-18): its hook recorded an `rm`, the agent called
-  the plugin's MCP tool, and `rewind` put the deleted files back. Evidence:
+- Install routes: Homebrew (`brew install johnbjoseph-cybersec/rewindagents/rewindagents`, tap CI installs and
+  tests the formula on macOS and Linux), npm (`npx rewindagents`, a launcher that installs the PyPI release
+  into its own virtualenv), and the Claude Code plugin from this repository's own marketplace
+  (`claude plugin marketplace add Johnbjoseph-cybersec/rewindagents`, then
+  `claude plugin install rewindagents@rewindagents`).
+- The VS Code extension is on the VS Code Marketplace as `rewindagents.rewindagents`.
+- The site and the docs page list every install route.
+
+### Changed
+- The Claude Code plugin has run in a live Claude Code session (2026-11-18): its hook recorded an `rm`, the agent
+  called the plugin's MCP tool, and `rewind` put the deleted files back. Evidence:
   `harness/live/evidence/claude-plugin.json`.
 
 ## [1.1.0] - 2026-11-18
@@ -91,6 +100,7 @@ Pre-release, GitHub only.
 - `fork` any recorded step and `compare` the runs (files, lines, and your own check).
 - Hooks for seven agents: Claude Code, Codex, Cursor, Gemini CLI, Copilot CLI, Factory Droid, Qwen Code.
 
+[1.1.1]: https://github.com/Johnbjoseph-cybersec/rewindagents/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/Johnbjoseph-cybersec/rewindagents/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Johnbjoseph-cybersec/rewindagents/compare/v0.0.9...v1.0.0
 [0.0.9]: https://github.com/Johnbjoseph-cybersec/rewindagents/compare/v0.0.8...v0.0.9

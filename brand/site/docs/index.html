@@ -31,7 +31,7 @@
 <link rel="preload" href="../fonts/commit-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../site.min.css">
 <script src="../site.js" defer></script>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "applicationCategory": "DeveloperApplication", "author": {"@type": "Person", "name": "John B Joseph"}, "codeRepository": "https://github.com/Johnbjoseph-cybersec/rewindagents", "description": "Getting started with rewindagents: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, fork a step and compare the runs, export, find a session, verify the log.", "license": "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE", "name": "rewindagents", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "operatingSystem": "macOS, Linux", "softwareVersion": "1.1.0", "url": "https://rewindagents.com/docs/"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "applicationCategory": "DeveloperApplication", "author": {"@type": "Person", "name": "John B Joseph"}, "codeRepository": "https://github.com/Johnbjoseph-cybersec/rewindagents", "description": "Getting started with rewindagents: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, fork a step and compare the runs, export, find a session, verify the log.", "license": "https://github.com/Johnbjoseph-cybersec/rewindagents/blob/main/LICENSE", "name": "rewindagents", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "operatingSystem": "macOS, Linux", "softwareVersion": "1.1.1", "url": "https://rewindagents.com/docs/"}</script>
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -54,8 +54,15 @@
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents <span class="nb">--version</span></span></span></code></pre>
 <p>The last command prints the version it installed:</p>
 <pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">rewindagents <span class="nb">--version</span></span></span>
-<span class="l i2">rewindagents 1.1.0</span></code></pre>
+<span class="l i2">rewindagents 1.1.1</span></code></pre>
 <p>Or from a clone, <code>pip install .</code>. Without installing, <code>PYTHONPATH=src python3 -m rewindagents</code> runs the same CLI from a clone; then the undo hint says <code>python3 -m rewindagents</code> instead of <code>rewindagents</code>.</p>
+<p>Other ways to install the same CLI, and the plugin for Claude Code:</p>
+<pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">brew install <span class="nb">johnbjoseph-cybersec/rewindagents/rewindagents</span></span></span>
+<span class="l"><span class="c"># npm launcher; needs Python 3.10+</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">npx rewindagents <span class="nb">--version</span></span></span>
+<span class="l"><span class="p">$ </span><span class="sel">claude plugin marketplace add <span class="nb">Johnbjoseph-cybersec/rewindagents</span></span></span>
+<span class="l"><span class="p">$ </span><span class="sel">claude plugin install rewindagents@rewindagents</span></span></code></pre>
+<p>In VS Code, search &quot;rewindagents&quot; in the Extensions view: it shows the steps the hook recorded as a timeline in the editor.</p>
 
 <h2 id="hook">Add the hook</h2>
 <pre class="term"><code><span class="l"><span class="p">$ </span><span class="sel">pipx install rewindagents &amp;&amp; cd <span class="nb">your-project</span> &amp;&amp; rewindagents init</span></span></code></pre>
