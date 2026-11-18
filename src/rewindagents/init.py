@@ -396,12 +396,21 @@ def status(global_: bool = False, root: Path | None = None, home: Path | None = 
               f"(the log plus a copy of each project file a step may need; `{run} gc` frees what no step needs)",
               file=out)
     if not global_ and (hooked or rec != "none"):
-        from . import bashscan
-        if bashscan.project_files(root, ignored_files=True) is None:
-            print(f"WARNING: this project has more than {bashscan.MAX_SCAN_FILES:,} files, so shell commands "
+        if too_many_files(root):
+            from . import bashscan, gitscan
+            limit = gitscan.MAX_GIT_FILES if gitscan.too_big(root) is not None else bashscan.MAX_SCAN_FILES
+            print(f"WARNING: this project has more than {limit:,} files, so shell commands "
                   f"(rm, sed -i, scripts) are NOT checkpointed here; edits made with the agent's file tools are. "
                   f"Add big generated directories to .gitignore to get under the limit.", file=out)
     return 1 if bad or rec == "BROKEN" else 0
+
+
+def too_many_files(root: Path) -> bool:
+    """True when shell commands cannot be checkpointed here: a git project has more tracked files than
+    gitscan.MAX_GIT_FILES (read from the index header, no scan), any other more than bashscan.MAX_SCAN_FILES."""
+    from . import bashscan, gitscan
+    big = gitscan.too_big(root)
+    return big if big is not None else bashscan.project_files(root, ignored_files=True) is None
 
 
 def main(yes: bool = False, global_: bool = False, root: Path | None = None, home: Path | None = None,

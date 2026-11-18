@@ -22,21 +22,28 @@ is not a torn write and stops the check where it is, as before.
 """
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import time
 from pathlib import Path
-from typing import Any
+
+TYPE_CHECKING = False   # typing is only for annotations; importing it costs time at every hook start
+if TYPE_CHECKING:
+    from typing import Any
 
 from . import filelock
+
+try:   # CPython 3.12+: the built-in SHA-2 module. `import hashlib` loads OpenSSL (_hashlib), ~1.6 ms of every hook
+    from _sha2 import sha256   # process; the digests are identical.
+except ImportError:            # older Python, or an implementation without it
+    from hashlib import sha256
 
 GENESIS = "0" * 64
 
 
 def _digest(record: dict) -> str:
     canon = json.dumps(record, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
-    return hashlib.sha256(canon.encode()).hexdigest()
+    return sha256(canon.encode()).hexdigest()
 
 
 def _lines(fh) -> tuple[list[bytes], bool]:

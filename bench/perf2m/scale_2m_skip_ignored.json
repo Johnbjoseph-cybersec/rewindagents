@@ -1,0 +1,38 @@
+{
+ "label": "2m-skip-ignored",
+ "repo": "/private/tmp/claude-501/-Users-johnbommeravenijoseph/adf68013-ef09-4df8-829c-694b84f6df92/scratchpad/t2m",
+ "path": "git",
+ "tracked": null,
+ "load": 8.8193359375,
+ "first_bash_ms": 6621.1,
+ "bash_ms": [
+  1118.3,
+  1254.8,
+  1091.5,
+  1088.7,
+  1155.9,
+  1104.0,
+  1059.0
+ ],
+ "bash_median_ms": 1104.0,
+ "read_median_ms": 40.3,
+ "edit_median_ms": 40.3,
+ "proof_call_ms": 6270.5,
+ "proof": {
+  "rm": "d001/s01/f0010.txt",
+  "sed": "d001/s01/f0011.txt",
+  "after_command_rm_exists": false,
+  "restored_equal": true,
+  "rewind_rc": 0,
+  "rewind_out": [
+   "session proof: rewind to step 0 of 1 (did change 2 files)",
+   "  restore  d001/s01/f0010.txt",
+   "  restore  d001/s01/f0011.txt",
+   "  this rewind is step 2; undo it with: python3 -m rewindagents rewind 1 --session proof"
+  ],
+  "checkpoints": [
+   "f0010.txt",
+   "f0011.txt"
+  ]
+ }
+}

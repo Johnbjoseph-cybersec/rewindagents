@@ -1,0 +1,49 @@
+rewindagents hook: not recorded: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+..usage: rewindagents install [-h]
+                            [--agent {claude,codex,copilot,cursor,droid,gemini,qwen}]
+                            [--settings SETTINGS]
+rewindagents install: error: argument --agent: invalid choice: 'no-such-agent' (choose from 'claude', 'codex', 'copilot', 'cursor', 'droid', 'gemini', 'qwen')
+....................................................................................................................................................s..............sss...............................................................................................................rewindagents hook: not recorded: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+.........................................sssssssssssss............................................................rewindagents: no log at /var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/tmp8lz5r9jm/none.jsonl
+rewindagents: no log at /var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/tmp8lz5r9jm/none.jsonl
+.rewindagents: stdin is not JSON: Expecting value: line 1 column 1 (char 0)
+rewindagents: stdin must be an object with a 'tool' key
+..installed in /var/folders/pl/wkcpk07j6617wp_khjn1g6x80000gn/T/tmptmf52e9a/.claude/settings.json
+..................................................................................................................................................................................................................................................../Users/johnbommeravenijoseph/fire/rewindagent-perf/brand/demo/runs.py:25: ResourceWarning: unclosed file <_io.TextIOWrapper name='/Users/johnbommeravenijoseph/fire/rewindagent-perf/ux-review/try-runs.sh' mode='r' encoding='utf-8'>
+  heads = set(re.findall(r'^echo "--- (.*)"$', open(SCRIPT, encoding="utf-8").read(), re.M))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+..................F.................F...........................................................................................................................................s.......s....sssss......................
+======================================================================
+FAIL: test_counters_are_counted_from_the_repository (test_site.TestSite.test_counters_are_counted_from_the_repository)
+The hero's counters are build-time numbers, each with its source on the page (no live fetches: the CSP is
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/johnbommeravenijoseph/fire/rewindagent-perf/tests/test_site.py", line 460, in test_counters_are_counted_from_the_repository
+    self.assertEqual(got[lbl][:2], (n, n), lbl)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: (833, 833) != (838, 838)
+
+First differing element 0:
+833
+838
+
+- (833, 833)
+?    ^    ^
+
++ (838, 838)
+?    ^    ^
+ : test functions in the repository
+
+======================================================================
+FAIL: test_pages_rebuild_byte_for_byte (test_site.TestSite.test_pages_rebuild_byte_for_byte)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/johnbommeravenijoseph/fire/rewindagent-perf/tests/test_site.py", line 171, in test_pages_rebuild_byte_for_byte
+    self.assertEqual(read(rel, d), read(rel), "%s drifted: run python3 brand/site/build.py" % rel)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '<!do[11485 chars]o="838">838</b><span class="cnt-l">test functi[55147 chars]l>\n' != '<!do[11485 chars]o="833">833</b><span class="cnt-l">test functi[55147 chars]l>\n' : index.html drifted: run python3 brand/site/build.py
+
+----------------------------------------------------------------------
+Ran 856 tests in 56.787s
+
+FAILED (failures=2, skipped=24)
