@@ -66,20 +66,20 @@ in both files with the absolute path to the intended executable (for example the
 copy Claude Code's plugin machinery installed; it is not part of the frozen manifest shape this
 repo ships and is not re-applied if the plugin is reinstalled or updated.
 
-## Installing it from this repo
+## Installing it
 
-There is no published marketplace entry yet (see Status, below), so today the only way to install
-the plugin is to point Claude Code's own marketplace machinery at this checkout:
+This repository is its own plugin marketplace (`.claude-plugin/marketplace.json` at the root,
+pointing at `plugin/`). From GitHub:
 
 ```
-claude plugin marketplace add /path/to/rewindagents/plugin
-claude plugin install rewindagents
+claude plugin marketplace add Johnbjoseph-cybersec/rewindagents
+claude plugin install rewindagents@rewindagents
 ```
 
-(`/path/to/rewindagents/plugin` is this repository's `plugin/` directory -- the one holding
-`.claude-plugin/marketplace.json`, not the repository root.) `claude plugin install` takes a
-`--scope` option (`user`, `project`, or `local`; `user` is the default) if you want the install
-scoped to this one project rather than every project Claude Code opens for you.
+Inside a Claude Code session the same two steps are `/plugin marketplace add
+Johnbjoseph-cybersec/rewindagents` and `/plugin install rewindagents@rewindagents`. From a clone,
+pass the clone's path to `marketplace add` instead. `claude plugin install` takes a `--scope`
+option (`user`, `project`, or `local`; `user` is the default).
 
 The MCP server it registers needs `rewindagents` on `PATH`: install the package first with
 `pipx install rewindagents`, `uv tool install rewindagents`, or `pip install rewindagents` (see
@@ -94,8 +94,10 @@ Built and validated locally with the Claude Code CLI's own validator
 command from `agents.AGENTS["claude"]` at test time, and checks the five command files by name
 and content.
 
-It has **not** been submitted to any marketplace -- not the official Claude Code marketplace, not
-a `homebrew-rewindagents`-style tap of its own. It has not been installed and exercised inside a
-live Claude Code session; the live-verification work tracked in `docs/live-verification.md`
-covers the CLI hook directly, not this packaged plugin. Treat it as built-and-checked, not as
-field-tested.
+It is not in the official Claude Code marketplace; this repository serves as its own marketplace
+(above). It has run in a live Claude Code session: on 2026-11-18, Claude Code 2.1.294 with the plugin
+loaded (`--plugin-dir plugin`) wrote a file and deleted two files with `rm`; the plugin's hook
+recorded all four steps (the `rm` with both files checkpointed), the agent called the plugin's own
+`rewind_summary` MCP tool, and `rewindagents rewind 1` afterwards put both deleted files back with
+their contents. Install through the marketplace was checked the same day in an empty Claude Code
+config directory. Evidence: `harness/live/evidence/claude-plugin.json`.

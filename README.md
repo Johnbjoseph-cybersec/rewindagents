@@ -366,14 +366,18 @@ stdout; without `--json` the output is unchanged): [docs/json-output.md](docs/js
 
 - **Claude Code plugin** (`plugin/`): the MCP server, the same hook `install --agent claude` writes, and
   five slash commands (`/rewind-status`, `/rewind-replay`, `/rewind-diff`, `/rewind-preview`,
-  `/rewind-to-step`). It passes `claude plugin validate`; it is not in a marketplace yet and has not yet
-  been run inside a live Claude Code session. See [docs/plugin.md](docs/plugin.md).
+  `/rewind-to-step`). Install: `claude plugin marketplace add
+  Johnbjoseph-cybersec/rewindagents`, then `claude plugin install rewindagents@rewindagents`. Run in a
+  live Claude Code session on 2026-11-18: its hook recorded an `rm` and `rewind` put the files back. Not in
+  the official Claude Code marketplace. See [docs/plugin.md](docs/plugin.md).
 - **VS Code / Cursor extension** (`vscode/`): the session timeline in the editor, with each step's diff,
   preview rewind and rewind to here. It calls the CLI's `--json` commands and has no runtime npm
   dependencies. Build the `.vsix` from `vscode/`; it is not on the VS Code Marketplace or Open VSX yet
   and has not yet been clicked through in a real VS Code window. See [docs/vscode.md](docs/vscode.md).
-- A Homebrew formula and an npm shim are written (`packaging/`), both wrappers around the PyPI package;
-  neither is published yet. See [docs/install-channels.md](docs/install-channels.md).
+- Homebrew: `brew install johnbjoseph-cybersec/rewindagents/rewindagents` (tap
+  [homebrew-rewindagents](https://github.com/Johnbjoseph-cybersec/homebrew-rewindagents); its CI installs and
+  tests the formula on macOS and Linux). An npm shim is written (`packaging/npm/`) but not published yet. Both
+  wrap the PyPI package. See [docs/install-channels.md](docs/install-channels.md).
 
 ## Replay, rewind, branch
 

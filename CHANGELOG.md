@@ -5,6 +5,15 @@ and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html). 
 minor version may change behaviour; every release is a git tag `vX.Y.Z` that equals `rewindagents.__version__`,
 and only a published GitHub release publishes to PyPI (`.github/workflows/publish.yml` refuses a mismatched tag).
 
+## [Unreleased]
+
+### Added
+- The repository is its own Claude Code plugin marketplace: `claude plugin marketplace add
+  Johnbjoseph-cybersec/rewindagents`, then `claude plugin install rewindagents@rewindagents`.
+- The plugin has run in a live Claude Code session (2026-11-18): its hook recorded an `rm`, the agent called
+  the plugin's MCP tool, and `rewind` put the deleted files back. Evidence:
+  `harness/live/evidence/claude-plugin.json`.
+
 ## [1.1.0] - 2026-11-18
 
 ### Added

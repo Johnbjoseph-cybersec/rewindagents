@@ -278,3 +278,16 @@ class TestDocsPluginExists(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestRootMarketplace(unittest.TestCase):
+    """`claude plugin marketplace add Johnbjoseph-cybersec/rewindagents` reads the root marketplace file."""
+
+    def test_root_marketplace_points_at_the_plugin_directory(self):
+        root = Path(__file__).resolve().parent.parent
+        market = json.loads((root / ".claude-plugin" / "marketplace.json").read_text(encoding="utf-8"))
+        plugin = json.loads((root / "plugin" / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
+        [entry] = market["plugins"]
+        self.assertEqual(entry["source"], "./plugin")
+        self.assertEqual(entry["name"], plugin["name"])
+        self.assertTrue((root / entry["source"] / ".claude-plugin" / "plugin.json").is_file())

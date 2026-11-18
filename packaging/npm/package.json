@@ -1,6 +1,6 @@
 {
   "name": "rewindagents",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Undo for AI coding agents: record every tool call, see what changed, take back a step, a file or a whole session. This package is a thin shim that installs and runs the real rewindagents Python CLI from PyPI.",
   "homepage": "https://github.com/Johnbjoseph-cybersec/rewindagents",
   "repository": {

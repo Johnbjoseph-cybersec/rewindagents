@@ -106,16 +106,17 @@ the version PyPI's own API (`https://pypi.org/pypi/rewindagents/json`,
 `packaging/homebrew/Formula/rewindagents.rb` were re-pinned to that release's
 own sdist and independently re-verified by downloading it and hashing it
 (see the sprint2 evidence file above) — they no longer carry a
-`RELEASE-TODO` comment, since that bump has now happened. `packaging/npm/package.json`'s
-`version` field was bumped to `1.0.0` the same way; the npm shim's venv path
-and `pip install` target (`PACKAGE_SPEC` in `packaging/npm/bin/rewindagents.js`)
-derive from that one field, so no other npm file needed a change. Neither
-channel is published anywhere yet, independent of this version bump: there is
-still no `homebrew-rewindagents` tap repository and no `rewindagents` package
-on the npm registry — only PyPI serves the real package today, and both
-installers are still only runnable from a checkout of this repo (Homebrew via
-`--build-from-source`, npm via `node packaging/npm/bin/rewindagents.js` or
-`npm link`), exactly as described above.
+`RELEASE-TODO` comment, since that bump has now happened. `packaging/npm/package.json`'s `version` field is `1.1.0`; the npm shim's venv path and
+`pip install` target (`PACKAGE_SPEC` in `packaging/npm/bin/rewindagents.js`) derive from that one field.
+
+Status on 2026-11-18:
+- Homebrew: published as the tap `Johnbjoseph-cybersec/homebrew-rewindagents`
+  (`brew install johnbjoseph-cybersec/rewindagents/rewindagents`). That repository's CI installs the formula
+  from source and runs `brew test` on `macos-latest` and `ubuntu-latest`; both passed and printed
+  `rewindagents 1.1.0`.
+- npm: not published. `npm pack` of `packaging/npm` and `npx ./rewindagents-1.1.0.tgz --version` print
+  `rewindagents 1.1.0` (the shim installed 1.1.0 from PyPI into its own venv), but no `rewindagents` package
+  is on the npm registry yet.
 
 ## What neither channel does
 

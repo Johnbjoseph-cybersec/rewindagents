@@ -1,0 +1,36 @@
+{
+  "agent": "claude-plugin",
+  "status": "VERIFIED_LIVE",
+  "date": "2026-11-18",
+  "claude_code": "2.1.294",
+  "model": "haiku",
+  "rewindagents": "1.1.0 (PyPI)",
+  "how": "claude -p --setting-sources project --plugin-dir plugin in a scratch git project",
+  "steps_recorded": [
+    {
+      "seq": 1,
+      "tool": "Write",
+      "files": [
+        "notes.txt"
+      ],
+      "checkpointed": 1
+    },
+    {
+      "seq": 2,
+      "tool": "Bash",
+      "command": "rm notes.txt keep.txt",
+      "checkpointed": 2
+    },
+    {
+      "seq": 3,
+      "tool": "ToolSearch"
+    },
+    {
+      "seq": 4,
+      "tool": "mcp__plugin_rewindagents_rewindagents__rewind_summary"
+    }
+  ],
+  "mcp_tool_called": "rewind_summary (returned the session's four steps)",
+  "rewind": "rewindagents rewind 1 -> restore keep.txt, restore notes.txt; contents 'keep me' and 'hello' back",
+  "marketplace_install": "CLAUDE_CONFIG_DIR=<empty dir>: claude plugin marketplace add <repo> -> added; claude plugin install rewindagents@rewindagents -> installed, enabled; claude plugin validate .claude-plugin/marketplace.json -> success true"
+}
