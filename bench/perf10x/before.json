@@ -1,0 +1,105 @@
+{
+  "date": "2026-11-18",
+  "machine": {
+    "os": "Darwin",
+    "os_release": "27.0.0",
+    "arch": "arm64",
+    "cpus": 12,
+    "python": "3.15.2",
+    "load_1m_at_start": 3.6,
+    "os_version": "macOS 27.0.1",
+    "cpu": "Apple M6"
+  },
+  "commit": "1ac5f23",
+  "method": "wall-clock of the PreToolUse and PostToolUse hook processes for one call, python -m rewindagents hook from the source tree, git repository of small text files; the script changes one file between the events for Edit and Bash",
+  "startup": {
+    "median_ms": 40.8,
+    "p90_ms": 43.0,
+    "min_ms": 37.2,
+    "max_ms": 43.0,
+    "runs": 7
+  },
+  "results": [
+    {
+      "files": 100,
+      "first_bash_ms": 133.5,
+      "tools": {
+        "Read": {
+          "median_ms": 65.4,
+          "p90_ms": 72.6,
+          "min_ms": 64.9,
+          "max_ms": 72.6,
+          "runs": 7
+        },
+        "Edit": {
+          "median_ms": 67.7,
+          "p90_ms": 71.0,
+          "min_ms": 65.3,
+          "max_ms": 71.0,
+          "runs": 7
+        },
+        "Bash": {
+          "median_ms": 115.8,
+          "p90_ms": 119.7,
+          "min_ms": 115.3,
+          "max_ms": 119.7,
+          "runs": 7
+        }
+      }
+    },
+    {
+      "files": 1000,
+      "first_bash_ms": 276.5,
+      "tools": {
+        "Read": {
+          "median_ms": 77.0,
+          "p90_ms": 94.9,
+          "min_ms": 73.3,
+          "max_ms": 94.9,
+          "runs": 7
+        },
+        "Edit": {
+          "median_ms": 76.0,
+          "p90_ms": 83.9,
+          "min_ms": 73.7,
+          "max_ms": 83.9,
+          "runs": 7
+        },
+        "Bash": {
+          "median_ms": 157.5,
+          "p90_ms": 187.1,
+          "min_ms": 151.2,
+          "max_ms": 187.1,
+          "runs": 7
+        }
+      }
+    },
+    {
+      "files": 10000,
+      "first_bash_ms": 2691.5,
+      "tools": {
+        "Read": {
+          "median_ms": 75.5,
+          "p90_ms": 78.7,
+          "min_ms": 66.1,
+          "max_ms": 78.7,
+          "runs": 7
+        },
+        "Edit": {
+          "median_ms": 74.4,
+          "p90_ms": 77.9,
+          "min_ms": 66.1,
+          "max_ms": 77.9,
+          "runs": 7
+        },
+        "Bash": {
+          "median_ms": 368.0,
+          "p90_ms": 409.4,
+          "min_ms": 321.2,
+          "max_ms": 409.4,
+          "runs": 7
+        }
+      }
+    }
+  ]
+}

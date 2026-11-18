@@ -22,20 +22,20 @@ stderr only.
 from __future__ import annotations
 
 import contextlib
-import hashlib
 import json
 import os
-import re
-import shlex
 import site
 import sys
 import threading
 import time
 from pathlib import Path
-from typing import Any
+
+TYPE_CHECKING = False   # importing typing costs time at every hook start; the hook only needs it for annotations
+if TYPE_CHECKING:
+    from typing import Any
 
 from . import agents, filelock, ospaths, project
-from .log import Recorder
+from .log import Recorder, sha256
 
 FILE_TOOLS = {"Write": "file_path", "Edit": "file_path", "MultiEdit": "file_path",
               "NotebookEdit": "notebook_path"}
@@ -161,7 +161,7 @@ def checkpoint(path: Path, objects: Path) -> dict:
         entry["skipped"] = f"larger than {MAX_CHECKPOINT_BYTES} bytes"
         return entry
     data = path.read_bytes()
-    sha = hashlib.sha256(data).hexdigest()
+    sha = sha256(data).hexdigest()
     objects.mkdir(parents=True, exist_ok=True)
     obj = objects / sha
     if not obj.exists():
@@ -188,7 +188,7 @@ def after_hash(path: Path, objects: Path | None = None) -> dict:
         entry["skipped"] = f"larger than {MAX_CHECKPOINT_BYTES} bytes"
         return entry
     if objects is None:
-        entry["after"] = hashlib.sha256(path.read_bytes()).hexdigest()
+        entry["after"] = sha256(path.read_bytes()).hexdigest()
         return entry
     cp = checkpoint(path, objects)
     entry["after"] = cp["sha256"]
@@ -421,18 +421,23 @@ def hook_command(agent: str = agents.DEFAULT, python: str | None = None) -> str:
     src = source_dir()
     if agents.windows_command(python):
         return _windows_command(ag, python, src, tail)
+    import shlex
     run = f"{shlex.quote(python)} -m rewindagents hook{tail}"
     if src is not None:
         run = f"PYTHONPATH={shlex.quote(str(src))} {run}"
     return run + " || true" if ag.fail_closed else run
 
 
-_PLAIN_WIN = re.compile(r"^[A-Za-z]:/[A-Za-z0-9_./+-]*$")
+_PLAIN_WIN = None   # compiled on first use: `re` is not imported on the hook's recording path
 
 
 def _win_word(path: str | Path) -> str:
     """A Windows path as one command word: forward slashes, bare when every shell reads it as one word, else
     double-quoted (Git Bash and cmd.exe; PowerShell needs `&` in front, which the caller adds)."""
+    global _PLAIN_WIN
+    if _PLAIN_WIN is None:
+        import re
+        _PLAIN_WIN = re.compile(r"^[A-Za-z]:/[A-Za-z0-9_./+-]*$")
     p = str(path).replace("\\", "/")
     return p if _PLAIN_WIN.match(p) else f'"{p}"'
 
@@ -454,11 +459,15 @@ def _windows_command(ag: agents.Agent, python: str, src: Path | None, tail: str)
 # `... -m rewindagents hook`, `rewindagents hook` (on PATH), or the clone-by-file form `.../rewindagents/__main__.py hook`
 # (a quote may close the path first: double on Windows's own quoting, single when a Windows-shaped path reaches
 # here through shlex.quote's POSIX quoting, as a real Windows interpreter path does on windows-latest CI).
-_OURS = re.compile(r"rewindagents(?:[/\\]__main__\.py)?['\"]?\s+hook\b")
+_OURS = None   # compiled on first use, as _PLAIN_WIN
 
 
 def ours(command: str) -> bool:
     """True for a hook command that runs rewindagents' hook (any interpreter, any agent, either OS form)."""
+    global _OURS
+    if _OURS is None:
+        import re
+        _OURS = re.compile(r"rewindagents(?:[/\\]__main__\.py)?['\"]?\s+hook\b")
     return bool(_OURS.search(command))
 
 
@@ -466,6 +475,7 @@ def words(command: str) -> list[str]:
     """The command's words with their quotes removed. POSIX rules, unless the command names a Windows path: then
     backslashes are kept (shlex's POSIX mode reads `C:\\Users` as `C:Users`), surrounding double quotes are
     stripped and a leading PowerShell `&` is dropped. Raises ValueError on an unbalanced quote, as shlex does."""
+    import shlex
     if not agents.windows_command(command):
         return shlex.split(command)
     out = []

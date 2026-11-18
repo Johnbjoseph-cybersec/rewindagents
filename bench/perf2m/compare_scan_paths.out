@@ -1,0 +1,7 @@
+pre record old: {'files': 10005, 'pending': '7dc96f776c8423e57a2785489a3f9c43'}  new: {'files': 10005, 'git': True, 'pending': '7dc96f776c8423e57a2785489a3f9c43'}
+checkpoints: old 12 new 12 identical: True
+after entries identical: True
+changed counts: {'changed': 12} {'changed': 12}
+rewind rc old/new: 0 0  text identical: True
+old path restored == original: True ; git path restored == original: True
+RESULT: IDENTICAL

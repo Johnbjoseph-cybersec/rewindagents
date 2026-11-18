@@ -1,0 +1,2 @@
+load averages: 3.57 4.38 7.46
+load averages: 3.56 4.34 7.39

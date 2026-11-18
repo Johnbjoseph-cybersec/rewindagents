@@ -144,7 +144,10 @@ import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+
+TYPE_CHECKING = False   # typing is only for annotations; importing it costs time at every hook start
+if TYPE_CHECKING:
+    from typing import Any
 
 CURSOR_DOCS = "https://cursor.com/docs/agent/hooks"
 CODEX_DOCS = "https://developers.openai.com/codex/hooks"
