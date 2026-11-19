@@ -13,7 +13,7 @@ from . import diff as diffs, init as setup, revert as reverts, summary as summar
 
 def invocation() -> str:
     """How the user runs us: the console command once installed, the module from a clone."""
-    return "rewindagents" if hook.installed() else "python3 -m rewindagents"
+    return hook.invocation()
 
 
 def main(argv: list[str] | None = None) -> int:

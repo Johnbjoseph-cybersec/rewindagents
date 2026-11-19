@@ -7,6 +7,13 @@ and only a published GitHub release publishes to PyPI (`.github/workflows/publis
 
 ## [Unreleased]
 
+### Fixed
+- After an editable install (`pip install -e .`) the next-step hints in `summary`, `revert`, `rewind`, `status`
+  and `init` said `python3 -m rewindagents ...`, as if running from a bare clone. Run from a venv that is not
+  activated, that command fails with "No module named rewindagents", including the "undo it with" line after a
+  revert. They now name the `rewindagents` command pip wrote, found from the install's own `direct_url.json`
+  record for this source tree (PEP 610).
+
 ## [1.2.0] - 2026-11-18
 
 The full test suite passes on Windows CI, five agent hooks are verified in live sessions on macOS, and Windows

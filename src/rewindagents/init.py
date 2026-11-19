@@ -318,7 +318,7 @@ def status(global_: bool = False, root: Path | None = None, home: Path | None = 
     else:
         home = Path(home)
     out = out or sys.stdout
-    run = "rewindagents" if hook.installed() else "python3 -m rewindagents"
+    run = hook.invocation()
     bad, shown, hooked, failing, partial, unprobed = 0, 0, 0, 0, 0, 0
     for name in agents.AGENTS:
         if global_ and home is None:
@@ -437,7 +437,7 @@ def main(yes: bool = False, global_: bool = False, root: Path | None = None, hom
     if kind:
         print(f"rewindagents init: nothing written: {hook.ephemeral_message(kind)}", file=out)
         return 2
-    run = "rewindagents" if hook.installed() else "python3 -m rewindagents"
+    run = hook.invocation()
     found = detect(root, home, global_, path)
     if only:
         found = [dict(f, found=f["found"] or ["--agent"]) for f in found if f["agent"] in only]
