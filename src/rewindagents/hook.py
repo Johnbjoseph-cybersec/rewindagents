@@ -348,6 +348,59 @@ def installed() -> bool:
     return any(here.is_relative_to(Path(d).resolve()) for d in dirs if d)
 
 
+def editable() -> bool:
+    """True when this source tree is `pip install -e`'d into this interpreter: the files stay in the clone
+    (so installed() is False), yet `pip` wrote the `rewindagents` console command and a .pth that makes the
+    package importable without PYTHONPATH.
+
+    Read from the install's own record, not from sys.path: pip writes `direct_url.json` (PEP 610) into the
+    site-packages dist-info with `"dir_info": {"editable": true}` and the clone's file URL. Only a record that
+    points at this very tree counts, so an editable install of some other checkout does not.
+    """
+    root = Path(__file__).resolve().parent.parent.parent      # <root>/src/rewindagents/hook.py
+    dirs = list(site.getsitepackages()) if hasattr(site, "getsitepackages") else []
+    if hasattr(site, "getusersitepackages"):
+        dirs.append(site.getusersitepackages())
+    for d in dirs:
+        for info in Path(d).glob("rewindagents-*.dist-info") if d else ():
+            try:
+                rec = json.loads((info / "direct_url.json").read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            if not isinstance(rec, dict) or not isinstance(rec.get("dir_info"), dict) \
+                    or not rec["dir_info"].get("editable"):
+                continue
+            path = _file_url_path(rec.get("url"))
+            try:
+                if path is not None and path.resolve() == root:
+                    return True
+            except (OSError, ValueError):
+                continue
+    return False
+
+
+def _file_url_path(url) -> Path | None:
+    """The local path a `file://` URL names (pip writes `file:///home/u/clone`, `file:///C:/Users/u/clone`),
+    else None. Decoded here rather than with urllib: the package imports no network module at all."""
+    if not isinstance(url, str) or not url.startswith("file://"):
+        return None
+    host, sep, rest = url[len("file://"):].partition("/")
+    if not sep or host not in ("", "localhost"):
+        return None
+    raw = re.sub(rb"%([0-9A-Fa-f]{2})", lambda m: bytes([int(m[1], 16)]), ("/" + rest).encode("utf-8"))
+    path = raw.decode("utf-8", "surrogateescape")
+    return Path(path[1:] if re.match(r"/[A-Za-z]:", path) else path)
+
+
+def invocation() -> str:
+    """How the user runs us, as printed in every next-step hint: the `rewindagents` console command once pip
+    has written it (a regular install, pipx, or an editable `pip install -e .`), else the module from a clone.
+
+    An editable install used to be taken for a bare clone, so its hints said `python3 -m rewindagents ...`,
+    which fails with "No module named rewindagents" whenever `python3` is not the venv's interpreter."""
+    return "rewindagents" if installed() or editable() else "python3 -m rewindagents"
+
+
 class EphemeralPython(ValueError):
     """install was run from a throwaway environment (uvx, pipx run) that its tool may delete."""
 
