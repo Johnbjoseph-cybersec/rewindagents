@@ -303,18 +303,48 @@ def run(stdin=None, agent: str = agents.DEFAULT) -> int:
     (Cursor: `{"permission": "allow"}` before a call, `{}` after one; the same allow if the input could not
     be read, so a broken payload still never turns into a block. Gemini CLI: `{}` always)."""
     event = "unknown"
+    found: list = []
+    payload = None
     try:
         payload = _clean(json.loads(_read(stdin)))
         if not isinstance(payload, dict):
             raise ValueError("hook input is not a JSON object")
         event = agents.normalize(payload)["event"]
-        handle(payload, agent)
+        rec = handle(payload, agent)
+        if event == "post":
+            found = _guarded(payload, rec)
     except Exception as e:  # never let a recording failure reach the agent as a block
         print(f"rewindagents hook: not recorded: {e}", file=sys.stderr)
     reply = agents.AGENTS[agent].reply.get(event, agents.AGENTS[agent].reply.get("unknown", ""))
+    if found:
+        from . import guard
+        msg = guard.warning(found)
+        if not reply and agent == "claude":
+            # Claude Code shows systemMessage to the user; additionalContext reaches the agent. Neither blocks.
+            out: dict[str, Any] = {"systemMessage": msg}
+            if payload.get("hook_event_name") == "PostToolUse":
+                out["hookSpecificOutput"] = {"hookEventName": "PostToolUse",
+                                             "additionalContext": guard.agent_note(found)}
+            reply = json.dumps(out)
+        else:
+            print(msg, file=sys.stderr)   # the other agents' stdout reply is fixed by their docs
     if reply:
         _write_reply_line(reply)
     return 0
+
+
+def _guarded(payload: dict, rec: dict) -> list:
+    """(relative path, pattern) for each guarded file this post record says the call changed; [] when the
+    project guards nothing (the common case costs one stat) or anything goes wrong."""
+    try:
+        from . import guard
+        root = project.root_for(agents.normalize(payload)["cwd"])
+        if not (root / ".rewindagents" / "guard.json").is_file():
+            return []
+        return guard.hits(root, guard.record_paths(rec))
+    except Exception as e:   # a guard check must never cost the recording or block the agent
+        print(f"rewindagents hook: guard check skipped: {e}", file=sys.stderr)
+        return []
 
 
 def _write_reply_line(reply: str) -> None:

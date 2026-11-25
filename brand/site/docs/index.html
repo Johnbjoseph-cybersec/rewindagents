@@ -111,8 +111,8 @@
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents rewind 0</span></span></code></pre>
 <p>Three commands, in the order you need them. <code>rewind</code> and <code>revert</code> refuse, change nothing and exit 1 when they would overwrite a change made after the agent&#x27;s step (your own edit, for example); the message names the file and the command that shows what would be lost. Every rewind is itself a step, so it can be undone, and it prints the command that undoes it.</p>
 
-<h2 id="undo">Undo, bookmarks, one file&#x27;s history</h2>
-<p><code>undo</code> takes back the agent&#x27;s last change with no step number to work out, and walks further back each time you run it; <code>redo</code> reverses it. <code>mark NAME</code> bookmarks a moment before a risky task and <code>rewind-to NAME</code> jumps back to it. <code>history FILE</code> lists every step that created, changed or deleted one file. All of them refuse to overwrite your own edit unless you add <code>--force</code>.</p>
+<h2 id="undo">Undo, bookmarks, guards, one file&#x27;s history</h2>
+<p><code>undo</code> takes back the agent&#x27;s last change with no step number to work out, and walks further back each time you run it; <code>redo</code> reverses it. <code>mark NAME</code> bookmarks a moment before a risky task and <code>rewind-to NAME</code> jumps back to it. <code>history FILE</code> lists every step that created, changed or deleted one file. <code>guard .env</code> warns you, and tells the agent, the moment a call changes a file you listed. All of them refuse to overwrite your own edit unless you add <code>--force</code>.</p>
 <pre class="term"><code><span class="l"><span class="c"># take back the agent&#x27;s last change</span></span>
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents undo</span></span>
 <span class="l"><span class="c"># the last three changes; `undo --all` for everything</span></span>
@@ -124,7 +124,13 @@
 <span class="l"><span class="c"># jump straight back to it; `marks` lists them, `unmark` deletes one</span></span>
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents <span class="nb">rewind-to</span> <span class="nb">before-refactor</span></span></span>
 <span class="l"><span class="c"># every step that created, changed or deleted this one file</span></span>
-<span class="l"><span class="p">$ </span><span class="sel">rewindagents history src/app.py</span></span></code></pre>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents history src/app.py</span></span>
+<span class="l"><span class="c"># files the agent must not touch</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents guard .env &#x27;secrets/&#x27; &#x27;*.pem&#x27;</span></span>
+<span class="l"><span class="c"># guarded files the session changed; `unguard PATTERN` removes one</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents guard <span class="nb">--check</span></span></span>
+<span class="l"><span class="c"># take back the agent&#x27;s last change to that one file</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents undo <span class="nb">--only .env</span></span></span></code></pre>
 
 <h2 id="first">A first session</h2>
 <p>The session behind the clip on the front page, as it ran. Every line below is what the command printed; <code>tests/test_demo.py</code> runs the same session and fails if a line changes.</p>

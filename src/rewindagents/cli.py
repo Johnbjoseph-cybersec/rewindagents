@@ -134,6 +134,17 @@ def main(argv: list[str] | None = None) -> int:
     rt.add_argument("--force", action="store_true",
                     help="jump back even over a file you changed by hand since (your bytes are kept as a step, "
                          "so it can be undone)")
+    gd = sub.add_parser("guard", help="protect files the agent should never touch (.env, 'secrets/', '*.pem'): "
+                                      "the hook warns you, and tells the agent, the moment one changes. No "
+                                      "pattern: list them")
+    gd.add_argument("patterns", nargs="*", metavar="PATTERN",
+                    help="a path relative to the project root; end with / for a directory; * ? [ for a glob")
+    gd.add_argument("--check", action="store_true",
+                    help="list every guarded file the session's steps changed and that is still changed "
+                         "(exit 1 if any)")
+    gd.add_argument("--session", help="with --check; default: the session that wrote the last record")
+    ug = sub.add_parser("unguard", help="stop guarding a pattern")
+    ug.add_argument("pattern", help="a pattern exactly as `guard` lists it")
     hi = sub.add_parser("history", help="one file's timeline: every step that created, changed or deleted it, "
                                         "oldest first, with how to put it back to any version")
     hi.add_argument("file", help="the file to trace")
@@ -398,6 +409,8 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
         return _marks(a)
     if a.cmd == "history":
         return _history(a)
+    if a.cmd in ("guard", "unguard"):
+        return _guard(a)
     if a.cmd == "rewind" and a.json:
         return _rewind_json(a)
     if a.cmd in ("rewind", "branch"):
@@ -465,9 +478,17 @@ def _undo_redo(a: argparse.Namespace) -> int:
         human = "redo the last undo"
     else:
         live = rewind.live_changes(all_steps)
+        if getattr(a, "only", None):
+            # `undo --only FILE` means the agent's last change TO that file, not its last change overall
+            hits = rewind._matcher(a.only)
+            live = [s for s in live if any(hits(c.get("path") or "") for c in s.get("checkpoints") or [])]
         if not live:
-            print("rewindagents: nothing to undo -- the files are already back to before the agent's first "
-                  "change", file=sys.stderr)
+            if getattr(a, "only", None):
+                print(f"rewindagents: nothing to undo -- the agent has no change to {', '.join(a.only)} that is "
+                      f"still in place", file=sys.stderr)
+            else:
+                print("rewindagents: nothing to undo -- the files are already back to before the agent's first "
+                      "change", file=sys.stderr)
             return 1
         if a.steps < 1:
             print(f"rewindagents: N must be 1 or more (got {a.steps})", file=sys.stderr)
@@ -476,9 +497,11 @@ def _undo_redo(a: argparse.Namespace) -> int:
         if not a.all and a.steps > len(live):
             print(f"note: the agent made {len(live)} change{'s' if len(live) != 1 else ''} in all; "
                   f"undoing every one", file=sys.stderr)
-        target = rewind.undo_target(all_steps, n)
+        target = 0 if n >= len(live) else live[-n]["step"] - 1     # same rule as rewind.undo_target
         human = ("undo the agent's last change" if n == 1
                  else f"undo the agent's last {n} changes")
+        if getattr(a, "only", None):
+            human += f" to {', '.join(a.only)}"
     try:
         p = rewind.rewind(a.log, target, session, dry_run=a.dry_run,
                           only=getattr(a, "only", None), force=a.force)
@@ -526,6 +549,51 @@ def _undo_report(p: dict, cmd: str, human: str, dry_run: bool, root) -> None:
               f"may have run before they finished)")
     if p.get("torn"):
         print(f"  note: the log has a torn write ({p['torn']}); some changes may not have been put back")
+
+
+def _guard(a: argparse.Namespace) -> int:
+    from . import guard
+    root = rewind.project_root(a.log)
+    if a.cmd == "unguard":
+        if not guard.remove(root, a.pattern):
+            have = ", ".join(guard.load(root)) or "none"
+            print(f"rewindagents: '{a.pattern}' is not guarded (guarded: {have})", file=sys.stderr)
+            return 1
+        print(f"no longer guarding {guard.normalize(a.pattern)}")
+        return 0
+    if a.patterns:
+        have = guard.add(root, a.patterns)
+        print(f"guarding {len(have)} pattern{'s' if len(have) != 1 else ''}: {', '.join(have)}")
+        print("  the hook now warns you (and tells the agent) the moment a call changes one; "
+              f"`{invocation()} guard --check` lists any already changed")
+        return 0
+    patterns = guard.load(root)
+    if not a.check:
+        if not patterns:
+            print(f"nothing guarded yet -- e.g. `{invocation()} guard .env 'secrets/' '*.pem'`")
+        for p in patterns:
+            print(f"  {p}")
+        return 0
+    if not patterns:
+        print("nothing guarded, so nothing to check")
+        return 0
+    session = a.session or rewind.latest_session(a.log)
+    if session is None:
+        print("nothing recorded yet")
+        return 0
+    all_steps = rewind.steps(a.log, session)
+    seen: dict[str, int] = {}
+    for s in rewind.live_changes(all_steps):
+        paths = [c.get("path") for c in s.get("checkpoints") or [] if isinstance(c, dict)]
+        for r, _ in guard.hits(root, [p for p in paths if p], patterns):
+            seen[r] = s["step"]                      # the latest live step that changed it
+    if not seen:
+        print(f"no guarded file was changed in session {session}")
+        return 0
+    print(f"{len(seen)} guarded file{'s' if len(seen) != 1 else ''} changed in session {session}:")
+    for r, step in seen.items():
+        print(f"  {r}  (last changed at step {step}) -- put it back: {invocation()} undo --only {r}")
+    return 1
 
 
 def _history(a: argparse.Namespace) -> int:

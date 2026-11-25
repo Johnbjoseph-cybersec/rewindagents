@@ -15,8 +15,13 @@ and only a published GitHub release publishes to PyPI (`.github/workflows/publis
 - `mark NAME`, `marks`, `unmark NAME`, `rewind-to NAME`: named bookmarks in time, kept in
   `.rewindagents/marks.json`.
 - `history FILE`: one file's timeline -- each step that created, modified or deleted it.
+- `guard PATTERN...`, `guard --check`, `unguard PATTERN`: protected files (`.env`, `secrets/`, `*.pem`). The
+  hook still never blocks; on a guarded change Claude Code shows the user a warning (`systemMessage`) and tells
+  the agent (`additionalContext`); other agents get it on stderr, their stdout reply unchanged.
+- `undo --only FILE` now takes back the agent's last change to that file (it used to count the last change
+  overall, then restrict it to the file).
 - All of these go through the same rewind checks (a hand edit is refused without `--force`; `--dry-run`).
-  Tests: `tests/test_undo.py`, `tests/test_marks.py`, `tests/test_history.py`.
+  Tests: `tests/test_undo.py`, `tests/test_marks.py`, `tests/test_history.py`, `tests/test_guard.py`.
 
 ### Fixed
 - After an editable install (`pip install -e .`) the next-step hints in `summary`, `revert`, `rewind`, `status`
