@@ -131,6 +131,47 @@ def steps_from(recs: list[dict]) -> list[dict]:
     return out
 
 
+def _is_control(step: dict) -> bool:
+    """A step rewindagents itself recorded (an undo/rewind/branch/revert), not one the agent took."""
+    return step.get("tool") == "rewindagents"
+
+
+def effective_cursor(all_steps: list[dict]) -> int:
+    """The step the files currently reflect. After an undo/rewind/branch the tree sits at that record's
+    to_step; otherwise at the last step. `undo` counts back from here, so repeated `undo` walks through
+    the agent's work instead of flip-flopping with its own records."""
+    if all_steps:
+        last = all_steps[-1]
+        if _is_control(last) and last.get("to_step") is not None:
+            return last["to_step"]
+    return len(all_steps)
+
+
+def live_changes(all_steps: list[dict]) -> list[dict]:
+    """The agent's own file-changing steps the tree still reflects, oldest first: not rewindagents'
+    records, and not steps that checkpointed no file (a Read, a Grep). Counting back over this list is
+    what `undo N` means."""
+    return [s for s in all_steps[:effective_cursor(all_steps)]
+            if not _is_control(s) and s.get("checkpoints")]
+
+
+def undo_target(all_steps: list[dict], count: int) -> int:
+    """The step to rewind to so the agent's last `count` change-steps are taken back (0 = pristine, when
+    count covers them all). Pairs with live_changes(); the caller clamps count to at least 1."""
+    live = live_changes(all_steps)
+    if count >= len(live):
+        return 0
+    return live[-count]["step"] - 1
+
+
+def redo_target(all_steps: list[dict]) -> int | None:
+    """The step to rewind to in order to reverse the most recent undo/rewind, or None when the last
+    recorded step is not one (nothing to redo)."""
+    if all_steps and _is_control(all_steps[-1]) and all_steps[-1].get("to_step") is not None:
+        return all_steps[-1]["step"] - 1
+    return None
+
+
 def relative(path: str | Path, root: Path | None) -> str:
     """The path relative to root when it is inside root, else unchanged."""
     if root is None:

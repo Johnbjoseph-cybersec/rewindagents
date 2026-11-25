@@ -7,6 +7,17 @@ and only a published GitHub release publishes to PyPI (`.github/workflows/publis
 
 ## [Unreleased]
 
+### Added
+- `undo [N]` / `undo --all`: take back the agent's last change (or last N) with no step number to work out.
+  It counts only steps that changed a file, from where the files are now, so a repeated `undo` walks back
+  through the agent's work instead of undoing the previous undo.
+- `redo`: reverse the last `undo`, `rewind` or `rewind-to`.
+- `mark NAME`, `marks`, `unmark NAME`, `rewind-to NAME`: named bookmarks in time, kept in
+  `.rewindagents/marks.json`.
+- `history FILE`: one file's timeline -- each step that created, modified or deleted it.
+- All of these go through the same rewind checks (a hand edit is refused without `--force`; `--dry-run`).
+  Tests: `tests/test_undo.py`, `tests/test_marks.py`, `tests/test_history.py`.
+
 ### Fixed
 - After an editable install (`pip install -e .`) the next-step hints in `summary`, `revert`, `rewind`, `status`
   and `init` said `python3 -m rewindagents ...`, as if running from a bare clone. Run from a venv that is not

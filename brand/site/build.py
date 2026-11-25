@@ -193,7 +193,7 @@ def facts():
         "wreck_steps": scenario.WRECK_STEPS,
         "blocks": {k: readme_block(readme, h) for k, h in (
             ("install", "Install"), ("hook", "Claude Code hook"), ("agents", "Codex and Cursor hooks"),
-            ("replay", "Replay, rewind, branch"),
+            ("replay", "Replay, rewind, branch"), ("undo", "Undo, bookmarks, and one file's history"),
             ("export", "Export a replay"), ("sessions", "Find a session"), ("verify", "What the chain does not catch"),
             ("record", "Use it"), ("tests", "Tests"), ("quick", "Quick start"), ("ui", "Timeline UI"), ("mcp", MCP_HEADING))},
         "quick_use": readme_blocks(readme, "Quick start")[1],
@@ -1158,7 +1158,7 @@ def docs_html(cfg, f):
     rel = "../"
     b = f["blocks"]
     desc = "Getting started with rewindagents: install, add the hook to Claude Code, Codex or Cursor, a first session, replay, rewind, branch, fork a step and compare the runs, export, find a session, verify the log."
-    toc = [("install", "Install"), ("hook", "Add the hook"), ("after", "After a bad run"), ("first", "A first session"), ("recorded", "What gets recorded"),
+    toc = [("install", "Install"), ("hook", "Add the hook"), ("after", "After a bad run"), ("undo", "Undo and bookmarks"), ("first", "A first session"), ("recorded", "What gets recorded"),
            ("replay", "Replay and rewind"), ("branch", "Branch"), ("fork", "Fork and compare"), ("ui", "Timeline in a browser"), ("mcp", "MCP server"), ("export", "Export"),
            ("sessions", "Find a session"), ("bundle", "Move a session"), ("attach", "Attach to a PR"),
            ("verify", "Verify"), ("status", "Is it recording?"), ("gc", "Free space"),
@@ -1202,6 +1202,10 @@ def docs_html(cfg, f):
 <h2 id="after">After a bad run</h2>
 %(rescue)s
 <p>%(rescue_says)s</p>
+
+<h2 id="undo">Undo, bookmarks, one file&#x27;s history</h2>
+<p><code>undo</code> takes back the agent&#x27;s last change with no step number to work out, and walks further back each time you run it; <code>redo</code> reverses it. <code>mark NAME</code> bookmarks a moment before a risky task and <code>rewind-to NAME</code> jumps back to it. <code>history FILE</code> lists every step that created, changed or deleted one file. All of them refuse to overwrite your own edit unless you add <code>--force</code>.</p>
+%(undo)s
 
 <h2 id="first">A first session</h2>
 <p>The session behind the clip on the front page, as it ran. Every line below is what the command printed; <code>tests/test_demo.py</code> runs the same session and fails if a line changes.</p>
@@ -1329,7 +1333,7 @@ def docs_html(cfg, f):
        "cursor_ro": ", ".join("<code>%s</code>" % e(t) for t in f["agents"]["cursor"]["read_only"]),
        "codex_ro": ", ".join("<code>%s</code>" % e(t) for t in f["agents"]["codex"]["read_only"]),
        "first": first, "chars": "{:,}".format(f["result_chars"]),
-       "tools": ", ".join("<code>%s</code>" % t for t in f["file_tools"]), "mb": f["file_mb"], "replay": code(b["replay"]),
+       "tools": ", ".join("<code>%s</code>" % t for t in f["file_tools"]), "mb": f["file_mb"], "replay": code(b["replay"]), "undo": code(b["undo"]),
        "good": f["good_step"], "n": f["steps"], "n1": f["steps"] + 1, "export": code(b["export"]), "kb": f["diff_kb"],
        "lines": f["diff_lines"], "sessions": code(b["sessions"]), "show": f["show_files"], "verify": code(b["verify"]),
        "record": code(b["record"]), "skip": ", ".join("<code>%s</code>" % e(d) for d in f["skip_dirs"]),

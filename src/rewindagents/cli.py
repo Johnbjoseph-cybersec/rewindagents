@@ -1,5 +1,5 @@
 """rewindagents command line: init, status, record, verify, head, show, hook, install, uninstall, replay, diff,
-rewind, revert, branch, fork, compare, export, sessions, bundle, import, gc."""
+undo, redo, rewind, revert, branch, fork, compare, export, sessions, bundle, import, gc."""
 from __future__ import annotations
 
 import argparse
@@ -20,8 +20,10 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         prog="rewindagents",
         description="The flight recorder for coding agents: see exactly what your agent did, and take back any "
-                    "part of it. Start with `rewindagents init`; then `summary`, `replay`, `diff N`, `rewind N [--only PATH]`, "
-                    "`revert K` (take back step K alone, keep everything after it).",
+                    "part of it. Start with `rewindagents init`. Went wrong? `rewindagents undo` puts the last "
+                    "change back (`undo N` the last N, `redo` reverses it) -- no step numbers to work out. Then "
+                    "`summary`, `replay`, `diff N`, `rewind N [--only PATH]`, `revert K` (take back step K alone, "
+                    "keep everything after it) for finer control.",
         epilog="Exit codes: 0 done; 1 it ran but something was not done or does not check out (a file a rewind "
                "could not put back or refused to overwrite, a log that does not verify); 2 it could not run as "
                "asked (an option it cannot parse, a step number the session does not have, or no log yet). A --session, "
@@ -99,6 +101,43 @@ def main(argv: list[str] | None = None) -> int:
     dfp.add_argument("--json", action="store_true",
                      help="print one JSON object instead (format rewindagents-diff): one entry per file, with "
                           "its change (created, modified or deleted) and its unified diff")
+    ud = sub.add_parser("undo", help="undo the agent's last change, or the last N: put every file back the "
+                                     "way it was before it. No step numbers to work out. `redo` reverses it")
+    ud.add_argument("steps", nargs="?", type=int, default=1, metavar="N",
+                    help="how many of the agent's most recent change-steps to take back (default 1)")
+    ud.add_argument("--all", action="store_true",
+                    help="take back everything the agent changed, back to before its first change")
+    ud.add_argument("--session", help="default: the session that wrote the last record")
+    ud.add_argument("--only", action="append", metavar="PATH",
+                    help="undo only this file (or the files under this directory); repeat for more")
+    ud.add_argument("-n", "--dry-run", action="store_true", help="show what undo would put back, change nothing")
+    ud.add_argument("--force", action="store_true",
+                    help="undo even over a file you changed by hand after the agent (your bytes are kept as a "
+                         "step, so the undo can itself be reversed with `redo`)")
+    rd = sub.add_parser("redo", help="reverse the last `undo` / `rewind` / `rewind-to`: restore what it took back")
+    rd.add_argument("--session", help="default: the session that wrote the last record")
+    rd.add_argument("-n", "--dry-run", action="store_true", help="show what redo would restore, change nothing")
+    rd.add_argument("--force", action="store_true", help="redo even over a file you changed by hand since")
+    mk = sub.add_parser("mark", help="bookmark the point in time you are at now with a name, to jump back to "
+                                     "later (`rewind-to NAME`) -- drop one before you let an agent do something risky")
+    mk.add_argument("name", help="a label: letters, digits, '.', '_' or '-' (not a bare number)")
+    mk.add_argument("--session", help="default: the session that wrote the last record")
+    sub.add_parser("marks", help="list your bookmarks: name, when made, and the step and session each points at")
+    um = sub.add_parser("unmark", help="delete a bookmark (the recorded history is untouched)")
+    um.add_argument("name", help="a mark name from `marks`")
+    rt = sub.add_parser("rewind-to", help="jump back to a bookmark: put every file the way it was when you made "
+                                          "the mark (same safety checks as `rewind`; reverse it with `redo`)")
+    rt.add_argument("name", help="a mark name from `marks`")
+    rt.add_argument("--only", action="append", metavar="PATH",
+                    help="put back only this file (or the files under this directory); repeat for more")
+    rt.add_argument("-n", "--dry-run", action="store_true", help="show what it would change, change nothing")
+    rt.add_argument("--force", action="store_true",
+                    help="jump back even over a file you changed by hand since (your bytes are kept as a step, "
+                         "so it can be undone)")
+    hi = sub.add_parser("history", help="one file's timeline: every step that created, changed or deleted it, "
+                                        "oldest first, with how to put it back to any version")
+    hi.add_argument("file", help="the file to trace")
+    hi.add_argument("--session", help="default: the session that wrote the last record")
     ini = sub.add_parser("init", help="find the coding agents you use and add the hook to each (asks first)")
     ini.add_argument("--yes", "-y", action="store_true", help="install without asking")
     ini.add_argument("--global", dest="global_", action="store_true",
@@ -353,6 +392,12 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
         return 0
     if a.cmd == "revert":
         return _revert(a)
+    if a.cmd in ("undo", "redo"):
+        return _undo_redo(a)
+    if a.cmd in ("mark", "marks", "unmark", "rewind-to"):
+        return _marks(a)
+    if a.cmd == "history":
+        return _history(a)
     if a.cmd == "rewind" and a.json:
         return _rewind_json(a)
     if a.cmd in ("rewind", "branch"):
@@ -400,6 +445,160 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
         print(f"{rec['seq']:>5}  {rec['session']}  {rec.get('event', '')}  {rec['tool']}  "
               f"{json.dumps(rec['args'], ensure_ascii=False)}")
     return 0
+
+
+def _undo_redo(a: argparse.Namespace) -> int:
+    """`undo [N]` / `redo`: the panic-moment front door over rewind. No step numbers -- undo counts back
+    over the agent's own change-steps from where the files are now; redo reverses the last undo."""
+    session = a.session or rewind.latest_session(a.log)
+    if session is None:
+        print(f"rewindagents: nothing is recorded yet, so there is nothing to {a.cmd}", file=sys.stderr)
+        return 1
+    all_steps = rewind.steps(a.log, session)
+    root = rewind.project_root(a.log)
+    if a.cmd == "redo":
+        target = rewind.redo_target(all_steps)
+        if target is None:
+            print(f"rewindagents: nothing to redo -- the last recorded step is not an undo to reverse "
+                  f"(`{invocation()} replay` shows the timeline)", file=sys.stderr)
+            return 1
+        human = "redo the last undo"
+    else:
+        live = rewind.live_changes(all_steps)
+        if not live:
+            print("rewindagents: nothing to undo -- the files are already back to before the agent's first "
+                  "change", file=sys.stderr)
+            return 1
+        if a.steps < 1:
+            print(f"rewindagents: N must be 1 or more (got {a.steps})", file=sys.stderr)
+            return 2
+        n = len(live) if a.all else min(a.steps, len(live))
+        if not a.all and a.steps > len(live):
+            print(f"note: the agent made {len(live)} change{'s' if len(live) != 1 else ''} in all; "
+                  f"undoing every one", file=sys.stderr)
+        target = rewind.undo_target(all_steps, n)
+        human = ("undo the agent's last change" if n == 1
+                 else f"undo the agent's last {n} changes")
+    try:
+        p = rewind.rewind(a.log, target, session, dry_run=a.dry_run,
+                          only=getattr(a, "only", None), force=a.force)
+    except rewind.DriftError as e:
+        _refused(e.plan, a)
+        return 1
+    except rewind.StepRangeError as e:
+        print(f"rewindagents: {e}", file=sys.stderr)
+        return 2
+    except rewind.RewindError as e:
+        print(f"rewindagents: {e}", file=sys.stderr)
+        return 1
+    _undo_report(p, a.cmd, human, dry_run=a.dry_run, root=root)
+    if p.get("drift") and a.dry_run and not a.force:
+        return 1
+    return 1 if p["cannot"] or p["bash_uncovered"] or p["scan_early"] or p.get("torn") else 0
+
+
+def _undo_report(p: dict, cmd: str, human: str, dry_run: bool, root) -> None:
+    n = len(p["restore"]) + len(p["delete"])
+    verb = "would put back" if dry_run else "put back"
+    if n == 0 and not p["cannot"]:
+        print(f"{human}: nothing to {'put back' if cmd != 'redo' else 'restore'} -- the files already match "
+              f"that point (session {p['session']})")
+        return
+    print(f"{human} -- {verb} {n} file{'s' if n != 1 else ''} "
+          f"(session {p['session']}, now at step {p['to_step']} of {p['steps']}):")
+    for path, _ in p["restore"]:
+        print(f"  put back  {rewind.relative(path, root)}")
+    for path in p["delete"]:
+        print(f"  remove    {rewind.relative(path, root)}   (the agent had created it)")
+    for path, why in p["cannot"]:
+        print(f"  CANNOT    {rewind.relative(path, root)}: {why}")
+    for q in p.get("unmatched") or []:
+        print(f"  skip      {q}: the agent did not change it")
+    if dry_run:
+        print(f"  this is a preview; run `{invocation()} {cmd}` without --dry-run (or -n) to do it")
+    elif p.get("record") and cmd != "redo":
+        print(f"  changed your mind? reverse this with:  {invocation()} redo")
+    if p["bash_uncovered"]:
+        print(f"  note: {p['bash_uncovered']} step(s) could not be fully put back (a command or edit whose "
+              f"before/after scan did not finish)")
+    if p["scan_early"]:
+        print(f"  note: {p['scan_early']} background command(s) may not be fully put back (their after-scan "
+              f"may have run before they finished)")
+    if p.get("torn"):
+        print(f"  note: the log has a torn write ({p['torn']}); some changes may not have been put back")
+
+
+def _history(a: argparse.Namespace) -> int:
+    from . import history as hist
+    rows, target = hist.file_history(a.log, a.file, a.session)
+    root = rewind.project_root(a.log)
+    rel = rewind.relative(target, root)
+    session = a.session or rewind.latest_session(a.log)
+    if not rows:
+        print(f"the agent never created, changed or deleted {rel} in this session")
+        return 1
+    print(f"{rel}: {len(rows)} change{'s' if len(rows) != 1 else ''} in session {session} (oldest first)")
+    for r in rows:
+        print(f"  step {r['step']:>3}  {r['change']:<28}  {r['tool']:<8} {r['summary']}")
+    print(f"  put it back to how it was right after any step:  {invocation()} rewind N --only {rel}")
+    print(f"  or to before the agent ever touched it:          {invocation()} rewind 0 --only {rel}")
+    return 0
+
+
+def _marks(a: argparse.Namespace) -> int:
+    """`mark` / `marks` / `unmark` / `rewind-to`: bookmarks in time over the same rewind machinery."""
+    from . import marks
+    if a.cmd == "mark":
+        try:
+            m = marks.set_mark(a.log, a.name, getattr(a, "session", None))
+        except marks.MarkError as e:
+            print(f"rewindagents: {e}", file=sys.stderr)
+            return 2
+        print(f"marked '{a.name}' at step {m['step']} of session {m['session']} -- "
+              f"come back here any time with: {invocation()} rewind-to {a.name}")
+        return 0
+    if a.cmd == "unmark":
+        try:
+            marks.remove(a.log, a.name)
+        except marks.MarkError as e:
+            print(f"rewindagents: {e}", file=sys.stderr)
+            return 2
+        print(f"removed mark '{a.name}'")
+        return 0
+    if a.cmd == "marks":
+        rows = marks.listing(a.log)
+        if not rows:
+            print(f"no marks yet -- make one with `{invocation()} mark NAME` (before a risky agent task)")
+            return 0
+        import datetime
+        for m in rows:
+            when = datetime.datetime.fromtimestamp(m["created"]).strftime("%Y-%m-%d %H:%M")
+            tail = "" if m["live"] else "  (that step is no longer in the session)"
+            print(f"  {m['name']:<20} {when}  step {m['step']} of {m['session_steps']}  "
+                  f"session {m['session']}{tail}")
+        return 0
+    # rewind-to
+    try:
+        m = marks.get(a.log, a.name)
+    except marks.MarkError as e:
+        print(f"rewindagents: {e}", file=sys.stderr)
+        return 2
+    root = rewind.project_root(a.log)
+    try:
+        p = rewind.rewind(a.log, m["step"], m["session"], dry_run=a.dry_run, only=a.only, force=a.force)
+    except rewind.DriftError as e:
+        _refused(e.plan, a)
+        return 1
+    except rewind.StepRangeError as e:
+        print(f"rewindagents: {e}", file=sys.stderr)
+        return 2
+    except rewind.RewindError as e:
+        print(f"rewindagents: {e}", file=sys.stderr)
+        return 1
+    _undo_report(p, "rewind-to", f"rewind to mark '{a.name}'", dry_run=a.dry_run, root=root)
+    if p.get("drift") and a.dry_run and not a.force:
+        return 1
+    return 1 if p["cannot"] or p["bash_uncovered"] or p["scan_early"] or p.get("torn") else 0
 
 
 def _revert(a: argparse.Namespace) -> int:
@@ -619,15 +818,19 @@ def drift_lines(p: dict, root, indent: str = "  ") -> list[str]:
 
 def _refused(p: dict, a: argparse.Namespace) -> None:
     root = rewind.project_root(a.log)
-    cmd = "rewind" if a.cmd == "rewind" else "branch"
+    cmd = a.cmd if a.cmd in ("rewind", "branch", "undo", "redo") else "rewind"
     n = len(p["drift"])
     print(f"rewindagents: {cmd} refused, nothing changed: {n} file{'s' if n != 1 else ''} changed after the steps "
           f"it takes back, and it would overwrite {'those changes' if n != 1 else 'that change'}:", file=sys.stderr)
     for line in drift_lines(p, root):
         print(line, file=sys.stderr)
     print(f"  see exactly what would be lost: {invocation()} diff {p['to_step']} --session {p['session']}", file=sys.stderr)
-    print(f"  {cmd} anyway with --force: the current bytes are kept as a step, so it can be undone with "
-          f"`{invocation()} rewind {p['steps']} --session {p['session']}`", file=sys.stderr)
+    if cmd in ("undo", "redo"):
+        print(f"  {cmd} anyway with --force: your current bytes are kept as a step, so you can get them back "
+              f"with `{invocation()} redo`", file=sys.stderr)
+    else:
+        print(f"  {cmd} anyway with --force: the current bytes are kept as a step, so it can be undone with "
+              f"`{invocation()} rewind {p['steps']} --session {p['session']}`", file=sys.stderr)
 
 
 def _report(p: dict, dry_run: bool, root) -> None:

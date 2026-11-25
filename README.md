@@ -73,6 +73,28 @@ The demo at the top is a real session: an agent's last two steps delete the test
 commands shown, and draws the frames from what they printed; `tests/test_demo.py` plays the same session again
 and fails if any line differs.
 
+## Undo, bookmarks, and one file's history
+
+No step numbers to work out when something just went wrong. `undo` counts back over the agent's own changes
+from where your files are now; a step that changed nothing (a test run, a Read) is skipped, and running `undo`
+again keeps walking back instead of undoing the undo. `redo` reverses the last undo, rewind or rewind-to.
+
+```sh
+rewindagents undo             # take back the agent's last change
+rewindagents undo 3           # the last three changes; `undo --all` for everything
+rewindagents redo             # changed your mind: put it back
+
+rewindagents mark before-refactor     # bookmark this moment before a risky task
+rewindagents rewind-to before-refactor   # jump straight back to it; `marks` lists them, `unmark` deletes one
+
+rewindagents history src/app.py   # every step that created, changed or deleted this one file
+```
+
+All of them use the same checks as `rewind`: they refuse and change nothing when they would overwrite your own
+edit (add `--force` to go ahead; your bytes are kept as a step), take `--dry-run` (`-n`) to preview, and
+`undo` and `rewind-to` take `--only PATH`. Marks are kept in `.rewindagents/marks.json`, beside the log, not in
+its hash chain.
+
 ## What it cannot put back
 
 Files under a directory git ignores as a whole (`node_modules/`, `build/`), symlinks, files over 20 MB,

@@ -45,7 +45,7 @@
 <div class="head"><h1 id="h1" class="h1-small">Getting started.</h1>
 <p class="lede">Install, add the hook to one project, let the agent work, then look at the session and step back when you need to. Every command here is the README&#x27;s, and a test checks that each one is a real subcommand.</p></div>
 <div class="docs">
-<nav class="toc" aria-label="On this page"><a href="#install">Install</a><a href="#hook">Add the hook</a><a href="#after">After a bad run</a><a href="#first">A first session</a><a href="#recorded">What gets recorded</a><a href="#replay">Replay and rewind</a><a href="#branch">Branch</a><a href="#fork">Fork and compare</a><a href="#ui">Timeline in a browser</a><a href="#mcp">MCP server</a><a href="#export">Export</a><a href="#sessions">Find a session</a><a href="#bundle">Move a session</a><a href="#attach">Attach to a PR</a><a href="#verify">Verify</a><a href="#status">Is it recording?</a><a href="#gc">Free space</a><a href="#overhead">Overhead</a><a href="#limits">Limits</a><a href="#remove">Remove it</a></nav>
+<nav class="toc" aria-label="On this page"><a href="#install">Install</a><a href="#hook">Add the hook</a><a href="#after">After a bad run</a><a href="#undo">Undo and bookmarks</a><a href="#first">A first session</a><a href="#recorded">What gets recorded</a><a href="#replay">Replay and rewind</a><a href="#branch">Branch</a><a href="#fork">Fork and compare</a><a href="#ui">Timeline in a browser</a><a href="#mcp">MCP server</a><a href="#export">Export</a><a href="#sessions">Find a session</a><a href="#bundle">Move a session</a><a href="#attach">Attach to a PR</a><a href="#verify">Verify</a><a href="#status">Is it recording?</a><a href="#gc">Free space</a><a href="#overhead">Overhead</a><a href="#limits">Limits</a><a href="#remove">Remove it</a></nav>
 <article class="doc">
 <h2 id="install">Install</h2>
 <p>Python &gt;=3.10, standard library only. Tested on Python 3.15 on macOS. Install it from PyPI:</p>
@@ -110,6 +110,21 @@
 <span class="l"><span class="c"># put every file back as it was before the session&#x27;s first step</span></span>
 <span class="l"><span class="p">$ </span><span class="sel">rewindagents rewind 0</span></span></code></pre>
 <p>Three commands, in the order you need them. <code>rewind</code> and <code>revert</code> refuse, change nothing and exit 1 when they would overwrite a change made after the agent&#x27;s step (your own edit, for example); the message names the file and the command that shows what would be lost. Every rewind is itself a step, so it can be undone, and it prints the command that undoes it.</p>
+
+<h2 id="undo">Undo, bookmarks, one file&#x27;s history</h2>
+<p><code>undo</code> takes back the agent&#x27;s last change with no step number to work out, and walks further back each time you run it; <code>redo</code> reverses it. <code>mark NAME</code> bookmarks a moment before a risky task and <code>rewind-to NAME</code> jumps back to it. <code>history FILE</code> lists every step that created, changed or deleted one file. All of them refuse to overwrite your own edit unless you add <code>--force</code>.</p>
+<pre class="term"><code><span class="l"><span class="c"># take back the agent&#x27;s last change</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents undo</span></span>
+<span class="l"><span class="c"># the last three changes; `undo --all` for everything</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents undo 3</span></span>
+<span class="l"><span class="c"># changed your mind: put it back</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents redo</span></span>
+<span class="l"><span class="c"># bookmark this moment before a risky task</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents mark <span class="nb">before-refactor</span></span></span>
+<span class="l"><span class="c"># jump straight back to it; `marks` lists them, `unmark` deletes one</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents <span class="nb">rewind-to</span> <span class="nb">before-refactor</span></span></span>
+<span class="l"><span class="c"># every step that created, changed or deleted this one file</span></span>
+<span class="l"><span class="p">$ </span><span class="sel">rewindagents history src/app.py</span></span></code></pre>
 
 <h2 id="first">A first session</h2>
 <p>The session behind the clip on the front page, as it ran. Every line below is what the command printed; <code>tests/test_demo.py</code> runs the same session and fails if a line changes.</p>

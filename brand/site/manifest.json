@@ -164,6 +164,16 @@
     "rewindagents ui                      # opens the timeline in your browser; Ctrl+C stops it",
     "rewindagents ui --session abc --no-open --port 8765"
    ],
+   "undo": [
+    "rewindagents undo             # take back the agent's last change",
+    "rewindagents undo 3           # the last three changes; `undo --all` for everything",
+    "rewindagents redo             # changed your mind: put it back",
+    "",
+    "rewindagents mark before-refactor     # bookmark this moment before a risky task",
+    "rewindagents rewind-to before-refactor   # jump straight back to it; `marks` lists them, `unmark` deletes one",
+    "",
+    "rewindagents history src/app.py   # every step that created, changed or deleted this one file"
+   ],
    "verify": [
     "rewindagents verify --head <pinned-hash>"
    ]
