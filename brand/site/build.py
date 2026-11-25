@@ -193,7 +193,7 @@ def facts():
         "wreck_steps": scenario.WRECK_STEPS,
         "blocks": {k: readme_block(readme, h) for k, h in (
             ("install", "Install"), ("hook", "Claude Code hook"), ("agents", "Codex and Cursor hooks"),
-            ("replay", "Replay, rewind, branch"), ("undo", "Undo, bookmarks, guards, and one file's history"),
+            ("replay", "Replay, rewind, branch"), ("undo", "Undo, bookmarks, guards, history and blame"),
             ("export", "Export a replay"), ("sessions", "Find a session"), ("verify", "What the chain does not catch"),
             ("record", "Use it"), ("tests", "Tests"), ("quick", "Quick start"), ("ui", "Timeline UI"), ("mcp", MCP_HEADING))},
         "quick_use": readme_blocks(readme, "Quick start")[1],
@@ -1203,8 +1203,8 @@ def docs_html(cfg, f):
 %(rescue)s
 <p>%(rescue_says)s</p>
 
-<h2 id="undo">Undo, bookmarks, guards, one file&#x27;s history</h2>
-<p><code>undo</code> takes back the agent&#x27;s last change with no step number to work out, and walks further back each time you run it; <code>redo</code> reverses it. <code>mark NAME</code> bookmarks a moment before a risky task and <code>rewind-to NAME</code> jumps back to it. <code>history FILE</code> lists every step that created, changed or deleted one file. <code>guard .env</code> warns you, and tells the agent, the moment a call changes a file you listed. All of them refuse to overwrite your own edit unless you add <code>--force</code>.</p>
+<h2 id="undo">Undo, bookmarks, guards, history and blame</h2>
+<p><code>undo</code> takes back the agent&#x27;s last change with no step number to work out, and walks further back each time you run it; <code>redo</code> reverses it. <code>mark NAME</code> bookmarks a moment before a risky task and <code>rewind-to NAME</code> jumps back to it. <code>history FILE</code> lists every step that created, changed or deleted one file. <code>blame FILE:LINE</code> names the step that wrote a line. <code>guard .env</code> warns you, and tells the agent, the moment a call changes a file you listed. All of them refuse to overwrite your own edit unless you add <code>--force</code>.</p>
 %(undo)s
 
 <h2 id="first">A first session</h2>

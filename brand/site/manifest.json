@@ -173,6 +173,7 @@
     "rewindagents rewind-to before-refactor   # jump straight back to it; `marks` lists them, `unmark` deletes one",
     "",
     "rewindagents history src/app.py   # every step that created, changed or deleted this one file",
+    "rewindagents blame src/app.py:42  # which step wrote line 42, and how to see or take back that step",
     "",
     "rewindagents guard .env 'secrets/' '*.pem'   # files the agent must not touch",
     "rewindagents guard --check        # guarded files the session changed; `unguard PATTERN` removes one",
