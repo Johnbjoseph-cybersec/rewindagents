@@ -145,6 +145,10 @@ def main(argv: list[str] | None = None) -> int:
     gd.add_argument("--session", help="with --check; default: the session that wrote the last record")
     ug = sub.add_parser("unguard", help="stop guarding a pattern")
     ug.add_argument("pattern", help="a pattern exactly as `guard` lists it")
+    bl = sub.add_parser("blame", help="which agent step wrote each line of a file (FILE), or one line "
+                                      "(FILE:LINE), with how to see that step and take it back")
+    bl.add_argument("target", metavar="FILE[:LINE]", help="a file, or a file and a 1-based line number")
+    bl.add_argument("--session", help="default: the session that wrote the last record")
     hi = sub.add_parser("history", help="one file's timeline: every step that created, changed or deleted it, "
                                         "oldest first, with how to put it back to any version")
     hi.add_argument("file", help="the file to trace")
@@ -409,6 +413,8 @@ def _dispatch(a: argparse.Namespace, explicit_log: bool) -> int:
         return _marks(a)
     if a.cmd == "history":
         return _history(a)
+    if a.cmd == "blame":
+        return _blame(a)
     if a.cmd in ("guard", "unguard"):
         return _guard(a)
     if a.cmd == "rewind" and a.json:
@@ -594,6 +600,61 @@ def _guard(a: argparse.Namespace) -> int:
     for r, step in seen.items():
         print(f"  {r}  (last changed at step {step}) -- put it back: {invocation()} undo --only {r}")
     return 1
+
+
+def _blame(a: argparse.Namespace) -> int:
+    from . import blame as bl
+    path, line = a.target, None
+    head, sep, tail = a.target.rpartition(":")
+    if sep and tail.isdigit() and head and not Path(a.target).exists():
+        path, line = head, int(tail)
+    try:
+        b = bl.blame(a.log, path, a.session)
+    except rewind.RewindError as e:
+        print(f"rewindagents: {e}", file=sys.stderr)
+        return 1
+    root = rewind.project_root(a.log)
+    rel = rewind.relative(b["target"], root)
+    rows = b["lines"]
+
+    def who(n: int) -> str:
+        return "before" if n == bl.BEFORE else "by hand" if n == bl.HAND else f"step {n}"
+
+    def about(n: int) -> str:
+        if n == bl.BEFORE:
+            return "already in the file before the session first changed it"
+        if n == bl.HAND:
+            return (f"not from a recorded step: changed after step {b['last_step']} (by hand, or by a tool the "
+                    f"hook does not see)")
+        s = b["steps"][n]
+        return f"{s['tool']}: {rewind.summary(s, root=root)}"
+
+    if b["absent"]:
+        print(f"{rel} does not exist now (last recorded change: step {b['last_step']}); "
+              f"`{invocation()} history {rel}` lists its steps")
+        return 1
+    if line is not None:
+        if not 1 <= line <= len(rows):
+            print(f"rewindagents: {rel} has {len(rows)} line{'s' if len(rows) != 1 else ''}; line {line} "
+                  f"is out of range", file=sys.stderr)
+            return 2
+        n, text = rows[line - 1]
+        print(f"{rel}:{line}  {text.rstrip()}")
+        print(f"  written by {who(n)} -- {about(n)}")
+        if n > 0:
+            print(f"  see that step:            {invocation()} replay --step {n} --diff")
+            print(f"  take back that step only: {invocation()} revert {n}")
+        return 0
+    width = max((len(who(n)) for n, _ in rows), default=6)
+    for i, (n, text) in enumerate(rows, 1):
+        print(f"{who(n):>{width}} {i:>5} | {text.rstrip()}")
+    used = sorted({n for n, _ in rows}, key=lambda n: (n <= 0, n))
+    print()
+    for n in used:
+        count = sum(1 for m, _ in rows if m == n)
+        print(f"  {who(n):>{width}}: {count:>4} line{'s' if count != 1 else ' '}  {about(n)}")
+    print(f"  one line in detail: {invocation()} blame {rel}:LINE")
+    return 0
 
 
 def _history(a: argparse.Namespace) -> int:

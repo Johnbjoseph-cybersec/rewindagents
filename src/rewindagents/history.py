@@ -17,6 +17,7 @@ def file_history(log_path, path, session: str | None = None) -> tuple[list[dict]
     def same(p) -> bool:          # the log may hold /var/... where resolve() gives /private/var/... (macOS)
         return bool(p) and (p == target or str(Path(p).resolve()) == target)
 
+    root = rewind.project_root(log_path)
     rows: list[dict] = []
     for s in rewind.steps(log_path, session):
         cp = next((c for c in s.get("checkpoints") or [] if same(c.get("path"))), None)
@@ -31,5 +32,5 @@ def file_history(log_path, path, session: str | None = None) -> tuple[list[dict]
             change = "deleted"
         else:
             change = "modified"
-        rows.append({"step": s["step"], "tool": s["tool"], "change": change, "summary": rewind.summary(s)})
+        rows.append({"step": s["step"], "tool": s["tool"], "change": change, "summary": rewind.summary(s, root=root)})
     return rows, target

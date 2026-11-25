@@ -8,6 +8,10 @@ and only a published GitHub release publishes to PyPI (`.github/workflows/publis
 ## [Unreleased]
 
 ### Added
+- `blame FILE` / `blame FILE:LINE`: which recorded step wrote each line (or `before` the session, or `by hand`
+  after it), with the commands to see that step (`replay --step N --diff`) and take it back alone
+  (`revert N`). Rebuilt from the stored copies; a version an `undo` or `rewind` restored keeps its original
+  authors. Tests: `tests/test_blame.py`.
 - `undo [N]` / `undo --all`: take back the agent's last change (or last N) with no step number to work out.
   It counts only steps that changed a file, from where the files are now, so a repeated `undo` walks back
   through the agent's work instead of undoing the previous undo.
@@ -22,6 +26,9 @@ and only a published GitHub release publishes to PyPI (`.github/workflows/publis
   overall, then restrict it to the file).
 - All of these go through the same rewind checks (a hand edit is refused without `--force`; `--dry-run`).
   Tests: `tests/test_undo.py`, `tests/test_marks.py`, `tests/test_history.py`, `tests/test_guard.py`.
+
+### Changed
+- `history` names files relative to the project in each step's summary.
 
 ### Fixed
 - After an editable install (`pip install -e .`) the next-step hints in `summary`, `revert`, `rewind`, `status`
