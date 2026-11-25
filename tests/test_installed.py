@@ -22,7 +22,7 @@ sys.path.insert(0, str(SRC))
 from rewindagents import agents  # noqa: E402  (only for the agents' event names; the binary under test runs without src)
 BIN = os.environ.get("REWINDAGENTS_BIN")
 VERSION = re.search(r'^__version__ = "([^"]+)"', (SRC / "rewindagents" / "__init__.py").read_text(), re.M).group(1)
-SUBCOMMANDS = set(re.findall(r'sub\.add_parser\("(\w+)"', (SRC / "rewindagents" / "cli.py").read_text()))
+SUBCOMMANDS = set(re.findall(r'sub\.add_parser\("([\w-]+)"', (SRC / "rewindagents" / "cli.py").read_text()))
 
 
 def clean_env():
