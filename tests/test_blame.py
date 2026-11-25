@@ -50,7 +50,8 @@ def cli(*args):
 
 
 def who(log, path):
-    return [(n, t.rstrip("\n")) for n, t in blame.blame(log, path)["lines"]]
+    # write_text() writes "\r\n" on Windows; the attribution is what is tested, not the line ending
+    return [(n, t.rstrip("\r\n")) for n, t in blame.blame(log, path)["lines"]]
 
 
 class TestBlame(unittest.TestCase):
